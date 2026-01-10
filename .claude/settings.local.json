@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__notion__notion-update-page"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
