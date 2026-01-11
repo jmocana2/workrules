@@ -51,6 +51,11 @@ Hemos definido una arquitectura **Serverless / Event-Driven Hybrid** diseñada p
 * **Estructura:** Relacional (metadatos) + Vectorial (embeddings) + JSONB (perfiles de cálculo).
 * **Documentación:** Ver `database/README.md` para detalles completos del esquema y uso.
 
+## Supabase
+- Project URL: https://kvebuijpjwlgrnfwfdgk.supabase.co
+- Región: eu-west-1
+- Estado: Proyecto activo
+
 #### Tablas Principales
 1. **convenios**: Información principal de convenios colectivos (nombre, código REGCON, ámbito, vigencia)
 2. **convenio_chunks**: Fragmentos de texto con embeddings vectoriales para búsqueda semántica (RAG)
