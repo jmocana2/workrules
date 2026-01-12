@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "mcp__notion__notion-update-page"
+      "mcp__notion__notion-update-page",
+      "mcp__notion__notion-fetch"
     ],
     "deny": [],
     "ask": []
