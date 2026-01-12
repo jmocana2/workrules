@@ -84,11 +84,28 @@ USING (
   OR auth.uid() = user_id
 );
 
--- Politica: Solo Pro puede insertar PDFs privados
+-- Politica: Usuarios pueden actualizar sus propios documentos
+CREATE POLICY "Users can update own private documents"
+ON convenio_chunks FOR UPDATE
+USING (
+  is_private = false 
+  OR auth.uid() = user_id
+);
+
+-- Politica: Usuarios pueden eliminar sus propios documentos
+CREATE POLICY "Users can delete own private documents"
+ON convenio_chunks FOR DELETE
+USING (
+  is_private = false 
+  OR auth.uid() = user_id
+);
+
+-- Politica: Solo Pro puede insertar PDFs privados y debe ser el propietario
 CREATE POLICY "Pro users can upload private docs"
 ON convenio_chunks FOR INSERT
 WITH CHECK (
-  EXISTS (
+  user_id = auth.uid()
+  AND EXISTS (
     SELECT 1 FROM user_subscriptions 
     WHERE user_id = auth.uid() 
     AND plan IN ('pro', 'enterprise')
@@ -129,6 +146,39 @@ supabase-storage/
       uploads/          # PDFs subidos por el usuario
       processed/        # Markdown generado
 ```
+
+### Políticas de Storage (Supabase)
+
+```sql
+-- Policy: Users can upload to own folder
+CREATE POLICY "Users can upload to own folder"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'private' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Policy: Users can read own files
+CREATE POLICY "Users can read own files"
+ON storage.objects FOR SELECT
+USING (
+  bucket_id = 'private' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Policy: Users can delete own files
+CREATE POLICY "Users can delete own files"
+ON storage.objects FOR DELETE
+USING (
+  bucket_id = 'private' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+```
+
+**Limitaciones de archivos:**
+- Tamaño máximo: 10 MB
+- Tipo MIME: application/pdf
+- Límite por usuario: según plan (Free: 5 archivos, Pro: 50, Enterprise: ilimitado)
 
 ---
 

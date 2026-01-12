@@ -85,6 +85,12 @@ CREATE TABLE convenio_chunks (
   metadata jsonb,
   created_at timestamptz DEFAULT now()
 );
+
+-- Vector similarity index for fast cosine similarity searches
+CREATE INDEX convenio_chunks_embedding_idx 
+ON convenio_chunks 
+USING ivfflat (embedding vector_cosine_ops) 
+WITH (lists = 100);
 ```
 
 ### Tabla: convenio_perfiles (JSON de Variables)
@@ -174,9 +180,9 @@ Este JSON es el **diferenciador técnico** que permite cálculos precisos:
 
 ---
 
-### 🔲 [I1.1] Crear proyecto Supabase
+### ✅ [I1.1] Crear proyecto Supabase
 
-- **Estado:** PENDIENTE
+- **Estado:** ✅ Listo
 - **Prioridad:** 🔴 Alta
 - **Descripción:**
     - Crear cuenta en Supabase
@@ -198,9 +204,9 @@ Este JSON es el **diferenciador técnico** que permite cálculos precisos:
 
 ---
 
-### 🔲 [I1.2] Configurar extensiones PostgreSQL
+### � [I1.2] Configurar extensiones PostgreSQL
 
-- **Estado:** PENDIENTE
+- **Estado:** 🔄 En progreso
 - **Prioridad:** 🔴 Alta
 - **Descripción:**
     - Habilitar extensión `pgvector` para embeddings

@@ -22,8 +22,8 @@ Cada convenio procesado genera dos activos:
 1. **Vectores:** Para búsqueda semántica de texto legal
 2. **Esquema JSON:** Diccionario dinámico que mapea variables críticas para que la IA sepa qué preguntar
 
+Ejemplo: Hostelería
 ```json
-// Ejemplo: Hostelería
 {
   "convenio": "Hostelería Madrid",
   "variables_criticas": ["Categoría Profesional", "Categoría Hotel", "Años Antigüedad"],
@@ -32,8 +32,10 @@ Cada convenio procesado genera dos activos:
     "Categoría Profesional": ["Gobernanta", "Camarera", "Recepcionista"]
   }
 }
+```
 
-// Ejemplo: Consultoría TIC
+Ejemplo: Consultoría TIC
+```json
 {
   "convenio": "Consultoras TIC",
   "variables_criticas": ["Área Funcional", "Grupo", "Nivel"],

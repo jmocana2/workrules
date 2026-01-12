@@ -17,7 +17,7 @@ Se ha seleccionado un **Monolito Modular** (un único repositorio) frente a una 
 | **Equipo** | Desarrollo en solitario (solo-dev). Los microservicios resuelven problemas de coordinación entre equipos; sin equipos, solo añaden complejidad. |
 | **Fase del proyecto** | Etapa temprana. La regla es: "empieza con monolito, divide cuando duela". |
 | **Presupuesto** | 100€/mes. Un monolito reduce costes de infraestructura y DevOps. |
-| **Modularidad interna** | Clean Architecture (domain/application/infrastructure) permite separación lógica sin repos separados. |
+| **Modularidad interna** | Separación lógica por capas (domain/application/infrastructure) aplicada dentro de cada módulo, sin necesidad de repos separados. |
 | **Pipeline ya aislado** | n8n corre en Docker de forma independiente, cubriendo la única separación física necesaria. |
 
 ### Estructura del repositorio
@@ -168,7 +168,7 @@ sequenceDiagram
 
 | Capa | Tecnología |
 |---|---|
-| **Frontend** | React 19, TanStack Query, shadcn/ui, Zustang |
+| **Frontend** | React 19, TanStack Query, shadcn/ui, Zustand |
 | **Backend** | Supabase Edge Functions (Deno) |
 | **Base de Datos** | PostgreSQL + pgvector |
 | **IA (Cerebro)** | Anthropic Claude 3.5 Sonnet |

@@ -38,8 +38,8 @@ flowchart TB
     C --> D
     D --> E
     D --> G
-    G --> H
-    G --> I
+    H --> G
+    I --> G
 ```
 
 ### Stack Frontend
@@ -109,8 +109,8 @@ Basados en el Perfil JSON del convenio seleccionado:
 ```jsx
 // Ejemplo de chips dinamicos
 <div className="flex gap-2 flex-wrap">
-  {perfil.valores_posibles["Categoria Profesional"].map(cat => (
-    <Button variant="outline" size="sm" onClick={() => insertVariable(cat)}>
+  {perfil.valores_posibles["Categoria Profesional"].map((cat, index) => (
+    <Button key={`${cat}-${index}`} variant="outline" size="sm" onClick={() => insertVariable(cat)}>
       {cat}
     </Button>
   ))}

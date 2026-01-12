@@ -129,7 +129,7 @@ Si te piden calcular un salario:
 
 ```tsx
 // Server-Sent Events para respuesta en tiempo real
-const stream = await [anthropic.messages.stream](http://anthropic.messages.stream)({
+const stream = await anthropic.messages.stream({
   model: "claude-3-5-sonnet-20241022",
   max_tokens: 1024,
   messages: [{ role: "user", content: prompt }]
@@ -199,7 +199,7 @@ for await (const chunk of stream) {
 | Campo | Valor |
 | --- | --- |
 | :--- | :--- |
-| **Descripción** | Disenar prompts que garanticen precisio en calculos |
+| **Descripción** | Diseñar prompts que garanticen precisión en cálculos |
 | **Criterios de Aceptación** | Chain of Thought visible, citas obligatorias |
 | **DoD** | 10 preguntas de prueba respondidas correctamente |
 | **Tokens estimados** | ~5000 (pruebas iterativas) |
@@ -323,7 +323,7 @@ Este módulo implementa el **Protocolo de Interacción del Chat** definido en el
 data: {"type": "text", "content": "El salario"}
 data: {"type": "text", "content": " base para"}
 ...
-data: {"type": "citation", "articulo": "Art. 24", "url": "[https://boe.es/](https://boe.es/)..."}
+data: {"type": "citation", "articulo": "Art. 24", "url": "https://boe.es/..."}
 data: {"type": "done"}
 ```
 
