@@ -45,7 +45,6 @@ flowchart TB
 ### Stack Frontend
 
 | Tecnología | Propósito |
-| --- | --- |
 | :--- | :--- |
 | **React 19 + Vite** | Framework base |
 | **TanStack Query** | Server state management |
@@ -133,7 +132,6 @@ Basados en el Perfil JSON del convenio seleccionado:
 
 | Campo | Valor |
 | --- | --- |
-| :--- | :--- |
 | **Descripción** | Clonar template con Clean Architecture |
 | **Criterios de Aceptación** | npm run dev funciona, estructura de carpetas lista |
 | **DoD** | README actualizado con instrucciones |
@@ -143,7 +141,6 @@ Basados en el Perfil JSON del convenio seleccionado:
 
 | Campo | Valor |
 | --- | --- |
-| :--- | :--- |
 | **Descripción** | Adaptador para conectar con el backend |
 | **Criterios de Aceptación** | Autenticacion y queries funcionando |
 | **DoD** | Hook useSupabase() disponible |
@@ -157,7 +154,6 @@ Basados en el Perfil JSON del convenio seleccionado:
 
 | Campo | Valor |
 | --- | --- |
-| :--- | :--- |
 | **Descripción** | Componente para buscar y seleccionar convenio |
 | **Criterios de Aceptación** | Busqueda fuzzy, muestra ambito, loading state |
 | **DoD** | Integrado con TanStack Query |
@@ -167,7 +163,6 @@ Basados en el Perfil JSON del convenio seleccionado:
 
 | Campo | Valor |
 | --- | --- |
-| :--- | :--- |
 | **Descripción** | Interfaz de chat con streaming |
 | **Criterios de Aceptación** | Mensajes usuario/IA, scroll automatico, markdown |
 | **DoD** | Vercel AI SDK useChat integrado |
@@ -177,7 +172,6 @@ Basados en el Perfil JSON del convenio seleccionado:
 
 | Campo | Valor |
 | --- | --- |
-| :--- | :--- |
 | **Descripción** | Botones con opciones del Perfil JSON |
 | **Criterios de Aceptación** | Se actualizan al cambiar convenio |
 | **DoD** | Click inserta variable en el input |
@@ -187,7 +181,6 @@ Basados en el Perfil JSON del convenio seleccionado:
 
 | Campo | Valor |
 | --- | --- |
-| :--- | :--- |
 | **Descripción** | Card que muestra enlace a la fuente oficial |
 | **Criterios de Aceptación** | Muestra articulo, pagina y link al PDF |
 | **DoD** | Abre en nueva pestana el PDF del BOE |
@@ -201,7 +194,6 @@ Basados en el Perfil JSON del convenio seleccionado:
 
 | Campo | Valor |
 | --- | --- |
-| :--- | :--- |
 | **Descripción** | Garantizar 100/100 en Lighthouse |
 | **Criterios de Aceptación** | LCP < 2.5s, FID < 100ms, CLS < 0.1 |
 | **DoD** | Report de Lighthouse guardado |
@@ -211,7 +203,6 @@ Basados en el Perfil JSON del convenio seleccionado:
 
 | Campo | Valor |
 | --- | --- |
-| :--- | :--- |
 | **Descripción** | Pagina de inicio optimizada para busquedas |
 | **Criterios de Aceptación** | HTML semantico, meta tags, [schema.org](http://schema.org) |
 | **DoD** | Indexable por Google Search Console |
@@ -221,7 +212,6 @@ Basados en el Perfil JSON del convenio seleccionado:
 
 | Campo | Valor |
 | --- | --- |
-| :--- | :--- |
 | **Descripción** | URLs como /convenio/hosteleria-madrid |
 | **Criterios de Aceptación** | SSG para los 100 convenios principales |
 | **DoD** | URLs indexables con contenido unico |

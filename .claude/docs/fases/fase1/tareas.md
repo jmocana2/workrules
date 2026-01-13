@@ -46,7 +46,7 @@
 #### [I1.2] Configurar extensiones PostgreSQL
 - **ID:** I1.2
 - **Prioridad:** 🔴 Alta
-- **Estado:** 🔄 En progreso
+- **Estado:** ✅ Listo
 - **Descripción:**
   - Habilitar pgvector para embeddings.
   - Habilitar uuid-ossp para IDs.
