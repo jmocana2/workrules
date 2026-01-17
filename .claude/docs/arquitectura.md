@@ -198,5 +198,6 @@ sequenceDiagram
 
 ### Sub-páginas
 
-- [Arquitectura en el Front](./arquitectura-front.md)
-- [Arquitectura en el Back](./arquitectura-back.md)
+- [Arquitectura en el Front](./arquitectura/arquitectura-front.md)
+- [Arquitectura en el Back](./arquitectura/arquitectura-back.md)
+- [Arquitectura Cloud & Contenedores](./arquitectura/arquitectura-cloud.md)
