@@ -204,9 +204,9 @@ Este JSON es el **diferenciador técnico** que permite cálculos precisos:
 
 ---
 
-### � [I1.2] Configurar extensiones PostgreSQL
+### ✅ [I1.2] Configurar extensiones PostgreSQL
 
-- **Estado:** 🔄 En progreso
+- **Estado:** 🔄 Listo
 - **Prioridad:** 🔴 Alta
 - **Descripción:**
     - Habilitar extensión `pgvector` para embeddings
@@ -231,9 +231,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 ---
 
-### 🔲 [I1.4] Configurar Storage bucket
+### ✅ [I1.4] Configurar Storage bucket
 
-- **Estado:** PENDIENTE
+- **Estado:** Listo
 - **Prioridad:** 🔴 Alta
 - **Descripción:**
     - Crear bucket `convenios-pdf` para almacenar PDFs originales
@@ -265,12 +265,12 @@ WITH CHECK (bucket_id = 'convenios-pdf' AND auth.role() = 'authenticated');
 
 ### **Bloque 2: Pipeline n8n** (Orquestación)
 
-### 🔲 [I1.5] Instalar n8n (self-hosted)
+### ✅ [I1.5] Instalar n8n (self-hosted)
 
-- **Estado:** PENDIENTE
+- **Estado:** Listo
 - **Prioridad:** 🔴 Alta
 - **Descripción:**
-    - Opción A: Desplegar en Railway/Render (recomendado para inicio)
+    - Opción A: Desplegar en Hostinger (recomendado para inicio)
     - Opción B: Instalación local con Docker
     - Configurar persistencia de workflows
     - Configurar credenciales de Supabase en n8n
@@ -306,7 +306,7 @@ docker run -d \
 
 ### 🔲 [I1.6] Crear workflow de ingesta
 
-- **Estado:** PENDIENTE
+- **Estado:** En progreso
 - **Prioridad:** 🔴 Alta
 - **Descripción:**
     - **Trigger:** Webhook HTTP POST con URL del PDF
