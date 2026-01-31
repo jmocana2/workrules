@@ -52,9 +52,8 @@ Hemos definido una arquitectura **Serverless / Event-Driven Hybrid** diseñada p
 * **Documentación:** Ver `database/README.md` para detalles completos del esquema y uso.
 
 ## Supabase
-- Project URL: https://kvebuijpjwlgrnfwfdgk.supabase.co
+- Project URL: `https://<SUPABASE_PROJECT_REF>.supabase.co`
 - Región: eu-west-1
-- Estado: Proyecto activo
 
 #### Tablas Principales
 1. **convenios**: Información principal de convenios colectivos (nombre, código REGCON, ámbito, vigencia)
@@ -103,7 +102,37 @@ Esta fase establece la fábrica de datos.
 
 ---
 
-## 6. Seguridad y Rendimiento
+## 6. Configuración del Proyecto
+
+### Requisitos previos
+- Cuenta en [Supabase](https://supabase.com) con extensión `pgvector` habilitada
+- Instancia de [n8n](https://n8n.io) (self-hosted o cloud)
+- API Keys: OpenAI, LlamaParse, Anthropic
+
+### Base de datos
+1. Crear un proyecto en Supabase
+2. Ejecutar `database/schema.sql` para crear las tablas
+3. Ejecutar los scripts en `database/functions/` para las funciones de búsqueda
+
+### Workflows de n8n
+Los workflows se encuentran en `n8n/workflows/`. Antes de importarlos:
+
+1. **Reemplazar placeholders:** Buscar `<SUPABASE_PROJECT_REF>` en los archivos JSON y sustituirlo por el project ref de tu instancia de Supabase (el subdominio de tu URL, ej: `abcdefghijklmnop`)
+2. **Configurar credenciales en n8n:**
+   - **Supabase API** — con tu `service_role` key y URL del proyecto
+   - **OpenAI API** — con tu API key
+   - **LlamaParse** — Header Auth con tu API key de LlamaParse (`Authorization: Bearer <key>`)
+3. **Importar los workflows** desde la UI de n8n (Settings > Import from file)
+4. **Asignar las credenciales** creadas en el paso 2 a cada nodo que las requiera
+
+| Workflow | Archivo | Descripción |
+|---|---|---|
+| Indexer | `Workrules-Indexer.json` | Pipeline completo: descarga PDF, extrae markdown, genera chunks y embeddings, guarda en Supabase |
+| Errors | `Workrules-Errors.json` | Gestión de errores del pipeline con clasificación y logging |
+
+---
+
+## 7. Seguridad y Rendimiento
 * **Seguridad:** Row Level Security (RLS) para proteger documentos privados. Webhooks firmados entre Supabase y n8n.
 * **Rendimiento:** Latencia mínima mediante Edge Functions distribuidas globalmente.
 * **SEO:** Implementación de HTML semántico y Core Web Vitals 100/100 para captar tráfico de consultas laborales orgánicas.

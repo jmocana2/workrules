@@ -63,6 +63,7 @@ CREATE TABLE convenios (
     ambito VARCHAR(200) NOT NULL,
     fecha_vigencia DATE NOT NULL,
     url_pdf TEXT,
+    markdown_completo TEXT,
     version VARCHAR(50) DEFAULT '1.0',
     estado VARCHAR(50) DEFAULT 'activo' CHECK (estado IN ('activo', 'derogado', 'pendiente', 'archivado')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -79,6 +80,7 @@ CREATE INDEX idx_convenios_ambito ON convenios(ambito);
 COMMENT ON TABLE convenios IS 'Tabla principal de convenios colectivos';
 COMMENT ON COLUMN convenios.codigo_regcon IS 'Código único del Registro de Convenios';
 COMMENT ON COLUMN convenios.ambito IS 'Ámbito de aplicación del convenio (provincial, estatal, empresa, etc.)';
+COMMENT ON COLUMN convenios.markdown_completo IS 'Markdown completo del convenio parseado por LlamaParse';
 
 -- -----------------------------------------------------------------------------
 -- Tabla: convenio_chunks
