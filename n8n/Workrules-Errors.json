@@ -4,7 +4,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://<SUPABASE_PROJECT_REF>.supabase.co/rest/v1/pipeline_logs",
+        "url": "=https://{{ $env.SUPABASE_PROJECT_REF }}.supabase.co/rest/v1/pipeline_logs",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendBody": true,
@@ -14,10 +14,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        256,
-        224
-      ],
+      "position": [256, 224],
       "id": "e725268e-a334-487d-9a9f-0ffbfb714e5f",
       "name": "Save to Logs",
       "credentials": {
@@ -37,14 +34,11 @@
     },
     {
       "parameters": {
-        "jsCode": "// Por ahora solo loguear que se debería reintentar\nreturn {\n  json: {\n    action: 'RETRY_NEEDED',\n    message: 'Este caso requiere reintento manual',\n    original_error: $input.first().json\n  }\n};"
+        "jsCode": "// Por ahora solo loguear que se debería reintentar\n// Pero pasar el error original para que se guarde en logs\nconst originalError = $input.first().json;\n\nreturn {\n  json: {\n    ...originalError,\n    // Añadir contexto de retry\n    retry_context: {\n      action: 'RETRY_NEEDED',\n      message: 'Este caso requiere reintento manual',\n      timestamp: new Date().toISOString()\n    }\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        256,
-        48
-      ],
+      "position": [256, 48],
       "id": "60480389-32b9-4e54-afc6-0ab5695b92f2",
       "name": "Prepare Retry"
     },
@@ -74,23 +68,17 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        0,
-        144
-      ],
+      "position": [0, 144],
       "id": "99dab3c2-8a71-4dd8-9f75-db4c155cde4c",
       "name": "Should Retry?"
     },
     {
       "parameters": {
-        "jsCode": "// Obtener información del error\nconst error = $input.first();\nconst errorData = error.json;\n\n// Obtener datos del webhook para contexto\nlet webhookData = null;\ntry {\n  webhookData = $('Webhook').first().json.body;\n} catch (e) {\n  webhookData = { error: 'No se pudo obtener datos del webhook' };\n}\n\n// Clasificar el error\nlet errorType = 'UNKNOWN';\nlet shouldRetry = false;\nlet userMessage = 'Error desconocido procesando el convenio';\n\nconst errorMessage = errorData.message || JSON.stringify(errorData);\n\n// 1. PDF ya existe en Storage\nif (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {\n  errorType = 'DUPLICATE_PDF';\n  shouldRetry = false;\n  userMessage = 'El PDF ya existe en el almacenamiento. Se puede reutilizar el existente.';\n}\n\n// 2. Convenio ya existe (unique constraint codigo_regcon)\nif (errorMessage.includes('duplicate key') && errorMessage.includes('codigo_regcon')) {\n  errorType = 'DUPLICATE_CONVENIO';\n  shouldRetry = false;\n  userMessage = 'Ya existe un convenio con este código REGCON en la base de datos.';\n}\n\n// 3. Timeout de LlamaParse\nif (errorMessage.includes('timeout') && errorMessage.includes('PENDING')) {\n  errorType = 'LLAMAPARSE_TIMEOUT';\n  shouldRetry = true;\n  userMessage = 'El procesamiento del PDF está tardando más de lo esperado.';\n}\n\n// 4. Error de autenticación API\nif (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {\n  errorType = 'AUTH_ERROR';\n  shouldRetry = false;\n  userMessage = 'Error de autenticación con las APIs externas.';\n}\n\n// 5. PDF no descargable\nif (errorMessage.includes('404') || errorMessage.includes('ENOTFOUND')) {\n  errorType = 'PDF_NOT_FOUND';\n  shouldRetry = false;\n  userMessage = 'No se pudo descargar el PDF desde la URL proporcionada.';\n}\n\nreturn {\n  json: {\n    workflow: 'ingesta-convenio',\n    error_type: errorType,\n    error_message: errorMessage,\n    user_message: userMessage,\n    should_retry: shouldRetry,\n    failed_node: errorData.node?.name || 'Unknown',\n    input_data: webhookData,\n    timestamp: new Date().toISOString()\n  }\n};"
+        "jsCode": "// Obtener información del error\nconst error = $input.first();\nconst errorData = error.json;\n\n// Obtener datos del webhook para contexto\nlet webhookData = null;\ntry {\n  webhookData = $('Webhook').first().json.body;\n} catch (e) {\n  webhookData = { error: 'No se pudo obtener datos del webhook' };\n}\n\n// Clasificar el error\nlet errorType = 'UNKNOWN';\nlet shouldRetry = false;\nlet userMessage = 'Error desconocido procesando el convenio';\n\nconst errorMessage = errorData.message || JSON.stringify(errorData);\n\n// Usar else-if para asegurar clasificación mutualmente exclusiva\n// 1. PDF ya existe en Storage\nif (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {\n  errorType = 'DUPLICATE_PDF';\n  shouldRetry = false;\n  userMessage = 'El PDF ya existe en el almacenamiento. Se puede reutilizar el existente.';\n}\n// 2. Convenio ya existe (unique constraint codigo_regcon)\nelse if (errorMessage.includes('duplicate key') && errorMessage.includes('codigo_regcon')) {\n  errorType = 'DUPLICATE_CONVENIO';\n  shouldRetry = false;\n  userMessage = 'Ya existe un convenio con este código REGCON en la base de datos.';\n}\n// 3. Timeout de LlamaParse\nelse if (errorMessage.includes('timeout') && errorMessage.includes('PENDING')) {\n  errorType = 'LLAMAPARSE_TIMEOUT';\n  shouldRetry = true;\n  userMessage = 'El procesamiento del PDF está tardando más de lo esperado.';\n}\n// 4. Error de autenticación API\nelse if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {\n  errorType = 'AUTH_ERROR';\n  shouldRetry = false;\n  userMessage = 'Error de autenticación con las APIs externas.';\n}\n// 5. PDF no descargable\nelse if (errorMessage.includes('404') || errorMessage.includes('ENOTFOUND')) {\n  errorType = 'PDF_NOT_FOUND';\n  shouldRetry = false;\n  userMessage = 'No se pudo descargar el PDF desde la URL proporcionada.';\n}\n\nreturn {\n  json: {\n    workflow: 'ingesta-convenio',\n    error_type: errorType,\n    error_message: errorMessage,\n    user_message: userMessage,\n    should_retry: shouldRetry,\n    failed_node: errorData.node?.name || 'Unknown',\n    input_data: webhookData,\n    timestamp: new Date().toISOString()\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        -208,
-        144
-      ],
+      "position": [-208, 144],
       "id": "9260961a-dd3f-4880-bbac-2e39834417cf",
       "name": "Process Error"
     },
@@ -98,16 +86,24 @@
       "parameters": {},
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
-      "position": [
-        -416,
-        144
-      ],
+      "position": [-416, 144],
       "id": "7a0909da-8399-41a0-94ee-4b1282eeaf60",
       "name": "Error Trigger"
     }
   ],
   "pinData": {},
   "connections": {
+    "Prepare Retry": {
+      "main": [
+        [
+          {
+            "node": "Save to Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Should Retry?": {
       "main": [
         [

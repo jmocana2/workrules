@@ -21,7 +21,7 @@ async function callOpenAIWithRetry(payload, apiKey, maxRetries = MAX_RETRIES) {
       const response = await fetch(OPENAI_API_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(payload)
@@ -29,8 +29,20 @@ async function callOpenAIWithRetry(payload, apiKey, maxRetries = MAX_RETRIES) {
 
       // Manejar rate limit con retry
       if (response.status === 429) {
+        // Si es el último intento, lanzar error
+        if (attempt === maxRetries) {
+          const errorText = await response
+            .text()
+            .catch(() => 'No response body');
+          throw new Error(
+            `Rate limited after ${maxRetries} attempts. OpenAI returned 429. Response: ${errorText}`
+          );
+        }
+
         const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
-        console.log(`Rate limited. Waiting ${waitTime}ms before retry ${attempt}/${maxRetries}...`);
+        console.log(
+          `Rate limited. Waiting ${waitTime}ms before retry ${attempt}/${maxRetries}...`
+        );
         await new Promise(r => setTimeout(r, waitTime));
         continue;
       }
@@ -45,7 +57,9 @@ async function callOpenAIWithRetry(payload, apiKey, maxRetries = MAX_RETRIES) {
     } catch (error) {
       // Si es el último intento, lanzar error
       if (attempt === maxRetries) {
-        throw new Error(`Failed after ${maxRetries} attempts: ${error.message}`);
+        throw new Error(
+          `Failed after ${maxRetries} attempts: ${error.message}`
+        );
       }
 
       // Esperar antes de reintentar
@@ -54,6 +68,11 @@ async function callOpenAIWithRetry(payload, apiKey, maxRetries = MAX_RETRIES) {
       await new Promise(r => setTimeout(r, waitTime));
     }
   }
+
+  // Fallback: si el loop termina sin retornar (no debería ocurrir)
+  throw new Error(
+    `Failed to get response from OpenAI after ${maxRetries} attempts`
+  );
 }
 
 // ============================================
@@ -75,36 +94,85 @@ try {
   // Intentar obtener de credenciales de OpenAI
   apiKey = $credentials.openAiApi.apiKey;
 } catch (error) {
-  throw new Error('No se pudo obtener la API Key de OpenAI. Verifica que las credenciales estén configuradas.');
+  throw new Error(
+    'No se pudo obtener la API Key de OpenAI. Verifica que las credenciales estén configuradas.'
+  );
 }
 
 // Preparar textos para embedding
 const textos = chunks.map(c => c.contenido);
+const invalidChunks = textos.filter((t, i) => !t || typeof t !== 'string');
+if (invalidChunks.length > 0) {
+  throw new Error(
+    `${invalidChunks.length} chunks tienen contenido inválido o vacío`
+  );
+}
 
 // Log inicial
-console.log(`Generando embeddings para ${chunks.length} chunks usando modelo ${MODEL}...`);
+console.log(
+  `Generando embeddings para ${chunks.length} chunks usando modelo ${MODEL}...`
+);
 
-// Preparar payload
-const payload = {
-  input: textos,
-  model: MODEL,
-  encoding_format: 'float'
+// Dividir en batches para evitar límites de OpenAI
+const batches = [];
+for (let i = 0; i < textos.length; i += BATCH_SIZE) {
+  batches.push(textos.slice(i, i + BATCH_SIZE));
+}
+
+console.log(
+  `Procesando ${batches.length} batch(es) de hasta ${BATCH_SIZE} chunks cada uno...`
+);
+
+// Procesar cada batch y acumular resultados
+let allEmbeddings = [];
+let totalUsage = {
+  total_tokens: 0,
+  prompt_tokens: 0
 };
 
-// Hacer request a OpenAI con retry logic
-const result = await callOpenAIWithRetry(payload, apiKey);
+for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
+  const batch = batches[batchIdx];
+  console.log(
+    `Procesando batch ${batchIdx + 1}/${batches.length} (${batch.length} chunks)...`
+  );
 
-// Validar respuesta
-if (!result.data || result.data.length !== chunks.length) {
+  const payload = {
+    input: batch,
+    model: MODEL,
+    encoding_format: 'float'
+  };
+
+  // Hacer request a OpenAI con retry logic
+  const result = await callOpenAIWithRetry(payload, apiKey);
+
+  // Validar respuesta del batch
+  if (!result.data || result.data.length !== batch.length) {
+    throw new Error(
+      `Mismatch en batch ${batchIdx + 1}: ${batch.length} chunks pero ${result.data?.length || 0} embeddings recibidos`
+    );
+  }
+
+  // Acumular embeddings
+  allEmbeddings = allEmbeddings.concat(result.data);
+
+  // Acumular estadísticas de uso
+  if (result.usage) {
+    totalUsage.total_tokens += result.usage.total_tokens || 0;
+    totalUsage.prompt_tokens += result.usage.prompt_tokens || 0;
+  }
+}
+
+// Validar que el total de embeddings coincide con chunks
+if (allEmbeddings.length !== chunks.length) {
   throw new Error(
-    `Mismatch en embeddings: ${chunks.length} chunks pero ${result.data?.length || 0} embeddings recibidos`
+    `Mismatch en embeddings: ${chunks.length} chunks pero ${allEmbeddings.length} embeddings recibidos`
   );
 }
 
 // Combinar chunks con sus embeddings
 const chunksWithEmbeddings = chunks.map((chunk, index) => ({
   ...chunk,
-  embedding: result.data[index].embedding
+  embedding: allEmbeddings[index].embedding
 }));
 
 // Validar que los embeddings tienen la dimensión correcta (1536 para text-embedding-3-small)
@@ -117,24 +185,28 @@ if (!firstEmbedding || firstEmbedding.length !== 1536) {
 
 // Estadísticas de uso
 const usage = {
-  total_tokens: result.usage.total_tokens,
-  prompt_tokens: result.usage.prompt_tokens,
+  total_tokens: totalUsage.total_tokens,
+  prompt_tokens: totalUsage.prompt_tokens,
   chunks_processed: chunks.length,
+  batches_processed: batches.length,
   model: MODEL,
-  estimated_cost_usd: (result.usage.total_tokens / 1000000) * 0.02 // $0.02 por 1M tokens
+  estimated_cost_usd: (totalUsage.total_tokens / 1000000) * 0.02 // $0.02 por 1M tokens
 };
 
 console.log(`✓ Embeddings generados exitosamente:`);
 console.log(`  - Chunks procesados: ${usage.chunks_processed}`);
+console.log(`  - Batches procesados: ${usage.batches_processed}`);
 console.log(`  - Tokens consumidos: ${usage.total_tokens}`);
 console.log(`  - Coste estimado: $${usage.estimated_cost_usd.toFixed(6)}`);
 
 // Retornar datos con embeddings
-return [{
-  json: {
-    chunks: chunksWithEmbeddings,
-    total_chunks: chunksWithEmbeddings.length,
-    embedding_usage: usage,
-    convenio_id: chunks[0]?.convenio_id
+return [
+  {
+    json: {
+      chunks: chunksWithEmbeddings,
+      total_chunks: chunksWithEmbeddings.length,
+      embedding_usage: usage,
+      convenio_id: chunks[0]?.convenio_id
+    }
   }
-}];
+];

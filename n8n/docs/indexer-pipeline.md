@@ -1,6 +1,6 @@
 # Pipeline de Indexación RAG - Workrules Indexer
 
-## Descripcion General
+## Descripción General
 
 El workflow **Workrules Indexer** es el pipeline ETL principal del sistema RAG. Recibe un convenio colectivo via webhook, lo procesa (descarga PDF, extrae texto, genera chunks y embeddings) y lo almacena en Supabase listo para busqueda semantica.
 
@@ -61,7 +61,7 @@ El workflow **Workrules Indexer** es el pipeline ETL principal del sistema RAG. 
 
 ## Fases del Pipeline
 
-### Fase 1: Recepcion y descarga
+### Fase 1: Recepción y descarga
 
 | Nodo | Tipo | Funcion |
 |---|---|---|
@@ -87,7 +87,7 @@ El PDF descargado se envia en paralelo a dos ramas:
 
 | Nodo | Tipo | Funcion |
 |---|---|---|
-| **Extract and clean md** | Code (JS) | Normaliza saltos de linea, limpia el markdown y estructura los datos |
+| **Extract and clean md** | Code (JS) | Normaliza saltos de línea, limpia el markdown y estructura los datos |
 | **Save md in supabase** | HTTP Request | Inserta el convenio en la tabla `convenios` con el markdown completo |
 
 ### Fase 4: Chunking
@@ -105,7 +105,7 @@ Configuracion del chunking:
 
 Tipos de chunk detectados automaticamente: `normativa`, `tabla_salarial`, `tabla`, `definicion`, `procedimiento`, `jornada`, `sanciones`.
 
-### Fase 5: Generacion de embeddings
+### Fase 5: Generación de embeddings
 
 | Nodo | Tipo | Funcion |
 |---|---|---|
@@ -155,7 +155,7 @@ Tipos de chunk detectados automaticamente: `normativa`, `tabla_salarial`, `tabla
 }
 ```
 
-## Gestion de errores
+## Gestión de errores
 
 El workflow tiene configurado **Workrules-Errors** como error workflow. Cuando un nodo falla:
 

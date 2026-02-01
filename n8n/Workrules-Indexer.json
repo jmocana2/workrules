@@ -3,343 +3,18 @@
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "ingesta-convenio",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
-      "position": [1600, 1712],
-      "id": "803d51a0-204f-4c35-9520-38d94e7ce373",
-      "name": "Webhook",
-      "webhookId": "01c36b3d-fb3a-4df1-8577-16f5b82c6e6f"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://<SUPABASE_PROJECT_REF>.supabase.co/storage/v1/object/convenios-pdf/{{ $json.body.codigo_regcon }}.pdf",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "sendBody": true,
-        "contentType": "binaryData",
-        "inputDataFieldName": "pdf_data",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [2064, 1872],
-      "id": "97d81dfe-51fd-45c0-9434-4cea768e9629",
-      "name": "HTTP Supabase storage PDF",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "GwkVJeVtr9euv3xH",
-          "name": "Header Auth account"
-        },
-        "supabaseApi": {
-          "id": "cS40YajdgVg0YWNA",
-          "name": "Supabase account 2"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "url": "={{ $json.body.pdf_url }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "file",
-              "outputPropertyName": "pdf_data"
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [1824, 1712],
-      "id": "55f01f05-fd54-443b-ae7c-943523d371e1",
-      "name": "HTTP PDF Request"
-    },
-    {
-      "parameters": {
-        "amount": 90
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [2288, 1536],
-      "id": "c4bb7c5a-70b0-4d4b-b74c-4e42a7772972",
-      "name": "Wait",
-      "webhookId": "e7907ffd-20a4-42e8-9fdf-ec94c7eeb960"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.cloud.llamaindex.ai/api/parsing/upload",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "contentType": "multipart-form-data",
-        "bodyParameters": {
-          "parameters": [
-            {
-              "parameterType": "formBinaryData",
-              "name": "file",
-              "inputDataFieldName": "pdf_data"
-            },
-            {
-              "name": "parsing_instruction",
-              "value": "Extrae el texto completo preservando la estructura de artículos y secciones"
-            },
-            {
-              "name": "result_type",
-              "value": "markdown"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [2064, 1536],
-      "id": "ee67ca6d-c931-43e2-92d7-dec798c89d38",
-      "name": "HTTP LlamaParse PDF",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "bBJGVxiIZYlbr6xq",
-          "name": "LlamaParse"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "url": "=https://api.cloud.llamaindex.ai/api/parsing/job/{{ $('HTTP LlamaParse PDF').first().json.id }}",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [2544, 1536],
-      "id": "0c162849-16a6-4a69-90e3-e63172533529",
-      "name": "Check LlamaParse Status",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "bBJGVxiIZYlbr6xq",
-          "name": "LlamaParse"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "472c8a61-1fd7-4333-bfbc-002ad25210f1",
-              "leftValue": "={{ $json.status }}",
-              "rightValue": "SUCCESS",
-              "operator": {
-                "type": "string",
-                "operation": "equals",
-                "name": "filter.operator.equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [2784, 1536],
-      "id": "f7c37453-dd51-4291-bcaa-3394d358dd4b",
-      "name": "Is Processing Complete?"
-    },
-    {
-      "parameters": {
-        "url": "=https://api.cloud.llamaindex.ai/api/parsing/job/{{ $('Check LlamaParse Status').first().json.id }}/result/markdown",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [2992, 1408],
-      "id": "de9b5a62-8384-454f-be3c-0808eea49af1",
-      "name": "Get Markdown Result",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "bBJGVxiIZYlbr6xq",
-          "name": "LlamaParse"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "errorMessage": "=LlamaParse job no completado. Status: {{ $('Check LlamaParse Status').first().json.status }}"
-      },
-      "type": "n8n-nodes-base.stopAndError",
-      "typeVersion": 1,
-      "position": [2992, 1648],
-      "id": "2e558b60-deb9-4b4a-b7e1-8f3e1944e212",
-      "name": "Stop and Error"
-    },
-    {
-      "parameters": {
         "jsCode": "// Obtener la respuesta de LlamaParse\nconst llamaParseResult = $input.first().json;\n\n// Extraer el markdown\nconst markdown = llamaParseResult.markdown || \n                 llamaParseResult.text;\n\n// Validar que tenemos contenido\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No se pudo extraer el markdown de LlamaParse. Respuesta vacía.');\n}\n\n// Limpiar y normalizar el markdown\nconst cleanMarkdown = markdown\n  .replace(/\\n{3,}/g, '\\n\\n')      // Normalizar múltiples saltos\n  .replace(/\\r\\n/g, '\\n')          // Normalizar line endings\n  .trim();\n\n// Obtener datos del webhook (están dentro de body)\nconst webhookData = $('Webhook').first().json.body;\n\n// Retornar datos estructurados\nreturn {\n  json: {\n    markdown_completo: cleanMarkdown,\n    longitud: cleanMarkdown.length,\n    convenio_id: webhookData.codigo_regcon,\n    nombre: webhookData.nombre,\n    // Campos opcionales (pueden no venir en el payload)\n    ambito: webhookData.ambito || null,\n    fecha_vigencia: webhookData.fecha_vigencia || null\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3232, 1408],
-      "id": "8f2cf5e1-b173-4916-acb9-f91816e46443",
+      "position": [3696, 1152],
+      "id": "6f809315-5381-4776-ac2b-3bbfc1ec33a5",
       "name": "Extract and clean md"
     },
     {
       "parameters": {
-        "jsCode": "// ============================================\n// CONFIGURACIÓN\n// ============================================\nconst TARGET_TOKENS = 450;      // Target ideal\nconst MAX_TOKENS = 600;         // Límite duro\nconst MIN_TOKENS = 100;         // Mínimo para chunk válido\nconst OVERLAP_CHARS = 200;      // ~50 tokens de overlap\n\n// ============================================\n// FUNCIONES AUXILIARES\n// ============================================\n\n/**\n * Estimación de tokens (4 chars ≈ 1 token para español)\n * Más preciso que dividir por 4 para textos legales\n */\nfunction estimateTokens(text) {\n  if (!text) return 0;\n  // Español tiene palabras más largas que inglés\n  const words = text.split(/\\s+/).length;\n  const chars = text.length;\n  // Fórmula híbrida: promedio entre chars/4 y words*1.3\n  return Math.round((chars / 4 + words * 1.3) / 2);\n}\n\n/**\n * Detectar tipo de chunk basado en contenido\n */\nfunction detectChunkType(content) {\n  // Tabla salarial\n  if (/\\|.*\\|/.test(content) && /salario|retribuc|sueldo|euro|€/i.test(content)) {\n    return 'tabla_salarial';\n  }\n  // Tabla genérica\n  if (/\\|.*\\|/.test(content)) {\n    return 'tabla';\n  }\n  // Definiciones\n  if (/se entiende por|a los efectos|definición|concepto/i.test(content)) {\n    return 'definicion';\n  }\n  // Procedimientos\n  if (/procedimiento|solicitud|plazo de|días (hábiles|naturales)/i.test(content)) {\n    return 'procedimiento';\n  }\n  // Jornada laboral\n  if (/jornada|horario|descanso|vacaciones|permiso/i.test(content)) {\n    return 'jornada';\n  }\n  // Sanciones\n  if (/falta (leve|grave|muy grave)|sanción|despido/i.test(content)) {\n    return 'sanciones';\n  }\n  return 'normativa';\n}\n\n/**\n * Extraer sección (Capítulo) del contenido\n */\nfunction extractSeccion(content, previousSeccion) {\n  const match = content.match(/^##\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  return previousSeccion || null;\n}\n\n/**\n * Extraer artículo del contenido\n */\nfunction extractArticulo(content, previousArticulo) {\n  const match = content.match(/^###\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  // También buscar \"Artículo X.\" en el texto\n  const artMatch = content.match(/Artículo\\s+\\d+[º°]?\\.?\\s*[–\\-:]?\\s*([^\\n]+)/i);\n  if (artMatch) return artMatch[0].trim();\n  return previousArticulo || null;\n}\n\n/**\n * Detectar si el chunk contiene una tabla\n */\nfunction hasTable(content) {\n  // Buscar patrón de tabla markdown: | col1 | col2 |\n  const tablePattern = /\\|[^\\n]+\\|[\\s\\S]*?\\|[^\\n]+\\|/;\n  return tablePattern.test(content);\n}\n\n/**\n * Extraer tabla completa del markdown\n */\nfunction extractTable(content, startIndex) {\n  const lines = content.substring(startIndex).split('\\n');\n  const tableLines = [];\n  let inTable = false;\n\n  for (const line of lines) {\n    if (line.includes('|')) {\n      tableLines.push(line);\n      inTable = true;\n    } else if (inTable && line.trim() === '') {\n      // Fin de la tabla\n      break;\n    } else if (inTable) {\n      // Línea sin | después de estar en tabla = fin\n      break;\n    }\n  }\n\n  return tableLines.join('\\n');\n}\n\n/**\n * Dividir markdown preservando estructura\n */\nfunction splitByStructure(markdown) {\n  const sections = [];\n\n  // Regex para capturar secciones completas\n  // Prioridad: ## > ### > párrafos\n  const sectionRegex = /^(#{2,3}\\s+[^\\n]+)([\\s\\S]*?)(?=^#{2,3}\\s+|\\z)/gm;\n\n  let match;\n  let lastIndex = 0;\n\n  while ((match = sectionRegex.exec(markdown)) !== null) {\n    // Texto antes de la sección (si existe)\n    if (match.index > lastIndex) {\n      const beforeText = markdown.substring(lastIndex, match.index).trim();\n      if (beforeText) {\n        sections.push({\n          type: 'text',\n          content: beforeText\n        });\n      }\n    }\n\n    // La sección completa\n    sections.push({\n      type: 'section',\n      header: match[1],\n      content: match[0].trim()\n    });\n\n    lastIndex = match.index + match[0].length;\n  }\n\n  // Texto restante\n  if (lastIndex < markdown.length) {\n    const remaining = markdown.substring(lastIndex).trim();\n    if (remaining) {\n      sections.push({\n        type: 'text',\n        content: remaining\n      });\n    }\n  }\n\n  // Si no se encontraron secciones, dividir por párrafos\n  if (sections.length === 0) {\n    return markdown.split(/\\n\\n+/).filter(p => p.trim()).map(p => ({\n      type: 'text',\n      content: p.trim()\n    }));\n  }\n\n  return sections;\n}\n\n// ============================================\n// FUNCIÓN PRINCIPAL DE CHUNKING\n// ============================================\n\nfunction chunkMarkdown(markdown, convenioId, convenioNombre) {\n  const chunks = [];\n  let chunkNumber = 0;\n  let currentSeccion = null;\n  let currentArticulo = null;\n\n  // Paso 1: Dividir por estructura\n  const sections = splitByStructure(markdown);\n\n  let currentChunk = '';\n  let currentTokens = 0;\n\n  for (const section of sections) {\n    const sectionContent = section.content || section;\n    const sectionTokens = estimateTokens(sectionContent);\n\n    // Actualizar tracking de sección/artículo\n    const tempSeccion = extractSeccion(sectionContent, currentSeccion);\n    if (tempSeccion) currentSeccion = tempSeccion;\n    \n    const tempArticulo = extractArticulo(sectionContent, currentArticulo);\n    if (tempArticulo) currentArticulo = tempArticulo;\n\n    // CASO 1: Sección tiene tabla → chunk independiente (permitir hasta MAX_TOKENS * 1.5)\n    if (hasTable(sectionContent)) {\n      // Guardar chunk anterior si existe\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n        currentChunk = '';\n        currentTokens = 0;\n      }\n\n      // Tabla como chunk independiente\n      if (sectionTokens <= MAX_TOKENS * 1.5) {\n        chunks.push(createChunkObject(\n          sectionContent,\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo,\n          true // isTable\n        ));\n      } else {\n        // Tabla muy grande: dividir por filas\n        const lines = sectionContent.split('\\n');\n        let tableChunk = '';\n        let tableTokens = 0;\n\n        for (const line of lines) {\n          const lineTokens = estimateTokens(line);\n          \n          if (tableTokens + lineTokens > MAX_TOKENS && tableChunk) {\n            chunks.push(createChunkObject(\n              tableChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo,\n              true\n            ));\n            tableChunk = line + '\\n';\n            tableTokens = lineTokens;\n          } else {\n            tableChunk += line + '\\n';\n            tableTokens += lineTokens;\n          }\n        }\n\n        // Último chunk de tabla\n        if (tableChunk.trim()) {\n          chunks.push(createChunkObject(\n            tableChunk.trim(),\n            ++chunkNumber,\n            convenioId,\n            convenioNombre,\n            currentSeccion,\n            currentArticulo,\n            true\n          ));\n        }\n      }\n      continue;\n    }\n\n    // CASO 2: Añadir a chunk actual si cabe\n    if (currentTokens + sectionTokens <= TARGET_TOKENS) {\n      currentChunk += (currentChunk ? '\\n\\n' : '') + sectionContent;\n      currentTokens += sectionTokens;\n      continue;\n    }\n\n    // CASO 3: Sección completa como nuevo chunk (si es razonable)\n    if (sectionTokens >= MIN_TOKENS && sectionTokens <= MAX_TOKENS) {\n      // Guardar chunk anterior\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n      }\n\n      // Nueva sección como chunk\n      chunks.push(createChunkObject(\n        sectionContent,\n        ++chunkNumber,\n        convenioId,\n        convenioNombre,\n        currentSeccion,\n        currentArticulo\n      ));\n\n      currentChunk = '';\n      currentTokens = 0;\n      continue;\n    }\n\n    // CASO 4: Sección muy grande → dividir por párrafos\n    if (sectionTokens > MAX_TOKENS) {\n      // Guardar chunk anterior\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n        currentChunk = '';\n        currentTokens = 0;\n      }\n\n      // Dividir sección en párrafos\n      const paragraphs = sectionContent.split(/\\n\\n+/);\n      \n      for (const para of paragraphs) {\n        const paraTokens = estimateTokens(para);\n\n        if (currentTokens + paraTokens <= TARGET_TOKENS) {\n          currentChunk += (currentChunk ? '\\n\\n' : '') + para;\n          currentTokens += paraTokens;\n        } else {\n          // Guardar chunk actual\n          if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n            chunks.push(createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo\n            ));\n          }\n\n          // Empezar nuevo chunk con overlap\n          const overlap = getOverlap(currentChunk);\n          currentChunk = overlap + (overlap ? '\\n\\n' : '') + para;\n          currentTokens = estimateTokens(currentChunk);\n        }\n      }\n    }\n  }\n\n  // Guardar último chunk\n  if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n    chunks.push(createChunkObject(\n      currentChunk.trim(),\n      ++chunkNumber,\n      convenioId,\n      convenioNombre,\n      currentSeccion,\n      currentArticulo\n    ));\n  }\n\n  // Actualizar total_chunks en todos\n  const totalChunks = chunks.length;\n  chunks.forEach(c => c.metadata.total_chunks = totalChunks);\n\n  return chunks;\n}\n\n/**\n * Crear objeto chunk con metadata\n */\nfunction createChunkObject(content, number, convenioId, convenioNombre, seccion, articulo, isTable = false) {\n  const tokens = estimateTokens(content);\n  const tipo = isTable ? 'tabla_salarial' : detectChunkType(content);\n\n  return {\n    contenido: content,\n    metadata: {\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      numero_chunk: number,\n      tokens: tokens,\n      seccion: seccion,\n      articulo: articulo,\n      tipo: tipo,\n      tiene_tabla: isTable,\n      total_chunks: 0 // Se actualiza después\n    }\n  };\n}\n\n/**\n * Obtener overlap del final del chunk anterior\n */\nfunction getOverlap(text) {\n  if (!text || text.length < OVERLAP_CHARS) return '';\n\n  // Buscar un punto de corte natural (fin de oración)\n  const endPortion = text.substring(text.length - OVERLAP_CHARS * 1.5);\n  const sentenceEnd = endPortion.lastIndexOf('. ');\n\n  if (sentenceEnd > 0) {\n    return endPortion.substring(sentenceEnd + 2);\n  }\n\n  // Si no hay punto, cortar en espacio\n  const spaceIndex = endPortion.indexOf(' ');\n  if (spaceIndex > 0) {\n    return endPortion.substring(spaceIndex + 1);\n  }\n\n  return endPortion;\n}\n\n// ============================================\n// EJECUCIÓN PRINCIPAL\n// ============================================\n\n// Obtener datos del convenio guardado (viene del nodo anterior)\nconst inputData = $input.first().json;\n\n// La respuesta de Supabase es un array con el convenio insertado\nconst convenioData = Array.isArray(inputData) ? inputData[0] : inputData;\n\nif (!convenioData || !convenioData.id) {\n  throw new Error('No se pudo obtener el ID del convenio guardado. Data: ' + JSON.stringify(inputData));\n}\n\nconst convenioId = convenioData.id; // UUID real del convenio\nconst convenioNombre = convenioData.nombre;\nconst markdown = convenioData.markdown_completo || '';\n\n// Validar input\nif (!markdown || markdown.length < 100) {\n  throw new Error('Markdown vacío o muy corto para procesar. Longitud: ' + markdown.length);\n}\n\n// Ejecutar chunking\nconst chunks = chunkMarkdown(markdown, convenioId, convenioNombre);\n\n// Estadísticas\nconst stats = {\n  total_chunks: chunks.length,\n  avg_tokens: Math.round(chunks.reduce((sum, c) => sum + c.metadata.tokens, 0) / chunks.length),\n  min_tokens: Math.min(...chunks.map(c => c.metadata.tokens)),\n  max_tokens: Math.max(...chunks.map(c => c.metadata.tokens)),\n  con_tablas: chunks.filter(c => c.metadata.tiene_tabla).length,\n  tipos: {}\n};\n\n// Contar tipos\nchunks.forEach(c => {\n  stats.tipos[c.metadata.tipo] = (stats.tipos[c.metadata.tipo] || 0) + 1;\n});\n\n// Retornar chunks como items individuales para procesamiento en lote\nreturn chunks.map((chunk, index) => ({\n  json: {\n    contenido: chunk.contenido,\n    convenio_id: chunk.metadata.convenio_id,\n    metadata: chunk.metadata,\n    // Añadir stats solo al primer item para referencia\n    ...(index === 0 ? { chunking_stats: stats } : {})\n  }\n}));"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [3712, 1408],
-      "id": "ef669ca5-6f62-4290-8529-bef3a1977e3e",
-      "name": "Chunk Markdown"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Obtener todos los chunks generados\nconst chunks = $input.all();\n\n// Preparar array para pasar al siguiente nodo (Generate Embeddings)\nconst allChunks = chunks.map(item => ({\n  convenio_id: item.json.convenio_id,\n  contenido: item.json.contenido,\n  metadata: item.json.metadata\n}));\n\n// Obtener stats del primer chunk (si existe)\nconst stats = chunks[0]?.json?.chunking_stats || {\n  total_chunks: chunks.length,\n  avg_tokens: 0,\n  min_tokens: 0,\n  max_tokens: 0\n};\n\nreturn [{\n  json: {\n    chunks: allChunks,\n    total_chunks: allChunks.length,\n    stats: stats,\n    convenio_id: chunks[0]?.json?.convenio_id\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [3952, 1408],
-      "id": "6e278afc-e17d-4fa8-ad6a-a50eca0d7be3",
-      "name": "Prepare Chunks for Insert"
-    },
-    {
-      "parameters": {
-        "jsCode": "// ============================================\n// NODO: Prepare Batch for OpenAI\n// TIPO: Code (JavaScript)\n// FASE: I1.8\n// POSICIÓN: Después de \"Prepare Chunks for Insert\"\n// ============================================\n\n// Obtener datos del input\nconst inputData = $input.first().json;\nconst chunks = inputData.chunks;\n\n// Validar que hay chunks\nif (!chunks || chunks.length === 0) {\n  throw new Error('No hay chunks para generar embeddings');\n}\n\n// Preparar textos para embedding\nconst textos = chunks.map(c => c.contenido);\n\nconsole.log(`Preparando ${chunks.length} chunks para OpenAI Embeddings API...`);\n\n// Retornar payload para OpenAI y chunks originales\nreturn [{\n  json: {\n    // Payload para OpenAI (será usado por el nodo HTTP siguiente)\n    input: textos,\n    model: 'text-embedding-3-small',\n    encoding_format: 'float',\n\n    // Datos adicionales para pasar al siguiente nodo\n    _chunks_original: chunks,\n    _total_chunks: chunks.length,\n    _convenio_id: inputData.convenio_id,\n    _stats: inputData.stats\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [4192, 1408],
-      "id": "c69f867d-5ad5-4534-ac8d-a7f019ff74ca",
-      "name": "Prepare Batch for OpenAI",
-      "notes": "NUEVO I1.8: Prepara payload para OpenAI Embeddings API"
-    },
-    {
-      "parameters": {
         "method": "POST",
-        "url": "https://api.openai.com/v1/embeddings",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "openAiApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json }}",
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [4432, 1408],
-      "id": "57c6b4d4-ba27-42fb-9a58-c5d8701822b6",
-      "name": "HTTP Request OpenAI Embeddings",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "kLWX0wJHEfXJ0Prh",
-          "name": "Header Auth account 2"
-        },
-        "openAiApi": {
-          "id": "PjBn2o5h4Qgt1Q6b",
-          "name": "OpenAi account"
-        }
-      },
-      "notes": "NUEVO I1.8: Llama a OpenAI para generar embeddings\n\n⚠️ IMPORTANTE: Debes añadir la credencial 'Header Auth' con:\n- Header Name: Authorization\n- Header Value: Bearer TU_API_KEY_AQUI"
-    },
-    {
-      "parameters": {
-        "jsCode": "// ============================================\n// NODO: Merge Embeddings with Chunks\n// TIPO: Code (JavaScript)\n// FASE: I1.8\n// POSICIÓN: Después de \"HTTP Request OpenAI Embeddings\"\n// ============================================\n\n// Obtener respuesta de OpenAI del nodo HTTP anterior\nconst openAIResponse = $input.first().json;\n\n// Obtener chunks originales que pasamos desde \"Prepare Batch for OpenAI\"\nconst prepareNode = $('Prepare Batch for OpenAI').first().json;\nconst chunks = prepareNode._chunks_original;\nconst convenioId = prepareNode._convenio_id;\n\n// Validar que OpenAI retornó los embeddings\nif (!openAIResponse.data || !Array.isArray(openAIResponse.data)) {\n  throw new Error('Respuesta inválida de OpenAI API: falta campo \"data\"');\n}\n\nconst embeddings = openAIResponse.data;\n\n// Validar que la cantidad coincide\nif (embeddings.length !== chunks.length) {\n  throw new Error(\n    `Mismatch en embeddings: ${chunks.length} chunks pero ${embeddings.length} embeddings recibidos`\n  );\n}\n\n// Combinar chunks con sus embeddings\nconst chunksWithEmbeddings = chunks.map((chunk, index) => ({\n  ...chunk,\n  embedding: embeddings[index].embedding\n}));\n\n// Validar que los embeddings tienen la dimensión correcta (1536 para text-embedding-3-small)\nconst firstEmbedding = chunksWithEmbeddings[0].embedding;\nif (!firstEmbedding || firstEmbedding.length !== 1536) {\n  throw new Error(\n    `Embedding dimension incorrecta: esperado 1536, recibido ${firstEmbedding?.length || 0}`\n  );\n}\n\n// Calcular estadísticas de uso\nconst usage = openAIResponse.usage || {};\nconst embeddingUsage = {\n  total_tokens: usage.total_tokens || 0,\n  prompt_tokens: usage.prompt_tokens || 0,\n  chunks_processed: chunks.length,\n  model: openAIResponse.model || 'text-embedding-3-small',\n  estimated_cost_usd: ((usage.total_tokens || 0) / 1000000) * 0.02 // $0.02 por 1M tokens\n};\n\nconsole.log(`✓ Embeddings generados exitosamente:`);\nconsole.log(`  - Chunks procesados: ${embeddingUsage.chunks_processed}`);\nconsole.log(`  - Tokens consumidos: ${embeddingUsage.total_tokens}`);\nconsole.log(`  - Coste estimado: $${embeddingUsage.estimated_cost_usd.toFixed(6)}`);\n\n// Preparar array para insert en Supabase\nconst insertData = chunksWithEmbeddings.map(chunk => ({\n  convenio_id: chunk.convenio_id,\n  contenido: chunk.contenido,\n  chunk_index: chunk.metadata.numero_chunk,\n  metadata: chunk.metadata,\n  embedding: chunk.embedding // IMPORTANTE: Incluir el embedding\n}));\n\nconsole.log(`✓ Preparados ${insertData.length} chunks para inserción en Supabase`);\nconsole.log(`  - Todos los chunks tienen embeddings de dimensión 1536`);\n\nreturn [{\n  json: {\n    chunks: insertData,\n    total_chunks: insertData.length,\n    embedding_usage: embeddingUsage,\n    convenio_id: convenioId\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [4672, 1408],
-      "id": "0b950d33-5331-4fd0-82b2-c06669bb7a5e",
-      "name": "Merge Embeddings with Chunks",
-      "notes": "NUEVO I1.8: Combina embeddings con chunks y valida dimensiones"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://<SUPABASE_PROJECT_REF>.supabase.co/rest/v1/convenio_chunks",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=minimal"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json.chunks) }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [4912, 1408],
-      "id": "b92a0b98-4fd4-4849-a85c-6d9ea433df84",
-      "name": "Bulk Insert Chunks",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "GwkVJeVtr9euv3xH",
-          "name": "Header Auth account"
-        },
-        "supabaseApi": {
-          "id": "17i79gWGYg1gHxjw",
-          "name": "Supabase account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://<SUPABASE_PROJECT_REF>.supabase.co/rest/v1/convenios",
+        "url": "https://kvebuijpjwlgrnfwfdgk.supabase.co/rest/v1/convenios",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
@@ -376,7 +51,7 @@
             },
             {
               "name": "url_pdf",
-              "value": "={{ $('HTTP PDF Request').item.json.body.pdf_url }}"
+              "value": "={{ $('Webhook').first().json.body.pdf_url }}"
             },
             {
               "name": "markdown_completo",
@@ -392,8 +67,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3472, 1408],
-      "id": "9b5a96c3-494e-4aac-859b-8d3d5664f00c",
+      "position": [3936, 1152],
+      "id": "2be6b569-5afe-4c68-a47b-2204e661e0ec",
       "name": "Save md in supabase",
       "retryOnFail": false,
       "notesInFlow": false,
@@ -410,12 +85,406 @@
     },
     {
       "parameters": {
-        "jsCode": "// Obtener datos de los nodos anteriores\nconst convenioData = $('Save md in supabase').first().json;\nconst markdownData = $('Extract and clean md').first().json;\nconst chunksData = $('Merge Embeddings with Chunks').first().json;\n\n// Construir response\nreturn [{\n  json: {\n    status: 'success',\n    message: 'Convenio procesado correctamente con embeddings',\n    data: {\n      convenio_id: convenioData.id,\n      nombre: convenioData.nombre,\n      codigo_regcon: convenioData.codigo_regcon,\n      markdown_length: markdownData.longitud,\n      pdf_url: convenioData.url_pdf,\n      chunks_generados: chunksData.total_chunks,\n      embeddings_generados: chunksData.total_chunks,\n      embedding_usage: chunksData.embedding_usage || {}\n    }\n  }\n}];"
+        "httpMethod": "POST",
+        "path": "ingesta-convenio",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [528, 2592],
+      "id": "7d41e591-b364-40ff-b150-69ad099364fe",
+      "name": "Webhook",
+      "webhookId": "01c36b3d-fb3a-4df1-8577-16f5b82c6e6f"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://kvebuijpjwlgrnfwfdgk.supabase.co/storage/v1/object/convenios-pdf/{{ $('Webhook').first().json.body.codigo_regcon }}.pdf",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "pdf_data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1024, 2592],
+      "id": "2dfc7fc1-a5b3-464d-94a3-fc3f11cec320",
+      "name": "HTTP Supabase storage PDF",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GwkVJeVtr9euv3xH",
+          "name": "Header Auth account"
+        },
+        "supabaseApi": {
+          "id": "cS40YajdgVg0YWNA",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.pdf_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "pdf_data"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [736, 2592],
+      "id": "c662c817-d319-4fb6-b449-a22fc9a174e4",
+      "name": "HTTP PDF Request"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1264, 2864],
+      "id": "3e8087e2-c0e7-4739-93ef-9146c6b80542",
+      "name": "Wait",
+      "webhookId": "e7907ffd-20a4-42e8-9fdf-ec94c7eeb960"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloud.llamaindex.ai/api/parsing/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "pdf_data"
+            },
+            {
+              "name": "parsing_instruction",
+              "value": "Extrae el texto completo preservando la estructura de artículos y secciones"
+            },
+            {
+              "name": "result_type",
+              "value": "markdown"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1024, 2864],
+      "id": "17bdc05f-fb56-4eea-b0c8-159fba53eab9",
+      "name": "HTTP LlamaParse PDF",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bBJGVxiIZYlbr6xq",
+          "name": "LlamaParse"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.llamaindex.ai/api/parsing/job/{{ $('HTTP LlamaParse PDF').first().json.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [1504, 2864],
+      "id": "e14b1df9-aaaa-4fcc-954c-67b5f1044ad0",
+      "name": "Check LlamaParse Status",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bBJGVxiIZYlbr6xq",
+          "name": "LlamaParse"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "472c8a61-1fd7-4333-bfbc-002ad25210f1",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "SUCCESS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "pending-check",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "PENDING",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "processing-check",
+                    "leftValue": "={{ $json.status }}",
+                    "rightValue": "PROCESSING",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [1776, 2848],
+      "id": "26f926aa-a19c-4cdd-b397-999fa24b30ac",
+      "name": "Is Processing Complete?"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.llamaindex.ai/api/parsing/job/{{ $('Check LlamaParse Status').first().json.id }}/result/markdown",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [2048, 2832],
+      "id": "e5d466d7-6b10-4920-ac1a-2fcb639390d1",
+      "name": "Get Markdown Result",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bBJGVxiIZYlbr6xq",
+          "name": "LlamaParse"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Limpiar contador de reintentos cuando el job completa exitosamente\nconst markdownResult = $input.first().json;\n\n// Obtener job ID del nodo de status check\nconst statusCheck = $('Check LlamaParse Status').first();\nif (statusCheck && statusCheck.json && statusCheck.json.id) {\n  const jobId = statusCheck.json.id;\n  \n  // Limpiar contador de este job en static data\n  const staticData = $getWorkflowStaticData('node');\n  if (staticData.llamaparseRetries && staticData.llamaparseRetries[jobId]) {\n    console.log(`Limpiando contador de reintentos para job ${jobId}`);\n    delete staticData.llamaparseRetries[jobId];\n  }\n}\n\n// Pasar los datos sin modificar\nreturn {\n  json: markdownResult\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [4928, 1744],
-      "id": "adfeb919-a25f-41bf-9c4e-bc2d0985fd2b",
+      "position": [2304, 2832],
+      "id": "0f614dd6-74ec-483f-9762-a7363629371d",
+      "name": "Clear Retry Counter"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=LlamaParse job no completado. Status: {{ $('Check LlamaParse Status').first().json.status }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [2032, 3120],
+      "id": "a58ed4c9-bd74-4af8-9392-3e317d4182f5",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Controlar límite de reintentos para LlamaParse polling\nconst MAX_RETRIES = 10;\n\n// Obtener datos actuales del status check\nconst currentData = $input.first().json;\nconst jobId = currentData.id;\n\nif (!jobId) {\n  throw new Error('No se encontró job ID en la respuesta de LlamaParse');\n}\n\n// Obtener workflow static data para almacenamiento persistente\nconst staticData = $getWorkflowStaticData('node');\n\n// Inicializar estructura de contadores si no existe\nif (!staticData.llamaparseRetries) {\n  staticData.llamaparseRetries = {};\n}\n\n// Obtener o inicializar contador para este job\nlet retryCount = staticData.llamaparseRetries[jobId] || 0;\n\n// Incrementar contador\nretryCount++;\nstaticData.llamaparseRetries[jobId] = retryCount;\n\nconsole.log(`Reintento LlamaParse #${retryCount}/${MAX_RETRIES} - Job: ${jobId} - Status: ${currentData.status}`);\n\n// Si excedemos el límite, lanzar error\nif (retryCount > MAX_RETRIES) {\n  // Limpiar contador antes de fallar\n  delete staticData.llamaparseRetries[jobId];\n  \n  throw new Error(\n    `LlamaParse polling excedió el límite de ${MAX_RETRIES} reintentos. ` +\n    `Último status: ${currentData.status}. Job ID: ${jobId}`\n  );\n}\n\n// Pasar los datos sin modificar (el contador está en static data)\nreturn {\n  json: currentData\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1888, 2592],
+      "id": "d71828bd-5b71-430d-ac41-716adebb6966",
+      "name": "Check Retry Limit"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// CONFIGURACIÓN\n// ============================================\nconst TARGET_TOKENS = 450;      // Target ideal\nconst MAX_TOKENS = 600;         // Límite duro\nconst MIN_TOKENS = 100;         // Mínimo para chunk válido\nconst OVERLAP_CHARS = 200;      // ~50 tokens de overlap\n\n// ============================================\n// FUNCIONES AUXILIARES\n// ============================================\n\n/**\n * Estimación de tokens (4 chars ≈ 1 token para español)\n * Más preciso que dividir por 4 para textos legales\n */\nfunction estimateTokens(text) {\n  if (!text) return 0;\n  // Español tiene palabras más largas que inglés\n  const words = text.split(/\\s+/).length;\n  const chars = text.length;\n  // Fórmula híbrida: promedio entre chars/4 y words*1.3\n  return Math.round((chars / 4 + words * 1.3) / 2);\n}\n\n/**\n * Detectar tipo de chunk basado en contenido\n */\nfunction detectChunkType(content) {\n  // Tabla salarial\n  if (/\\|.*\\|/.test(content) && /salario|retribuc|sueldo|euro|€/i.test(content)) {\n    return 'tabla_salarial';\n  }\n  // Tabla genérica\n  if (/\\|.*\\|/.test(content)) {\n    return 'tabla';\n  }\n  // Definiciones\n  if (/se entiende por|a los efectos|definición|concepto/i.test(content)) {\n    return 'definicion';\n  }\n  // Procedimientos\n  if (/procedimiento|solicitud|plazo de|días (hábiles|naturales)/i.test(content)) {\n    return 'procedimiento';\n  }\n  // Jornada laboral\n  if (/jornada|horario|descanso|vacaciones|permiso/i.test(content)) {\n    return 'jornada';\n  }\n  // Sanciones\n  if (/falta (leve|grave|muy grave)|sanción|despido/i.test(content)) {\n    return 'sanciones';\n  }\n  return 'normativa';\n}\n\n/**\n * Extraer sección (Capítulo) del contenido\n */\nfunction extractSeccion(content, previousSeccion) {\n  const match = content.match(/^##\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  return previousSeccion || null;\n}\n\n/**\n * Extraer artículo del contenido\n */\nfunction extractArticulo(content, previousArticulo) {\n  const match = content.match(/^###\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  // También buscar \"Artículo X.\" en el texto\n  const artMatch = content.match(/Artículo\\s+\\d+[º°]?\\.?\\s*[–\\-:]?\\s*([^\\n]+)/i);\n  if (artMatch) return artMatch[0].trim();\n  return previousArticulo || null;\n}\n\n/**\n * Detectar si el chunk contiene una tabla\n */\nfunction hasTable(content) {\n  // Buscar patrón de tabla markdown: | col1 | col2 |\n  const tablePattern = /\\|[^\\n]+\\|[\\s\\S]*?\\|[^\\n]+\\|/;\n  return tablePattern.test(content);\n}\n\n/**\n * Extraer tabla completa del markdown\n */\nfunction extractTable(content, startIndex) {\n  const lines = content.substring(startIndex).split('\\n');\n  const tableLines = [];\n  let inTable = false;\n\n  for (const line of lines) {\n    if (line.includes('|')) {\n      tableLines.push(line);\n      inTable = true;\n    } else if (inTable && line.trim() === '') {\n      // Fin de la tabla\n      break;\n    } else if (inTable) {\n      // Línea sin | después de estar en tabla = fin\n      break;\n    }\n  }\n\n  return tableLines.join('\\n');\n}\n\n/**\n * Dividir markdown preservando estructura\n */\nfunction splitByStructure(markdown) {\n  const sections = [];\n\n  // Regex para capturar secciones completas\n  // Prioridad: ## > ### > párrafos\n  const sectionRegex = /^(#{2,3}\\s+[^\\n]+)([\\s\\S]*?)(?=^#{2,3}\\s+|\\z)/gm;\n\n  let match;\n  let lastIndex = 0;\n\n  while ((match = sectionRegex.exec(markdown)) !== null) {\n    // Texto antes de la sección (si existe)\n    if (match.index > lastIndex) {\n      const beforeText = markdown.substring(lastIndex, match.index).trim();\n      if (beforeText) {\n        sections.push({\n          type: 'text',\n          content: beforeText\n        });\n      }\n    }\n\n    // La sección completa\n    sections.push({\n      type: 'section',\n      header: match[1],\n      content: match[0].trim()\n    });\n\n    lastIndex = match.index + match[0].length;\n  }\n\n  // Texto restante\n  if (lastIndex < markdown.length) {\n    const remaining = markdown.substring(lastIndex).trim();\n    if (remaining) {\n      sections.push({\n        type: 'text',\n        content: remaining\n      });\n    }\n  }\n\n  // Si no se encontraron secciones, dividir por párrafos\n  if (sections.length === 0) {\n    return markdown.split(/\\n\\n+/).filter(p => p.trim()).map(p => ({\n      type: 'text',\n      content: p.trim()\n    }));\n  }\n\n  return sections;\n}\n\n// ============================================\n// FUNCIÓN PRINCIPAL DE CHUNKING\n// ============================================\n\nfunction chunkMarkdown(markdown, convenioId, convenioNombre) {\n  const chunks = [];\n  let chunkNumber = 0;\n  let currentSeccion = null;\n  let currentArticulo = null;\n\n  // Paso 1: Dividir por estructura\n  const sections = splitByStructure(markdown);\n\n  let currentChunk = '';\n  let currentTokens = 0;\n\n  for (const section of sections) {\n    const sectionContent = section.content || section;\n    const sectionTokens = estimateTokens(sectionContent);\n\n    // Actualizar tracking de sección/artículo\n    const tempSeccion = extractSeccion(sectionContent, currentSeccion);\n    if (tempSeccion) currentSeccion = tempSeccion;\n    \n    const tempArticulo = extractArticulo(sectionContent, currentArticulo);\n    if (tempArticulo) currentArticulo = tempArticulo;\n\n    // CASO 1: Sección tiene tabla → chunk independiente (permitir hasta MAX_TOKENS * 1.5)\n    if (hasTable(sectionContent)) {\n      // Guardar chunk anterior si existe\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n        currentChunk = '';\n        currentTokens = 0;\n      }\n\n      // Tabla como chunk independiente\n      if (sectionTokens <= MAX_TOKENS * 1.5) {\n        chunks.push(createChunkObject(\n          sectionContent,\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo,\n          true // isTable\n        ));\n      } else {\n        // Tabla muy grande: dividir por filas\n        const lines = sectionContent.split('\\n');\n        let tableChunk = '';\n        let tableTokens = 0;\n\n        for (const line of lines) {\n          const lineTokens = estimateTokens(line);\n          \n          if (tableTokens + lineTokens > MAX_TOKENS && tableChunk) {\n            chunks.push(createChunkObject(\n              tableChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo,\n              true\n            ));\n            tableChunk = line + '\\n';\n            tableTokens = lineTokens;\n          } else {\n            tableChunk += line + '\\n';\n            tableTokens += lineTokens;\n          }\n        }\n\n        // Último chunk de tabla\n        if (tableChunk.trim()) {\n          chunks.push(createChunkObject(\n            tableChunk.trim(),\n            ++chunkNumber,\n            convenioId,\n            convenioNombre,\n            currentSeccion,\n            currentArticulo,\n            true\n          ));\n        }\n      }\n      continue;\n    }\n\n    // CASO 2: Añadir a chunk actual si cabe\n    if (currentTokens + sectionTokens <= TARGET_TOKENS) {\n      currentChunk += (currentChunk ? '\\n\\n' : '') + sectionContent;\n      currentTokens += sectionTokens;\n      continue;\n    }\n\n    // CASO 3: Sección completa como nuevo chunk (si es razonable)\n    if (sectionTokens >= MIN_TOKENS && sectionTokens <= MAX_TOKENS) {\n      // Guardar chunk anterior\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n      }\n\n      // Nueva sección como chunk\n      chunks.push(createChunkObject(\n        sectionContent,\n        ++chunkNumber,\n        convenioId,\n        convenioNombre,\n        currentSeccion,\n        currentArticulo\n      ));\n\n      currentChunk = '';\n      currentTokens = 0;\n      continue;\n    }\n\n    // CASO 4: Sección muy grande → dividir por párrafos\n    if (sectionTokens > MAX_TOKENS) {\n      // Guardar chunk anterior\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n        currentChunk = '';\n        currentTokens = 0;\n      }\n\n      // Dividir sección en párrafos\n      const paragraphs = sectionContent.split(/\\n\\n+/);\n      \n      for (const para of paragraphs) {\n        const paraTokens = estimateTokens(para);\n\n        if (currentTokens + paraTokens <= TARGET_TOKENS) {\n          currentChunk += (currentChunk ? '\\n\\n' : '') + para;\n          currentTokens += paraTokens;\n        } else {\n          // Guardar chunk actual\n          if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n            chunks.push(createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo\n            ));\n          }\n\n          // Empezar nuevo chunk con overlap\n          const overlap = getOverlap(currentChunk);\n          currentChunk = overlap + (overlap ? '\\n\\n' : '') + para;\n          currentTokens = estimateTokens(currentChunk);\n        }\n      }\n    }\n  }\n\n  // Guardar último chunk\n  if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n    chunks.push(createChunkObject(\n      currentChunk.trim(),\n      ++chunkNumber,\n      convenioId,\n      convenioNombre,\n      currentSeccion,\n      currentArticulo\n    ));\n  }\n\n  // Actualizar total_chunks en todos\n  const totalChunks = chunks.length;\n  chunks.forEach(c => c.metadata.total_chunks = totalChunks);\n\n  return chunks;\n}\n\n/**\n * Crear objeto chunk con metadata\n */\nfunction createChunkObject(content, number, convenioId, convenioNombre, seccion, articulo, isTable = false) {\n  const tokens = estimateTokens(content);\n  const tipo = isTable ? 'tabla_salarial' : detectChunkType(content);\n\n  return {\n    contenido: content,\n    metadata: {\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      numero_chunk: number,\n      tokens: tokens,\n      seccion: seccion,\n      articulo: articulo,\n      tipo: tipo,\n      tiene_tabla: isTable,\n      total_chunks: 0 // Se actualiza después\n    }\n  };\n}\n\n/**\n * Obtener overlap del final del chunk anterior\n */\nfunction getOverlap(text) {\n  if (!text || text.length < OVERLAP_CHARS) return '';\n\n  // Buscar un punto de corte natural (fin de oración)\n  const endPortion = text.substring(text.length - OVERLAP_CHARS * 1.5);\n  const sentenceEnd = endPortion.lastIndexOf('. ');\n\n  if (sentenceEnd > 0) {\n    return endPortion.substring(sentenceEnd + 2);\n  }\n\n  // Si no hay punto, cortar en espacio\n  const spaceIndex = endPortion.indexOf(' ');\n  if (spaceIndex > 0) {\n    return endPortion.substring(spaceIndex + 1);\n  }\n\n  return endPortion;\n}\n\n// ============================================\n// EJECUCIÓN PRINCIPAL\n// ============================================\n\n// Obtener datos del convenio guardado (viene del nodo anterior)\nconst inputData = $input.first().json;\n\n// La respuesta de Supabase es un array con el convenio insertado\nconst convenioData = Array.isArray(inputData) ? inputData[0] : inputData;\n\nif (!convenioData || !convenioData.id) {\n  throw new Error('No se pudo obtener el ID del convenio guardado. Data: ' + JSON.stringify(inputData));\n}\n\nconst convenioId = convenioData.id; // UUID real del convenio\nconst convenioNombre = convenioData.nombre;\nconst markdown = convenioData.markdown_completo || '';\n\n// Validar input\nif (!markdown || markdown.length < 100) {\n  throw new Error('Markdown vacío o muy corto para procesar. Longitud: ' + markdown.length);\n}\n\n// Ejecutar chunking\nconst chunks = chunkMarkdown(markdown, convenioId, convenioNombre);\n\n// Estadísticas\nconst stats = {\n  total_chunks: chunks.length,\n  avg_tokens: Math.round(chunks.reduce((sum, c) => sum + c.metadata.tokens, 0) / chunks.length),\n  min_tokens: Math.min(...chunks.map(c => c.metadata.tokens)),\n  max_tokens: Math.max(...chunks.map(c => c.metadata.tokens)),\n  con_tablas: chunks.filter(c => c.metadata.tiene_tabla).length,\n  tipos: {}\n};\n\n// Contar tipos\nchunks.forEach(c => {\n  stats.tipos[c.metadata.tipo] = (stats.tipos[c.metadata.tipo] || 0) + 1;\n});\n\n// Retornar chunks como items individuales para procesamiento en lote\nreturn chunks.map((chunk, index) => ({\n  json: {\n    contenido: chunk.contenido,\n    convenio_id: chunk.metadata.convenio_id,\n    metadata: chunk.metadata,\n    // Añadir stats solo al primer item para referencia\n    ...(index === 0 ? { chunking_stats: stats } : {})\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3200, 2832],
+      "id": "d658fb62-0e22-4916-9959-4d518e027fb8",
+      "name": "Chunk Markdown"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener todos los chunks generados\nconst chunks = $input.all();\n\n// Preparar array para pasar al siguiente nodo (Generate Embeddings)\nconst allChunks = chunks.map(item => ({\n  convenio_id: item.json.convenio_id,\n  contenido: item.json.contenido,\n  metadata: item.json.metadata\n}));\n\n// Obtener stats del primer chunk (si existe)\nconst stats = chunks[0]?.json?.chunking_stats || {\n  total_chunks: chunks.length,\n  avg_tokens: 0,\n  min_tokens: 0,\n  max_tokens: 0\n};\n\nreturn [{\n  json: {\n    chunks: allChunks,\n    total_chunks: allChunks.length,\n    stats: stats,\n    convenio_id: chunks[0]?.json?.convenio_id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3456, 2832],
+      "id": "c661d21b-ce80-464c-8d49-9f0845d4cc5d",
+      "name": "Prepare Chunks for Insert"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Prepare Batch for OpenAI\n// TIPO: Code (JavaScript)\n// FASE: I1.8\n// POSICIÓN: Después de \"Prepare Chunks for Insert\"\n// ============================================\n\n// Obtener datos del input\nconst inputData = $input.first().json;\nconst chunks = inputData.chunks;\n\n// Validar que hay chunks\nif (!chunks || chunks.length === 0) {\n  throw new Error('No hay chunks para generar embeddings');\n}\n\n// Preparar textos para embedding\nconst textos = chunks.map(c => c.contenido);\n\nconsole.log(`Preparando ${chunks.length} chunks para OpenAI Embeddings API...`);\n\n// Retornar payload separado para OpenAI y metadata interna\nreturn [{\n  json: {\n    // Payload limpio para OpenAI (solo campos requeridos por la API)\n    openai_payload: {\n      input: textos,\n      model: 'text-embedding-3-small',\n      encoding_format: 'float'\n    },\n\n    // Metadatos internos (NO se envían a OpenAI)\n    _chunks_original: chunks,\n    _total_chunks: chunks.length,\n    _convenio_id: inputData.convenio_id,\n    _stats: inputData.stats\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3696, 2832],
+      "id": "89448c21-fefd-4dae-b87a-49d41c37fc3b",
+      "name": "Prepare Batch for OpenAI",
+      "notes": "NUEVO I1.8: Prepara payload para OpenAI Embeddings API"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.openai_payload }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [3936, 2832],
+      "id": "1d20288a-0fbb-4cf3-ad71-f0501e10509e",
+      "name": "HTTP Request OpenAI Embeddings",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "kLWX0wJHEfXJ0Prh",
+          "name": "Header Auth account 2"
+        },
+        "openAiApi": {
+          "id": "PjBn2o5h4Qgt1Q6b",
+          "name": "OpenAi account"
+        }
+      },
+      "notes": "NUEVO I1.8: Llama a OpenAI para generar embeddings\n\n⚠️ IMPORTANTE: Debes añadir la credencial 'Header Auth' con:\n- Header Name: Authorization\n- Header Value: Bearer TU_API_KEY_AQUI"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Merge Embeddings with Chunks\n// TIPO: Code (JavaScript)\n// FASE: I1.8\n// POSICIÓN: Después de \"HTTP Request OpenAI Embeddings\"\n// ============================================\n\n// Obtener respuesta de OpenAI del nodo HTTP anterior\nconst inputItem = $input.first();\nif (!inputItem) {\n  throw new Error('No se recibió respuesta del nodo HTTP de OpenAI');\n}\nconst openAIResponse = inputItem.json;\n\n// Obtener chunks originales que pasamos desde \"Prepare Batch for OpenAI\"\nconst prepareNodeItem = $('Prepare Batch for OpenAI').first();\nif (!prepareNodeItem) {\n  throw new Error(\n    'No se encontraron datos del nodo \"Prepare Batch for OpenAI\"'\n  );\n}\nconst prepareNode = prepareNodeItem.json;\nconst chunks = prepareNode._chunks_original;\nconst convenioId = prepareNode._convenio_id;\n\nif (!chunks || !Array.isArray(chunks)) {\n  throw new Error('Chunks originales no encontrados o formato inválido');\n}\n\n// Validar que OpenAI retornó los embeddings\nif (!openAIResponse.data || !Array.isArray(openAIResponse.data)) {\n  throw new Error('Respuesta inválida de OpenAI API: falta campo \"data\"');\n}\n\nconst embeddings = openAIResponse.data;\n\n// Validar que hay chunks para procesar\nif (!chunks || chunks.length === 0) {\n  throw new Error('No hay chunks para combinar con embeddings');\n}\n\n// Validar que la cantidad coincide\nif (embeddings.length !== chunks.length) {\n  throw new Error(\n    `Mismatch en embeddings: ${chunks.length} chunks pero ${embeddings.length} embeddings recibidos`\n  );\n}\n\n// Combinar chunks con sus embeddings (defensivamente)\nconst chunksWithEmbeddings = chunks.map((chunk, index) => ({\n  ...chunk,\n  embedding: (embeddings[index] && embeddings[index].embedding) || null\n}));\n\n// Validar que al menos un embedding tiene la dimensión correcta (1536 para text-embedding-3-small)\nconst firstNonEmptyEmbedding = chunksWithEmbeddings.find(c =>\n  Array.isArray(c.embedding)\n);\n\nif (!firstNonEmptyEmbedding) {\n  throw new Error(\n    'No se encontraron embeddings válidos. Todos los chunks tienen embeddings nulos o indefinidos.'\n  );\n}\n\nif (firstNonEmptyEmbedding.embedding.length !== 1536) {\n  throw new Error(\n    `Embedding dimension incorrecta: esperado 1536, recibido ${firstNonEmptyEmbedding.embedding.length}`\n  );\n}\n\n// Advertir si hay chunks sin embeddings\nconst chunksWithoutEmbeddings = chunksWithEmbeddings.filter(\n  c => !Array.isArray(c.embedding)\n);\nif (chunksWithoutEmbeddings.length > 0) {\n  console.warn(\n    `⚠️ ${chunksWithoutEmbeddings.length} chunks sin embeddings válidos`\n  );\n}\n\n// Calcular estadísticas de uso\nconst usage = openAIResponse.usage || {};\nconst embeddingUsage = {\n  total_tokens: usage.total_tokens || 0,\n  prompt_tokens: usage.prompt_tokens || 0,\n  chunks_processed: chunks.length,\n  model: openAIResponse.model || 'text-embedding-3-small',\n  estimated_cost_usd: ((usage.total_tokens || 0) / 1000000) * 0.02 // $0.02 por 1M tokens\n};\n\nconsole.log(`✓ Embeddings generados exitosamente:`);\nconsole.log(`  - Chunks procesados: ${embeddingUsage.chunks_processed}`);\nconsole.log(`  - Tokens consumidos: ${embeddingUsage.total_tokens}`);\nconsole.log(\n  `  - Coste estimado: $${embeddingUsage.estimated_cost_usd.toFixed(6)}`\n);\n\n// Preparar array para insert en Supabase con validación de metadata\nconst insertData = chunksWithEmbeddings\n  .map((chunk, index) => {\n    // Validar que el chunk tiene metadata válida\n    if (!chunk.metadata || typeof chunk.metadata !== 'object') {\n      console.warn(\n        `⚠️ Chunk ${index} carece de metadata válida, usando valores por defecto`\n      );\n      return {\n        convenio_id: chunk.convenio_id,\n        contenido: chunk.contenido,\n        chunk_index: index, // Usar índice del array como fallback\n        metadata: { numero_chunk: index, warning: 'metadata_missing' },\n        embedding: chunk.embedding\n      };\n    }\n\n    // Validar que numero_chunk existe\n    const chunkIndex =\n      typeof chunk.metadata.numero_chunk === 'number'\n        ? chunk.metadata.numero_chunk\n        : index; // Fallback al índice si no existe\n\n    if (typeof chunk.metadata.numero_chunk !== 'number') {\n      console.warn(\n        `⚠️ Chunk ${index} carece de numero_chunk, usando índice ${index}`\n      );\n    }\n\n    return {\n      convenio_id: chunk.convenio_id,\n      contenido: chunk.contenido,\n      chunk_index: chunkIndex,\n      metadata: chunk.metadata,\n      embedding: chunk.embedding // IMPORTANTE: Incluir el embedding\n    };\n  })\n  .filter(chunk => chunk !== null); // Filtrar chunks nulos si hubiese alguno\n\n// Contar chunks con embeddings válidos de 1536 dimensiones\nconst validEmbeddingsCount = insertData.filter(\n  item =>\n    item.embedding &&\n    Array.isArray(item.embedding) &&\n    item.embedding.length === 1536\n).length;\n\nconsole.log(\n  `✓ Preparados ${insertData.length} chunks para inserción en Supabase`\n);\n\n// Log condicional basado en embeddings válidos\nif (validEmbeddingsCount === insertData.length) {\n  console.log(`  - Todos los chunks tienen embeddings de dimensión 1536`);\n} else {\n  console.log(\n    `  - ${validEmbeddingsCount}/${insertData.length} chunks con embeddings válidos de 1536 dimensiones`\n  );\n  console.log(\n    `  - ⚠️ ${insertData.length - validEmbeddingsCount} chunks con embeddings faltantes o inválidos`\n  );\n}\n\nreturn [{\n  json: {\n    chunks: insertData,\n    total_chunks: insertData.length,\n    embedding_usage: embeddingUsage,\n    convenio_id: convenioId\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4176, 2832],
+      "id": "d2f5e1cd-207f-4173-9ce1-ace2ed9594ba",
+      "name": "Merge Embeddings with Chunks",
+      "notes": "NUEVO I1.8: Combina embeddings con chunks y valida dimensiones"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kvebuijpjwlgrnfwfdgk.supabase.co/rest/v1/convenio_chunks",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.chunks) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [4416, 2832],
+      "id": "645f0df3-7fdd-462a-873a-a7f18ed3c2ed",
+      "name": "Bulk Insert Chunks",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GwkVJeVtr9euv3xH",
+          "name": "Header Auth account"
+        },
+        "supabaseApi": {
+          "id": "17i79gWGYg1gHxjw",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener datos de los nodos anteriores\nconst convenioData = $('Save md in supabase1').first().json;\nconst markdownData = $('Extract and clean md1').first().json;\nconst chunksData = $('Merge Embeddings with Chunks').first().json;\n\n// Construir response\nreturn [{\n  json: {\n    status: 'success',\n    message: 'Convenio procesado correctamente con embeddings',\n    data: {\n      convenio_id: convenioData.id,\n      nombre: convenioData.nombre,\n      codigo_regcon: convenioData.codigo_regcon,\n      markdown_length: markdownData.longitud,\n      pdf_url: convenioData.url_pdf,\n      chunks_generados: chunksData.total_chunks,\n      embeddings_generados: chunksData.total_chunks,\n      embedding_usage: chunksData.embedding_usage || {}\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2448, 3136],
+      "id": "09568ced-6e44-4e59-9659-b73429746f93",
       "name": "Prepare Response"
     },
     {
@@ -426,13 +495,109 @@
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [5168, 1744],
-      "id": "1e111aa8-b8a6-472d-8fe2-5624d0af64e8",
+      "position": [2688, 3136],
+      "id": "db644110-40cb-4800-92b3-a89d7f42e64b",
       "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener la respuesta de LlamaParse\nconst llamaParseResult = $input.first().json;\n\n// Extraer el markdown\nconst markdown = llamaParseResult.markdown || \n                 llamaParseResult.text;\n\n// Validar que tenemos contenido\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No se pudo extraer el markdown de LlamaParse. Respuesta vacía.');\n}\n\n// Limpiar y normalizar el markdown\nconst cleanMarkdown = markdown\n  .replace(/\\n{3,}/g, '\\n\\n')      // Normalizar múltiples saltos\n  .replace(/\\r\\n/g, '\\n')          // Normalizar line endings\n  .trim();\n\n// Obtener datos del webhook (están dentro de body)\nconst webhookData = $('Webhook').first().json.body;\n\n// Retornar datos estructurados\nreturn {\n  json: {\n    markdown_completo: cleanMarkdown,\n    longitud: cleanMarkdown.length,\n    convenio_id: webhookData.codigo_regcon,\n    nombre: webhookData.nombre,\n    // Campos opcionales (pueden no venir en el payload)\n    ambito: webhookData.ambito || null,\n    fecha_vigencia: webhookData.fecha_vigencia || null\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2608, 2832],
+      "id": "414c59ec-3d11-46cc-9ba8-caeb32546224",
+      "name": "Extract and clean md1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kvebuijpjwlgrnfwfdgk.supabase.co/rest/v1/convenios",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "nombre",
+              "value": "={{ $('Webhook').first().json.body.nombre }}"
+            },
+            {
+              "name": "codigo_regcon",
+              "value": "={{ $('Webhook').first().json.body.codigo_regcon }}"
+            },
+            {
+              "name": "ambito",
+              "value": "={{ $('Webhook').first().json.body.ambito || 'Sin especificar' }}"
+            },
+            {
+              "name": "fecha_vigencia",
+              "value": "={{ $('Webhook').first().json.body.fecha_vigencia }}"
+            },
+            {
+              "name": "url_pdf",
+              "value": "={{ $('Webhook').first().json.body.pdf_url }}"
+            },
+            {
+              "name": "markdown_completo",
+              "value": "={{ $('Extract and clean md1').first().json.markdown_completo }}"
+            },
+            {
+              "name": "estado",
+              "value": "activo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [2848, 2832],
+      "id": "9175e81a-bfd2-448e-8879-c41c10d85c61",
+      "name": "Save md in supabase1",
+      "retryOnFail": false,
+      "notesInFlow": false,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GwkVJeVtr9euv3xH",
+          "name": "Header Auth account"
+        },
+        "supabaseApi": {
+          "id": "17i79gWGYg1gHxjw",
+          "name": "Supabase account"
+        }
+      }
     }
   ],
   "pinData": {},
   "connections": {
+    "Extract and clean md": {
+      "main": [
+        [
+          {
+            "node": "Save md in supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save md in supabase": {
+      "main": [[]]
+    },
     "Webhook": {
       "main": [
         [
@@ -448,23 +613,12 @@
       "main": [
         [
           {
-            "node": "HTTP Supabase storage PDF",
+            "node": "HTTP LlamaParse PDF",
             "type": "main",
             "index": 0
           },
           {
-            "node": "HTTP LlamaParse PDF",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait": {
-      "main": [
-        [
-          {
-            "node": "Check LlamaParse Status",
+            "node": "HTTP Supabase storage PDF",
             "type": "main",
             "index": 0
           }
@@ -476,6 +630,17 @@
         [
           {
             "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Check LlamaParse Status",
             "type": "main",
             "index": 0
           }
@@ -504,7 +669,25 @@
         ],
         [
           {
+            "node": "Check Retry Limit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Retry Limit": {
+      "main": [
+        [
+          {
+            "node": "Wait",
             "type": "main",
             "index": 0
           }
@@ -515,18 +698,18 @@
       "main": [
         [
           {
-            "node": "Extract and clean md",
+            "node": "Clear Retry Counter",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Extract and clean md": {
+    "Clear Retry Counter": {
       "main": [
         [
           {
-            "node": "Save md in supabase",
+            "node": "Extract and clean md1",
             "type": "main",
             "index": 0
           }
@@ -610,7 +793,18 @@
         ]
       ]
     },
-    "Save md in supabase": {
+    "Extract and clean md1": {
+      "main": [
+        [
+          {
+            "node": "Save md in supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save md in supabase1": {
       "main": [
         [
           {
@@ -630,7 +824,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": "TvPqwtsxVr__-N5sWDqqN"
   },
-  "versionId": "17a78f04-7a0f-45cd-9d94-8fa7a283f171",
+  "versionId": "8140f15b-14c6-4890-b9e3-ccda3eac4c38",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "1c6a2faf45e95944d162a539c0cff8415bcd053d25a87106e91c063a6ec7d027"

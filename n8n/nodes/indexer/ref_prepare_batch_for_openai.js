@@ -19,18 +19,22 @@ const textos = chunks.map(c => c.contenido);
 
 console.log(`Preparando ${chunks.length} chunks para OpenAI Embeddings API...`);
 
-// Retornar payload para OpenAI y chunks originales
-return [{
-  json: {
-    // Payload para OpenAI (será usado por el nodo HTTP siguiente)
-    input: textos,
-    model: 'text-embedding-3-small',
-    encoding_format: 'float',
+// Retornar payload separado para OpenAI y metadata interna
+return [
+  {
+    json: {
+      // Payload limpio para OpenAI (solo campos requeridos por la API)
+      openai_payload: {
+        input: textos,
+        model: 'text-embedding-3-small',
+        encoding_format: 'float'
+      },
 
-    // Datos adicionales para pasar al siguiente nodo
-    _chunks_original: chunks,
-    _total_chunks: chunks.length,
-    _convenio_id: inputData.convenio_id,
-    _stats: inputData.stats
+      // Metadatos internos (NO se envían a OpenAI)
+      _chunks_original: chunks,
+      _total_chunks: chunks.length,
+      _convenio_id: inputData.convenio_id,
+      _stats: inputData.stats
+    }
   }
-}];
+];
