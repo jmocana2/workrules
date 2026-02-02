@@ -1,0 +1,193 @@
+// ============================================
+// NODO: Validate Perfil JSON
+// FASE: I1.9
+// FUNCIÓN: Parsear y validar el JSON devuelto por Claude antes de insertar en DB
+// ============================================
+
+// ============================================
+// CAMPOS OBLIGATORIOS DEL SCHEMA
+// ============================================
+const REQUIRED_FIELDS = ['convenio', 'ambito', 'variables_criticas', 'categorias_profesionales', 'jornada'];
+const VALID_AMBITOS = ['estatal', 'autonomico', 'provincial', 'empresa'];
+const VALID_COMPLEMENTO_TIPOS = ['porcentaje', 'cantidad_fija', 'trienio', 'quinquenio', 'bienio', 'otro'];
+
+// ============================================
+// FUNCIONES DE VALIDACIÓN
+// ============================================
+
+function cleanJsonResponse(text) {
+  let cleaned = text.trim();
+
+  // Quitar bloques de código markdown si Claude los añadió
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.slice(7);
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.slice(3);
+  }
+  if (cleaned.endsWith('```')) {
+    cleaned = cleaned.slice(0, -3);
+  }
+
+  return cleaned.trim();
+}
+
+function validateCategoria(cat, index) {
+  const warnings = [];
+
+  if (!cat.nombre || typeof cat.nombre !== 'string') {
+    warnings.push(`categorias_profesionales[${index}]: falta "nombre" o no es string`);
+  }
+
+  if (cat.salario_base_anual !== undefined && typeof cat.salario_base_anual !== 'number') {
+    warnings.push(`categorias_profesionales[${index}].salario_base_anual no es number`);
+  }
+
+  if (cat.salario_base_mensual !== undefined && typeof cat.salario_base_mensual !== 'number') {
+    warnings.push(`categorias_profesionales[${index}].salario_base_mensual no es number`);
+  }
+
+  // Redondear salarios a 2 decimales
+  if (typeof cat.salario_base_anual === 'number') {
+    cat.salario_base_anual = Math.round(cat.salario_base_anual * 100) / 100;
+  }
+  if (typeof cat.salario_base_mensual === 'number') {
+    cat.salario_base_mensual = Math.round(cat.salario_base_mensual * 100) / 100;
+  }
+
+  return warnings;
+}
+
+function validateComplemento(comp, index) {
+  const warnings = [];
+
+  if (!comp.nombre || typeof comp.nombre !== 'string') {
+    warnings.push(`complementos[${index}]: falta "nombre"`);
+  }
+
+  if (!comp.tipo) {
+    warnings.push(`complementos[${index}]: falta "tipo"`);
+  } else if (!VALID_COMPLEMENTO_TIPOS.includes(comp.tipo)) {
+    warnings.push(`complementos[${index}].tipo "${comp.tipo}" no es válido, se cambia a "otro"`);
+    comp.tipo = 'otro';
+  }
+
+  if (comp.valor !== undefined && typeof comp.valor !== 'number') {
+    warnings.push(`complementos[${index}].valor no es number`);
+  }
+
+  return warnings;
+}
+
+// ============================================
+// FUNCIÓN PRINCIPAL
+// ============================================
+
+const inputData = $input.first().json;
+const rawResponse = inputData.raw_response;
+const convenioId = inputData.convenio_id;
+const convenioNombre = inputData.convenio_nombre;
+const claudeUsage = inputData.claude_usage;
+
+if (!rawResponse) {
+  throw new Error('No hay respuesta de Claude para validar');
+}
+
+// 1. Limpiar y parsear JSON
+const cleanedJson = cleanJsonResponse(rawResponse);
+let perfil;
+
+try {
+  perfil = JSON.parse(cleanedJson);
+} catch (parseError) {
+  // Intentar extraer JSON si hay texto antes/después
+  const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      perfil = JSON.parse(jsonMatch[0]);
+      console.log('⚠ JSON extraído tras limpiar texto envolvente');
+    } catch (e) {
+      throw new Error(`JSON inválido de Claude. Error: ${parseError.message}. Primeros 500 chars: ${cleanedJson.substring(0, 500)}`);
+    }
+  } else {
+    throw new Error(`No se encontró JSON válido en la respuesta de Claude. Primeros 500 chars: ${cleanedJson.substring(0, 500)}`);
+  }
+}
+
+console.log('✓ JSON parseado correctamente');
+
+// 2. Validar campos obligatorios
+const missingFields = REQUIRED_FIELDS.filter(field => !perfil[field]);
+if (missingFields.length > 0) {
+  console.log(`⚠ Campos obligatorios faltantes: ${missingFields.join(', ')}`);
+  // No lanzar error: guardamos lo que hay pero lo marcamos
+}
+
+// 3. Validar ambito
+if (perfil.ambito && !VALID_AMBITOS.includes(perfil.ambito)) {
+  console.log(`⚠ Ámbito "${perfil.ambito}" no reconocido, se mantiene tal cual`);
+}
+
+// 4. Validar categorías profesionales
+const allWarnings = [];
+
+if (Array.isArray(perfil.categorias_profesionales)) {
+  perfil.categorias_profesionales.forEach((cat, i) => {
+    allWarnings.push(...validateCategoria(cat, i));
+  });
+  console.log(`✓ ${perfil.categorias_profesionales.length} categorías profesionales encontradas`);
+} else {
+  allWarnings.push('categorias_profesionales no es un array o no existe');
+}
+
+// 5. Validar complementos
+if (Array.isArray(perfil.complementos)) {
+  perfil.complementos.forEach((comp, i) => {
+    allWarnings.push(...validateComplemento(comp, i));
+  });
+  console.log(`✓ ${perfil.complementos.length} complementos encontrados`);
+}
+
+// 6. Validar variables_criticas
+if (Array.isArray(perfil.variables_criticas)) {
+  console.log(`✓ ${perfil.variables_criticas.length} variables críticas: ${perfil.variables_criticas.join(', ')}`);
+} else {
+  allWarnings.push('variables_criticas no es un array o no existe');
+}
+
+// 7. Log de warnings
+if (allWarnings.length > 0) {
+  console.log(`⚠ ${allWarnings.length} warnings de validación:`);
+  allWarnings.forEach(w => console.log(`  - ${w}`));
+}
+
+// 8. Construir resultado de validación
+const validationResult = {
+  is_valid: missingFields.length === 0,
+  missing_fields: missingFields,
+  warnings: allWarnings,
+  stats: {
+    categorias: Array.isArray(perfil.categorias_profesionales) ? perfil.categorias_profesionales.length : 0,
+    complementos: Array.isArray(perfil.complementos) ? perfil.complementos.length : 0,
+    variables_criticas: Array.isArray(perfil.variables_criticas) ? perfil.variables_criticas.length : 0,
+    tiene_jornada: !!perfil.jornada,
+    tiene_horas_extra: !!perfil.horas_extra,
+    tiene_periodo_prueba: Array.isArray(perfil.periodo_prueba) && perfil.periodo_prueba.length > 0,
+    tiene_vacaciones: !!perfil.vacaciones,
+    tiene_tablas_salariales: !!perfil.tablas_salariales
+  }
+};
+
+console.log(`\n✓ Validación completa: ${validationResult.is_valid ? 'VÁLIDO' : 'CON CAMPOS FALTANTES'}`);
+console.log(`  Categorías: ${validationResult.stats.categorias}`);
+console.log(`  Complementos: ${validationResult.stats.complementos}`);
+console.log(`  Variables críticas: ${validationResult.stats.variables_criticas}`);
+
+return [{
+  json: {
+    perfil_data: perfil,
+    convenio_id: convenioId,
+    convenio_nombre: convenioNombre,
+    validation: validationResult,
+    claude_usage: claudeUsage
+  }
+}];

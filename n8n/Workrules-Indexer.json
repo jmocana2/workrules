@@ -1,88 +1,6 @@
 {
-  "name": "Workrules Convenios - I1.8 v2 (Con Embeddings via HTTP)",
+  "name": "Workrules Convenios - I1.9 (Con Embeddings + Perfil JSON)",
   "nodes": [
-    {
-      "parameters": {
-        "jsCode": "// Obtener la respuesta de LlamaParse\nconst llamaParseResult = $input.first().json;\n\n// Extraer el markdown\nconst markdown = llamaParseResult.markdown || \n                 llamaParseResult.text;\n\n// Validar que tenemos contenido\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No se pudo extraer el markdown de LlamaParse. Respuesta vacía.');\n}\n\n// Limpiar y normalizar el markdown\nconst cleanMarkdown = markdown\n  .replace(/\\n{3,}/g, '\\n\\n')      // Normalizar múltiples saltos\n  .replace(/\\r\\n/g, '\\n')          // Normalizar line endings\n  .trim();\n\n// Obtener datos del webhook (están dentro de body)\nconst webhookData = $('Webhook').first().json.body;\n\n// Retornar datos estructurados\nreturn {\n  json: {\n    markdown_completo: cleanMarkdown,\n    longitud: cleanMarkdown.length,\n    convenio_id: webhookData.codigo_regcon,\n    nombre: webhookData.nombre,\n    // Campos opcionales (pueden no venir en el payload)\n    ambito: webhookData.ambito || null,\n    fecha_vigencia: webhookData.fecha_vigencia || null\n  }\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [3696, 1152],
-      "id": "6f809315-5381-4776-ac2b-3bbfc1ec33a5",
-      "name": "Extract and clean md"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://kvebuijpjwlgrnfwfdgk.supabase.co/rest/v1/convenios",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "supabaseApi",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "nombre",
-              "value": "={{ $('Webhook').first().json.body.nombre }}"
-            },
-            {
-              "name": "codigo_regcon",
-              "value": "={{ $('Webhook').first().json.body.codigo_regcon }}"
-            },
-            {
-              "name": "ambito",
-              "value": "={{ $('Webhook').first().json.body.ambito || 'Sin especificar' }}"
-            },
-            {
-              "name": "fecha_vigencia",
-              "value": "={{ $('Webhook').first().json.body.fecha_vigencia }}"
-            },
-            {
-              "name": "url_pdf",
-              "value": "={{ $('Webhook').first().json.body.pdf_url }}"
-            },
-            {
-              "name": "markdown_completo",
-              "value": "={{ $('Extract and clean md').first().json.markdown_completo }}"
-            },
-            {
-              "name": "estado",
-              "value": "activo"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
-      "position": [3936, 1152],
-      "id": "2be6b569-5afe-4c68-a47b-2204e661e0ec",
-      "name": "Save md in supabase",
-      "retryOnFail": false,
-      "notesInFlow": false,
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "GwkVJeVtr9euv3xH",
-          "name": "Header Auth account"
-        },
-        "supabaseApi": {
-          "id": "17i79gWGYg1gHxjw",
-          "name": "Supabase account"
-        }
-      }
-    },
     {
       "parameters": {
         "httpMethod": "POST",
@@ -92,8 +10,8 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [528, 2592],
-      "id": "7d41e591-b364-40ff-b150-69ad099364fe",
+      "position": [2720, 2256],
+      "id": "3aa67ba6-242d-4821-a137-c1c98881dd78",
       "name": "Webhook",
       "webhookId": "01c36b3d-fb3a-4df1-8577-16f5b82c6e6f"
     },
@@ -110,8 +28,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1024, 2592],
-      "id": "2dfc7fc1-a5b3-464d-94a3-fc3f11cec320",
+      "position": [3216, 2256],
+      "id": "fd23af89-2bbe-4f16-93f7-1b11631732fc",
       "name": "HTTP Supabase storage PDF",
       "credentials": {
         "httpHeaderAuth": {
@@ -138,8 +56,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [736, 2592],
-      "id": "c662c817-d319-4fb6-b449-a22fc9a174e4",
+      "position": [2928, 2256],
+      "id": "6f0ab41e-1abc-4f19-829d-aa43ee6e4ef9",
       "name": "HTTP PDF Request"
     },
     {
@@ -148,8 +66,8 @@
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [1264, 2864],
-      "id": "3e8087e2-c0e7-4739-93ef-9146c6b80542",
+      "position": [3456, 2528],
+      "id": "e79251c5-c8fe-411e-8bd3-3586cbb2976a",
       "name": "Wait",
       "webhookId": "e7907ffd-20a4-42e8-9fdf-ec94c7eeb960"
     },
@@ -182,8 +100,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1024, 2864],
-      "id": "17bdc05f-fb56-4eea-b0c8-159fba53eab9",
+      "position": [3216, 2528],
+      "id": "b33b5e54-73fb-47f8-94d6-f82a6778d4fa",
       "name": "HTTP LlamaParse PDF",
       "credentials": {
         "httpHeaderAuth": {
@@ -207,8 +125,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1504, 2864],
-      "id": "e14b1df9-aaaa-4fcc-954c-67b5f1044ad0",
+      "position": [3696, 2528],
+      "id": "401138c7-15ea-49e3-b34b-e56b6605e4d5",
       "name": "Check LlamaParse Status",
       "credentials": {
         "httpHeaderAuth": {
@@ -293,8 +211,8 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [1776, 2848],
-      "id": "26f926aa-a19c-4cdd-b397-999fa24b30ac",
+      "position": [3968, 2512],
+      "id": "b04ce11d-628e-4a91-b9f3-e159e69a5054",
       "name": "Is Processing Complete?"
     },
     {
@@ -312,8 +230,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2048, 2832],
-      "id": "e5d466d7-6b10-4920-ac1a-2fcb639390d1",
+      "position": [4240, 2496],
+      "id": "14a026ca-6749-4c11-ac8e-1cef0c92d830",
       "name": "Get Markdown Result",
       "credentials": {
         "httpHeaderAuth": {
@@ -328,8 +246,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2304, 2832],
-      "id": "0f614dd6-74ec-483f-9762-a7363629371d",
+      "position": [4496, 2496],
+      "id": "b08bf622-70ca-4310-a0d0-f0d14fda3736",
       "name": "Clear Retry Counter"
     },
     {
@@ -338,8 +256,8 @@
       },
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [2032, 3120],
-      "id": "a58ed4c9-bd74-4af8-9392-3e317d4182f5",
+      "position": [4224, 2784],
+      "id": "68dcd678-3f62-4a4c-891d-c04f11f8521d",
       "name": "Stop and Error"
     },
     {
@@ -348,18 +266,18 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1888, 2592],
-      "id": "d71828bd-5b71-430d-ac41-716adebb6966",
+      "position": [4080, 2256],
+      "id": "b4287fb5-273e-4062-affa-cb16ce217c9f",
       "name": "Check Retry Limit"
     },
     {
       "parameters": {
-        "jsCode": "// ============================================\n// CONFIGURACIÓN\n// ============================================\nconst TARGET_TOKENS = 450;      // Target ideal\nconst MAX_TOKENS = 600;         // Límite duro\nconst MIN_TOKENS = 100;         // Mínimo para chunk válido\nconst OVERLAP_CHARS = 200;      // ~50 tokens de overlap\n\n// ============================================\n// FUNCIONES AUXILIARES\n// ============================================\n\n/**\n * Estimación de tokens (4 chars ≈ 1 token para español)\n * Más preciso que dividir por 4 para textos legales\n */\nfunction estimateTokens(text) {\n  if (!text) return 0;\n  // Español tiene palabras más largas que inglés\n  const words = text.split(/\\s+/).length;\n  const chars = text.length;\n  // Fórmula híbrida: promedio entre chars/4 y words*1.3\n  return Math.round((chars / 4 + words * 1.3) / 2);\n}\n\n/**\n * Detectar tipo de chunk basado en contenido\n */\nfunction detectChunkType(content) {\n  // Tabla salarial\n  if (/\\|.*\\|/.test(content) && /salario|retribuc|sueldo|euro|€/i.test(content)) {\n    return 'tabla_salarial';\n  }\n  // Tabla genérica\n  if (/\\|.*\\|/.test(content)) {\n    return 'tabla';\n  }\n  // Definiciones\n  if (/se entiende por|a los efectos|definición|concepto/i.test(content)) {\n    return 'definicion';\n  }\n  // Procedimientos\n  if (/procedimiento|solicitud|plazo de|días (hábiles|naturales)/i.test(content)) {\n    return 'procedimiento';\n  }\n  // Jornada laboral\n  if (/jornada|horario|descanso|vacaciones|permiso/i.test(content)) {\n    return 'jornada';\n  }\n  // Sanciones\n  if (/falta (leve|grave|muy grave)|sanción|despido/i.test(content)) {\n    return 'sanciones';\n  }\n  return 'normativa';\n}\n\n/**\n * Extraer sección (Capítulo) del contenido\n */\nfunction extractSeccion(content, previousSeccion) {\n  const match = content.match(/^##\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  return previousSeccion || null;\n}\n\n/**\n * Extraer artículo del contenido\n */\nfunction extractArticulo(content, previousArticulo) {\n  const match = content.match(/^###\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  // También buscar \"Artículo X.\" en el texto\n  const artMatch = content.match(/Artículo\\s+\\d+[º°]?\\.?\\s*[–\\-:]?\\s*([^\\n]+)/i);\n  if (artMatch) return artMatch[0].trim();\n  return previousArticulo || null;\n}\n\n/**\n * Detectar si el chunk contiene una tabla\n */\nfunction hasTable(content) {\n  // Buscar patrón de tabla markdown: | col1 | col2 |\n  const tablePattern = /\\|[^\\n]+\\|[\\s\\S]*?\\|[^\\n]+\\|/;\n  return tablePattern.test(content);\n}\n\n/**\n * Extraer tabla completa del markdown\n */\nfunction extractTable(content, startIndex) {\n  const lines = content.substring(startIndex).split('\\n');\n  const tableLines = [];\n  let inTable = false;\n\n  for (const line of lines) {\n    if (line.includes('|')) {\n      tableLines.push(line);\n      inTable = true;\n    } else if (inTable && line.trim() === '') {\n      // Fin de la tabla\n      break;\n    } else if (inTable) {\n      // Línea sin | después de estar en tabla = fin\n      break;\n    }\n  }\n\n  return tableLines.join('\\n');\n}\n\n/**\n * Dividir markdown preservando estructura\n */\nfunction splitByStructure(markdown) {\n  const sections = [];\n\n  // Regex para capturar secciones completas\n  // Prioridad: ## > ### > párrafos\n  const sectionRegex = /^(#{2,3}\\s+[^\\n]+)([\\s\\S]*?)(?=^#{2,3}\\s+|\\z)/gm;\n\n  let match;\n  let lastIndex = 0;\n\n  while ((match = sectionRegex.exec(markdown)) !== null) {\n    // Texto antes de la sección (si existe)\n    if (match.index > lastIndex) {\n      const beforeText = markdown.substring(lastIndex, match.index).trim();\n      if (beforeText) {\n        sections.push({\n          type: 'text',\n          content: beforeText\n        });\n      }\n    }\n\n    // La sección completa\n    sections.push({\n      type: 'section',\n      header: match[1],\n      content: match[0].trim()\n    });\n\n    lastIndex = match.index + match[0].length;\n  }\n\n  // Texto restante\n  if (lastIndex < markdown.length) {\n    const remaining = markdown.substring(lastIndex).trim();\n    if (remaining) {\n      sections.push({\n        type: 'text',\n        content: remaining\n      });\n    }\n  }\n\n  // Si no se encontraron secciones, dividir por párrafos\n  if (sections.length === 0) {\n    return markdown.split(/\\n\\n+/).filter(p => p.trim()).map(p => ({\n      type: 'text',\n      content: p.trim()\n    }));\n  }\n\n  return sections;\n}\n\n// ============================================\n// FUNCIÓN PRINCIPAL DE CHUNKING\n// ============================================\n\nfunction chunkMarkdown(markdown, convenioId, convenioNombre) {\n  const chunks = [];\n  let chunkNumber = 0;\n  let currentSeccion = null;\n  let currentArticulo = null;\n\n  // Paso 1: Dividir por estructura\n  const sections = splitByStructure(markdown);\n\n  let currentChunk = '';\n  let currentTokens = 0;\n\n  for (const section of sections) {\n    const sectionContent = section.content || section;\n    const sectionTokens = estimateTokens(sectionContent);\n\n    // Actualizar tracking de sección/artículo\n    const tempSeccion = extractSeccion(sectionContent, currentSeccion);\n    if (tempSeccion) currentSeccion = tempSeccion;\n    \n    const tempArticulo = extractArticulo(sectionContent, currentArticulo);\n    if (tempArticulo) currentArticulo = tempArticulo;\n\n    // CASO 1: Sección tiene tabla → chunk independiente (permitir hasta MAX_TOKENS * 1.5)\n    if (hasTable(sectionContent)) {\n      // Guardar chunk anterior si existe\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n        currentChunk = '';\n        currentTokens = 0;\n      }\n\n      // Tabla como chunk independiente\n      if (sectionTokens <= MAX_TOKENS * 1.5) {\n        chunks.push(createChunkObject(\n          sectionContent,\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo,\n          true // isTable\n        ));\n      } else {\n        // Tabla muy grande: dividir por filas\n        const lines = sectionContent.split('\\n');\n        let tableChunk = '';\n        let tableTokens = 0;\n\n        for (const line of lines) {\n          const lineTokens = estimateTokens(line);\n          \n          if (tableTokens + lineTokens > MAX_TOKENS && tableChunk) {\n            chunks.push(createChunkObject(\n              tableChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo,\n              true\n            ));\n            tableChunk = line + '\\n';\n            tableTokens = lineTokens;\n          } else {\n            tableChunk += line + '\\n';\n            tableTokens += lineTokens;\n          }\n        }\n\n        // Último chunk de tabla\n        if (tableChunk.trim()) {\n          chunks.push(createChunkObject(\n            tableChunk.trim(),\n            ++chunkNumber,\n            convenioId,\n            convenioNombre,\n            currentSeccion,\n            currentArticulo,\n            true\n          ));\n        }\n      }\n      continue;\n    }\n\n    // CASO 2: Añadir a chunk actual si cabe\n    if (currentTokens + sectionTokens <= TARGET_TOKENS) {\n      currentChunk += (currentChunk ? '\\n\\n' : '') + sectionContent;\n      currentTokens += sectionTokens;\n      continue;\n    }\n\n    // CASO 3: Sección completa como nuevo chunk (si es razonable)\n    if (sectionTokens >= MIN_TOKENS && sectionTokens <= MAX_TOKENS) {\n      // Guardar chunk anterior\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n      }\n\n      // Nueva sección como chunk\n      chunks.push(createChunkObject(\n        sectionContent,\n        ++chunkNumber,\n        convenioId,\n        convenioNombre,\n        currentSeccion,\n        currentArticulo\n      ));\n\n      currentChunk = '';\n      currentTokens = 0;\n      continue;\n    }\n\n    // CASO 4: Sección muy grande → dividir por párrafos\n    if (sectionTokens > MAX_TOKENS) {\n      // Guardar chunk anterior\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n        currentChunk = '';\n        currentTokens = 0;\n      }\n\n      // Dividir sección en párrafos\n      const paragraphs = sectionContent.split(/\\n\\n+/);\n      \n      for (const para of paragraphs) {\n        const paraTokens = estimateTokens(para);\n\n        if (currentTokens + paraTokens <= TARGET_TOKENS) {\n          currentChunk += (currentChunk ? '\\n\\n' : '') + para;\n          currentTokens += paraTokens;\n        } else {\n          // Guardar chunk actual\n          if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n            chunks.push(createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo\n            ));\n          }\n\n          // Empezar nuevo chunk con overlap\n          const overlap = getOverlap(currentChunk);\n          currentChunk = overlap + (overlap ? '\\n\\n' : '') + para;\n          currentTokens = estimateTokens(currentChunk);\n        }\n      }\n    }\n  }\n\n  // Guardar último chunk\n  if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n    chunks.push(createChunkObject(\n      currentChunk.trim(),\n      ++chunkNumber,\n      convenioId,\n      convenioNombre,\n      currentSeccion,\n      currentArticulo\n    ));\n  }\n\n  // Actualizar total_chunks en todos\n  const totalChunks = chunks.length;\n  chunks.forEach(c => c.metadata.total_chunks = totalChunks);\n\n  return chunks;\n}\n\n/**\n * Crear objeto chunk con metadata\n */\nfunction createChunkObject(content, number, convenioId, convenioNombre, seccion, articulo, isTable = false) {\n  const tokens = estimateTokens(content);\n  const tipo = isTable ? 'tabla_salarial' : detectChunkType(content);\n\n  return {\n    contenido: content,\n    metadata: {\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      numero_chunk: number,\n      tokens: tokens,\n      seccion: seccion,\n      articulo: articulo,\n      tipo: tipo,\n      tiene_tabla: isTable,\n      total_chunks: 0 // Se actualiza después\n    }\n  };\n}\n\n/**\n * Obtener overlap del final del chunk anterior\n */\nfunction getOverlap(text) {\n  if (!text || text.length < OVERLAP_CHARS) return '';\n\n  // Buscar un punto de corte natural (fin de oración)\n  const endPortion = text.substring(text.length - OVERLAP_CHARS * 1.5);\n  const sentenceEnd = endPortion.lastIndexOf('. ');\n\n  if (sentenceEnd > 0) {\n    return endPortion.substring(sentenceEnd + 2);\n  }\n\n  // Si no hay punto, cortar en espacio\n  const spaceIndex = endPortion.indexOf(' ');\n  if (spaceIndex > 0) {\n    return endPortion.substring(spaceIndex + 1);\n  }\n\n  return endPortion;\n}\n\n// ============================================\n// EJECUCIÓN PRINCIPAL\n// ============================================\n\n// Obtener datos del convenio guardado (viene del nodo anterior)\nconst inputData = $input.first().json;\n\n// La respuesta de Supabase es un array con el convenio insertado\nconst convenioData = Array.isArray(inputData) ? inputData[0] : inputData;\n\nif (!convenioData || !convenioData.id) {\n  throw new Error('No se pudo obtener el ID del convenio guardado. Data: ' + JSON.stringify(inputData));\n}\n\nconst convenioId = convenioData.id; // UUID real del convenio\nconst convenioNombre = convenioData.nombre;\nconst markdown = convenioData.markdown_completo || '';\n\n// Validar input\nif (!markdown || markdown.length < 100) {\n  throw new Error('Markdown vacío o muy corto para procesar. Longitud: ' + markdown.length);\n}\n\n// Ejecutar chunking\nconst chunks = chunkMarkdown(markdown, convenioId, convenioNombre);\n\n// Estadísticas\nconst stats = {\n  total_chunks: chunks.length,\n  avg_tokens: Math.round(chunks.reduce((sum, c) => sum + c.metadata.tokens, 0) / chunks.length),\n  min_tokens: Math.min(...chunks.map(c => c.metadata.tokens)),\n  max_tokens: Math.max(...chunks.map(c => c.metadata.tokens)),\n  con_tablas: chunks.filter(c => c.metadata.tiene_tabla).length,\n  tipos: {}\n};\n\n// Contar tipos\nchunks.forEach(c => {\n  stats.tipos[c.metadata.tipo] = (stats.tipos[c.metadata.tipo] || 0) + 1;\n});\n\n// Retornar chunks como items individuales para procesamiento en lote\nreturn chunks.map((chunk, index) => ({\n  json: {\n    contenido: chunk.contenido,\n    convenio_id: chunk.metadata.convenio_id,\n    metadata: chunk.metadata,\n    // Añadir stats solo al primer item para referencia\n    ...(index === 0 ? { chunking_stats: stats } : {})\n  }\n}));"
+        "jsCode": "// ============================================\n// NODO: Chunk Markdown\n// TIPO: Code (JavaScript) v2\n// FASE: I1.7\n// ============================================\n\n// ============================================\n// CONFIGURACIÓN\n// ============================================\nconst TARGET_TOKENS = 450;      // Target ideal\nconst MAX_TOKENS = 600;         // Límite duro\nconst MIN_TOKENS = 100;         // Mínimo para chunk válido\nconst OVERLAP_CHARS = 200;      // ~50 tokens de overlap\n\n// ============================================\n// FUNCIONES AUXILIARES\n// ============================================\n\n/**\n * Estimación de tokens (4 chars ≈ 1 token para español)\n * Más preciso que dividir por 4 para textos legales\n */\nfunction estimateTokens(text) {\n  if (!text) return 0;\n  // Español tiene palabras más largas que inglés\n  const words = text.split(/\\s+/).length;\n  const chars = text.length;\n  // Fórmula híbrida: promedio entre chars/4 y words*1.3\n  return Math.round((chars / 4 + words * 1.3) / 2);\n}\n\n/**\n * Detectar tipo de chunk basado en contenido\n */\nfunction detectChunkType(content) {\n  // Tabla salarial\n  if (/\\|.*\\|/.test(content) && /salario|retribuc|sueldo|euro|€/i.test(content)) {\n    return 'tabla_salarial';\n  }\n  // Tabla genérica\n  if (/\\|.*\\|/.test(content)) {\n    return 'tabla';\n  }\n  // Definiciones\n  if (/se entiende por|a los efectos|definición|concepto/i.test(content)) {\n    return 'definicion';\n  }\n  // Procedimientos\n  if (/procedimiento|solicitud|plazo de|días (hábiles|naturales)/i.test(content)) {\n    return 'procedimiento';\n  }\n  // Jornada laboral\n  if (/jornada|horario|descanso|vacaciones|permiso/i.test(content)) {\n    return 'jornada';\n  }\n  // Sanciones\n  if (/falta (leve|grave|muy grave)|sanción|despido/i.test(content)) {\n    return 'sanciones';\n  }\n  return 'normativa';\n}\n\n/**\n * Extraer sección (Capítulo) del contenido\n */\nfunction extractSeccion(content, previousSeccion) {\n  const match = content.match(/^##\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  return previousSeccion || null;\n}\n\n/**\n * Extraer artículo del contenido\n */\nfunction extractArticulo(content, previousArticulo) {\n  const match = content.match(/^###\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  // También buscar \"Artículo X.\" en el texto\n  const artMatch = content.match(/Artículo\\s+\\d+[º°]?\\.?\\s*[–\\-:]?\\s*([^\\n]+)/i);\n  if (artMatch) return artMatch[0].trim();\n  return previousArticulo || null;\n}\n\n/**\n * Detectar si el chunk contiene una tabla\n */\nfunction hasTable(content) {\n  // Buscar patrón de tabla markdown: | col1 | col2 |\n  const tablePattern = /\\|[^\\n]+\\|[\\s\\S]*?\\|[^\\n]+\\|/;\n  return tablePattern.test(content);\n}\n\n/**\n * Extraer tabla completa del markdown\n */\nfunction extractTable(content, startIndex) {\n  const lines = content.substring(startIndex).split('\\n');\n  const tableLines = [];\n  let inTable = false;\n\n  for (const line of lines) {\n    if (line.includes('|')) {\n      tableLines.push(line);\n      inTable = true;\n    } else if (inTable && line.trim() === '') {\n      // Fin de la tabla\n      break;\n    } else if (inTable) {\n      // Línea sin | después de estar en tabla = fin\n      break;\n    }\n  }\n\n  return tableLines.join('\\n');\n}\n\n/**\n * Dividir markdown preservando estructura\n */\nfunction splitByStructure(markdown) {\n  const sections = [];\n\n  // Regex para capturar secciones completas\n  // Prioridad: ## > ### > párrafos\n  const sectionRegex = /^(#{2,3}\\s+[^\\n]+)([\\s\\S]*?)(?=^#{2,3}\\s+|\\z)/gm;\n\n  let match;\n  let lastIndex = 0;\n\n  while ((match = sectionRegex.exec(markdown)) !== null) {\n    // Texto antes de la sección (si existe)\n    if (match.index > lastIndex) {\n      const beforeText = markdown.substring(lastIndex, match.index).trim();\n      if (beforeText) {\n        sections.push({\n          type: 'text',\n          content: beforeText\n        });\n      }\n    }\n\n    // La sección completa\n    sections.push({\n      type: 'section',\n      header: match[1],\n      content: match[0].trim()\n    });\n\n    lastIndex = match.index + match[0].length;\n  }\n\n  // Texto restante\n  if (lastIndex < markdown.length) {\n    const remaining = markdown.substring(lastIndex).trim();\n    if (remaining) {\n      sections.push({\n        type: 'text',\n        content: remaining\n      });\n    }\n  }\n\n  // Si no se encontraron secciones, dividir por párrafos\n  if (sections.length === 0) {\n    return markdown.split(/\\n\\n+/).filter(p => p.trim()).map(p => ({\n      type: 'text',\n      content: p.trim()\n    }));\n  }\n\n  return sections;\n}\n\n// ============================================\n// FUNCIÓN PRINCIPAL DE CHUNKING\n// ============================================\n\nfunction chunkMarkdown(markdown, convenioId, convenioNombre) {\n  const chunks = [];\n  let chunkNumber = 0;\n  let currentSeccion = null;\n  let currentArticulo = null;\n\n  // Paso 1: Dividir por estructura\n  const sections = splitByStructure(markdown);\n\n  let currentChunk = '';\n  let currentTokens = 0;\n\n  for (const section of sections) {\n    const sectionContent = section.content || section;\n    const sectionTokens = estimateTokens(sectionContent);\n\n    // Actualizar tracking de sección/artículo\n    const tempSeccion = extractSeccion(sectionContent, currentSeccion);\n    if (tempSeccion) currentSeccion = tempSeccion;\n    \n    const tempArticulo = extractArticulo(sectionContent, currentArticulo);\n    if (tempArticulo) currentArticulo = tempArticulo;\n\n    // CASO 1: Sección tiene tabla → chunk independiente (permitir hasta MAX_TOKENS * 1.5)\n    if (hasTable(sectionContent)) {\n      // Guardar chunk anterior si existe\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n        currentChunk = '';\n        currentTokens = 0;\n      }\n\n      // Tabla como chunk independiente\n      if (sectionTokens <= MAX_TOKENS * 1.5) {\n        chunks.push(createChunkObject(\n          sectionContent,\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo,\n          true // isTable\n        ));\n      } else {\n        // Tabla muy grande: dividir por filas\n        const lines = sectionContent.split('\\n');\n        let tableChunk = '';\n        let tableTokens = 0;\n\n        for (const line of lines) {\n          const lineTokens = estimateTokens(line);\n          \n          if (tableTokens + lineTokens > MAX_TOKENS && tableChunk) {\n            chunks.push(createChunkObject(\n              tableChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo,\n              true\n            ));\n            tableChunk = line + '\\n';\n            tableTokens = lineTokens;\n          } else {\n            tableChunk += line + '\\n';\n            tableTokens += lineTokens;\n          }\n        }\n\n        // Último chunk de tabla\n        if (tableChunk.trim()) {\n          chunks.push(createChunkObject(\n            tableChunk.trim(),\n            ++chunkNumber,\n            convenioId,\n            convenioNombre,\n            currentSeccion,\n            currentArticulo,\n            true\n          ));\n        }\n      }\n      continue;\n    }\n\n    // CASO 2: Añadir a chunk actual si cabe\n    if (currentTokens + sectionTokens <= TARGET_TOKENS) {\n      currentChunk += (currentChunk ? '\\n\\n' : '') + sectionContent;\n      currentTokens += sectionTokens;\n      continue;\n    }\n\n    // CASO 3: Sección completa como nuevo chunk (si es razonable)\n    if (sectionTokens >= MIN_TOKENS && sectionTokens <= MAX_TOKENS) {\n      // Guardar chunk anterior\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n      }\n\n      // Nueva sección como chunk\n      chunks.push(createChunkObject(\n        sectionContent,\n        ++chunkNumber,\n        convenioId,\n        convenioNombre,\n        currentSeccion,\n        currentArticulo\n      ));\n\n      currentChunk = '';\n      currentTokens = 0;\n      continue;\n    }\n\n    // CASO 4: Sección muy grande → dividir por párrafos\n    if (sectionTokens > MAX_TOKENS) {\n      // Guardar chunk anterior\n      if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n        chunks.push(createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        ));\n        currentChunk = '';\n        currentTokens = 0;\n      }\n\n      // Dividir sección en párrafos\n      const paragraphs = sectionContent.split(/\\n\\n+/);\n      \n      for (const para of paragraphs) {\n        const paraTokens = estimateTokens(para);\n\n        if (currentTokens + paraTokens <= TARGET_TOKENS) {\n          currentChunk += (currentChunk ? '\\n\\n' : '') + para;\n          currentTokens += paraTokens;\n        } else {\n          // Guardar chunk actual\n          if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n            chunks.push(createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo\n            ));\n          }\n\n          // Empezar nuevo chunk con overlap\n          const overlap = getOverlap(currentChunk);\n          currentChunk = overlap + (overlap ? '\\n\\n' : '') + para;\n          currentTokens = estimateTokens(currentChunk);\n        }\n      }\n    }\n  }\n\n  // Guardar último chunk\n  if (currentChunk.trim() && currentTokens >= MIN_TOKENS) {\n    chunks.push(createChunkObject(\n      currentChunk.trim(),\n      ++chunkNumber,\n      convenioId,\n      convenioNombre,\n      currentSeccion,\n      currentArticulo\n    ));\n  }\n\n  // Actualizar total_chunks en todos\n  const totalChunks = chunks.length;\n  chunks.forEach(c => c.metadata.total_chunks = totalChunks);\n\n  return chunks;\n}\n\n/**\n * Crear objeto chunk con metadata\n */\nfunction createChunkObject(content, number, convenioId, convenioNombre, seccion, articulo, isTable = false) {\n  const tokens = estimateTokens(content);\n  const tipo = isTable ? 'tabla_salarial' : detectChunkType(content);\n\n  return {\n    contenido: content,\n    metadata: {\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      numero_chunk: number,\n      tokens: tokens,\n      seccion: seccion,\n      articulo: articulo,\n      tipo: tipo,\n      tiene_tabla: isTable,\n      total_chunks: 0 // Se actualiza después\n    }\n  };\n}\n\n/**\n * Obtener overlap del final del chunk anterior\n */\nfunction getOverlap(text) {\n  if (!text || text.length < OVERLAP_CHARS) return '';\n\n  // Buscar un punto de corte natural (fin de oración)\n  const endPortion = text.substring(text.length - OVERLAP_CHARS * 1.5);\n  const sentenceEnd = endPortion.lastIndexOf('. ');\n\n  if (sentenceEnd > 0) {\n    return endPortion.substring(sentenceEnd + 2);\n  }\n\n  // Si no hay punto, cortar en espacio\n  const spaceIndex = endPortion.indexOf(' ');\n  if (spaceIndex > 0) {\n    return endPortion.substring(spaceIndex + 1);\n  }\n\n  return endPortion;\n}\n\n// ============================================\n// EJECUCIÓN PRINCIPAL\n// ============================================\n\n// Obtener datos del convenio guardado (viene del nodo anterior)\nconst inputData = $input.first().json;\n\n// La respuesta de Supabase es un array con el convenio insertado\nconst convenioData = Array.isArray(inputData) ? inputData[0] : inputData;\n\nif (!convenioData || !convenioData.id) {\n  throw new Error('No se pudo obtener el ID del convenio guardado. Data: ' + JSON.stringify(inputData));\n}\n\nconst convenioId = convenioData.id; // UUID real del convenio\nconst convenioNombre = convenioData.nombre;\nconst markdown = convenioData.markdown_completo || '';\n\n// Validar input\nif (!markdown || markdown.length < 100) {\n  throw new Error('Markdown vacío o muy corto para procesar. Longitud: ' + markdown.length);\n}\n\n// Ejecutar chunking\nconst chunks = chunkMarkdown(markdown, convenioId, convenioNombre);\n\n// Estadísticas\nconst stats = {\n  total_chunks: chunks.length,\n  avg_tokens: Math.round(chunks.reduce((sum, c) => sum + c.metadata.tokens, 0) / chunks.length),\n  min_tokens: Math.min(...chunks.map(c => c.metadata.tokens)),\n  max_tokens: Math.max(...chunks.map(c => c.metadata.tokens)),\n  con_tablas: chunks.filter(c => c.metadata.tiene_tabla).length,\n  tipos: {}\n};\n\n// Contar tipos\nchunks.forEach(c => {\n  stats.tipos[c.metadata.tipo] = (stats.tipos[c.metadata.tipo] || 0) + 1;\n});\n\n// Retornar chunks como items individuales para procesamiento en lote\nreturn chunks.map((chunk, index) => ({\n  json: {\n    contenido: chunk.contenido,\n    convenio_id: chunk.metadata.convenio_id,\n    metadata: chunk.metadata,\n    // Añadir stats solo al primer item para referencia\n    ...(index === 0 ? { chunking_stats: stats } : {})\n  }\n}));"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3200, 2832],
-      "id": "d658fb62-0e22-4916-9959-4d518e027fb8",
+      "position": [5392, 2496],
+      "id": "fa2e3af2-b038-4c7b-91ba-f45ed4d96a1d",
       "name": "Chunk Markdown"
     },
     {
@@ -368,8 +286,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3456, 2832],
-      "id": "c661d21b-ce80-464c-8d49-9f0845d4cc5d",
+      "position": [5648, 2496],
+      "id": "9da8213f-b30b-43b0-b604-929acaa769af",
       "name": "Prepare Chunks for Insert"
     },
     {
@@ -378,8 +296,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3696, 2832],
-      "id": "89448c21-fefd-4dae-b87a-49d41c37fc3b",
+      "position": [5888, 2496],
+      "id": "9fa8b6fd-857c-4242-9678-4387d226eb48",
       "name": "Prepare Batch for OpenAI",
       "notes": "NUEVO I1.8: Prepara payload para OpenAI Embeddings API"
     },
@@ -411,8 +329,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3936, 2832],
-      "id": "1d20288a-0fbb-4cf3-ad71-f0501e10509e",
+      "position": [6128, 2496],
+      "id": "09f2e7b4-f27b-48ce-8b45-ff3884d9c622",
       "name": "HTTP Request OpenAI Embeddings",
       "credentials": {
         "httpHeaderAuth": {
@@ -432,8 +350,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [4176, 2832],
-      "id": "d2f5e1cd-207f-4173-9ce1-ace2ed9594ba",
+      "position": [6368, 2496],
+      "id": "017c4fb5-699b-4c1b-9b12-9d98034748f4",
       "name": "Merge Embeddings with Chunks",
       "notes": "NUEVO I1.8: Combina embeddings con chunks y valida dimensiones"
     },
@@ -463,8 +381,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [4416, 2832],
-      "id": "645f0df3-7fdd-462a-873a-a7f18ed3c2ed",
+      "position": [6608, 2496],
+      "id": "03ddfaae-963f-4856-81dc-044b031de2a1",
       "name": "Bulk Insert Chunks",
       "credentials": {
         "httpHeaderAuth": {
@@ -479,12 +397,23 @@
     },
     {
       "parameters": {
-        "jsCode": "// Obtener datos de los nodos anteriores\nconst convenioData = $('Save md in supabase1').first().json;\nconst markdownData = $('Extract and clean md1').first().json;\nconst chunksData = $('Merge Embeddings with Chunks').first().json;\n\n// Construir response\nreturn [{\n  json: {\n    status: 'success',\n    message: 'Convenio procesado correctamente con embeddings',\n    data: {\n      convenio_id: convenioData.id,\n      nombre: convenioData.nombre,\n      codigo_regcon: convenioData.codigo_regcon,\n      markdown_length: markdownData.longitud,\n      pdf_url: convenioData.url_pdf,\n      chunks_generados: chunksData.total_chunks,\n      embeddings_generados: chunksData.total_chunks,\n      embedding_usage: chunksData.embedding_usage || {}\n    }\n  }\n}];"
+        "jsCode": "// ============================================\n// NODO: Chunks Branch Complete\n// Pasar confirmación de que la rama de chunks terminó\n// ============================================\n\nconst chunksData = $('Merge Embeddings with Chunks').first().json;\n\nconsole.log('✓ Rama de chunks completada: ' + chunksData.total_chunks + ' chunks insertados');\n\nreturn [{\n  json: {\n    branch: 'chunks',\n    status: 'completed',\n    total_chunks: chunksData.total_chunks,\n    timestamp: Date.now()\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2448, 3136],
-      "id": "09568ced-6e44-4e59-9659-b73429746f93",
+      "position": [6848, 2496],
+      "id": "chunks-branch-complete-node-id",
+      "name": "Chunks Branch Complete",
+      "notes": "Pasa datos al merge para que ambas ramas completen"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Prepare Response (ACTUALIZADO I1.9)\n// Recoge datos de ambas ramas: chunks + perfil\n// ============================================\n\nconst convenioData = $('Save md in supabase1').first().json;\nconst markdownData = $('Extract and clean md1').first().json;\nconst chunksData = $('Merge Embeddings with Chunks').first().json;\n\n// Intentar obtener datos del perfil (puede no existir si esa rama falló)\nlet perfilData = null;\ntry {\n  perfilData = $('Upsert Perfil Supabase').first().json;\n} catch (e) {\n  console.log('⚠ Rama de perfil no disponible (posible error): ' + e.message);\n}\n\n// Construir response\nconst response = {\n  status: 'success',\n  message: 'Convenio procesado correctamente con embeddings' + (perfilData ? ' y perfil JSON' : ''),\n  data: {\n    convenio_id: convenioData.id,\n    nombre: convenioData.nombre,\n    codigo_regcon: convenioData.codigo_regcon,\n    markdown_length: markdownData.longitud,\n    pdf_url: convenioData.url_pdf,\n    chunks_generados: chunksData.total_chunks,\n    embeddings_generados: chunksData.total_chunks,\n    embedding_usage: chunksData.embedding_usage || {}\n  }\n};\n\n// Añadir info del perfil si existe\nif (perfilData) {\n  response.data.perfil = {\n    perfil_id: perfilData.perfil_id,\n    operation: perfilData.operation,\n    categorias: perfilData.validation?.stats?.categorias || 0,\n    complementos: perfilData.validation?.stats?.complementos || 0,\n    variables_criticas: perfilData.validation?.stats?.variables_criticas || 0,\n    is_valid: perfilData.validation?.is_valid || false,\n    claude_usage: perfilData.claude_usage || {}\n  };\n} else {\n  response.data.perfil = {\n    status: 'skipped_or_failed',\n    message: 'La extracción de perfil JSON no se completó. Los chunks y embeddings se procesaron correctamente.'\n  };\n}\n\nreturn [{ json: response }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [7280, 2816],
+      "id": "731e530e-973f-4178-9420-3aa4e13de335",
       "name": "Prepare Response"
     },
     {
@@ -495,8 +424,8 @@
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [2688, 3136],
-      "id": "db644110-40cb-4800-92b3-a89d7f42e64b",
+      "position": [7520, 2816],
+      "id": "4c95b304-06bb-4aa5-8fa5-f889b5fa4eda",
       "name": "Respond to Webhook"
     },
     {
@@ -505,8 +434,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2608, 2832],
-      "id": "414c59ec-3d11-46cc-9ba8-caeb32546224",
+      "position": [4800, 2496],
+      "id": "b3d1223d-8722-4300-802b-82acc4bafa25",
       "name": "Extract and clean md1"
     },
     {
@@ -565,8 +494,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2848, 2832],
-      "id": "9175e81a-bfd2-448e-8879-c41c10d85c61",
+      "position": [5040, 2496],
+      "id": "cea544ed-b7ca-4d98-883c-d103ce6c7fd7",
       "name": "Save md in supabase1",
       "retryOnFail": false,
       "notesInFlow": false,
@@ -580,24 +509,175 @@
           "name": "Supabase account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Prepare Claude Request\n// FASE: I1.9\n// FUNCIÓN: Preparar payload para llamada a Claude API\n// ============================================\n\nconst MODEL = 'claude-sonnet-4-20250514';\nconst MAX_OUTPUT_TOKENS = 8192;\nconst TEMPERATURE = 0;\n\nconst SYSTEM_PROMPT = `Eres un experto en derecho laboral espanol especializado en convenios colectivos.\n\nTu tarea es analizar el texto completo de un convenio colectivo y extraer un JSON estructurado con toda la informacion relevante para calcular condiciones laborales (salarios, jornada, complementos, etc.).\n\nREGLAS ESTRICTAS:\n1. Solo extrae datos que aparezcan EXPLICITAMENTE en el texto. Nunca inventes ni supongas valores.\n2. Si un dato no aparece en el convenio, omite ese campo del JSON. No pongas null ni valores inventados.\n3. Los salarios deben ser EXACTOS tal como aparecen en las tablas del convenio, sin redondear.\n4. Cita el articulo del convenio donde aparece cada dato siempre que sea posible.\n5. Si hay ambiguedad en un dato, incluyelo en el array \"notas_extraccion\" explicando la ambiguedad.\n6. Responde UNICAMENTE con el JSON. Sin texto antes ni despues. Sin bloques de codigo markdown.\n7. El JSON debe ser valido y parseable directamente.`;\n\nfunction buildUserPrompt(markdown) {\n  return `Analiza el siguiente convenio colectivo y extrae un JSON estructurado con esta informacion:\n\n1. **Datos basicos**: nombre del convenio, ambito (estatal/autonomico/provincial/empresa), vigencia, codigo REGCON si aparece.\n2. **Variables criticas**: lista de variables que un usuario necesitaria para un calculo salarial preciso. Solo incluye variables que REALMENTE afecten al salario segun este convenio.\n3. **Categorias profesionales**: TODAS las categorias/puestos con nombre exacto, grupo, nivel, area funcional, salario base anual y/o mensual.\n4. **Jornada laboral**: horas anuales, semanales, distribucion irregular. Cita articulo.\n5. **Tablas salariales**: ano referencia, num pagas, pagas extra, revision salarial.\n6. **Complementos salariales**: TODOS con nombre, tipo, valor, base calculo, condicion, articulo.\n7. **Horas extraordinarias**: recargos, precio fijo, maximo anual, compensacion descanso. Cita articulo.\n8. **Periodo de prueba**: duracion por tipo de trabajador. Cita articulo.\n9. **Vacaciones**: dias naturales o laborables. Cita articulo.\n10. **Variables especificas del sector**: variables propias con valores posibles como array.\n11. **Notas de extraccion**: ambiguedades, datos no extraidos con certeza.\n\nFORMATO: JSON valido con campos: convenio, ambito, vigencia, codigo_convenio, variables_criticas, categorias_profesionales, jornada, tablas_salariales, complementos, horas_extra, periodo_prueba, vacaciones, variables_especificas, notas_extraccion.\n\nOmite campos sin informacion. No inventes datos.\n\n---\n\nTEXTO DEL CONVENIO:\n\n${markdown}`;\n}\n\n// MAIN\nconst markdownData = $('Extract and clean md1').first().json;\nconst markdown = markdownData.markdown_completo;\nconst convenioId = markdownData.convenio_id;\nconst convenioNombre = markdownData.nombre;\n\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No hay markdown del convenio para extraer perfil');\n}\n\nconsole.log(`Preparando request para Claude: ${convenioNombre || convenioId} (${markdown.length} chars)`);\n\nconst userPrompt = buildUserPrompt(markdown);\nconst requestStartTime = Date.now();\n\n// Preparar payload para el nodo HTTP\nconst payload = {\n  model: MODEL,\n  max_tokens: MAX_OUTPUT_TOKENS,\n  temperature: TEMPERATURE,\n  system: SYSTEM_PROMPT,\n  messages: [{ role: 'user', content: userPrompt }]\n};\n\nreturn [{\n  json: {\n    payload: payload,\n    convenio_id: convenioId,\n    convenio_nombre: convenioNombre,\n    request_start_time: requestStartTime\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5392, 3072],
+      "id": "e11666e6-8f49-433f-bae8-b1878726266d",
+      "name": "Prepare Claude Request",
+      "continueOnFail": true,
+      "notes": "NUEVO I1.9: Prepara el payload para Claude API"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [5632, 3072],
+      "id": "55f2b597-88fe-4fcb-b466-0f5bdac6de0b",
+      "name": "HTTP Claude API",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "bBJGVxiIZYlbr6xq",
+          "name": "LlamaParse"
+        },
+        "anthropicApi": {
+          "id": "M3fVam8eni05f4rZ",
+          "name": "Anthropic account"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "NUEVO I1.9: Llamada HTTP a Anthropic Claude API"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Extract Perfil Claude\n// FASE: I1.9\n// FUNCIÓN: Procesar respuesta de Claude API\n// ============================================\n\n// MAIN\nconst inputData = $input.first().json;\nconst previousData = $('Prepare Claude Request').first().json;\nconst convenioId = previousData.convenio_id;\nconst convenioNombre = previousData.convenio_nombre;\nconst requestStartTime = previousData.request_start_time;\n\n// Check si el nodo HTTP anterior falló (continueOnFail)\nif (inputData.error) {\n  console.log('⚠ La llamada a Claude API falló: ' + (inputData.error.message || JSON.stringify(inputData.error)));\n  return [{\n    json: {\n      error: inputData.error,\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre\n    }\n  }];\n}\n\nconst result = inputData;\nconst elapsedMs = Date.now() - requestStartTime;\n\nconst responseText = result.content?.[0]?.text;\nif (!responseText) {\n  throw new Error('Claude no devolvió contenido en la respuesta');\n}\n\nconst usage = {\n  input_tokens: result.usage?.input_tokens || 0,\n  output_tokens: result.usage?.output_tokens || 0,\n  model: result.model || 'claude-sonnet-4-20250514',\n  elapsed_ms: elapsedMs,\n  estimated_cost_usd:\n    ((result.usage?.input_tokens || 0) / 1000000) * 3 +\n    ((result.usage?.output_tokens || 0) / 1000000) * 15\n};\n\nconsole.log(`✓ Claude respondió en ${(elapsedMs / 1000).toFixed(1)}s | Tokens: ${usage.input_tokens}in/${usage.output_tokens}out | ~$${usage.estimated_cost_usd.toFixed(4)}`);\n\nreturn [{\n  json: {\n    raw_response: responseText,\n    convenio_id: convenioId,\n    convenio_nombre: convenioNombre,\n    claude_usage: usage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5632, 3360],
+      "id": "86295afb-e86d-4444-ada0-d387f7227f22",
+      "name": "Extract Perfil Claude",
+      "continueOnFail": true,
+      "notes": "NUEVO I1.9: Procesa respuesta de Claude API"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Validate Perfil JSON\n// FASE: I1.9\n// ============================================\n\nconst REQUIRED_FIELDS = ['convenio', 'ambito', 'variables_criticas', 'categorias_profesionales', 'jornada'];\nconst VALID_AMBITOS = ['estatal', 'autonomico', 'provincial', 'empresa'];\nconst VALID_COMPLEMENTO_TIPOS = ['porcentaje', 'cantidad_fija', 'trienio', 'quinquenio', 'bienio', 'otro'];\n\nfunction cleanJsonResponse(text) {\n  let cleaned = text.trim();\n  if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);\n  else if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);\n  if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);\n  return cleaned.trim();\n}\n\nfunction validateCategoria(cat, index) {\n  const warnings = [];\n  if (!cat.nombre || typeof cat.nombre !== 'string') {\n    warnings.push(`categorias_profesionales[${index}]: falta \"nombre\"`);\n  }\n  if (typeof cat.salario_base_anual === 'number') {\n    cat.salario_base_anual = Math.round(cat.salario_base_anual * 100) / 100;\n  }\n  if (typeof cat.salario_base_mensual === 'number') {\n    cat.salario_base_mensual = Math.round(cat.salario_base_mensual * 100) / 100;\n  }\n  return warnings;\n}\n\nfunction validateComplemento(comp, index) {\n  const warnings = [];\n  if (!comp.nombre) warnings.push(`complementos[${index}]: falta \"nombre\"`);\n  if (comp.tipo && !VALID_COMPLEMENTO_TIPOS.includes(comp.tipo)) {\n    warnings.push(`complementos[${index}].tipo \"${comp.tipo}\" no válido, cambiado a \"otro\"`);\n    comp.tipo = 'otro';\n  }\n  return warnings;\n}\n\n// MAIN\nconst inputData = $input.first().json;\n\n// Check si el nodo anterior falló (continueOnFail)\nif (inputData.error) {\n  console.log('⚠ El nodo Extract Perfil Claude falló: ' + (inputData.error.message || JSON.stringify(inputData.error)));\n  return [{\n    json: {\n      perfil_data: null,\n      convenio_id: null,\n      convenio_nombre: null,\n      validation: { is_valid: false, error: inputData.error.message || 'Error en extracción' },\n      claude_usage: null\n    }\n  }];\n}\n\nconst rawResponse = inputData.raw_response;\nconst convenioId = inputData.convenio_id;\nconst convenioNombre = inputData.convenio_nombre;\nconst claudeUsage = inputData.claude_usage;\n\nif (!rawResponse) {\n  throw new Error('No hay respuesta de Claude para validar');\n}\n\nconst cleanedJson = cleanJsonResponse(rawResponse);\nlet perfil;\n\ntry {\n  perfil = JSON.parse(cleanedJson);\n} catch (parseError) {\n  const jsonMatch = cleanedJson.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) {\n    try {\n      perfil = JSON.parse(jsonMatch[0]);\n      console.log('⚠ JSON extraído tras limpiar texto envolvente');\n    } catch (e) {\n      throw new Error(`JSON inválido: ${parseError.message}. Inicio: ${cleanedJson.substring(0, 200)}`);\n    }\n  } else {\n    throw new Error(`No se encontró JSON válido. Inicio: ${cleanedJson.substring(0, 200)}`);\n  }\n}\n\nconsole.log('✓ JSON parseado correctamente');\n\nconst missingFields = REQUIRED_FIELDS.filter(f => !perfil[f]);\nif (missingFields.length > 0) console.log(`⚠ Campos faltantes: ${missingFields.join(', ')}`);\n\nconst allWarnings = [];\n\nif (Array.isArray(perfil.categorias_profesionales)) {\n  perfil.categorias_profesionales.forEach((cat, i) => allWarnings.push(...validateCategoria(cat, i)));\n  console.log(`✓ ${perfil.categorias_profesionales.length} categorías profesionales`);\n}\n\nif (Array.isArray(perfil.complementos)) {\n  perfil.complementos.forEach((comp, i) => allWarnings.push(...validateComplemento(comp, i)));\n  console.log(`✓ ${perfil.complementos.length} complementos`);\n}\n\nif (Array.isArray(perfil.variables_criticas)) {\n  console.log(`✓ Variables críticas: ${perfil.variables_criticas.join(', ')}`);\n}\n\nconst validationResult = {\n  is_valid: missingFields.length === 0,\n  missing_fields: missingFields,\n  warnings: allWarnings,\n  stats: {\n    categorias: Array.isArray(perfil.categorias_profesionales) ? perfil.categorias_profesionales.length : 0,\n    complementos: Array.isArray(perfil.complementos) ? perfil.complementos.length : 0,\n    variables_criticas: Array.isArray(perfil.variables_criticas) ? perfil.variables_criticas.length : 0,\n    tiene_jornada: !!perfil.jornada,\n    tiene_horas_extra: !!perfil.horas_extra,\n    tiene_periodo_prueba: Array.isArray(perfil.periodo_prueba) && perfil.periodo_prueba.length > 0,\n    tiene_vacaciones: !!perfil.vacaciones,\n    tiene_tablas_salariales: !!perfil.tablas_salariales\n  }\n};\n\nconsole.log(`✓ Validación: ${validationResult.is_valid ? 'OK' : 'CON CAMPOS FALTANTES'}`);\n\nreturn [{\n  json: {\n    perfil_data: perfil,\n    convenio_id: convenioId,\n    convenio_nombre: convenioNombre,\n    validation: validationResult,\n    claude_usage: claudeUsage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5872, 3360],
+      "id": "1037c53a-fc3a-49c5-9aed-84390ca9d007",
+      "name": "Validate Perfil JSON",
+      "notes": "NUEVO I1.9: Parsea, valida y normaliza el JSON del perfil"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Prepare Supabase Request\n// FASE: I1.9\n// ============================================\n\nconst inputData = $input.first().json;\n\n// Si la validación marcó error (rama falló), pasar sin insertar\nif (!inputData.perfil_data) {\n  console.log('⚠ Sin perfil_data para insertar, saltando upsert');\n  return [{\n    json: {\n      skip_upsert: true,\n      perfil_id: null,\n      convenio_id: null,\n      convenio_nombre: inputData.convenio_nombre,\n      operation: 'skipped',\n      validation: inputData.validation,\n      claude_usage: inputData.claude_usage\n    }\n  }];\n}\n\nconst perfilData = inputData.perfil_data;\nconst convenioNombre = inputData.convenio_nombre;\nconst validation = inputData.validation;\nconst claudeUsage = inputData.claude_usage;\n\n// Obtener UUID real del convenio\nconst convenioData = $('Save md in supabase1').first().json;\nconst convenioUuid = Array.isArray(convenioData) ? convenioData[0].id : convenioData.id;\n\nif (!convenioUuid) {\n  throw new Error('No se pudo obtener UUID del convenio');\n}\n\nconsole.log(`Preparando upsert perfil: ${convenioNombre} (${convenioUuid})`);\n\n// Preparar payload para INSERT\nconst insertPayload = {\n  convenio_id: convenioUuid,\n  perfil_data: perfilData\n};\n\nreturn [{\n  json: {\n    skip_upsert: false,\n    convenio_uuid: convenioUuid,\n    insert_payload: insertPayload,\n    convenio_nombre: convenioNombre,\n    validation: validation,\n    claude_usage: claudeUsage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [6080, 3360],
+      "id": "a4b54be0-0d7c-4d8b-a409-de17caa34086",
+      "name": "Prepare Supabase Request",
+      "continueOnFail": true,
+      "notes": "NUEVO I1.9: Prepara datos para upsert en Supabase"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://kvebuijpjwlgrnfwfdgk.supabase.co/rest/v1/convenio_perfiles?convenio_id=eq.{{ $json.convenio_uuid }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [6304, 3120],
+      "id": "2e516355-28e4-4234-80fa-f31d6a0af92d",
+      "name": "HTTP Supabase Delete Perfil",
+      "credentials": {
+        "supabaseApi": {
+          "id": "17i79gWGYg1gHxjw",
+          "name": "Supabase account"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "NUEVO I1.9: Elimina perfil existente si lo hay"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kvebuijpjwlgrnfwfdgk.supabase.co/rest/v1/convenio_perfiles",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Prepare Supabase Request').first().json.insert_payload) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [6544, 3120],
+      "id": "0391aace-4819-42e8-906f-675fa56a7405",
+      "name": "HTTP Supabase Insert Perfil",
+      "credentials": {
+        "supabaseApi": {
+          "id": "17i79gWGYg1gHxjw",
+          "name": "Supabase account"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "NUEVO I1.9: Inserta nuevo perfil en convenio_perfiles"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Upsert Perfil Supabase\n// FASE: I1.9\n// FUNCIÓN: Procesar respuesta de Supabase\n// ============================================\n\nconst prepareData = $('Prepare Supabase Request').first().json;\n\n// Si se saltó el upsert\nif (prepareData.skip_upsert) {\n  console.log('⚠ Upsert saltado (sin perfil_data)');\n  return [{\n    json: {\n      perfil_id: null,\n      convenio_id: null,\n      convenio_nombre: prepareData.convenio_nombre,\n      operation: 'skipped',\n      validation: prepareData.validation,\n      claude_usage: prepareData.claude_usage\n    }\n  }];\n}\n\nconst insertData = $input.first().json;\nconst convenioNombre = prepareData.convenio_nombre;\nconst validation = prepareData.validation;\nconst claudeUsage = prepareData.claude_usage;\nconst convenioUuid = prepareData.convenio_uuid;\n\n// Check si el nodo HTTP anterior falló\nif (insertData.error) {\n  console.log('⚠ Error al insertar perfil: ' + (insertData.error.message || JSON.stringify(insertData.error)));\n  throw new Error('Error al guardar perfil en Supabase: ' + (insertData.error.message || ''));\n}\n\nconst savedData = insertData;\nconst savedPerfil = Array.isArray(savedData) ? savedData[0] : savedData;\n\nconsole.log(`✓ Perfil insertado: ${savedPerfil.id}`);\nconsole.log(`  Categorías: ${validation.stats.categorias} | Complementos: ${validation.stats.complementos}`);\n\nreturn [{\n  json: {\n    perfil_id: savedPerfil.id,\n    convenio_id: convenioUuid,\n    convenio_nombre: convenioNombre,\n    operation: 'inserted',\n    validation: validation,\n    claude_usage: claudeUsage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [6784, 3120],
+      "id": "31b18074-d513-4821-95dd-835269d889f7",
+      "name": "Upsert Perfil Supabase",
+      "continueOnFail": true,
+      "notes": "NUEVO I1.9: Procesa respuesta de Supabase"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "wait"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [7040, 2816],
+      "id": "6c59c262-7a48-444e-8f7f-0f9d64d29eb2",
+      "name": "Wait Both Branches",
+      "notes": "NUEVO I1.9: Espera a que ambas ramas (chunks + perfil) terminen antes de responder"
     }
   ],
   "pinData": {},
   "connections": {
-    "Extract and clean md": {
-      "main": [
-        [
-          {
-            "node": "Save md in supabase",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Save md in supabase": {
-      "main": [[]]
-    },
     "Webhook": {
       "main": [
         [
@@ -716,6 +796,33 @@
         ]
       ]
     },
+    "Extract and clean md1": {
+      "main": [
+        [
+          {
+            "node": "Save md in supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save md in supabase1": {
+      "main": [
+        [
+          {
+            "node": "Chunk Markdown",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Claude Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Chunk Markdown": {
       "main": [
         [
@@ -775,6 +882,116 @@
       "main": [
         [
           {
+            "node": "Chunks Branch Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chunks Branch Complete": {
+      "main": [
+        [
+          {
+            "node": "Wait Both Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Claude Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Claude API": {
+      "main": [
+        [
+          {
+            "node": "Extract Perfil Claude",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Perfil Claude": {
+      "main": [
+        [
+          {
+            "node": "Validate Perfil JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Perfil JSON": {
+      "main": [
+        [
+          {
+            "node": "Prepare Supabase Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Supabase Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Supabase Delete Perfil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Supabase Delete Perfil": {
+      "main": [
+        [
+          {
+            "node": "HTTP Supabase Insert Perfil",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Supabase Insert Perfil": {
+      "main": [
+        [
+          {
+            "node": "Upsert Perfil Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Perfil Supabase": {
+      "main": [
+        [
+          {
+            "node": "Wait Both Branches",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Wait Both Branches": {
+      "main": [
+        [
+          {
             "node": "Prepare Response",
             "type": "main",
             "index": 0
@@ -792,28 +1009,6 @@
           }
         ]
       ]
-    },
-    "Extract and clean md1": {
-      "main": [
-        [
-          {
-            "node": "Save md in supabase1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Save md in supabase1": {
-      "main": [
-        [
-          {
-            "node": "Chunk Markdown",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "active": true,
@@ -824,7 +1019,7 @@
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": "TvPqwtsxVr__-N5sWDqqN"
   },
-  "versionId": "8140f15b-14c6-4890-b9e3-ccda3eac4c38",
+  "versionId": "10667521-5c74-49ad-bba9-c53fd919feaf",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "1c6a2faf45e95944d162a539c0cff8415bcd053d25a87106e91c063a6ec7d027"

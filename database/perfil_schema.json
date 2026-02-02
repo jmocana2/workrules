@@ -1,0 +1,231 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Perfil de Convenio Colectivo",
+  "description": "Schema de validacion para el perfil JSON extraido de un convenio colectivo por Claude. Se usa para validar la respuesta antes de insertar en convenio_perfiles.perfil_data",
+  "type": "object",
+  "required": [
+    "convenio",
+    "ambito",
+    "variables_criticas",
+    "categorias_profesionales",
+    "jornada"
+  ],
+  "properties": {
+    "convenio": {
+      "type": "string",
+      "description": "Nombre completo del convenio colectivo"
+    },
+    "ambito": {
+      "type": "string",
+      "enum": ["estatal", "autonomico", "provincial", "empresa"],
+      "description": "Ambito territorial del convenio"
+    },
+    "vigencia": {
+      "type": "object",
+      "description": "Periodo de vigencia del convenio",
+      "properties": {
+        "inicio": { "type": "string", "description": "Fecha inicio (YYYY-MM-DD o YYYY)" },
+        "fin": { "type": "string", "description": "Fecha fin (YYYY-MM-DD o YYYY)" },
+        "prorroga_automatica": { "type": "boolean" }
+      }
+    },
+    "codigo_convenio": {
+      "type": "string",
+      "description": "Codigo REGCON del convenio si aparece en el texto"
+    },
+    "variables_criticas": {
+      "type": "array",
+      "description": "Lista de variables que el sistema debe preguntar al usuario para hacer calculos precisos",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "categorias_profesionales": {
+      "type": "array",
+      "description": "Lista de categorias/puestos profesionales del convenio con su salario base",
+      "items": {
+        "type": "object",
+        "required": ["nombre"],
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre de la categoria profesional tal como aparece en el convenio"
+          },
+          "grupo": {
+            "type": "string",
+            "description": "Grupo profesional al que pertenece (I, II, III... o A, B, C...)"
+          },
+          "nivel": {
+            "type": "string",
+            "description": "Nivel dentro del grupo si aplica"
+          },
+          "area_funcional": {
+            "type": "string",
+            "description": "Area funcional si el convenio las define"
+          },
+          "salario_base_anual": {
+            "type": "number",
+            "description": "Salario base anual en euros. Null si no aparece en el convenio",
+            "minimum": 0
+          },
+          "salario_base_mensual": {
+            "type": "number",
+            "description": "Salario base mensual en euros (si el convenio lo expresa asi)",
+            "minimum": 0
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "jornada": {
+      "type": "object",
+      "description": "Informacion sobre la jornada laboral",
+      "properties": {
+        "horas_anuales": {
+          "type": "number",
+          "description": "Jornada maxima anual en horas"
+        },
+        "horas_semanales": {
+          "type": "number",
+          "description": "Jornada maxima semanal en horas"
+        },
+        "distribucion_irregular": {
+          "type": "boolean",
+          "description": "Si el convenio permite distribucion irregular de jornada"
+        },
+        "articulo": {
+          "type": "string",
+          "description": "Articulo del convenio que regula la jornada"
+        }
+      }
+    },
+    "tablas_salariales": {
+      "type": "object",
+      "description": "Ano de referencia y numero de pagas",
+      "properties": {
+        "ano_referencia": {
+          "type": ["string", "integer"],
+          "description": "Ano al que corresponden los salarios"
+        },
+        "num_pagas": {
+          "type": "integer",
+          "description": "Numero total de pagas (normalmente 14 o 12 con prorrateo)"
+        },
+        "pagas_extra": {
+          "type": "integer",
+          "description": "Numero de pagas extraordinarias (normalmente 2)"
+        },
+        "revision_salarial": {
+          "type": "string",
+          "description": "Criterio de revision salarial (IPC, porcentaje fijo, etc.)"
+        }
+      }
+    },
+    "complementos": {
+      "type": "array",
+      "description": "Complementos salariales definidos en el convenio",
+      "items": {
+        "type": "object",
+        "required": ["nombre", "tipo"],
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre del complemento (Plus nocturnidad, Plus transporte, etc.)"
+          },
+          "tipo": {
+            "type": "string",
+            "enum": ["porcentaje", "cantidad_fija", "trienio", "quinquenio", "bienio", "otro"],
+            "description": "Tipo de complemento"
+          },
+          "valor": {
+            "type": "number",
+            "description": "Valor numerico (porcentaje o euros segun tipo)"
+          },
+          "base_calculo": {
+            "type": "string",
+            "description": "Sobre que se calcula: salario_base, salario_hora, etc."
+          },
+          "condicion": {
+            "type": "string",
+            "description": "Condicion para aplicar el complemento si la hay"
+          },
+          "articulo": {
+            "type": "string",
+            "description": "Articulo del convenio que lo regula"
+          }
+        }
+      }
+    },
+    "horas_extra": {
+      "type": "object",
+      "description": "Regulacion de horas extraordinarias",
+      "properties": {
+        "recargo_laborable_pct": {
+          "type": "number",
+          "description": "Porcentaje de recargo en dias laborables"
+        },
+        "recargo_festivo_pct": {
+          "type": "number",
+          "description": "Porcentaje de recargo en dias festivos"
+        },
+        "precio_fijo_hora": {
+          "type": "number",
+          "description": "Precio fijo por hora extra si el convenio lo define asi"
+        },
+        "maximo_anual": {
+          "type": "integer",
+          "description": "Maximo de horas extra anuales permitidas"
+        },
+        "compensacion_descanso": {
+          "type": "boolean",
+          "description": "Si se pueden compensar con descanso"
+        },
+        "articulo": {
+          "type": "string"
+        }
+      }
+    },
+    "periodo_prueba": {
+      "type": "array",
+      "description": "Periodos de prueba por tipo de trabajador/categoria",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tipo_trabajador": {
+            "type": "string",
+            "description": "A que trabajadores aplica (tecnicos titulados, resto, etc.)"
+          },
+          "duracion": {
+            "type": "string",
+            "description": "Duracion del periodo de prueba tal como aparece en el convenio"
+          },
+          "articulo": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "vacaciones": {
+      "type": "object",
+      "description": "Regulacion de vacaciones",
+      "properties": {
+        "dias_naturales": { "type": "integer" },
+        "dias_laborables": { "type": "integer" },
+        "articulo": { "type": "string" }
+      }
+    },
+    "variables_especificas": {
+      "type": "object",
+      "description": "Variables propias del sector que no encajan en los campos anteriores (ej: categoria hotel, zona geografica, turno)",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "notas_extraccion": {
+      "type": "array",
+      "description": "Notas del proceso de extraccion: ambiguedades encontradas, datos que no se pudieron extraer, etc.",
+      "items": { "type": "string" }
+    }
+  },
+  "additionalProperties": false
+}
