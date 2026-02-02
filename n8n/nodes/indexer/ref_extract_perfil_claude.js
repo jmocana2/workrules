@@ -104,18 +104,24 @@ ${markdown}`;
 // ============================================
 // FUNCIÓN DE RETRY
 // ============================================
-async function callClaudeWithRetry(systemPrompt, userPrompt, apiKey, maxRetries = MAX_RETRIES) {
+async function callClaudeWithRetry(
+  systemPrompt,
+  userPrompt,
+  apiKey,
+  maxRetries = MAX_RETRIES
+) {
   const payload = {
     model: MODEL,
     max_tokens: MAX_OUTPUT_TOKENS,
     temperature: TEMPERATURE,
     system: systemPrompt,
-    messages: [
-      { role: 'user', content: userPrompt }
-    ]
+    messages: [{ role: 'user', content: userPrompt }]
   };
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 seconds timeout
+
     try {
       const response = await fetch(ANTHROPIC_API_URL, {
         method: 'POST',
@@ -124,17 +130,26 @@ async function callClaudeWithRetry(systemPrompt, userPrompt, apiKey, maxRetries 
           'anthropic-version': '2023-06-01',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       // Rate limit
       if (response.status === 429) {
         if (attempt === maxRetries) {
-          const errorText = await response.text().catch(() => 'No response body');
-          throw new Error(`Rate limited after ${maxRetries} attempts. Response: ${errorText}`);
+          const errorText = await response
+            .text()
+            .catch(() => 'No response body');
+          throw new Error(
+            `Rate limited after ${maxRetries} attempts. Response: ${errorText}`
+          );
         }
         const waitTime = Math.pow(2, attempt) * 2000;
-        console.log(`Rate limited. Waiting ${waitTime}ms before retry ${attempt}/${maxRetries}...`);
+        console.log(
+          `Rate limited. Waiting ${waitTime}ms before retry ${attempt}/${maxRetries}...`
+        );
         await new Promise(r => setTimeout(r, waitTime));
         continue;
       }
@@ -142,10 +157,14 @@ async function callClaudeWithRetry(systemPrompt, userPrompt, apiKey, maxRetries 
       // Overloaded
       if (response.status === 529) {
         if (attempt === maxRetries) {
-          throw new Error(`Anthropic API overloaded after ${maxRetries} attempts`);
+          throw new Error(
+            `Anthropic API overloaded after ${maxRetries} attempts`
+          );
         }
         const waitTime = Math.pow(2, attempt) * 3000;
-        console.log(`API overloaded. Waiting ${waitTime}ms before retry ${attempt}/${maxRetries}...`);
+        console.log(
+          `API overloaded. Waiting ${waitTime}ms before retry ${attempt}/${maxRetries}...`
+        );
         await new Promise(r => setTimeout(r, waitTime));
         continue;
       }
@@ -157,16 +176,38 @@ async function callClaudeWithRetry(systemPrompt, userPrompt, apiKey, maxRetries 
 
       return await response.json();
     } catch (error) {
+      clearTimeout(timeoutId);
+
+      // Handle abort specifically
+      if (error.name === 'AbortError') {
+        console.log(
+          `Request aborted due to timeout (attempt ${attempt}/${maxRetries})`
+        );
+        if (attempt === maxRetries) {
+          throw new Error('Request timed out after 120 seconds');
+        }
+        const waitTime = Math.pow(2, attempt) * 2000;
+        console.log(`Retrying in ${waitTime}ms...`);
+        await new Promise(r => setTimeout(r, waitTime));
+        continue;
+      }
+
       if (attempt === maxRetries) {
-        throw new Error(`Failed after ${maxRetries} attempts: ${error.message}`);
+        throw new Error(
+          `Failed after ${maxRetries} attempts: ${error.message}`
+        );
       }
       const waitTime = Math.pow(2, attempt) * 2000;
-      console.log(`Attempt ${attempt} failed: ${error.message}. Retrying in ${waitTime}ms...`);
+      console.log(
+        `Attempt ${attempt} failed: ${error.message}. Retrying in ${waitTime}ms...`
+      );
       await new Promise(r => setTimeout(r, waitTime));
     }
   }
 
-  throw new Error(`Failed to get response from Claude after ${maxRetries} attempts`);
+  throw new Error(
+    `Failed to get response from Claude after ${maxRetries} attempts`
+  );
 }
 
 // ============================================
@@ -183,7 +224,9 @@ if (!markdown || markdown.trim().length === 0) {
   throw new Error('No hay markdown del convenio para extraer perfil');
 }
 
-console.log(`Extrayendo perfil JSON de convenio: ${convenioNombre || convenioId}`);
+console.log(
+  `Extrayendo perfil JSON de convenio: ${convenioNombre || convenioId}`
+);
 console.log(`Longitud del markdown: ${markdown.length} caracteres`);
 
 // Obtener API Key de las credenciales de Anthropic
@@ -227,11 +270,13 @@ console.log(`  - Output tokens: ${usage.output_tokens}`);
 console.log(`  - Tiempo: ${(usage.elapsed_ms / 1000).toFixed(1)}s`);
 console.log(`  - Coste estimado: $${usage.estimated_cost_usd.toFixed(4)}`);
 
-return [{
-  json: {
-    raw_response: responseText,
-    convenio_id: convenioId,
-    convenio_nombre: convenioNombre,
-    claude_usage: usage
+return [
+  {
+    json: {
+      raw_response: responseText,
+      convenio_id: convenioId,
+      convenio_nombre: convenioNombre,
+      claude_usage: usage
+    }
   }
-}];
+];

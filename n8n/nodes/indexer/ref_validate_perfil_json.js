@@ -7,9 +7,22 @@
 // ============================================
 // CAMPOS OBLIGATORIOS DEL SCHEMA
 // ============================================
-const REQUIRED_FIELDS = ['convenio', 'ambito', 'variables_criticas', 'categorias_profesionales', 'jornada'];
+const REQUIRED_FIELDS = [
+  'convenio',
+  'ambito',
+  'variables_criticas',
+  'categorias_profesionales',
+  'jornada'
+];
 const VALID_AMBITOS = ['estatal', 'autonomico', 'provincial', 'empresa'];
-const VALID_COMPLEMENTO_TIPOS = ['porcentaje', 'cantidad_fija', 'trienio', 'quinquenio', 'bienio', 'otro'];
+const VALID_COMPLEMENTO_TIPOS = [
+  'porcentaje',
+  'cantidad_fija',
+  'trienio',
+  'quinquenio',
+  'bienio',
+  'otro'
+];
 
 // ============================================
 // FUNCIONES DE VALIDACIÓN
@@ -35,15 +48,27 @@ function validateCategoria(cat, index) {
   const warnings = [];
 
   if (!cat.nombre || typeof cat.nombre !== 'string') {
-    warnings.push(`categorias_profesionales[${index}]: falta "nombre" o no es string`);
+    warnings.push(
+      `categorias_profesionales[${index}]: falta "nombre" o no es string`
+    );
   }
 
-  if (cat.salario_base_anual !== undefined && typeof cat.salario_base_anual !== 'number') {
-    warnings.push(`categorias_profesionales[${index}].salario_base_anual no es number`);
+  if (
+    cat.salario_base_anual !== undefined &&
+    typeof cat.salario_base_anual !== 'number'
+  ) {
+    warnings.push(
+      `categorias_profesionales[${index}].salario_base_anual no es number`
+    );
   }
 
-  if (cat.salario_base_mensual !== undefined && typeof cat.salario_base_mensual !== 'number') {
-    warnings.push(`categorias_profesionales[${index}].salario_base_mensual no es number`);
+  if (
+    cat.salario_base_mensual !== undefined &&
+    typeof cat.salario_base_mensual !== 'number'
+  ) {
+    warnings.push(
+      `categorias_profesionales[${index}].salario_base_mensual no es number`
+    );
   }
 
   // Redondear salarios a 2 decimales
@@ -67,7 +92,9 @@ function validateComplemento(comp, index) {
   if (!comp.tipo) {
     warnings.push(`complementos[${index}]: falta "tipo"`);
   } else if (!VALID_COMPLEMENTO_TIPOS.includes(comp.tipo)) {
-    warnings.push(`complementos[${index}].tipo "${comp.tipo}" no es válido, se cambia a "otro"`);
+    warnings.push(
+      `complementos[${index}].tipo "${comp.tipo}" no es válido, se cambia a "otro"`
+    );
     comp.tipo = 'otro';
   }
 
@@ -99,17 +126,84 @@ let perfil;
 try {
   perfil = JSON.parse(cleanedJson);
 } catch (parseError) {
-  // Intentar extraer JSON si hay texto antes/después
-  const jsonMatch = cleanedJson.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    try {
-      perfil = JSON.parse(jsonMatch[0]);
-      console.log('⚠ JSON extraído tras limpiar texto envolvente');
-    } catch (e) {
-      throw new Error(`JSON inválido de Claude. Error: ${parseError.message}. Primeros 500 chars: ${cleanedJson.substring(0, 500)}`);
+  // Intentar extraer JSON usando brace-matching
+  const firstBrace = cleanedJson.indexOf('{');
+
+  if (firstBrace !== -1) {
+    // Implementar brace-matching para extraer el primer objeto JSON válido
+    let braceCount = 0;
+    let endIndex = -1;
+    let inString = false;
+    let escapeNext = false;
+
+    for (let i = firstBrace; i < cleanedJson.length; i++) {
+      const char = cleanedJson[i];
+
+      // Manejar escape characters
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+
+      // Manejar strings (ignorar braces dentro de strings)
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) continue;
+
+      // Contar braces fuera de strings
+      if (char === '{') {
+        braceCount++;
+      } else if (char === '}') {
+        braceCount--;
+        if (braceCount === 0) {
+          endIndex = i + 1;
+          break;
+        }
+      }
+    }
+
+    if (endIndex !== -1) {
+      const extractedJson = cleanedJson.substring(firstBrace, endIndex);
+      try {
+        perfil = JSON.parse(extractedJson);
+        console.log('⚠ JSON extraído usando brace-matching');
+      } catch (e) {
+        // Debug log con contenido sanitizado (solo para diagnóstico)
+        const sanitizedPreview = cleanedJson
+          .substring(0, 100)
+          .replace(/[^\x20-\x7E]/g, '?');
+        console.log(
+          `Debug: Parse error after brace-matching. Error: ${parseError.message}. Preview: ${sanitizedPreview}...`
+        );
+        throw new Error(`Invalid JSON from Claude: ${parseError.message}`);
+      }
+    } else {
+      // Debug log con contenido sanitizado
+      const sanitizedPreview = cleanedJson
+        .substring(0, 100)
+        .replace(/[^\x20-\x7E]/g, '?');
+      console.log(
+        `Debug: No matching closing brace found. Preview: ${sanitizedPreview}...`
+      );
+      throw new Error('No valid JSON found in Claude response');
     }
   } else {
-    throw new Error(`No se encontró JSON válido en la respuesta de Claude. Primeros 500 chars: ${cleanedJson.substring(0, 500)}`);
+    // Debug log con contenido sanitizado
+    const sanitizedPreview = cleanedJson
+      .substring(0, 100)
+      .replace(/[^\x20-\x7E]/g, '?');
+    console.log(
+      `Debug: No opening brace found. Preview: ${sanitizedPreview}...`
+    );
+    throw new Error('No valid JSON found in Claude response');
   }
 }
 
@@ -124,7 +218,9 @@ if (missingFields.length > 0) {
 
 // 3. Validar ambito
 if (perfil.ambito && !VALID_AMBITOS.includes(perfil.ambito)) {
-  console.log(`⚠ Ámbito "${perfil.ambito}" no reconocido, se mantiene tal cual`);
+  console.log(
+    `⚠ Ámbito "${perfil.ambito}" no reconocido, se mantiene tal cual`
+  );
 }
 
 // 4. Validar categorías profesionales
@@ -134,7 +230,9 @@ if (Array.isArray(perfil.categorias_profesionales)) {
   perfil.categorias_profesionales.forEach((cat, i) => {
     allWarnings.push(...validateCategoria(cat, i));
   });
-  console.log(`✓ ${perfil.categorias_profesionales.length} categorías profesionales encontradas`);
+  console.log(
+    `✓ ${perfil.categorias_profesionales.length} categorías profesionales encontradas`
+  );
 } else {
   allWarnings.push('categorias_profesionales no es un array o no existe');
 }
@@ -149,7 +247,9 @@ if (Array.isArray(perfil.complementos)) {
 
 // 6. Validar variables_criticas
 if (Array.isArray(perfil.variables_criticas)) {
-  console.log(`✓ ${perfil.variables_criticas.length} variables críticas: ${perfil.variables_criticas.join(', ')}`);
+  console.log(
+    `✓ ${perfil.variables_criticas.length} variables críticas: ${perfil.variables_criticas.join(', ')}`
+  );
 } else {
   allWarnings.push('variables_criticas no es un array o no existe');
 }
@@ -166,28 +266,41 @@ const validationResult = {
   missing_fields: missingFields,
   warnings: allWarnings,
   stats: {
-    categorias: Array.isArray(perfil.categorias_profesionales) ? perfil.categorias_profesionales.length : 0,
-    complementos: Array.isArray(perfil.complementos) ? perfil.complementos.length : 0,
-    variables_criticas: Array.isArray(perfil.variables_criticas) ? perfil.variables_criticas.length : 0,
+    categorias: Array.isArray(perfil.categorias_profesionales)
+      ? perfil.categorias_profesionales.length
+      : 0,
+    complementos: Array.isArray(perfil.complementos)
+      ? perfil.complementos.length
+      : 0,
+    variables_criticas: Array.isArray(perfil.variables_criticas)
+      ? perfil.variables_criticas.length
+      : 0,
     tiene_jornada: !!perfil.jornada,
     tiene_horas_extra: !!perfil.horas_extra,
-    tiene_periodo_prueba: Array.isArray(perfil.periodo_prueba) && perfil.periodo_prueba.length > 0,
+    tiene_periodo_prueba:
+      Array.isArray(perfil.periodo_prueba) && perfil.periodo_prueba.length > 0,
     tiene_vacaciones: !!perfil.vacaciones,
     tiene_tablas_salariales: !!perfil.tablas_salariales
   }
 };
 
-console.log(`\n✓ Validación completa: ${validationResult.is_valid ? 'VÁLIDO' : 'CON CAMPOS FALTANTES'}`);
+console.log(
+  `\n✓ Validación completa: ${validationResult.is_valid ? 'VÁLIDO' : 'CON CAMPOS FALTANTES'}`
+);
 console.log(`  Categorías: ${validationResult.stats.categorias}`);
 console.log(`  Complementos: ${validationResult.stats.complementos}`);
-console.log(`  Variables críticas: ${validationResult.stats.variables_criticas}`);
+console.log(
+  `  Variables críticas: ${validationResult.stats.variables_criticas}`
+);
 
-return [{
-  json: {
-    perfil_data: perfil,
-    convenio_id: convenioId,
-    convenio_nombre: convenioNombre,
-    validation: validationResult,
-    claude_usage: claudeUsage
+return [
+  {
+    json: {
+      perfil_data: perfil,
+      convenio_id: convenioId,
+      convenio_nombre: convenioNombre,
+      validation: validationResult,
+      claude_usage: claudeUsage
+    }
   }
-}];
+];
