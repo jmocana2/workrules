@@ -695,6 +695,48 @@ $$;
 
 COMMENT ON FUNCTION search_similar_chunks IS 'Busca chunks similares usando búsqueda vectorial por cosine similarity';
 
+-- -----------------------------------------------------------------------------
+-- Función para buscar chunks similares FILTRADOS por convenio_id
+-- -----------------------------------------------------------------------------
+-- Nueva función para Fase 2: Permite filtrar búsqueda vectorial por convenio
+-- específico, esencial para el RAG cuando el usuario pregunta sobre UN convenio
+-- -----------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION search_chunks_by_convenio(
+    query_embedding vector(1536),
+    p_convenio_id UUID,
+    match_threshold float DEFAULT 0.7,
+    match_count int DEFAULT 10
+)
+RETURNS TABLE (
+    chunk_id UUID,
+    convenio_id UUID,
+    contenido TEXT,
+    metadata JSONB,
+    similarity float
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        cc.id as chunk_id,
+        cc.convenio_id,
+        cc.contenido,
+        cc.metadata,
+        1 - (cc.embedding <=> query_embedding) as similarity
+    FROM convenio_chunks cc
+    WHERE
+        cc.convenio_id = p_convenio_id
+        AND 1 - (cc.embedding <=> query_embedding) > match_threshold
+    ORDER BY cc.embedding <=> query_embedding
+    LIMIT match_count;
+END;
+$$;
+
+COMMENT ON FUNCTION search_chunks_by_convenio IS 'Busca chunks similares de un convenio específico usando búsqueda vectorial (RAG Fase 2)';
+
 -- Función para buscar en caché semántico
 CREATE OR REPLACE FUNCTION search_semantic_cache(
     query_embedding vector(1536),
