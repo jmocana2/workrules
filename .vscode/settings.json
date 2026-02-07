@@ -1,0 +1,21 @@
+{
+  // Configuración de Deno para Supabase Edge Functions
+  "deno.enable": true,
+  "deno.enablePaths": [
+    "./supabase/functions"
+  ],
+  "deno.lint": true,
+  "deno.unstable": true,
+  
+  // Desactivar TypeScript del workspace en las carpetas de Deno
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  
+  // Excluir node_modules si lo usas en otras partes
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true
+  }
+}
