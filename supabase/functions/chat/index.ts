@@ -54,10 +54,13 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // Consider logging the full error server-side instead of exposing to client
+    console.error('Chat function error:', error);
     return new Response(
       JSON.stringify({
         error: 'Internal server error',
-        details: error.message
+        details: Deno.env.get('ENVIRONMENT') === 'production' ? undefined : errorMessage
       }),
       {
         status: 500,
@@ -75,6 +78,6 @@ Deno.serve(async (req: Request) => {
   curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/chat' \
     --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
     --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
+    --data '{"convenio_id":"66499","pregunta":"¿Cuántos días de vacaciones corresponden?","session_id":"test-session-123"}'
 
 */
