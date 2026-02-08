@@ -95,7 +95,7 @@ try {
   apiKey = $credentials.openAiApi.apiKey;
 } catch (error) {
   throw new Error(
-    'No se pudo obtener la API Key de OpenAI. Verifica que las credenciales estén configuradas.'
+    `No se pudo obtener la API Key de OpenAI. Verifica que las credenciales estén configuradas. Error: ${error.message}`
   );
 }
 

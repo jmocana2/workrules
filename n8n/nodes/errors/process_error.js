@@ -12,7 +12,7 @@ const errorData = error.json;
 let webhookData = null;
 try {
   webhookData = $('Webhook').first().json.body;
-} catch (e) {
+} catch {
   webhookData = { error: 'No se pudo obtener datos del webhook' };
 }
 
@@ -30,7 +30,6 @@ if (
   errorMessage.includes('duplicate')
 ) {
   errorType = 'DUPLICATE_PDF';
-  shouldRetry = false;
   userMessage =
     'El PDF ya existe en el almacenamiento. Se puede reutilizar el existente.';
 }
@@ -40,7 +39,6 @@ else if (
   errorMessage.includes('codigo_regcon')
 ) {
   errorType = 'DUPLICATE_CONVENIO';
-  shouldRetry = false;
   userMessage =
     'Ya existe un convenio con este código REGCON en la base de datos.';
 }
@@ -56,13 +54,11 @@ else if (
   errorMessage.includes('unauthorized')
 ) {
   errorType = 'AUTH_ERROR';
-  shouldRetry = false;
   userMessage = 'Error de autenticación con las APIs externas.';
 }
 // 5. PDF no descargable
 else if (errorMessage.includes('404') || errorMessage.includes('ENOTFOUND')) {
   errorType = 'PDF_NOT_FOUND';
-  shouldRetry = false;
   userMessage = 'No se pudo descargar el PDF desde la URL proporcionada.';
 }
 

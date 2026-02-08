@@ -127,6 +127,7 @@ try {
   perfil = JSON.parse(cleanedJson);
 } catch (parseError) {
   // Intentar extraer JSON usando brace-matching
+  console.log(`Initial JSON parse failed: ${parseError.message}. Attempting brace-matching extraction...`);
   const firstBrace = cleanedJson.indexOf('{');
 
   if (firstBrace !== -1) {
@@ -181,9 +182,9 @@ try {
           .substring(0, 100)
           .replace(/[^\x20-\x7E]/g, '?');
         console.log(
-          `Debug: Parse error after brace-matching. Error: ${parseError.message}. Preview: ${sanitizedPreview}...`
+          `Debug: Parse error after brace-matching. Error: ${e.message}. Preview: ${sanitizedPreview}...`
         );
-        throw new Error(`Invalid JSON from Claude: ${parseError.message}`);
+        throw new Error(`Invalid JSON from Claude: ${e.message}`);
       }
     } else {
       // Debug log con contenido sanitizado

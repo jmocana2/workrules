@@ -235,7 +235,7 @@ try {
   apiKey = $credentials.anthropicApi.apiKey;
 } catch (error) {
   throw new Error(
-    'No se pudo obtener la API Key de Anthropic. Verifica que la credencial "Anthropic account" esté configurada.'
+    `No se pudo obtener la API Key de Anthropic. Verifica que la credencial "Anthropic account" esté configurada. Error: ${error.message}`
   );
 }
 

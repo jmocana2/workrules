@@ -6,7 +6,15 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report",
+    "test:deno": "deno test --allow-all --config supabase/functions/deno.json supabase/functions",
+    "test:coverage": "deno test --allow-all --config supabase/functions/deno.json --coverage=supabase/functions/coverage supabase/functions",
+    "build": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +26,7 @@
     "@typescript-eslint/parser": "^8.54.0",
     "eslint": "9.0.0",
     "eslint-plugin-sonarjs": "^3.0.6",
+    "husky": "^9.1.7",
     "ts-api-utils": "^2.4.0",
     "typescript": "^5.9.3"
   }

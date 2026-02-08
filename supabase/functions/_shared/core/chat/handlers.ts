@@ -79,7 +79,7 @@ export async function parseRequestBody(req: Request): Promise<{
   try {
     const data = await req.json();
     return { data };
-  } catch (_error) {
+  } catch {
     return {
       data: null,
       error: 'Invalid JSON body',
