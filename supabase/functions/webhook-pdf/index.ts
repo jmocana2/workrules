@@ -1,22 +1,26 @@
 // supabase/functions/webhook-pdf/index.ts
 
 import { corsHeaders } from '../_shared/lib/cors.ts';
+import { buildNotImplementedResponse } from './handlers.ts';
 
-Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
+const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+
+Deno.serve((_req: Request) => {
+  if (_req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  return new Response(
-    JSON.stringify({
-      status: 'not_implemented',
-      message: 'webhook-pdf: Pendiente de implementacion (Fase 3+)'
-    }),
-    {
-      status: 501,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    }
-  );
+  // TODO: Implementar procesamiento de PDFs en Fase 3+
+  // 1. Validar webhook payload
+  // 2. Verificar que es un PDF
+  // 3. Extraer convenio_id del path
+  // 4. Trigger pipeline de procesamiento (n8n)
+
+  const response = buildNotImplementedResponse();
+  return new Response(JSON.stringify(response.body), {
+    status: response.status,
+    headers: jsonHeaders,
+  });
 });
 
 /* To invoke locally:

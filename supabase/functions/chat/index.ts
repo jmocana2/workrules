@@ -1,7 +1,15 @@
 // supabase/functions/chat/index.ts
 
 import type { ChatRequest } from '../_shared/core/chat/types.ts';
+import {
+  validateChatRequest,
+  parseRequestBody,
+  processChatRequest,
+  buildErrorResponse,
+} from '../_shared/core/chat/handlers.ts';
 import { corsHeaders } from '../_shared/lib/cors.ts';
+
+const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
 
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
@@ -12,61 +20,51 @@ Deno.serve(async (req: Request) => {
   try {
     // Solo POST permitido
     if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-        status: 405,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      const response = buildErrorResponse(405, 'Method not allowed');
+      return new Response(JSON.stringify(response.body), {
+        status: response.status,
+        headers: jsonHeaders,
       });
     }
 
     // Parsear body
-    const body: ChatRequest = await req.json();
-    const { convenio_id, pregunta } = body;
-
-    // Validacion basica
-    if (!convenio_id || !pregunta) {
-      return new Response(
-        JSON.stringify({
-          error: 'Missing required fields',
-          required: ['convenio_id', 'pregunta']
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
+    const { data, error: parseError } = await parseRequestBody(req);
+    if (parseError) {
+      const response = buildErrorResponse(400, parseError);
+      return new Response(JSON.stringify(response.body), {
+        status: response.status,
+        headers: jsonHeaders,
+      });
     }
 
-    // Hello World response (se reemplazara por RAG en I2.8)
-    return new Response(
-      JSON.stringify({
-        status: 'ok',
-        message: `WorkRules chat operativo. Pregunta recibida para convenio ${convenio_id}`,
-        data: {
-          convenio_id,
-          pregunta,
-          respuesta: 'Hello World - Edge Function funcionando correctamente',
-          version: '0.1.0'
-        }
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    // Validar request
+    const validation = validateChatRequest(data);
+    if (!validation.valid) {
+      const response = buildErrorResponse(400, validation.error!, {
+        ...(validation.fields && { required: validation.fields }),
+      });
+      return new Response(JSON.stringify(response.body), {
+        status: response.status,
+        headers: jsonHeaders,
+      });
+    }
+
+    // Procesar chat (se reemplazará por RAG en I2.8)
+    const chatResponse = processChatRequest(data as ChatRequest);
+    return new Response(JSON.stringify(chatResponse.body), {
+      status: chatResponse.status,
+      headers: jsonHeaders,
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    // Consider logging the full error server-side instead of exposing to client
     console.error('Chat function error:', error);
-    return new Response(
-      JSON.stringify({
-        error: 'Internal server error',
-        details: Deno.env.get('ENVIRONMENT') === 'production' ? undefined : errorMessage
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    const response = buildErrorResponse(500, 'Internal server error', {
+      details: Deno.env.get('ENVIRONMENT') === 'production' ? undefined : errorMessage,
+    });
+    return new Response(JSON.stringify(response.body), {
+      status: response.status,
+      headers: jsonHeaders,
+    });
   }
 });
 
