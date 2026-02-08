@@ -1,0 +1,8 @@
+node_modules/
+coverage/
+dist/
+build/
+*.min.js
+pnpm-lock.yaml
+package-lock.json
+supabase/functions/coverage/
