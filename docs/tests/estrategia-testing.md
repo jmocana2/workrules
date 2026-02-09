@@ -1,0 +1,357 @@
+# Estrategia de Testing - WorkRules
+
+**Fecha:** Febrero 2026 | **Arquitectura:** Monolito Modular | **Stack:** React 19 + Supabase Edge Functions (Deno)
+
+---
+
+## 1. Testing Pyramid
+
+```
+        ┌─────────┐
+        │   E2E   │  5-10%
+        │Playwright│
+       ┌┴─────────┴┐
+       │Integration │  20-30%
+       │Vitest + RTL│
+      ┌┴───────────┴┐
+      │    Unit     │  60-70%
+      │Vitest + Deno│
+      └─────────────┘
+```
+
+### Principio rector
+
+**Testear comportamiento, no implementación.** Los tests deben centrarse en lo que el usuario experimenta, no en los detalles internos del código.
+
+---
+
+## 2. Stack de Testing por Capa
+
+| Capa | Tecnología | Runner | Ubicación |
+|------|------------|--------|-----------|
+| **Frontend (Unit)** | Vitest + vi.mock() | Node.js | `apps/web/**/*.test.ts` |
+| **Frontend (Integration)** | Vitest + React Testing Library | Node.js | `apps/web/**/*.test.tsx` |
+| **Edge Functions (Unit)** | Deno Test + std/testing/mock | Deno | `supabase/functions/**/*.test.ts` |
+| **Edge Functions (Integration)** | Supabase CLI local + Deno Test | Deno | `supabase/functions/**/*.integration.test.ts` |
+| **E2E** | Playwright + POM | Node.js | `e2e/**/*.spec.ts` |
+
+---
+
+## 3. Objetivos de Coverage
+
+### Coverage General
+
+| Métrica | Objetivo | Justificación |
+|---------|----------|---------------|
+| **Functions** | 90% | Evita testear getters triviales y boilerplate |
+| **Lines** | 70% | Sostenible para solo-dev sin tests de relleno |
+
+### Objetivos por Área
+
+| Área | Objetivo | Notas |
+|------|----------|-------|
+| User flows | 90% | Flujos principales del chat RAG |
+| Component integration | 85% | Componentes que interactúan entre sí |
+| State management | 80% | Testear lógica propia, no TanStack Query |
+| API Integration | 80% | Enfoque en flujo RAG y Edge Functions |
+| Validación formularios | 100% | Crítico para LegalTech |
+
+---
+
+## 4. Estructura de Tests
+
+### Frontend (apps/web)
+
+```
+apps/web/
+├── src/
+│   ├── components/
+│   │   ├── Chat/
+│   │   │   ├── ChatInput.tsx
+│   │   │   ├── ChatInput.test.tsx      # Unit test
+│   │   │   └── ChatFlow.test.tsx       # Integration test
+│   │   └── ...
+│   ├── hooks/
+│   │   ├── useChat.ts
+│   │   └── useChat.test.ts
+│   └── utils/
+│       ├── validators.ts
+│       └── validators.test.ts
+├── vitest.config.ts
+└── vitest.setup.ts
+```
+
+### Edge Functions (supabase/functions)
+
+```
+supabase/functions/
+├── chat/
+│   ├── index.ts                        # Edge Function
+│   ├── index.test.ts                   # Unit test
+│   └── index.integration.test.ts       # Integration test
+├── webhook-pdf/
+│   ├── index.ts
+│   └── index.test.ts
+├── _shared/
+│   ├── core/
+│   │   ├── chat/
+│   │   │   ├── handlers.ts
+│   │   │   ├── handlers.test.ts
+│   │   │   └── types.ts
+│   │   └── convenio/
+│   │       ├── calculator.ts
+│   │       └── calculator.test.ts      # Crítico: lógica de cálculo
+│   └── lib/
+│       ├── supabase.ts
+│       └── supabase.test.ts
+└── deno.json                           # Configuración Deno + test tasks
+```
+
+### E2E (e2e/)
+
+```
+e2e/
+├── pages/                              # Page Object Model
+│   ├── BasePage.ts
+│   ├── ChatPage.ts
+│   └── ConvenioPage.ts
+├── fixtures/
+│   └── test-data.ts
+├── specs/
+│   ├── chat-flow.spec.ts
+│   └── convenio-search.spec.ts
+├── playwright.config.ts
+└── global-setup.ts                     # Mock server setup
+```
+
+---
+
+## 5. Configuración
+
+### 5.1 Vitest (Frontend)
+
+```typescript
+// apps/web/vitest.config.ts
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      exclude: ['node_modules/', 'src/**/*.d.ts'],
+      thresholds: {
+        functions: 90,
+        lines: 70
+      }
+    }
+  }
+})
+```
+
+### 5.2 Deno (Edge Functions)
+
+```json
+// supabase/functions/deno.json
+{
+  "tasks": {
+    "test": "deno test --allow-env --allow-net --allow-read",
+    "test:watch": "deno test --watch --allow-env --allow-net --allow-read",
+    "test:coverage": "deno test --coverage=coverage --allow-env --allow-net --allow-read",
+    "coverage:report": "deno coverage coverage --lcov > coverage.lcov"
+  },
+  "imports": {
+    "@std/testing": "jsr:@std/testing@^0.225.0",
+    "@std/assert": "jsr:@std/assert@^0.225.0"
+  }
+}
+```
+
+### 5.3 Playwright (E2E)
+
+```typescript
+// e2e/playwright.config.ts
+import { defineConfig, devices } from '@playwright/test'
+
+export default defineConfig({
+  testDir: './specs',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
+  use: {
+    baseURL: 'http://localhost:5173',
+    trace: 'on-first-retry',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
+  webServer: {
+    command: 'pnpm dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: !process.env.CI,
+  },
+})
+```
+
+---
+
+## 6. Estrategia de Mocks
+
+### Frontend (Vitest)
+
+```typescript
+// Ejemplo: Mock de Supabase client
+import { vi } from 'vitest'
+
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn().mockResolvedValue({ data: [], error: null })
+    }))
+  }
+}))
+```
+
+### Edge Functions (Deno)
+
+```typescript
+// Ejemplo: Mock de fetch para Anthropic API
+import { stub } from "@std/testing/mock"
+
+const fetchStub = stub(globalThis, "fetch", () =>
+  Promise.resolve(new Response(JSON.stringify({ content: "mocked" })))
+)
+```
+
+### E2E (Mock Service Worker)
+
+```typescript
+// e2e/mocks/handlers.ts
+import { http, HttpResponse } from 'msw'
+
+export const handlers = [
+  http.post('*/functions/v1/chat', () => {
+    return HttpResponse.json({
+      status: 'ok',
+      data: { respuesta: 'Mock response for E2E' }
+    })
+  })
+]
+```
+
+---
+
+## 7. TDD Workflow
+
+```
+┌─────────────────────────────────────┐
+│  1. RED: Escribir test que falla    │
+├─────────────────────────────────────┤
+│  2. GREEN: Implementar mínimo       │
+├─────────────────────────────────────┤
+│  3. REFACTOR: Mejorar sin romper    │
+└─────────────────────────────────────┘
+```
+
+### Ejemplo TDD para Edge Function
+
+```typescript
+// 1. RED - Escribir test primero
+// supabase/functions/chat/handlers.test.ts
+import { assertEquals } from "@std/assert"
+import { validateChatRequest } from "./handlers.ts"
+
+Deno.test("validateChatRequest - rechaza sin convenio_id", () => {
+  const result = validateChatRequest({ pregunta: "test" })
+  assertEquals(result.valid, false)
+  assertEquals(result.error, "convenio_id is required")
+})
+
+// 2. GREEN - Implementar
+// supabase/functions/chat/handlers.ts
+export function validateChatRequest(body: unknown) {
+  if (!body?.convenio_id) {
+    return { valid: false, error: "convenio_id is required" }
+  }
+  return { valid: true }
+}
+
+// 3. REFACTOR - Mejorar tipado, extraer constantes, etc.
+```
+
+---
+
+## 8. Scripts NPM
+
+```json
+// package.json (root)
+{
+  "scripts": {
+    "test": "pnpm -r test",
+    "test:unit": "pnpm --filter web test:unit",
+    "test:integration": "pnpm --filter web test:integration",
+    "test:e2e": "playwright test",
+    "test:edge": "cd supabase/functions && deno task test",
+    "test:coverage": "pnpm -r test:coverage",
+    "test:ci": "pnpm test:unit && pnpm test:edge && pnpm test:e2e"
+  }
+}
+```
+
+---
+
+## 9. CI/CD Integration
+
+```yaml
+# .github/workflows/test.yml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - run: pnpm install
+      - run: pnpm test:unit
+      - run: pnpm test:edge
+      - run: pnpm test:e2e
+```
+
+---
+
+## 10. Prioridad de Implementación
+
+1. **Fase 1:** Configurar Deno tests para Edge Functions existentes (chat, webhook-pdf)
+2. **Fase 2:** Configurar Vitest cuando se cree el frontend
+3. **Fase 3:** Configurar Playwright + POM para flujos E2E críticos
+4. **Fase 4:** Integrar con CI/CD
+
+---
+
+## Referencias
+
+- [Vitest Documentation](https://vitest.dev/)
+- [Deno Testing](https://docs.deno.com/runtime/manual/basics/testing/)
+- [Playwright Documentation](https://playwright.dev/)
+- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
+- [MSW - Mock Service Worker](https://mswjs.io/)
