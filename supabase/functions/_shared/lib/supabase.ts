@@ -1,7 +1,7 @@
 // supabase/functions/_shared/lib/supabase.ts
 // Repository para operaciones de base de datos (PostgreSQL + pgvector)
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 // ============================================
 // Types
@@ -29,7 +29,7 @@ export interface QuotaStatus {
   hasQuota: boolean;
   used: number;
   limit: number;
-  tier: 'free' | 'premium' | 'enterprise';
+  tier: "free" | "premium" | "enterprise";
 }
 
 /** Datos basicos de convenio */
@@ -44,11 +44,11 @@ export interface Convenio {
 
 /** Codigos de error del repository */
 export type RepositoryErrorCode =
-  | 'NOT_FOUND'
-  | 'DB_ERROR'
-  | 'QUOTA_EXCEEDED'
-  | 'INVALID_INPUT'
-  | 'CONFIG_ERROR';
+  | "NOT_FOUND"
+  | "DB_ERROR"
+  | "QUOTA_EXCEEDED"
+  | "INVALID_INPUT"
+  | "CONFIG_ERROR";
 
 // ============================================
 // RepositoryError
@@ -61,10 +61,10 @@ export class RepositoryError extends Error {
   constructor(
     message: string,
     public code: RepositoryErrorCode,
-    public details?: unknown
+    public details?: unknown,
   ) {
     super(message);
-    this.name = 'RepositoryError';
+    this.name = "RepositoryError";
   }
 }
 
@@ -80,11 +80,11 @@ export function validateEmbedding(embedding: unknown): {
   error?: string;
 } {
   if (!embedding) {
-    return { valid: false, error: 'Embedding is required' };
+    return { valid: false, error: "Embedding is required" };
   }
 
   if (!Array.isArray(embedding)) {
-    return { valid: false, error: 'Embedding must be an array' };
+    return { valid: false, error: "Embedding must be an array" };
   }
 
   if (embedding.length !== 1536) {
@@ -96,10 +96,10 @@ export function validateEmbedding(embedding: unknown): {
 
   // Verificar que todos los elementos son numeros
   const allNumbers = embedding.every(
-    (n) => typeof n === 'number' && !isNaN(n)
+    (n) => typeof n === "number" && !isNaN(n),
   );
   if (!allNumbers) {
-    return { valid: false, error: 'Embedding must contain only numbers' };
+    return { valid: false, error: "Embedding must contain only numbers" };
   }
 
   return { valid: true };
@@ -116,7 +116,7 @@ export function validateUUID(id: unknown, fieldName: string): {
     return { valid: false, error: `${fieldName} is required` };
   }
 
-  if (typeof id !== 'string') {
+  if (typeof id !== "string") {
     return { valid: false, error: `${fieldName} must be a string` };
   }
 
@@ -135,13 +135,13 @@ export function validateUUID(id: unknown, fieldName: string): {
  */
 export function validateNonEmptyString(
   value: unknown,
-  fieldName: string
+  fieldName: string,
 ): { valid: boolean; error?: string } {
   if (!value) {
     return { valid: false, error: `${fieldName} is required` };
   }
 
-  if (typeof value !== 'string') {
+  if (typeof value !== "string") {
     return { valid: false, error: `${fieldName} must be a string` };
   }
 
@@ -163,7 +163,7 @@ let _supabaseClient: SupabaseClient | null = null;
  * Permite inyectar cliente para testing
  */
 export function getSupabaseClient(
-  injectedClient?: SupabaseClient
+  injectedClient?: SupabaseClient,
 ): SupabaseClient {
   if (injectedClient) {
     return injectedClient;
@@ -173,13 +173,13 @@ export function getSupabaseClient(
     return _supabaseClient;
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
   if (!supabaseUrl || !supabaseServiceKey) {
     throw new RepositoryError(
-      'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables',
-      'CONFIG_ERROR'
+      "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables",
+      "CONFIG_ERROR",
     );
   }
 
@@ -207,25 +207,25 @@ export async function searchChunksByConvenio(
   convenioId: string,
   limit = 5,
   threshold = 0.7,
-  client?: SupabaseClient
+  client?: SupabaseClient,
 ): Promise<ChunkSearchResult[]> {
   // Validar inputs
   const embeddingValidation = validateEmbedding(embedding);
   if (!embeddingValidation.valid) {
     throw new RepositoryError(
       embeddingValidation.error!,
-      'INVALID_INPUT'
+      "INVALID_INPUT",
     );
   }
 
-  const uuidValidation = validateUUID(convenioId, 'convenioId');
+  const uuidValidation = validateUUID(convenioId, "convenioId");
   if (!uuidValidation.valid) {
-    throw new RepositoryError(uuidValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(uuidValidation.error!, "INVALID_INPUT");
   }
 
   const supabase = getSupabaseClient(client);
 
-  const { data, error } = await supabase.rpc('search_chunks_by_convenio', {
+  const { data, error } = await supabase.rpc("search_chunks_by_convenio", {
     query_embedding: embedding,
     p_convenio_id: convenioId,
     match_threshold: threshold,
@@ -235,8 +235,8 @@ export async function searchChunksByConvenio(
   if (error) {
     throw new RepositoryError(
       `Error searching chunks: ${error.message}`,
-      'DB_ERROR',
-      error
+      "DB_ERROR",
+      error,
     );
   }
 
@@ -248,26 +248,26 @@ export async function searchChunksByConvenio(
  */
 export async function getPerfilByConvenio(
   convenioId: string,
-  client?: SupabaseClient
+  client?: SupabaseClient,
 ): Promise<Record<string, unknown> | null> {
-  const uuidValidation = validateUUID(convenioId, 'convenioId');
+  const uuidValidation = validateUUID(convenioId, "convenioId");
   if (!uuidValidation.valid) {
-    throw new RepositoryError(uuidValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(uuidValidation.error!, "INVALID_INPUT");
   }
 
   const supabase = getSupabaseClient(client);
 
   const { data, error } = await supabase
-    .from('convenio_perfiles')
-    .select('perfil_data')
-    .eq('convenio_id', convenioId)
+    .from("convenio_perfiles")
+    .select("perfil_data")
+    .eq("convenio_id", convenioId)
     .maybeSingle();
 
   if (error) {
     throw new RepositoryError(
       `Error fetching perfil: ${error.message}`,
-      'DB_ERROR',
-      error
+      "DB_ERROR",
+      error,
     );
   }
 
@@ -279,26 +279,26 @@ export async function getPerfilByConvenio(
  */
 export async function getConvenioById(
   convenioId: string,
-  client?: SupabaseClient
+  client?: SupabaseClient,
 ): Promise<Convenio | null> {
-  const uuidValidation = validateUUID(convenioId, 'convenioId');
+  const uuidValidation = validateUUID(convenioId, "convenioId");
   if (!uuidValidation.valid) {
-    throw new RepositoryError(uuidValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(uuidValidation.error!, "INVALID_INPUT");
   }
 
   const supabase = getSupabaseClient(client);
 
   const { data, error } = await supabase
-    .from('convenios')
-    .select('id, nombre, codigo_regcon, ambito, fecha_vigencia, estado')
-    .eq('id', convenioId)
+    .from("convenios")
+    .select("id, nombre, codigo_regcon, ambito, fecha_vigencia, estado")
+    .eq("id", convenioId)
     .maybeSingle();
 
   if (error) {
     throw new RepositoryError(
       `Error fetching convenio: ${error.message}`,
-      'DB_ERROR',
-      error
+      "DB_ERROR",
+      error,
     );
   }
 
@@ -312,19 +312,24 @@ export async function searchSemanticCache(
   embedding: number[],
   convenioId: string,
   threshold = 0.95,
-  client?: SupabaseClient
+  client?: SupabaseClient,
 ): Promise<CacheHit | null> {
   const embeddingValidation = validateEmbedding(embedding);
   if (!embeddingValidation.valid) {
     throw new RepositoryError(
       embeddingValidation.error!,
-      'INVALID_INPUT'
+      "INVALID_INPUT",
     );
+  }
+
+  const convenioValidation = validateUUID(convenioId, 'convenioId');
+  if (!convenioValidation.valid) {
+    throw new RepositoryError(convenioValidation.error!, 'INVALID_INPUT');
   }
 
   const supabase = getSupabaseClient(client);
 
-  const { data, error } = await supabase.rpc('search_semantic_cache', {
+  const { data, error } = await supabase.rpc("search_semantic_cache", {
     query_embedding: embedding,
     similarity_threshold: threshold,
     p_convenio_id: convenioId,
@@ -333,8 +338,8 @@ export async function searchSemanticCache(
   if (error) {
     throw new RepositoryError(
       `Error searching cache: ${error.message}`,
-      'DB_ERROR',
-      error
+      "DB_ERROR",
+      error,
     );
   }
 
@@ -344,16 +349,16 @@ export async function searchSemanticCache(
 
     // Actualizar hit_count y last_hit_at (fire and forget)
     supabase
-      .from('semantic_cache')
+      .from("semantic_cache")
       .update({
         hit_count: hit.hit_count + 1,
         last_hit_at: new Date().toISOString(),
         // Extender expiracion en cada hit (30 dias)
         expires_at: new Date(
-          Date.now() + 30 * 24 * 60 * 60 * 1000
+          Date.now() + 30 * 24 * 60 * 60 * 1000,
         ).toISOString(),
       })
-      .eq('id', hit.cache_id)
+      .eq("id", hit.cache_id)
       .then(() => {
         // Fire and forget - no esperamos resultado
       });
@@ -378,29 +383,34 @@ export async function saveToSemanticCache(
   response: string,
   convenioId: string,
   tokensUsed = 0,
-  client?: SupabaseClient
+  client?: SupabaseClient,
 ): Promise<void> {
   const embeddingValidation = validateEmbedding(embedding);
   if (!embeddingValidation.valid) {
     throw new RepositoryError(
       embeddingValidation.error!,
-      'INVALID_INPUT'
+      "INVALID_INPUT",
     );
   }
 
-  const queryValidation = validateNonEmptyString(query, 'query');
+  const queryValidation = validateNonEmptyString(query, "query");
   if (!queryValidation.valid) {
-    throw new RepositoryError(queryValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(queryValidation.error!, "INVALID_INPUT");
   }
 
-  const responseValidation = validateNonEmptyString(response, 'response');
+  const responseValidation = validateNonEmptyString(response, "response");
   if (!responseValidation.valid) {
-    throw new RepositoryError(responseValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(responseValidation.error!, "INVALID_INPUT");
+  }
+
+  const convenioValidation = validateUUID(convenioId, 'convenioId');
+  if (!convenioValidation.valid) {
+    throw new RepositoryError(convenioValidation.error!, 'INVALID_INPUT');
   }
 
   const supabase = getSupabaseClient(client);
 
-  const { error } = await supabase.from('semantic_cache').insert({
+  const { error } = await supabase.from("semantic_cache").insert({
     query_embedding: embedding,
     query_text: query,
     response: response,
@@ -408,13 +418,13 @@ export async function saveToSemanticCache(
     tokens_saved: tokensUsed,
     hit_count: 1,
     expires_at: new Date(
-      Date.now() + 30 * 24 * 60 * 60 * 1000
+      Date.now() + 30 * 24 * 60 * 60 * 1000,
     ).toISOString(),
   });
 
   if (error) {
     // Log pero no fallar - el cache es optimizacion, no critico
-    console.error('Error saving to cache:', error);
+    console.error("Error saving to cache:", error);
   }
 }
 
@@ -425,33 +435,40 @@ export async function getOrCreateChatSession(
   userId: string,
   convenioId: string,
   title?: string,
-  client?: SupabaseClient
+  client?: SupabaseClient,
 ): Promise<string> {
-  const userValidation = validateUUID(userId, 'userId');
+  const userValidation = validateUUID(userId, "userId");
   if (!userValidation.valid) {
-    throw new RepositoryError(userValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(userValidation.error!, "INVALID_INPUT");
   }
 
-  const convenioValidation = validateUUID(convenioId, 'convenioId');
+  const convenioValidation = validateUUID(convenioId, "convenioId");
   if (!convenioValidation.valid) {
-    throw new RepositoryError(convenioValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(convenioValidation.error!, "INVALID_INPUT");
   }
 
   const supabase = getSupabaseClient(client);
 
   // Buscar sesion existente reciente (ultimas 24h)
-  const { data: existing } = await supabase
-    .from('chat_sessions')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('convenio_id', convenioId)
+  const { data: existing, error: lookupError } = await supabase
+    .from("chat_sessions")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("convenio_id", convenioId)
     .gte(
-      'created_at',
-      new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      "created_at",
+      new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     )
-    .order('created_at', { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  if (lookupError) {
+    throw new RepositoryError(
+      `Failed to lookup existing session: ${lookupError.message}`,
+      "DB_ERROR",
+    );
+  }
 
   if (existing) {
     return existing.id;
@@ -459,20 +476,20 @@ export async function getOrCreateChatSession(
 
   // Crear nueva sesion
   const { data, error } = await supabase
-    .from('chat_sessions')
+    .from("chat_sessions")
     .insert({
       user_id: userId,
       convenio_id: convenioId,
-      title: title || 'Nueva consulta',
+      title: title || "Nueva consulta",
     })
-    .select('id')
+    .select("id")
     .single();
 
   if (error) {
     throw new RepositoryError(
       `Error creating chat session: ${error.message}`,
-      'DB_ERROR',
-      error
+      "DB_ERROR",
+      error,
     );
   }
 
@@ -484,32 +501,32 @@ export async function getOrCreateChatSession(
  */
 export async function saveChatMessage(
   sessionId: string,
-  role: 'user' | 'assistant' | 'system',
+  role: "user" | "assistant" | "system",
   content: string,
   metadata?: Record<string, unknown>,
-  client?: SupabaseClient
+  client?: SupabaseClient,
 ): Promise<void> {
-  const sessionValidation = validateUUID(sessionId, 'sessionId');
+  const sessionValidation = validateUUID(sessionId, "sessionId");
   if (!sessionValidation.valid) {
-    throw new RepositoryError(sessionValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(sessionValidation.error!, "INVALID_INPUT");
   }
 
-  const contentValidation = validateNonEmptyString(content, 'content');
+  const contentValidation = validateNonEmptyString(content, "content");
   if (!contentValidation.valid) {
-    throw new RepositoryError(contentValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(contentValidation.error!, "INVALID_INPUT");
   }
 
-  const validRoles = ['user', 'assistant', 'system'];
+  const validRoles = ["user", "assistant", "system"];
   if (!validRoles.includes(role)) {
     throw new RepositoryError(
-      `role must be one of: ${validRoles.join(', ')}`,
-      'INVALID_INPUT'
+      `role must be one of: ${validRoles.join(", ")}`,
+      "INVALID_INPUT",
     );
   }
 
   const supabase = getSupabaseClient(client);
 
-  const { error } = await supabase.from('chat_messages').insert({
+  const { error } = await supabase.from("chat_messages").insert({
     session_id: sessionId,
     role,
     content,
@@ -519,8 +536,8 @@ export async function saveChatMessage(
   if (error) {
     throw new RepositoryError(
       `Error saving message: ${error.message}`,
-      'DB_ERROR',
-      error
+      "DB_ERROR",
+      error,
     );
   }
 }
@@ -530,26 +547,26 @@ export async function saveChatMessage(
  */
 export async function checkUserQuota(
   userId: string,
-  client?: SupabaseClient
+  client?: SupabaseClient,
 ): Promise<QuotaStatus> {
-  const userValidation = validateUUID(userId, 'userId');
+  const userValidation = validateUUID(userId, "userId");
   if (!userValidation.valid) {
-    throw new RepositoryError(userValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(userValidation.error!, "INVALID_INPUT");
   }
 
   const supabase = getSupabaseClient(client);
 
   const { data, error } = await supabase
-    .from('user_profiles')
-    .select('subscription_tier, monthly_queries_used, monthly_query_limit')
-    .eq('id', userId)
+    .from("user_profiles")
+    .select("subscription_tier, monthly_queries_used, monthly_query_limit")
+    .eq("id", userId)
     .maybeSingle();
 
   if (error) {
     throw new RepositoryError(
       `Error checking quota: ${error.message}`,
-      'DB_ERROR',
-      error
+      "DB_ERROR",
+      error,
     );
   }
 
@@ -559,13 +576,13 @@ export async function checkUserQuota(
       hasQuota: true, // Primera consulta gratis
       used: 0,
       limit: 5,
-      tier: 'free',
+      tier: "free",
     };
   }
 
   const limit = data.monthly_query_limit;
   const used = data.monthly_queries_used;
-  const tier = data.subscription_tier as 'free' | 'premium' | 'enterprise';
+  const tier = data.subscription_tier as "free" | "premium" | "enterprise";
 
   // Premium tiene limite -1 (ilimitado)
   const hasQuota = limit === -1 || used < limit;
@@ -584,24 +601,24 @@ export async function checkUserQuota(
  */
 export async function incrementQueryCount(
   userId: string,
-  client?: SupabaseClient
+  client?: SupabaseClient,
 ): Promise<boolean> {
-  const userValidation = validateUUID(userId, 'userId');
+  const userValidation = validateUUID(userId, "userId");
   if (!userValidation.valid) {
-    throw new RepositoryError(userValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(userValidation.error!, "INVALID_INPUT");
   }
 
   const supabase = getSupabaseClient(client);
 
-  const { data, error } = await supabase.rpc('increment_query_count', {
+  const { data, error } = await supabase.rpc("increment_query_count", {
     p_user_id: userId,
   });
 
   if (error) {
     throw new RepositoryError(
       `Error incrementing query count: ${error.message}`,
-      'DB_ERROR',
-      error
+      "DB_ERROR",
+      error,
     );
   }
 
