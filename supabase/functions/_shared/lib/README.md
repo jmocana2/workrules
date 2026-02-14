@@ -11,7 +11,9 @@ _shared/lib/
 ├── openai.ts          # Servicio de Embeddings (OpenAI) ✅
 ├── openai.test.ts     # Tests unitarios
 ├── openai.integration.test.ts  # Test de integracion
-├── anthropic.ts       # Servicio de IA (Claude) - stub I2.4
+├── anthropic.ts       # Servicio de IA (Claude) con streaming ✅
+├── anthropic.test.ts  # Tests unitarios
+├── anthropic.integration.test.ts  # Test de integracion
 ├── supabase.ts        # Repository de BD (PostgreSQL + pgvector) ✅
 ├── supabase.test.ts   # Tests unitarios
 ├── cors.ts            # Headers CORS ✅
@@ -198,16 +200,86 @@ try {
 
 ### anthropic.ts - Servicio de IA (Claude)
 
-**Estado:** Stub (pendiente I2.4)
+**Estado:** ✅ Implementado (I2.4)
 
 Cliente para llamadas a Claude con streaming SSE.
 
+#### Funciones principales
+
 ```typescript
-// TODO: I2.4
-export async function streamResponse(
-  systemPrompt: string,
-  userMessage: string
-): Promise<ReadableStream>
+import { streamChatResponse, createChatResponse } from '../_shared/lib/anthropic.ts';
+
+// Con streaming (para Edge Functions)
+const stream = await streamChatResponse({
+  systemPrompt: "Eres un experto en convenios colectivos...",
+  userMessage: "Cual es el salario base de un camarero?",
+});
+
+return new Response(stream, {
+  headers: { 'Content-Type': 'text/event-stream' }
+});
+
+// Sin streaming (para tests o cache)
+const response = await createChatResponse({
+  systemPrompt: "...",
+  userMessage: "...",
+});
+```
+
+#### Especificaciones
+
+| Parametro | Valor |
+|-----------|-------|
+| Modelo | `claude-sonnet-4-20250514` |
+| Max tokens | 2048 (configurable) |
+| Temperature | 0.3 (configurable) |
+| Context window | 200K tokens |
+
+#### Formato SSE
+
+El streaming emite eventos en formato Server-Sent Events:
+
+```
+data: {"type":"text","content":"El "}
+
+data: {"type":"text","content":"salario "}
+
+data: {"type":"done"}
+```
+
+#### Manejo de errores
+
+```typescript
+import { streamChatResponse, AnthropicError } from '../_shared/lib/anthropic.ts';
+
+try {
+  const stream = await streamChatResponse(options);
+} catch (error) {
+  if (error instanceof AnthropicError) {
+    switch (error.code) {
+      case 'INVALID_INPUT':  // Parametros invalidos
+      case 'AUTH_ERROR':     // API key invalida (401)
+      case 'RATE_LIMIT':     // Limite excedido (429)
+      case 'OVERLOADED':     // API sobrecargada (529)
+      case 'API_ERROR':      // Error del servidor (5xx)
+    }
+    // error.retryable indica si se puede reintentar
+  }
+}
+```
+
+#### Variables de entorno
+
+| Variable | Requerida | Descripcion |
+|----------|-----------|-------------|
+| `ANTHROPIC_API_KEY` | Si | API key de Anthropic |
+
+```bash
+# Produccion
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+
+# Local
+echo "ANTHROPIC_API_KEY=sk-ant-..." >> supabase/.env.local
 ```
 
 ---
@@ -257,6 +329,12 @@ deno task test _shared/lib/supabase.test.ts
 
 # CORS
 deno task test _shared/lib/cors.test.ts
+
+# Anthropic (unitarios)
+deno task test _shared/lib/anthropic.test.ts
+
+# Anthropic (integracion - requiere API key)
+ANTHROPIC_API_KEY=sk-ant-... deno test --allow-env --allow-net _shared/lib/anthropic.integration.test.ts
 ```
 
 ### Coverage actual
@@ -266,7 +344,7 @@ deno task test _shared/lib/cors.test.ts
 | openai.ts | 17 unitarios + 1 integracion | ✅ |
 | supabase.ts | 33 unitarios | ✅ |
 | cors.ts | 4 unitarios | ✅ |
-| anthropic.ts | 0 (stub) | Pendiente I2.4 |
+| anthropic.ts | 21 unitarios + 3 integracion | ✅ |
 
 ---
 

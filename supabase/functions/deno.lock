@@ -8,7 +8,8 @@
     "jsr:@std/fs@^1.0.22": "1.0.22",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/path@^1.1.4": "1.1.4",
-    "jsr:@std/testing@1": "1.0.17"
+    "jsr:@std/testing@1": "1.0.17",
+    "npm:@anthropic-ai/sdk@*": "0.74.0"
   },
   "jsr": {
     "@std/assert@1.0.18": {
@@ -48,6 +49,28 @@
         "jsr:@std/internal",
         "jsr:@std/path"
       ]
+    }
+  },
+  "npm": {
+    "@anthropic-ai/sdk@0.74.0": {
+      "integrity": "sha512-srbJV7JKsc5cQ6eVuFzjZO7UR3xEPJqPamHFIe29bs38Ij2IripoAhC0S5NslNbaFUYqBKypmmpzMTpqfHEUDw==",
+      "dependencies": [
+        "json-schema-to-ts"
+      ],
+      "bin": true
+    },
+    "@babel/runtime@7.28.6": {
+      "integrity": "sha512-05WQkdpL9COIMz4LjTxGpPNCdlpyimKppYNoJ5Di5EUObifl8t4tuLuUBBZEpoLYOmfvIWrsp9fCl0HoPRVTdA=="
+    },
+    "json-schema-to-ts@3.1.1": {
+      "integrity": "sha512-+DWg8jCJG2TEnpy7kOm/7/AxaYoaRbjVB4LFZLySZlWn8exGs3A4OLJR966cVvU26N7X9TWxl+Jsw7dzAqKT6g==",
+      "dependencies": [
+        "@babel/runtime",
+        "ts-algebra"
+      ]
+    },
+    "ts-algebra@2.0.0": {
+      "integrity": "sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw=="
     }
   },
   "redirects": {
