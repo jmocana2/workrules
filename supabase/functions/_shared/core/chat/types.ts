@@ -39,3 +39,128 @@ export type SSEEvent =
   | { type: 'citation'; articulo: string; seccion: string | null }
   | { type: 'done'; metadata: ChatMetadata }
   | { type: 'error'; message: string };
+
+// ============================================
+// CALCULATE SALARY TYPES
+// ============================================
+
+/**
+ * Variables extraidas del mensaje del usuario
+ */
+export interface ExtractedVariables {
+  categoria?: string;
+  jornada?: 'completa' | 'parcial';
+  horasSemanales?: number;
+  horasExtra?: number;
+  horasNocturnas?: number;
+  antiguedadAnos?: number;
+  nivelEstablecimiento?: string;
+  /** Otras variables especificas del convenio */
+  [key: string]: string | number | undefined;
+}
+
+/**
+ * Estado de clasificacion de datos
+ */
+export type DataState = 'complete' | 'incomplete' | 'invalid' | 'conflicting';
+
+/**
+ * Variable invalida con detalle del error
+ */
+export interface InvalidVariable {
+  name: string;
+  reason: string;
+  value: unknown;
+}
+
+/**
+ * Variables en conflicto
+ */
+export interface ConflictingVariables {
+  variables: string[];
+  reason: string;
+}
+
+/**
+ * Resultado de la clasificacion de datos
+ */
+export interface DataClassificationResult {
+  state: DataState;
+  extractedVariables: ExtractedVariables;
+  missingVariables: string[];
+  invalidVariables: InvalidVariable[];
+  conflictingVariables: ConflictingVariables[];
+  /** Variable -> opciones validas del perfil */
+  suggestions: Record<string, string[]>;
+}
+
+/**
+ * Input para el calculo de salario
+ */
+export interface CalculateSalaryInput {
+  convenioId: string;
+  pregunta: string;
+  userId: string;
+  sessionId?: string;
+  /** Variables ya conocidas del usuario (de turnos anteriores) */
+  variablesConocidas?: ExtractedVariables;
+  stream?: boolean;
+}
+
+/**
+ * Metadata del calculo salarial
+ */
+export interface CalculateSalaryMetadata {
+  cacheHit: boolean;
+  chunksUsed: number;
+  model: string;
+  latencyMs: number;
+  variablesUsadas: ExtractedVariables;
+}
+
+/**
+ * Concepto del desglose salarial
+ */
+export interface SalaryBreakdownItem {
+  nombre: string;
+  importe: number;
+}
+
+/**
+ * Desglose del calculo salarial
+ */
+export interface SalaryBreakdown {
+  conceptos: SalaryBreakdownItem[];
+  totalBruto: number;
+}
+
+/**
+ * Resultado exitoso de calculo completo
+ */
+export interface CalculateSalarySuccess {
+  type: 'salary_calculated';
+  response: string;
+  metadata: CalculateSalaryMetadata;
+  citations: ChatCitation[];
+  desglose: SalaryBreakdown;
+}
+
+/**
+ * Datos incompletos - necesita mas info
+ */
+export interface CalculateSalaryIncomplete {
+  type: 'incomplete_data';
+  message: string;
+  missingVariables: string[];
+  suggestions: Record<string, string[]>;
+}
+
+/**
+ * Datos invalidos o conflictivos
+ */
+export interface CalculateSalaryInvalid {
+  type: 'invalid_data';
+  message: string;
+  invalidVariables: InvalidVariable[];
+  conflictingVariables?: ConflictingVariables[];
+}
