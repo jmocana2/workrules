@@ -1,7 +1,7 @@
 // supabase/functions/_shared/lib/supabase.ts
 // Repository para operaciones de base de datos (PostgreSQL + pgvector)
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // ============================================
 // Types
@@ -623,4 +623,44 @@ export async function incrementQueryCount(
   }
 
   return data === true;
+}
+
+/**
+ * Verifica un token JWT de Supabase Auth y extrae el userId
+ *
+ * @param token - Token JWT del header Authorization
+ * @returns userId si el token es valido, null si no
+ */
+export async function verifyUserToken(
+  token: string,
+): Promise<string | null> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("[supabase] Missing SUPABASE_URL or SUPABASE_ANON_KEY");
+    return null;
+  }
+
+  try {
+    // Crear cliente con el token del usuario
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    });
+
+    // Verificar el token obteniendo el usuario
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      console.error("[supabase] Auth error:", error?.message);
+      return null;
+    }
+
+    return user.id;
+  } catch (error) {
+    console.error("[supabase] Error verifying token:", error);
+    return null;
+  }
 }

@@ -1,34 +1,78 @@
 // supabase/functions/chat/index.ts
+// Edge Function: POST /chat - Endpoint principal de WorkRules
 
 import type { ChatRequest } from '../_shared/core/chat/types.ts';
 import {
   validateChatRequest,
   parseRequestBody,
-  processChatRequest,
+  extractUserIdFromRequest,
+  classifyAndExecute,
+  mapResultToHttpResponse,
+  handleStreamResponse,
   buildErrorResponse,
 } from '../_shared/core/chat/handlers.ts';
 import { corsHeaders } from '../_shared/lib/cors.ts';
 
-const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+// ============================================
+// Headers
+// ============================================
+
+const jsonHeaders = {
+  ...corsHeaders,
+  'Content-Type': 'application/json',
+};
+
+const sseHeaders = {
+  ...corsHeaders,
+  'Content-Type': 'text/event-stream',
+  'Cache-Control': 'no-cache',
+  'Connection': 'keep-alive',
+};
+
+// ============================================
+// Edge Function Handler
+// ============================================
 
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight
+  // ========================================
+  // 1. CORS preflight
+  // ========================================
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // ========================================
+  // 2. Solo POST permitido
+  // ========================================
+  if (req.method !== 'POST') {
+    const response = buildErrorResponse(405, 'Method not allowed');
+    return new Response(JSON.stringify(response.body), {
+      status: response.status,
+      headers: jsonHeaders,
+    });
+  }
+
   try {
-    // Solo POST permitido
-    if (req.method !== 'POST') {
-      const response = buildErrorResponse(405, 'Method not allowed');
+    // ========================================
+    // 3. Autenticacion
+    // ========================================
+    const userId = await extractUserIdFromRequest(req);
+
+    if (!userId) {
+      const response = buildErrorResponse(401, 'Unauthorized', {
+        hint: 'Include a valid Supabase Auth JWT in the Authorization header',
+      });
       return new Response(JSON.stringify(response.body), {
         status: response.status,
         headers: jsonHeaders,
       });
     }
 
-    // Parsear body
+    // ========================================
+    // 4. Parsear body
+    // ========================================
     const { data, error: parseError } = await parseRequestBody(req);
+
     if (parseError) {
       const response = buildErrorResponse(400, parseError);
       return new Response(JSON.stringify(response.body), {
@@ -37,8 +81,11 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Validar request
+    // ========================================
+    // 5. Validar request
+    // ========================================
     const validation = validateChatRequest(data);
+
     if (!validation.valid) {
       const response = buildErrorResponse(400, validation.error!, {
         ...(validation.fields && { required: validation.fields }),
@@ -49,18 +96,49 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Procesar chat (se reemplazará por RAG en I2.8)
-    const chatResponse = processChatRequest(data as ChatRequest);
-    return new Response(JSON.stringify(chatResponse.body), {
-      status: chatResponse.status,
+    const request = data as ChatRequest;
+
+    // ========================================
+    // 6. Ejecutar logica de negocio (RAG)
+    // ========================================
+    const result = await classifyAndExecute(request, userId);
+
+    // ========================================
+    // 7. Manejar streaming
+    // ========================================
+    if (result.type === 'stream') {
+      // Para streaming, necesitamos obtener las citations despues
+      // Por ahora enviamos array vacio y las citations en done event
+      return handleStreamResponse(
+        result.stream,
+        result.cleanup,
+        [], // Citations se agregan en el cleanup si es necesario
+        sseHeaders
+      );
+    }
+
+    // ========================================
+    // 8. Respuesta JSON normal
+    // ========================================
+    const response = mapResultToHttpResponse(result);
+
+    return new Response(JSON.stringify(response.body), {
+      status: response.status,
       headers: jsonHeaders,
     });
+
   } catch (error) {
+    // ========================================
+    // 9. Error handling global
+    // ========================================
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Chat function error:', error);
+    console.error('[chat] Unhandled error:', error);
+
     const response = buildErrorResponse(500, 'Internal server error', {
-      details: Deno.env.get('ENVIRONMENT') === 'production' ? undefined : errorMessage,
+      // Solo incluir detalles en desarrollo
+      ...(Deno.env.get('ENVIRONMENT') !== 'production' && { details: errorMessage }),
     });
+
     return new Response(JSON.stringify(response.body), {
       status: response.status,
       headers: jsonHeaders,
@@ -68,14 +146,36 @@ Deno.serve(async (req: Request) => {
   }
 });
 
-/* To invoke locally:
-
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/chat' \
-    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-    --header 'Content-Type: application/json' \
-    --data '{"convenio_id":"66499","pregunta":"¿Cuántos días de vacaciones corresponden?","session_id":"test-session-123"}'
-
-*/
+/* ============================================
+ * INVOCACION LOCAL
+ * ============================================
+ *
+ * 1. Iniciar Supabase local:
+ *    supabase start
+ *
+ * 2. Pregunta general:
+ *    curl -X POST 'http://127.0.0.1:54321/functions/v1/chat' \
+ *      -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
+ *      -H 'Content-Type: application/json' \
+ *      -d '{
+ *        "convenio_id": "uuid-del-convenio",
+ *        "pregunta": "Cuantos dias de vacaciones tengo?"
+ *      }'
+ *
+ * 3. Calculo salarial:
+ *    curl -X POST 'http://127.0.0.1:54321/functions/v1/chat' \
+ *      -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
+ *      -H 'Content-Type: application/json' \
+ *      -d '{
+ *        "convenio_id": "uuid-del-convenio",
+ *        "pregunta": "Cuanto cobra un camarero en hotel 4 estrellas?"
+ *      }'
+ *
+ * 4. Con streaming:
+ *    curl -X POST 'http://127.0.0.1:54321/functions/v1/chat' \
+ *      -H 'Authorization: Bearer ...' \
+ *      -H 'Content-Type: application/json' \
+ *      -d '{"convenio_id": "uuid", "pregunta": "Que dice el articulo 14?", "stream": true}' \
+ *      -N
+ *
+ */
