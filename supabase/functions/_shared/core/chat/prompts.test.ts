@@ -55,7 +55,7 @@ Deno.test("buildSystemPrompt - calculate-salary incluye SMI y ano tablas", () =>
   assertStringIncludes(result, "Hosteleria Valencia");
   assertStringIncludes(result, "2024");
   assertStringIncludes(result, "CHAIN OF THOUGHT");
-  assertStringIncludes(result, "1.134"); // SMI
+  assertStringIncludes(result, "1.221"); // SMI 2026
 });
 
 Deno.test("buildSystemPrompt - calculate-salary usa horas anuales del contexto", () => {

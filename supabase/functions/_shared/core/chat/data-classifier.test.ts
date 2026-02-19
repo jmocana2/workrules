@@ -422,3 +422,75 @@ Deno.test('LEGAL_LIMITS - valores correctos', () => {
   assertEquals(LEGAL_LIMITS.jornadaSemanalMinima, 1);
   assertEquals(LEGAL_LIMITS.antiguedadMaxima, 50);
 });
+
+// ============================================
+// SMI_2026 y validateAgainstSMI
+// ============================================
+
+import { SMI_2026, validateAgainstSMI } from './data-classifier.ts';
+
+Deno.test('SMI_2026 - valores correctos 2026', () => {
+  assertEquals(SMI_2026.mensual14Pagas, 1221);
+  assertEquals(SMI_2026.mensual12Pagas, 1424.5);
+  assertEquals(SMI_2026.anual, 17094);
+});
+
+Deno.test('validateAgainstSMI - salario por encima del SMI', () => {
+  const result = validateAgainstSMI(1500, 14);
+
+  assertEquals(result.belowSMI, false);
+  assertEquals(result.calculatedSalary, 1500);
+  assertEquals(result.smiApplicable, 1221);
+  assertEquals(result.difference, 279);
+  assertEquals(result.message, undefined);
+});
+
+Deno.test('validateAgainstSMI - salario igual al SMI', () => {
+  const result = validateAgainstSMI(1221, 14);
+
+  assertEquals(result.belowSMI, false);
+  assertEquals(result.difference, 0);
+  assertEquals(result.message, undefined);
+});
+
+Deno.test('validateAgainstSMI - salario por debajo del SMI', () => {
+  const result = validateAgainstSMI(1100, 14);
+
+  assertEquals(result.belowSMI, true);
+  assertEquals(result.calculatedSalary, 1100);
+  assertEquals(result.smiApplicable, 1221);
+  assertEquals(result.difference, -121);
+  assertEquals(result.message?.includes('Alerta SMI'), true);
+  assertEquals(result.message?.includes('1100') || result.message?.includes('1.100'), true);
+  assertEquals(result.message?.includes('1221') || result.message?.includes('1.221'), true);
+  assertEquals(result.message?.includes('Art. 27'), true);
+});
+
+Deno.test('validateAgainstSMI - 12 pagas por encima', () => {
+  const result = validateAgainstSMI(1500, 12);
+
+  assertEquals(result.belowSMI, false);
+  assertEquals(result.smiApplicable, 1424.5);
+});
+
+Deno.test('validateAgainstSMI - 12 pagas por debajo', () => {
+  const result = validateAgainstSMI(1300, 12);
+
+  assertEquals(result.belowSMI, true);
+  assertEquals(result.smiApplicable, 1424.5);
+  assertEquals(result.message?.includes('12 pagas'), true);
+});
+
+Deno.test('validateAgainstSMI - salario muy bajo', () => {
+  const result = validateAgainstSMI(500, 14);
+
+  assertEquals(result.belowSMI, true);
+  assertEquals(result.difference, -721);
+});
+
+Deno.test('validateAgainstSMI - por defecto usa 14 pagas', () => {
+  const result = validateAgainstSMI(1221);
+
+  assertEquals(result.smiApplicable, 1221);
+  assertEquals(result.belowSMI, false);
+});

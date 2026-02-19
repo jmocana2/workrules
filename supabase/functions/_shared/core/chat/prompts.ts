@@ -62,14 +62,15 @@ export interface PerfilContexto {
 // CONSTANTES
 // ============================================
 
-const SMI_2026_MENSUAL = "1.134"; // SMI 2026 en 14 pagas
+const SMI_2026_MENSUAL = "1.221"; // SMI 2026 en 14 pagas: 1.221,00 € (RD febrero 2026, +3,1%)
 const JORNADA_LEGAL_ANUAL = 1826; // Horas anuales legales
 
 // ============================================
 // TEMPLATE: ASK-QUESTION
 // ============================================
 
-const SYSTEM_PROMPT_ASK_QUESTION = `Eres un asistente experto en convenios colectivos espanoles. Tu funcion es responder preguntas sobre el convenio de {{convenio_name}} basandote UNICAMENTE en la informacion proporcionada en el contexto.
+const SYSTEM_PROMPT_ASK_QUESTION =
+  `Eres un asistente experto en convenios colectivos espanoles. Tu funcion es responder preguntas sobre el convenio de {{convenio_name}} basandote UNICAMENTE en la informacion proporcionada en el contexto.
 
 ## REGLAS ESTRICTAS
 
@@ -105,7 +106,8 @@ Si tu antiguedad supera 15 anos, se anaden 2 dias adicionales segun el Art. 25.3
 // TEMPLATE: CALCULATE-SALARY
 // ============================================
 
-const SYSTEM_PROMPT_CALCULATE_SALARY = `Eres un asistente experto en calculos laborales basados en convenios colectivos espanoles. Tu funcion es calcular importes salariales para el convenio de {{convenio_name}} (tablas {{ano_tablas}}).
+const SYSTEM_PROMPT_CALCULATE_SALARY =
+  `Eres un asistente experto en calculos laborales basados en convenios colectivos espanoles. Tu funcion es calcular importes salariales para el convenio de {{convenio_name}} (tablas {{ano_tablas}}).
 
 ## REGLAS ESTRICTAS
 
@@ -179,7 +181,8 @@ Respuesta:
 // TEMPLATE: INCOMPLETE-DATA
 // ============================================
 
-const SYSTEM_PROMPT_INCOMPLETE_DATA = `Eres un asistente experto en convenios colectivos espanoles. El usuario quiere informacion del convenio de {{convenio_name}}, pero faltan datos necesarios para dar una respuesta precisa.
+const SYSTEM_PROMPT_INCOMPLETE_DATA =
+  `Eres un asistente experto en convenios colectivos espanoles. El usuario quiere informacion del convenio de {{convenio_name}}, pero faltan datos necesarios para dar una respuesta precisa.
 
 ## TU TAREA
 
@@ -422,7 +425,9 @@ export function formatPerfilForContext(perfil: PerfilContexto): string {
   }
 
   if (perfil.tablas_salariales?.ano_referencia) {
-    lines.push(`Ano tablas salariales: ${perfil.tablas_salariales.ano_referencia}`);
+    lines.push(
+      `Ano tablas salariales: ${perfil.tablas_salariales.ano_referencia}`,
+    );
   }
 
   return lines.join("\n");
