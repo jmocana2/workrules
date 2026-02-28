@@ -1,5 +1,5 @@
 .env
-.claude/
+
 node_modules
 dist
 coverage
@@ -10,3 +10,7 @@ coverage
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# docs
+.claude/
+docs/arquitectura/arquitectura-seguridad.md
