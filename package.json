@@ -5,6 +5,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "playwright test",
@@ -12,7 +15,6 @@
     "test:report": "playwright show-report",
     "test:deno": "deno test --allow-all --config supabase/functions/deno.json supabase/functions",
     "test:coverage": "deno test --allow-all --config supabase/functions/deno.json --coverage=supabase/functions/coverage supabase/functions",
-    "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "prepare": "husky"
   },
@@ -23,12 +25,27 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@types/node": "^25.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@typescript-eslint/parser": "^8.54.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "autoprefixer": "^10.4.27",
     "eslint": "9.0.0",
     "eslint-plugin-sonarjs": "^3.0.6",
     "husky": "^9.1.7",
+    "postcss": "^8.5.8",
     "style-dictionary": "^5.3.2",
+    "tailwindcss": "^4.2.1",
     "ts-api-utils": "^2.4.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "dependencies": {
+    "@ai-sdk/react": "^3.0.110",
+    "@tanstack/react-query": "^5.90.21",
+    "ai": "^6.0.108",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "zustand": "^5.0.11"
   }
 }
