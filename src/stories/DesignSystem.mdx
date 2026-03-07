@@ -1,0 +1,748 @@
+{/* DesignSystem.mdx */}
+import { Meta, ColorPalette, ColorItem } from "@storybook/addon-docs/blocks";
+
+<Meta title="Design System/Overview" />
+
+<div className="wr-docs">
+
+# WorkRules Design System
+
+<p className="wr-subtitle">
+  Sistema de diseño basado en <strong>Radix Themes</strong> para WorkRules.eu - Consultor Laboral Automatizado.
+</p>
+
+<div className="wr-divider" />
+
+## Colores
+
+### Accent Color: Teal
+
+<p className="wr-description">
+  El color principal de la marca. Transmite confianza, profesionalidad y claridad - valores esenciales para una plataforma LegalTech.
+</p>
+
+<ColorPalette>
+  <ColorItem
+    title="Teal"
+    subtitle="Accent Color"
+    colors={{
+      '1': '#fafefd',
+      '2': '#f3fbf9',
+      '3': '#e0f8f3',
+      '4': '#ccf3ea',
+      '5': '#b8eae0',
+      '6': '#a1ded2',
+      '7': '#83cdc1',
+      '8': '#53b9ab',
+      '9 (Base)': '#12a594',
+      '10': '#0d9b8a',
+      '11': '#008573',
+      '12': '#0d3d38',
+    }}
+  />
+</ColorPalette>
+
+<div className="wr-usage-grid">
+  <div className="wr-usage-card">
+    <div className="wr-usage-swatch" style={{ background: '#12a594' }} />
+    <div className="wr-usage-text">
+      <strong>Step 9</strong>
+      <span>Botones, links, interactivos</span>
+    </div>
+  </div>
+  <div className="wr-usage-card">
+    <div className="wr-usage-swatch" style={{ background: '#008573' }} />
+    <div className="wr-usage-text">
+      <strong>Step 11</strong>
+      <span>Texto sobre fondos claros</span>
+    </div>
+  </div>
+  <div className="wr-usage-card">
+    <div className="wr-usage-swatch" style={{ background: '#e0f8f3' }} />
+    <div className="wr-usage-text">
+      <strong>Steps 1-3</strong>
+      <span>Fondos sutiles, hover states</span>
+    </div>
+  </div>
+</div>
+
+<div className="wr-divider" />
+
+### Neutral Color: Slate
+
+<p className="wr-description">
+  Escala de grises con un tono ligeramente azulado, complementando el Teal y proporcionando una base profesional.
+</p>
+
+<ColorPalette>
+  <ColorItem
+    title="Slate"
+    subtitle="Neutral Color"
+    colors={{
+      '1': '#fcfcfd',
+      '2': '#f9f9fb',
+      '3': '#f0f0f3',
+      '4': '#e8e8ec',
+      '5': '#e0e1e6',
+      '6': '#d9d9e0',
+      '7': '#cdced6',
+      '8': '#b9bbc6',
+      '9': '#8b8d98',
+      '10': '#80838d',
+      '11': '#60646c',
+      '12': '#1c2024',
+    }}
+  />
+</ColorPalette>
+
+<div className="wr-divider" />
+
+### Semantic Colors
+
+<p className="wr-description">
+  Colores con significado funcional para comunicar estados y feedback.
+</p>
+
+<ColorPalette>
+  <ColorItem
+    title="Error"
+    subtitle="Red"
+    colors={{
+      '1': '#fffcfc',
+      '3': '#feebec',
+      '5': '#ffcdce',
+      '7': '#f4a9aa',
+      '9 (Base)': '#e5484d',
+      '11': '#ce2c31',
+    }}
+  />
+  <ColorItem
+    title="Success"
+    subtitle="Green"
+    colors={{
+      '1': '#fbfefc',
+      '3': '#e6f6eb',
+      '5': '#c4e8d1',
+      '7': '#8eceaa',
+      '9 (Base)': '#30a46c',
+      '11': '#218358',
+    }}
+  />
+  <ColorItem
+    title="Warning"
+    subtitle="Yellow"
+    colors={{
+      '1': '#fdfdf9',
+      '3': '#fffab8',
+      '5': '#ffe770',
+      '7': '#e4c767',
+      '9 (Base)': '#ffe629',
+      '11': '#9e6c00',
+    }}
+  />
+  <ColorItem
+    title="Info"
+    subtitle="Cyan"
+    colors={{
+      '1': '#fafdfe',
+      '3': '#def7f9',
+      '5': '#b5e9f0',
+      '7': '#7dcedc',
+      '9 (Base)': '#00a2c7',
+      '11': '#107d98',
+    }}
+  />
+</ColorPalette>
+
+<div className="wr-divider" />
+
+## Tipografia
+
+<p className="wr-description">
+  Basada en <strong>SF Pro</strong> con una escala de 9 pasos y 4 pesos.
+</p>
+
+### Escala de Tamanos
+
+<div className="wr-type-scale">
+  <div className="wr-type-row">
+    <span className="wr-type-label">1</span>
+    <span className="wr-type-sample" style={{ fontSize: '12px', lineHeight: '16px' }}>Captions y labels pequenos</span>
+    <span className="wr-type-meta">12px / 16px</span>
+  </div>
+  <div className="wr-type-row">
+    <span className="wr-type-label">2</span>
+    <span className="wr-type-sample" style={{ fontSize: '14px', lineHeight: '20px' }}>Texto secundario, metadata</span>
+    <span className="wr-type-meta">14px / 20px</span>
+  </div>
+  <div className="wr-type-row">
+    <span className="wr-type-label">3</span>
+    <span className="wr-type-sample" style={{ fontSize: '16px', lineHeight: '24px' }}>Texto base para parrafos</span>
+    <span className="wr-type-meta">16px / 24px</span>
+  </div>
+  <div className="wr-type-row">
+    <span className="wr-type-label">4</span>
+    <span className="wr-type-sample" style={{ fontSize: '18px', lineHeight: '26px' }}>Texto destacado</span>
+    <span className="wr-type-meta">18px / 26px</span>
+  </div>
+  <div className="wr-type-row">
+    <span className="wr-type-label">5</span>
+    <span className="wr-type-sample" style={{ fontSize: '20px', lineHeight: '28px' }}>Subtitulos pequenos</span>
+    <span className="wr-type-meta">20px / 28px</span>
+  </div>
+  <div className="wr-type-row">
+    <span className="wr-type-label">6</span>
+    <span className="wr-type-sample" style={{ fontSize: '24px', lineHeight: '30px' }}>Subtitulos</span>
+    <span className="wr-type-meta">24px / 30px</span>
+  </div>
+  <div className="wr-type-row">
+    <span className="wr-type-label">7</span>
+    <span className="wr-type-sample" style={{ fontSize: '28px', lineHeight: '36px' }}>Titulos de seccion</span>
+    <span className="wr-type-meta">28px / 36px</span>
+  </div>
+  <div className="wr-type-row">
+    <span className="wr-type-label">8</span>
+    <span className="wr-type-sample" style={{ fontSize: '35px', lineHeight: '40px' }}>Titulos de pagina</span>
+    <span className="wr-type-meta">35px / 40px</span>
+  </div>
+  <div className="wr-type-row">
+    <span className="wr-type-label">9</span>
+    <span className="wr-type-sample" style={{ fontSize: '48px', lineHeight: '52px' }}>Hero display</span>
+    <span className="wr-type-meta">60px / 60px</span>
+  </div>
+</div>
+
+### Pesos
+
+<div className="wr-weights-grid">
+  <div className="wr-weight-card">
+    <span className="wr-weight-sample" style={{ fontWeight: 300 }}>Aa</span>
+    <span className="wr-weight-name">Light</span>
+    <span className="wr-weight-value">300</span>
+  </div>
+  <div className="wr-weight-card">
+    <span className="wr-weight-sample" style={{ fontWeight: 400 }}>Aa</span>
+    <span className="wr-weight-name">Regular</span>
+    <span className="wr-weight-value">400</span>
+  </div>
+  <div className="wr-weight-card">
+    <span className="wr-weight-sample" style={{ fontWeight: 500 }}>Aa</span>
+    <span className="wr-weight-name">Medium</span>
+    <span className="wr-weight-value">500</span>
+  </div>
+  <div className="wr-weight-card">
+    <span className="wr-weight-sample" style={{ fontWeight: 700 }}>Aa</span>
+    <span className="wr-weight-name">Bold</span>
+    <span className="wr-weight-value">700</span>
+  </div>
+</div>
+
+<div className="wr-divider" />
+
+## Espaciado
+
+<p className="wr-description">
+  Escala de 9 pasos para consistencia en margins y paddings.
+</p>
+
+<div className="wr-spacing-scale">
+  <div className="wr-spacing-row">
+    <span className="wr-spacing-label">1</span>
+    <div className="wr-spacing-bar" style={{ width: '4px' }} />
+    <span className="wr-spacing-value">4px</span>
+    <span className="wr-spacing-use">Espaciado minimo</span>
+  </div>
+  <div className="wr-spacing-row">
+    <span className="wr-spacing-label">2</span>
+    <div className="wr-spacing-bar" style={{ width: '8px' }} />
+    <span className="wr-spacing-value">8px</span>
+    <span className="wr-spacing-use">Entre elementos relacionados</span>
+  </div>
+  <div className="wr-spacing-row">
+    <span className="wr-spacing-label">3</span>
+    <div className="wr-spacing-bar" style={{ width: '12px' }} />
+    <span className="wr-spacing-value">12px</span>
+    <span className="wr-spacing-use">Padding componentes pequenos</span>
+  </div>
+  <div className="wr-spacing-row">
+    <span className="wr-spacing-label">4</span>
+    <div className="wr-spacing-bar" style={{ width: '16px' }} />
+    <span className="wr-spacing-value">16px</span>
+    <span className="wr-spacing-use">Padding estandar, grid gaps</span>
+  </div>
+  <div className="wr-spacing-row">
+    <span className="wr-spacing-label">5</span>
+    <div className="wr-spacing-bar" style={{ width: '24px' }} />
+    <span className="wr-spacing-value">24px</span>
+    <span className="wr-spacing-use">Secciones pequenas</span>
+  </div>
+  <div className="wr-spacing-row">
+    <span className="wr-spacing-label">6</span>
+    <div className="wr-spacing-bar" style={{ width: '32px' }} />
+    <span className="wr-spacing-value">32px</span>
+    <span className="wr-spacing-use">Padding cards y paneles</span>
+  </div>
+  <div className="wr-spacing-row">
+    <span className="wr-spacing-label">7</span>
+    <div className="wr-spacing-bar" style={{ width: '40px' }} />
+    <span className="wr-spacing-value">40px</span>
+    <span className="wr-spacing-use">Entre secciones</span>
+  </div>
+  <div className="wr-spacing-row">
+    <span className="wr-spacing-label">8</span>
+    <div className="wr-spacing-bar" style={{ width: '48px' }} />
+    <span className="wr-spacing-value">48px</span>
+    <span className="wr-spacing-use">Margenes pagina (mobile)</span>
+  </div>
+  <div className="wr-spacing-row">
+    <span className="wr-spacing-label">9</span>
+    <div className="wr-spacing-bar" style={{ width: '64px' }} />
+    <span className="wr-spacing-value">64px</span>
+    <span className="wr-spacing-use">Margenes pagina (desktop)</span>
+  </div>
+</div>
+
+<div className="wr-divider" />
+
+## Border Radius
+
+<p className="wr-description">
+  Estilo <strong>Medium</strong> - Balance entre profesionalismo y modernidad.
+</p>
+
+<div className="wr-radius-grid">
+  <div className="wr-radius-card">
+    <div className="wr-radius-box" style={{ borderRadius: '3px' }} />
+    <span className="wr-radius-name">Scale 1</span>
+    <span className="wr-radius-value">3px</span>
+  </div>
+  <div className="wr-radius-card">
+    <div className="wr-radius-box" style={{ borderRadius: '4px' }} />
+    <span className="wr-radius-name">Scale 2</span>
+    <span className="wr-radius-value">4px</span>
+  </div>
+  <div className="wr-radius-card">
+    <div className="wr-radius-box" style={{ borderRadius: '6px' }} />
+    <span className="wr-radius-name">Scale 3</span>
+    <span className="wr-radius-value">6px</span>
+  </div>
+  <div className="wr-radius-card">
+    <div className="wr-radius-box" style={{ borderRadius: '8px' }} />
+    <span className="wr-radius-name">Scale 4</span>
+    <span className="wr-radius-value">8px</span>
+  </div>
+  <div className="wr-radius-card">
+    <div className="wr-radius-box" style={{ borderRadius: '10px' }} />
+    <span className="wr-radius-name">Scale 5</span>
+    <span className="wr-radius-value">10px</span>
+  </div>
+  <div className="wr-radius-card">
+    <div className="wr-radius-box" style={{ borderRadius: '12px' }} />
+    <span className="wr-radius-name">Scale 6</span>
+    <span className="wr-radius-value">12px</span>
+  </div>
+  <div className="wr-radius-card">
+    <div className="wr-radius-box" style={{ borderRadius: '9999px' }} />
+    <span className="wr-radius-name">Full</span>
+    <span className="wr-radius-value">9999px</span>
+  </div>
+</div>
+
+<div className="wr-divider" />
+
+## Panel Style
+
+<p className="wr-description">
+  Estilo <strong>Solid</strong> - Fondos blancos solidos para maxima legibilidad.
+</p>
+
+<div className="wr-panel-demo">
+  <div className="wr-panel-example">
+    <div className="wr-panel-title">Panel Ejemplo</div>
+    <div className="wr-panel-content">Contenido del panel con fondo solido blanco y borde sutil.</div>
+  </div>
+</div>
+
+<div className="wr-divider" />
+
+## Decisiones de Diseno
+
+<div className="wr-decisions">
+  <div className="wr-decision-card">
+    <div className="wr-decision-header">
+      <span className="wr-decision-aspect">Accent</span>
+      <span className="wr-decision-choice">Teal</span>
+    </div>
+    <p>Transmite confianza y profesionalidad sin ser agresivo. Ideal para una plataforma legal.</p>
+  </div>
+  <div className="wr-decision-card">
+    <div className="wr-decision-header">
+      <span className="wr-decision-aspect">Neutral</span>
+      <span className="wr-decision-choice">Slate</span>
+    </div>
+    <p>Complementa el teal con tonos azulados sutiles. Mas sofisticado que un gris puro.</p>
+  </div>
+  <div className="wr-decision-card">
+    <div className="wr-decision-header">
+      <span className="wr-decision-aspect">Panel</span>
+      <span className="wr-decision-choice">Solid</span>
+    </div>
+    <p>Maxima legibilidad para documentos legales y calculos. Sin distracciones visuales.</p>
+  </div>
+  <div className="wr-decision-card">
+    <div className="wr-decision-header">
+      <span className="wr-decision-aspect">Radius</span>
+      <span className="wr-decision-choice">Medium</span>
+    </div>
+    <p>Balance entre modernidad y seriedad. Suficiente suavidad sin parecer infantil.</p>
+  </div>
+</div>
+
+</div>
+
+<style>
+{`
+  .wr-docs {
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .wr-subtitle {
+    font-size: 18px;
+    color: #60646c;
+    margin-bottom: 40px;
+    line-height: 1.6;
+  }
+
+  .wr-description {
+    font-size: 16px;
+    color: #60646c;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .wr-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #d9d9e0, transparent);
+    margin: 48px 0;
+  }
+
+  /* Usage Grid */
+  .wr-usage-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .wr-usage-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f9f9fb;
+    border-radius: 8px;
+    border: 1px solid #e8e8ec;
+  }
+
+  .wr-usage-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .wr-usage-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .wr-usage-text strong {
+    font-size: 14px;
+    color: #1c2024;
+  }
+
+  .wr-usage-text span {
+    font-size: 12px;
+    color: #60646c;
+  }
+
+  /* Typography Scale */
+  .wr-type-scale {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: #fcfcfd;
+    border-radius: 12px;
+    border: 1px solid #e8e8ec;
+    overflow: hidden;
+    margin-top: 24px;
+  }
+
+  .wr-type-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 120px;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e8e8ec;
+  }
+
+  .wr-type-row:last-child {
+    border-bottom: none;
+  }
+
+  .wr-type-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #12a594;
+    background: #e0f8f3;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wr-type-sample {
+    color: #1c2024;
+    padding: 0 16px;
+  }
+
+  .wr-type-meta {
+    font-size: 13px;
+    color: #8b8d98;
+    font-family: monospace;
+    text-align: right;
+  }
+
+  /* Font Weights */
+  .wr-weights-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .wr-weight-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    background: #fcfcfd;
+    border-radius: 12px;
+    border: 1px solid #e8e8ec;
+    gap: 8px;
+  }
+
+  .wr-weight-sample {
+    font-size: 48px;
+    color: #1c2024;
+    line-height: 1;
+  }
+
+  .wr-weight-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1c2024;
+  }
+
+  .wr-weight-value {
+    font-size: 12px;
+    color: #8b8d98;
+    font-family: monospace;
+  }
+
+  /* Spacing Scale */
+  .wr-spacing-scale {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: #fcfcfd;
+    border-radius: 12px;
+    border: 1px solid #e8e8ec;
+    overflow: hidden;
+    margin-top: 24px;
+  }
+
+  .wr-spacing-row {
+    display: grid;
+    grid-template-columns: 50px 80px 60px 1fr;
+    align-items: center;
+    padding: 12px 24px;
+    border-bottom: 1px solid #e8e8ec;
+    gap: 16px;
+  }
+
+  .wr-spacing-row:last-child {
+    border-bottom: none;
+  }
+
+  .wr-spacing-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #12a594;
+    background: #e0f8f3;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .wr-spacing-bar {
+    height: 24px;
+    background: linear-gradient(135deg, #12a594, #0d9b8a);
+    border-radius: 4px;
+    min-width: 4px;
+  }
+
+  .wr-spacing-value {
+    font-size: 13px;
+    color: #1c2024;
+    font-family: monospace;
+    font-weight: 500;
+  }
+
+  .wr-spacing-use {
+    font-size: 13px;
+    color: #60646c;
+  }
+
+  /* Radius Grid */
+  .wr-radius-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .wr-radius-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .wr-radius-box {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #12a594, #0d9b8a);
+  }
+
+  .wr-radius-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #1c2024;
+  }
+
+  .wr-radius-value {
+    font-size: 12px;
+    color: #8b8d98;
+    font-family: monospace;
+  }
+
+  /* Panel Demo */
+  .wr-panel-demo {
+    margin-top: 24px;
+  }
+
+  .wr-panel-example {
+    background: #ffffff;
+    border: 1px solid #d9d9e0;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    max-width: 400px;
+  }
+
+  .wr-panel-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1c2024;
+    margin-bottom: 8px;
+  }
+
+  .wr-panel-content {
+    font-size: 14px;
+    color: #60646c;
+    line-height: 1.5;
+  }
+
+  /* Decisions */
+  .wr-decisions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .wr-decision-card {
+    background: #fcfcfd;
+    border: 1px solid #e8e8ec;
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .wr-decision-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .wr-decision-aspect {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8b8d98;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .wr-decision-choice {
+    font-size: 14px;
+    font-weight: 600;
+    color: #12a594;
+    background: #e0f8f3;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .wr-decision-card p {
+    font-size: 14px;
+    color: #60646c;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .wr-usage-grid,
+    .wr-weights-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .wr-radius-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .wr-decisions {
+      grid-template-columns: 1fr;
+    }
+
+    .wr-type-row {
+      grid-template-columns: 40px 1fr;
+    }
+
+    .wr-type-meta {
+      display: none;
+    }
+
+    .wr-spacing-row {
+      grid-template-columns: 40px 60px 50px 1fr;
+    }
+  }
+`}
+</style>
