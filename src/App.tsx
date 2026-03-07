@@ -1,3 +1,11 @@
+import { Button } from '@/ui/components/shadcn/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from '@/ui/components/shadcn/card';
 import { useEffect, useState } from 'react';
 
 function App() {
@@ -22,38 +30,36 @@ function App() {
             <p className="text-muted-foreground">Consulta de Convenios Colectivos</p>
           </div>
 
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-card-foreground hover:bg-muted"
-          >
+          <Button type="button" variant="outline" onClick={toggleTheme}>
             Tema: {theme === 'dark' ? 'Oscuro' : 'Claro'}
-          </button>
+          </Button>
         </header>
 
-        <section className="rounded-xl border border-border bg-card p-6 shadow-md">
-          <h2 className="text-lg font-semibold text-card-foreground">Demo Tailwind + Tokens</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Este bloque usa clases de Tailwind conectadas a `index.css`.
-          </p>
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle>Demo Tailwind + Tokens + shadcn/ui</CardTitle>
+            <CardDescription>
+              Este bloque usa componentes base de shadcn y variables de index.css.
+            </CardDescription>
+          </CardHeader>
 
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <button className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:opacity-90">
-              Botón Primary (Tailwind)
-            </button>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button>Botón Primary (shadcn)</Button>
 
-            <div
-              className="rounded-md border px-4 py-2 text-sm"
-              style={{
-                backgroundColor: 'var(--app-muted)',
-                borderColor: 'var(--colorsAccentAccent7)',
-                color: 'var(--app-foreground)'
-              }}
-            >
-              Caja usando variables generadas por Style Dictionary
+              <div
+                className="rounded-md border px-4 py-2 text-sm"
+                style={{
+                  backgroundColor: 'var(--app-muted)',
+                  borderColor: 'var(--colorsAccentAccent7)',
+                  color: 'var(--app-foreground)'
+                }}
+              >
+                Caja usando variables generadas por Style Dictionary
+              </div>
             </div>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       </div>
     </main>
   );
