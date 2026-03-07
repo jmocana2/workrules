@@ -14,3 +14,6 @@ coverage
 # docs
 .claude/
 docs/arquitectura/arquitectura-seguridad.md
+
+*storybook.log
+storybook-static
