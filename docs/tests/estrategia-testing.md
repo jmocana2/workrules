@@ -27,14 +27,19 @@
 
 ## 2. Stack de Testing por Capa
 
+### Modelo recomendado: doble carril
+
+1. **Carril A (UI Contract):** tests nativos de Storybook 10 sobre `*.stories.*` para validar estados visuales, interacción básica y regresiones de composición.
+2. **Carril B (Lógica de app):** tests de nuestro stack (Vitest + RTL, Deno test, Playwright) para comportamiento funcional, reglas de negocio y flujos end-to-end.
+
 | Capa | Tecnología | Runner | Ubicación |
 |------|------------|--------|-----------|
-| **Frontend (Unit)** | Vitest + vi.mock() | Node.js | `apps/web/**/*.test.ts` |
-| **Frontend (Integration)** | Vitest + React Testing Library | Node.js | `apps/web/**/*.test.tsx` |
+| **Frontend (Storybook native)** | Storybook 10 + `@storybook/addon-vitest` + `storybook/test` | Vitest project `storybook` | `src/**/*.stories.{ts,tsx}` + `src/**/*.mdx` |
+| **Frontend (Unit)** | Vitest + vi.mock() | Node.js | `src/**/*.test.ts` |
+| **Frontend (Integration)** | Vitest + React Testing Library | Node.js | `src/**/*.test.tsx` |
 | **Edge Functions (Unit)** | Deno Test + std/testing/mock | Deno | `supabase/functions/**/*.test.ts` |
 | **Edge Functions (Integration)** | Supabase CLI local + Deno Test | Deno | `supabase/functions/**/*.integration.test.ts` |
-| **E2E** | Playwright + POM | Node.js | `e2e/**/*.spec.ts` |
-
+| **E2E** | Playwright + POM | Node.js | `e2e/specs/**/*.spec.ts` |
 ---
 
 ## 3. Objetivos de Coverage
@@ -60,25 +65,20 @@
 
 ## 4. Estructura de Tests
 
-### Frontend (apps/web)
+### Frontend (`src/`)
 
 ```
-apps/web/
-├── src/
-│   ├── components/
-│   │   ├── Chat/
-│   │   │   ├── ChatInput.tsx
-│   │   │   ├── ChatInput.test.tsx      # Unit test
-│   │   │   └── ChatFlow.test.tsx       # Integration test
+src/
+├── ui/components/workrules/
+│   ├── atoms/
+│   │   ├── ThemeToggle/
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   ├── ThemeToggle.stories.tsx   # Storybook native tests
+│   │   │   └── ThemeToggle.test.tsx      # Vitest + RTL
 │   │   └── ...
-│   ├── hooks/
-│   │   ├── useChat.ts
-│   │   └── useChat.test.ts
-│   └── utils/
-│       ├── validators.ts
-│       └── validators.test.ts
-├── vitest.config.ts
-└── vitest.setup.ts
+├── core/
+├── lib/
+└── ...
 ```
 
 ### Edge Functions (supabase/functions)
@@ -128,10 +128,10 @@ e2e/
 
 ## 5. Configuración
 
-### 5.1 Vitest (Frontend)
+### 5.1 Vitest (Frontend - stack propio)
 
 ```typescript
-// apps/web/vitest.config.ts
+// vitest.unit.config.ts
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
@@ -154,6 +154,16 @@ export default defineConfig({
   }
 })
 ```
+
+### 5.1.b Storybook 10 native tests (carril UI)
+
+En este repo, Storybook 10 está integrado vía `@storybook/addon-vitest` y corre sobre el proyecto de Vitest llamado `storybook`.
+
+- Incluye historias: `src/**/*.stories.{ts,tsx}` y `src/**/*.mdx`
+- Import utilidades de test desde `storybook/test` (no `@storybook/test`)
+- Comando recomendado: `pnpm test:storybook`
+
+Esto valida contratos visuales e interacción a nivel de historia, pero **no reemplaza** los tests `*.test.ts(x)` de lógica/comportamiento.
 
 ### 5.2 Deno (Edge Functions)
 
@@ -298,16 +308,21 @@ export function validateChatRequest(body: unknown) {
 // package.json (root)
 {
   "scripts": {
-    "test": "pnpm -r test",
-    "test:unit": "pnpm --filter web test:unit",
-    "test:integration": "pnpm --filter web test:integration",
-    "test:e2e": "playwright test",
-    "test:edge": "cd supabase/functions && deno task test",
-    "test:coverage": "pnpm -r test:coverage",
-    "test:ci": "pnpm test:unit && pnpm test:edge && pnpm test:e2e"
+    "test": "playwright test",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:deno": "deno test --allow-all --config supabase/functions/deno.json supabase/functions",
+    "test:storybook": "vitest run --project storybook",
+    "test:ci": "pnpm test:storybook && pnpm test:unit && pnpm test:deno && pnpm test"
   }
 }
 ```
+
+### Política de ejecución recomendada
+
+1. **PR de UI/Componentes:** ejecutar `test:storybook`.
+2. **PR de lógica frontend:** ejecutar `test:unit`.
+3. **PR backend Edge Functions:** ejecutar `test:deno`.
+4. **PR de flujos críticos:** ejecutar `test` (Playwright).
 
 ---
 
@@ -333,18 +348,17 @@ jobs:
 
       - run: pnpm install
       - run: pnpm test:unit
-      - run: pnpm test:edge
-      - run: pnpm test:e2e
-```
-
+      - run: pnpm test:storybook
+      - run: pnpm test:deno
+      - run: pnpm test
 ---
 
 ## 10. Prioridad de Implementación
 
-1. **Fase 1:** Configurar Deno tests para Edge Functions existentes (chat, webhook-pdf)
-2. **Fase 2:** Configurar Vitest cuando se cree el frontend
-3. **Fase 3:** Configurar Playwright + POM para flujos E2E críticos
-4. **Fase 4:** Integrar con CI/CD
+1. **Fase 1:** Mantener Storybook tests para contratos de UI (`*.stories.*`)
+2. **Fase 2:** Mantener y ampliar tests de frontend en `test:unit` (`*.test.ts(x)`)
+3. **Fase 3:** Consolidar cobertura de Edge Functions con `test:deno`
+4. **Fase 4:** Ejecutar gates completos en CI (`test:storybook` + `test:unit` + `test:deno` + `test`)
 
 ---
 

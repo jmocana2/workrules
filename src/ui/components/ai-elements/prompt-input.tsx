@@ -606,6 +606,22 @@ export const PromptInput = ({
     }
   }, [files, syncHiddenInput]);
 
+  const preventDefaultForFileDrop = useCallback((e: DragEvent) => {
+    if (e.dataTransfer?.types?.includes("Files")) {
+      e.preventDefault();
+    }
+  }, []);
+
+  const handleFileDrop = useCallback(
+    (e: DragEvent) => {
+      preventDefaultForFileDrop(e);
+      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+        add(e.dataTransfer.files);
+      }
+    },
+    [add, preventDefaultForFileDrop]
+  );
+
   // Attach drop handlers on nearest form and document (opt-in)
   useEffect(() => {
     const form = formRef.current;
@@ -617,52 +633,26 @@ export const PromptInput = ({
       return;
     }
 
-    const onDragOver = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) {
-        e.preventDefault();
-      }
-    };
-    const onDrop = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) {
-        e.preventDefault();
-      }
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        add(e.dataTransfer.files);
-      }
-    };
-    form.addEventListener("dragover", onDragOver);
-    form.addEventListener("drop", onDrop);
+    form.addEventListener("dragover", preventDefaultForFileDrop);
+    form.addEventListener("drop", handleFileDrop);
     return () => {
-      form.removeEventListener("dragover", onDragOver);
-      form.removeEventListener("drop", onDrop);
+      form.removeEventListener("dragover", preventDefaultForFileDrop);
+      form.removeEventListener("drop", handleFileDrop);
     };
-  }, [add, globalDrop]);
+  }, [globalDrop, handleFileDrop, preventDefaultForFileDrop]);
 
   useEffect(() => {
     if (!globalDrop) {
       return;
     }
 
-    const onDragOver = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) {
-        e.preventDefault();
-      }
-    };
-    const onDrop = (e: DragEvent) => {
-      if (e.dataTransfer?.types?.includes("Files")) {
-        e.preventDefault();
-      }
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        add(e.dataTransfer.files);
-      }
-    };
-    document.addEventListener("dragover", onDragOver);
-    document.addEventListener("drop", onDrop);
+    document.addEventListener("dragover", preventDefaultForFileDrop);
+    document.addEventListener("drop", handleFileDrop);
     return () => {
-      document.removeEventListener("dragover", onDragOver);
-      document.removeEventListener("drop", onDrop);
+      document.removeEventListener("dragover", preventDefaultForFileDrop);
+      document.removeEventListener("drop", handleFileDrop);
     };
-  }, [add, globalDrop]);
+  }, [globalDrop, handleFileDrop, preventDefaultForFileDrop]);
 
   useEffect(
     () => () => {
@@ -674,7 +664,6 @@ export const PromptInput = ({
         }
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- cleanup only on unmount; filesRef always current
     [usingProvider]
   );
 
@@ -701,35 +690,66 @@ export const PromptInput = ({
     [files, add, remove, clearAttachments, openFileDialog]
   );
 
+  const addReferencedSources = useCallback(
+    (incoming: SourceDocumentUIPart[] | SourceDocumentUIPart) => {
+      const array = Array.isArray(incoming) ? incoming : [incoming];
+      setReferencedSources((prev) => [
+        ...prev,
+        ...array.map((s) => ({ ...s, id: nanoid() })),
+      ]);
+    },
+    []
+  );
+
+  const removeReferencedSource = useCallback((id: string) => {
+    setReferencedSources((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
   const refsCtx = useMemo<ReferencedSourcesContext>(
     () => ({
-      add: (incoming: SourceDocumentUIPart[] | SourceDocumentUIPart) => {
-        const array = Array.isArray(incoming) ? incoming : [incoming];
-        setReferencedSources((prev) => [
-          ...prev,
-          ...array.map((s) => ({ ...s, id: nanoid() })),
-        ]);
-      },
+      add: addReferencedSources,
       clear: clearReferencedSources,
-      remove: (id: string) => {
-        setReferencedSources((prev) => prev.filter((s) => s.id !== id));
-      },
+      remove: removeReferencedSource,
       sources: referencedSources,
     }),
-    [referencedSources, clearReferencedSources]
+    [referencedSources, clearReferencedSources, addReferencedSources, removeReferencedSource]
   );
+
+  const getSubmitText = useCallback(
+    (form: HTMLFormElement) => {
+      if (usingProvider) {
+        return controller.textInput.value;
+      }
+
+      const formData = new FormData(form);
+      return (formData.get("message") as string) || "";
+    },
+    [controller, usingProvider]
+  );
+
+  const getConvertedFiles = useCallback(async () => {
+    return Promise.all(
+      files.map(async ({ id: _id, ...item }) => {
+        if (!item.url?.startsWith("blob:")) {
+          return item;
+        }
+
+        const dataUrl = await convertBlobUrlToDataUrl(item.url);
+        return {
+          ...item,
+          // If conversion failed, keep the original blob URL
+          url: dataUrl ?? item.url,
+        };
+      })
+    );
+  }, [files]);
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     async (event) => {
       event.preventDefault();
 
       const form = event.currentTarget;
-      const text = usingProvider
-        ? controller.textInput.value
-        : (() => {
-            const formData = new FormData(form);
-            return (formData.get("message") as string) || "";
-          })();
+      const text = getSubmitText(form);
 
       // Reset form immediately after capturing text to avoid race condition
       // where user input during async blob conversion would be lost
@@ -739,19 +759,7 @@ export const PromptInput = ({
 
       try {
         // Convert blob URLs to data URLs asynchronously
-        const convertedFiles: FileUIPart[] = await Promise.all(
-          files.map(async ({ id: _id, ...item }) => {
-            if (item.url?.startsWith("blob:")) {
-              const dataUrl = await convertBlobUrlToDataUrl(item.url);
-              // If conversion failed, keep the original blob URL
-              return {
-                ...item,
-                url: dataUrl ?? item.url,
-              };
-            }
-            return item;
-          })
-        );
+        const convertedFiles: FileUIPart[] = await getConvertedFiles();
 
         const result = onSubmit({ files: convertedFiles, text }, event);
 
@@ -777,7 +785,7 @@ export const PromptInput = ({
         // Don't clear on error - user may want to retry
       }
     },
-    [usingProvider, controller, files, onSubmit, clear]
+    [usingProvider, controller, onSubmit, clear, getConvertedFiles, getSubmitText]
   );
 
   // Render with or without local provider
@@ -1050,13 +1058,11 @@ export const PromptInputActionMenu = (props: PromptInputActionMenuProps) => (
   <DropdownMenu {...props} />
 );
 
-export type PromptInputActionMenuTriggerProps = PromptInputButtonProps;
-
 export const PromptInputActionMenuTrigger = ({
   className,
   children,
   ...props
-}: PromptInputActionMenuTriggerProps) => (
+}: PromptInputButtonProps) => (
   <DropdownMenuTrigger asChild>
     <PromptInputButton className={className} {...props}>
       {children ?? <PlusIcon className="size-4" />}
