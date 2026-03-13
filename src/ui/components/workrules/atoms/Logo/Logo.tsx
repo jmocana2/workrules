@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 
-interface LogoProps {
+export interface LogoProps {
   variant?: 'full' | 'icon' | 'text';
   size?: 'sm' | 'md' | 'lg';
   theme?: 'light' | 'dark' | 'auto';
@@ -98,8 +98,7 @@ export function Logo({
       )}
       aria-hidden="true"
     >
-      <span className="text-primary">Work</span>
-      <span className="text-secondary">Rules</span>
+      Work<span className="text-muted-foreground">Rules</span>
     </span>
   );
 

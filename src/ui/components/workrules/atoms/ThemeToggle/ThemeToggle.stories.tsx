@@ -118,7 +118,7 @@ export const Controlled: Story = {
       <div className="flex flex-col items-center gap-6 p-8 rounded-lg bg-background border">
         <div className="text-center">
           <div className="text-sm font-medium text-foreground mb-2">
-            Tema actual: <span className="font-bold text-primary">{theme}</span>
+            Tema actual: <span className="font-bold text-foreground">{theme}</span>
           </div>
           <ThemeToggle
             theme={theme}
