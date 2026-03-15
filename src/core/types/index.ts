@@ -21,3 +21,10 @@ export type {
   // Cache
   SemanticCache,
 } from './supabase';
+
+// Tipos de UI
+export type {
+  PerfilJson,
+  UserConvenio,
+  ConversationSummary,
+} from './convenio';
