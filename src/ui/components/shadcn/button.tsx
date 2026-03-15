@@ -9,14 +9,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        default:
+          "bg-(--app-button-primary-bg) text-(--app-button-primary-fg) hover:bg-(--app-button-primary-hover)",
+        outline:
+          "border-(--app-button-outline-border) bg-(--app-button-outline-bg) text-(--app-button-outline-fg) hover:bg-(--app-button-outline-hover) hover:text-(--app-button-outline-fg) aria-expanded:bg-(--app-button-outline-hover) aria-expanded:text-(--app-button-outline-fg)",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-(--app-button-secondary-bg) text-(--app-button-secondary-fg) hover:bg-(--app-button-secondary-hover) hover:text-(--app-button-secondary-fg) aria-expanded:bg-(--app-button-secondary-bg) aria-expanded:text-(--app-button-secondary-fg)",
         ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "hover:bg-(--app-button-ghost-hover) hover:text-foreground aria-expanded:bg-(--app-button-ghost-hover) aria-expanded:text-foreground",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+          "bg-(--app-button-destructive-bg) text-(--app-button-destructive-fg) hover:bg-(--app-button-destructive-hover) focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

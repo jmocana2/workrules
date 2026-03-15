@@ -53,13 +53,13 @@ const getAmbitoIndicator = (ambito?: ConvenioChipProps['ambito']): string => {
 const getAmbitoClasses = (ambito?: ConvenioChipProps['ambito']): string => {
   switch (ambito) {
     case 'estatal':
-      return 'border-[var(--colorsAccentAccent9)] text-[var(--colorsAccentAccent11)] bg-[var(--colorsAccentAccent2)] hover:bg-[var(--colorsAccentAccent3)]';
+      return 'border-[var(--colorsAccentAccent9)] text-[var(--colorsAccentAccent12)] bg-[var(--colorsAccentAccent2)] hover:bg-[var(--colorsAccentAccent3)]';
     case 'provincial':
-      return 'border-[var(--colorsSemanticSuccess9)] text-[var(--colorsSemanticSuccess11)] bg-[var(--colorsSemanticSuccess1)] hover:bg-[var(--colorsSemanticSuccess2)]';
+      return 'border-[var(--colorsSemanticSuccess9)] text-[var(--colorsSemanticSuccess12)] bg-[var(--colorsSemanticSuccess1)] hover:bg-[var(--colorsSemanticSuccess2)]';
     case 'empresa':
-      return 'border-[var(--colorsSemanticInfo9)] text-[var(--colorsSemanticInfo11)] bg-[var(--colorsSemanticInfo1)] hover:bg-[var(--colorsSemanticInfo2)]';
+      return 'border-[var(--colorsSemanticInfo9)] text-[var(--colorsSemanticInfo12)] bg-[var(--colorsSemanticInfo1)] hover:bg-[var(--colorsSemanticInfo2)]';
     default:
-      return '';
+      return 'border-[var(--colorsNeutralNeutral9)] text-[var(--colorsNeutralNeutral12)] bg-[var(--colorsNeutralNeutral2)] hover:bg-[var(--colorsNeutralNeutral3)]';
   }
 };
 
@@ -74,11 +74,33 @@ export const ConvenioChip = ({
 }: ConvenioChipProps) => {
   const ambitoIndicator = getAmbitoIndicator(ambito);
   const ambitoClasses = getAmbitoClasses(ambito);
+  const usesBadgeButtonBehavior = !!onClick && !removable;
+  const showsInnerSelectButton = !!onClick && removable;
 
   const handleRemoveClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     onRemove?.();
   };
+
+  const handleBadgeKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick?.();
+    }
+  };
+
+  const content = (
+    <>
+      {ambitoIndicator && (
+        <span className="font-semibold text-[0.625rem] leading-none">
+          {ambitoIndicator}
+        </span>
+      )}
+      <span className="max-w-50 truncate text-xs leading-none">
+        {nombre}
+      </span>
+    </>
+  );
 
   return (
     <Badge
@@ -86,33 +108,33 @@ export const ConvenioChip = ({
       className={cn(
         'gap-1.5 h-auto py-1 px-2.5 transition-all',
         ambitoClasses,
-        onClick && 'cursor-pointer',
-        selected && 'ring-2 ring-[var(--colorsAccentAccent9)] ring-offset-2 ring-offset-background',
+        usesBadgeButtonBehavior && 'cursor-pointer',
+        selected && 'ring-2 ring-(--colorsAccentAccent9) ring-offset-2 ring-offset-background',
         className
       )}
-      onClick={onClick}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onKeyDown={onClick ? (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      } : undefined}
-    >      {ambitoIndicator && (
-        <span className="font-semibold text-[0.625rem] leading-none opacity-90">
-          {ambitoIndicator}
-        </span>
+      onClick={usesBadgeButtonBehavior ? onClick : undefined}
+      role={usesBadgeButtonBehavior ? 'button' : undefined}
+      tabIndex={usesBadgeButtonBehavior ? 0 : undefined}
+      onKeyDown={usesBadgeButtonBehavior ? handleBadgeKeyDown : undefined}
+    >
+      {showsInnerSelectButton ? (
+        <button
+          type="button"
+          onClick={onClick}
+          className="inline-flex min-w-0 items-center gap-1.5 rounded-sm text-left transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-(--colorsAccentAccent9) focus:ring-offset-1"
+          aria-label={`Seleccionar ${nombre}`}
+        >
+          {content}
+        </button>
+      ) : (
+        content
       )}
-      <span className="max-w-[200px] truncate text-xs leading-none">
-        {nombre}
-      </span>
       {removable && (
         <button
           type="button"
           onClick={handleRemoveClick}
           aria-label={`Eliminar ${nombre}`}
-          className="ml-0.5 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-[var(--colorsAccentAccent9)] focus:ring-offset-1"
+          className="ml-0.5 rounded-sm transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-(--colorsAccentAccent9) focus:ring-offset-1"
         >
           <X className="h-3 w-3" />
         </button>

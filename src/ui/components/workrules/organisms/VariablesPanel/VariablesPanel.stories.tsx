@@ -1,7 +1,8 @@
+import type { PerfilJson } from '@core/types';
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Button } from '@ui/components/shadcn/button';
 import { useState } from 'react';
 import { VariablesPanel } from './VariablesPanel';
-import type { PerfilJson } from '@core/types';
 
 const meta: Meta<typeof VariablesPanel> = {
   title: 'WorkRules/Organisms/VariablesPanel',
@@ -99,7 +100,7 @@ export const Default: Story = {
   },
   decorators: [
     (Story: React.ComponentType) => (
-      <div className="flex h-screen items-stretch bg-[var(--colorsNeutralNeutral1)]">
+      <div className="flex h-screen items-stretch bg-background">
         <div className="flex-1" />
         <Story />
       </div>
@@ -118,7 +119,7 @@ export const ConsultorasTIC: Story = {
   },
   decorators: [
     (Story: React.ComponentType) => (
-      <div className="flex h-screen items-stretch bg-[var(--colorsNeutralNeutral1)]">
+      <div className="flex h-screen items-stretch bg-background">
         <div className="flex-1" />
         <Story />
       </div>
@@ -137,7 +138,7 @@ export const NoConvenio: Story = {
   },
   decorators: [
     (Story: React.ComponentType) => (
-      <div className="flex h-screen items-stretch bg-[var(--colorsNeutralNeutral1)]">
+      <div className="flex h-screen items-stretch bg-background">
         <div className="flex-1" />
         <Story />
       </div>
@@ -155,7 +156,7 @@ export const Collapsed: Story = {
   },
   decorators: [
     (Story: React.ComponentType) => (
-      <div className="flex h-screen items-stretch bg-[var(--colorsNeutralNeutral1)]">
+      <div className="flex h-screen items-stretch bg-background">
         <div className="flex-1" />
         <Story />
       </div>
@@ -174,7 +175,7 @@ export const ConVariableSinValores: Story = {
   },
   decorators: [
     (Story: React.ComponentType) => (
-      <div className="flex h-screen items-stretch bg-[var(--colorsNeutralNeutral1)]">
+      <div className="flex h-screen items-stretch bg-background">
         <div className="flex-1" />
         <Story />
       </div>
@@ -201,28 +202,25 @@ export const Interactive: Story = {
     };
 
     return (
-      <div className="flex h-screen items-stretch bg-[var(--colorsNeutralNeutral1)]">
+      <div className="flex h-screen items-stretch bg-background">
         {/* Main content area */}
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-          <h1 className="text-2xl font-bold text-[var(--colorsNeutralNeutral12)]">
+          <h1 className="text-2xl font-bold text-foreground">
             Panel de Variables Interactivo
           </h1>
-          <p className="text-[var(--colorsNeutralNeutral11)]">
+          <p className="text-muted-foreground">
             Estado: {isCollapsed ? 'Colapsado' : 'Expandido'}
           </p>
           {lastClick && (
-            <div className="rounded-lg border border-[var(--colorsAccentAccent6)] bg-[var(--colorsAccentAccent3)] p-4">
-              <p className="text-sm text-[var(--colorsAccentAccent11)]">
+            <div className="rounded-lg border border-(--colorsAccentAccent6) bg-(--colorsAccentAccent3) p-4">
+              <p className="text-sm text-(--colorsAccentAccent11)">
                 Último click: <strong>{lastClick}</strong>
               </p>
             </div>
           )}
-          <button
-            onClick={handleToggleCollapse}
-            className="rounded-md bg-[var(--colorsAccentAccent9)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--colorsAccentAccent10)]"
-          >
+          <Button onClick={handleToggleCollapse} size="sm">
             {isCollapsed ? 'Expandir' : 'Colapsar'} Panel
-          </button>
+          </Button>
         </div>
 
         {/* Variables Panel */}

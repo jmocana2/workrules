@@ -8,39 +8,96 @@
 :root {
   color-scheme: light;
 
-  --app-primary: var(--colorsAccentAccent9);
-  --app-primary-foreground: var(--tokensColorsWhiteContrast);
+  --app-primary: var(--colorsAccentAccent9, #0b7285);
+  --app-primary-foreground: var(--colorsDefaultWhite, #ffffff);
 
-  --app-background: var(--colorsDefaultWhite);
-  --app-foreground: var(--colorsDefaultBlack);
+  --app-background: var(--colorsDefaultWhite, #ffffff);
+  --app-foreground: var(--colorsDefaultBlack, #111111);
   --app-muted: #f5f6f8;
   --app-muted-foreground: #5f6670;
 
-  --app-card: var(--colorsDefaultWhite);
-  --app-card-foreground: var(--colorsDefaultBlack);
+  --app-card: var(--colorsDefaultWhite, #ffffff);
+  --app-card-foreground: var(--colorsDefaultBlack, #111111);
 
-  --app-border: #d9dde3;
-  --app-input: #d9dde3;
-  --app-ring: var(--colorsAccentAccent9);
+  /* Higher-contrast default borders improve control perception in light mode. */
+  --app-border: #8f99aa;
+  --app-input: #8f99aa;
+  --app-ring: var(--colorsAccentAccent9, #0b7285);
+
+  --app-alert-warning-bg: #fff6dd;
+  --app-alert-warning-surface: #ffefc2;
+  --app-alert-warning-border: #99622b;
+  --app-alert-warning-icon: #8f4d00;
+  --app-alert-warning-title: #7a4300;
+  --app-alert-warning-fg: #2d2416;
+  --app-alert-warning-muted: #6a5a43;
+  --app-alert-warning-hover: #ffe4a8;
+
+  --app-button-primary-bg: #0f766e;
+  --app-button-primary-fg: #ffffff;
+  --app-button-primary-hover: #0d665f;
+
+  --app-button-outline-bg: var(--app-background);
+  --app-button-outline-fg: var(--app-foreground);
+  --app-button-outline-border: var(--app-border);
+  --app-button-outline-hover: #e8edf3;
+
+  --app-button-secondary-bg: #e8edf3;
+  --app-button-secondary-fg: #1f2937;
+  --app-button-secondary-hover: #dce3eb;
+
+  --app-button-ghost-hover: #eef2f6;
+
+  --app-button-destructive-bg: #b4232b;
+  --app-button-destructive-fg: #ffffff;
+  --app-button-destructive-hover: #9f1f26;
 }
 
 .dark {
   color-scheme: dark;
 
-  --app-primary: var(--colorsAccentAccent10);
-  --app-primary-foreground: var(--tokensColorsWhiteContrast);
+  --app-primary: var(--colorsAccentAccent10, #22b8cf);
+  --app-primary-foreground: var(--colorsDefaultWhite, #ffffff);
 
-  --app-background: var(--tokensColorsPageBackground);
-  --app-foreground: var(--tokensColorsText);
-  --app-muted: var(--colorsNeutralNeutral3);
-  --app-muted-foreground: var(--colorsNeutralNeutral11);
+  --app-background: var(--tokensColorsPageBackground, #0b0f14);
+  --app-foreground: var(--tokensColorsText, #f5f7fa);
+  --app-muted: var(--colorsNeutralNeutral3, #1a2029);
+  --app-muted-foreground: var(--colorsNeutralNeutral11, #b5beca);
 
-  --app-card: var(--panelSolid);
-  --app-card-foreground: var(--tokensColorsText);
+  --app-card: var(--panelSolid, #111923);
+  --app-card-foreground: var(--tokensColorsText, #f5f7fa);
 
-  --app-border: var(--colorsNeutralNeutral6);
-  --app-input: var(--colorsNeutralNeutral6);
-  --app-ring: var(--colorsAccentAccent10);
+  --app-border: var(--colorsNeutralNeutral6, #445066);
+  --app-input: var(--colorsNeutralNeutral6, #445066);
+  --app-ring: var(--colorsAccentAccent10, #22b8cf);
+
+  --app-alert-warning-bg: var(--colorsSemanticWarning1, #14120b);
+  --app-alert-warning-surface: var(--colorsSemanticWarning2, #1b180f);
+  --app-alert-warning-border: var(--colorsSemanticWarning7, #665417);
+  --app-alert-warning-icon: var(--colorsSemanticWarning10, #ffff57);
+  --app-alert-warning-title: var(--colorsSemanticWarning11, #f5e147);
+  --app-alert-warning-fg: var(--colorsSemanticWarning12, #f6eeb4);
+  --app-alert-warning-muted: var(--colorsNeutralNeutral11, #b0b4ba);
+  --app-alert-warning-hover: var(--colorsSemanticWarning3, #2d2305);
+
+  --app-button-primary-bg: #2ad4b7;
+  --app-button-primary-fg: #04231d;
+  --app-button-primary-hover: #49e6cb;
+
+  --app-button-outline-bg: color-mix(in srgb, var(--app-background) 72%, white 28%);
+  --app-button-outline-fg: var(--app-foreground);
+  --app-button-outline-border: var(--app-border);
+  --app-button-outline-hover: color-mix(in srgb, var(--app-background) 50%, white 50%);
+
+  --app-button-secondary-bg: color-mix(in srgb, var(--app-background) 58%, white 42%);
+  --app-button-secondary-fg: var(--app-foreground);
+  --app-button-secondary-hover: color-mix(in srgb, var(--app-background) 44%, white 56%);
+
+  --app-button-ghost-hover: color-mix(in srgb, var(--app-background) 58%, white 42%);
+
+  --app-button-destructive-bg: #ff7a80;
+  --app-button-destructive-fg: #2b0a0b;
+  --app-button-destructive-hover: #ff9095;
 }
 
 /* Tailwind aliases → Style Dictionary tokens */
@@ -60,8 +117,8 @@
   --color-input: var(--app-input);
   --color-ring: var(--app-ring);
 
-  --font-family-sans: var(--typographyFontFamilyText), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-family-mono: var(--typographyFontFamilyCode), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family-sans: var(--typographyFontFamilyText, "Inter"), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: var(--typographyFontFamilyCode, "JetBrains Mono"), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 /* Base Styles */

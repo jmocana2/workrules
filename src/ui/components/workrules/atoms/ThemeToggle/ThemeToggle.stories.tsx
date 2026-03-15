@@ -1,3 +1,4 @@
+import { Button } from '@/ui/components/shadcn/button';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import type { Theme } from './ThemeToggle';
@@ -92,15 +93,15 @@ export const AllSizes: Story = {
     <div className="flex items-center gap-6 p-8 rounded-lg bg-background border">
       <div className="flex flex-col items-center gap-2">
         <ThemeToggle size="sm" showLabel />
-        <span className="text-xs text-muted-foreground">Small</span>
+        <span className="text-xs text-foreground">Small</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <ThemeToggle size="md" showLabel />
-        <span className="text-xs text-muted-foreground">Medium</span>
+        <span className="text-xs text-foreground">Medium</span>
       </div>
       <div className="flex flex-col items-center gap-2">
         <ThemeToggle size="lg" showLabel />
-        <span className="text-xs text-muted-foreground">Large</span>
+        <span className="text-xs text-foreground">Large</span>
       </div>
     </div>
   ),
@@ -117,8 +118,8 @@ export const Controlled: Story = {
     return (
       <div className="flex flex-col items-center gap-6 p-8 rounded-lg bg-background border">
         <div className="text-center">
-          <div className="text-sm font-medium text-foreground mb-2">
-            Tema actual: <span className="font-bold text-foreground">{theme}</span>
+          <div className="text-sm font-medium mb-2">
+            Tema actual: <span className="font-bold">{theme}</span>
           </div>
           <ThemeToggle
             theme={theme}
@@ -130,24 +131,27 @@ export const Controlled: Story = {
         </div>
 
         <div className="flex gap-2 pt-4 border-t">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setTheme('light')}
-            className="px-3 py-1.5 text-sm rounded-md border hover:bg-muted transition-colors"
           >
             Set Light
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setTheme('dark')}
-            className="px-3 py-1.5 text-sm rounded-md border hover:bg-muted transition-colors"
           >
             Set Dark
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setTheme('system')}
-            className="px-3 py-1.5 text-sm rounded-md border hover:bg-muted transition-colors"
           >
             Set System
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -180,9 +184,9 @@ export const InHeader: Story = {
 
         <div className="flex items-center gap-4">
           <ThemeToggle size="md" includeSystem />
-          <button className="px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/80 transition-colors">
+          <Button size="sm">
             Mi cuenta
-          </button>
+          </Button>
         </div>
       </div>
     </header>

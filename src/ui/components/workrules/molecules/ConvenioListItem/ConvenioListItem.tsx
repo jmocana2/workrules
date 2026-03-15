@@ -48,7 +48,9 @@ export function ConvenioListItem({
         className
       )}
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div
+        className="flex items-center gap-3 min-w-0 flex-1"
+      >
         <ConvenioChip
           nombre=""
           ambito={ambito}
@@ -62,7 +64,7 @@ export function ConvenioListItem({
           )}>
             {nombre}
           </p>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-foreground/70">
             {sector && <span>{sector}</span>}
             {sector && fechaActualizacion && <span>•</span>}
             {fechaActualizacion && (
@@ -70,29 +72,29 @@ export function ConvenioListItem({
             )}
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-1 shrink-0">
-        {onInfo && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              onInfo();
-            }}
-            aria-label={`Información sobre ${nombre}`}          >
-            <Info className="h-4 w-4" />
-          </Button>
-        )}
         {onClick && (
           <ChevronRight className={cn(
-            'h-4 w-4 text-muted-foreground transition-transform',
+            'h-4 w-4 text-foreground/70 transition-transform',
             'group-hover:translate-x-0.5'
           )} />
         )}
       </div>
+
+      {onInfo && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 focus-visible:opacity-100 transition-opacity shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            onInfo();
+          }}
+          aria-label={`Información sobre ${nombre}`}
+        >
+          <Info className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }

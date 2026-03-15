@@ -189,11 +189,11 @@ export const InChatContext: Story = {
   render: (args) => (
     <div className="max-w-2xl space-y-4 p-4 bg-muted/30 rounded-lg">
       <div className="bg-background p-4 rounded-lg border">
-        <p className="text-sm text-muted-foreground mb-2">Usuario</p>
+        <p className="text-sm text-foreground mb-2">Usuario</p>
         <p>Cuanto gana un recepcionista en Baleares?</p>
       </div>
       <div className="bg-background p-4 rounded-lg border">
-        <p className="text-sm text-muted-foreground mb-2">WorkRules</p>
+        <p className="text-sm text-foreground mb-2">WorkRules</p>
         <p className="mb-4">
           He localizado el Convenio de Hosteleria de Baleares.
         </p>

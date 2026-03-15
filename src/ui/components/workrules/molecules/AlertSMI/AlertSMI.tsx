@@ -43,11 +43,11 @@ export function AlertSMI({
       role="alert"
       aria-live="polite"
       className={cn(
-        'border-[var(--colorsSemanticWarning9)] bg-[var(--colorsSemanticWarning1)] text-[var(--colorsNeutralNeutral12)]',
+        'border-(--app-alert-warning-border) bg-(--app-alert-warning-bg) text-(--app-alert-warning-fg)',
         className
       )}
     >
-      <AlertTriangle className="text-[var(--colorsSemanticWarning9)]" />
+      <AlertTriangle className="text-(--app-alert-warning-icon)" />
 
       {onDismiss && (
         <AlertAction>
@@ -56,25 +56,25 @@ export function AlertSMI({
             size="icon-xs"
             onClick={onDismiss}
             aria-label="Cerrar alerta"
-            className="text-[var(--colorsNeutralNeutral11)] hover:text-[var(--colorsNeutralNeutral12)]"
+            className="text-(--app-alert-warning-muted) hover:text-(--app-alert-warning-fg)"
           >
             <X className="size-3.5" />
           </Button>
         </AlertAction>
       )}
 
-      <AlertTitle className="text-[var(--colorsSemanticWarning11)] font-[var(--typographyFontWeightMedium)]">
+      <AlertTitle className="text-(--app-alert-warning-title) font-(--typographyFontWeightMedium)">
         Alerta de Salario Mínimo
       </AlertTitle>
 
       <AlertDescription className="space-y-4">
-        <p className="text-[var(--colorsNeutralNeutral11)] text-[var(--typographyFontSize2)] leading-[var(--typographyLineHeight2)]">
+        <p className="text-(--app-alert-warning-fg) text-(length:--typographyFontSize2) leading-(--typographyLineHeight2)">
           El cálculo según convenio resulta en{' '}
-          <span className="font-[var(--typographyFontWeightMedium)] text-[var(--colorsNeutralNeutral12)]">
+          <span className="font-(--typographyFontWeightMedium) text-(--app-alert-warning-fg)">
             {formatCurrency(calculatedAmount)}
           </span>
           /mes, pero el SMI vigente para {smiYear} es de{' '}
-          <span className="font-[var(--typographyFontWeightMedium)] text-[var(--colorsNeutralNeutral12)]">
+          <span className="font-(--typographyFontWeightMedium) text-(--app-alert-warning-fg)">
             {formatCurrency(smiAmount)}
           </span>{' '}
           ({periodText}).
@@ -82,43 +82,43 @@ export function AlertSMI({
 
         <div
           className={cn(
-            'rounded-[var(--radius3)] border border-[var(--colorsSemanticWarning7)]',
-            'bg-[var(--colorsSemanticWarning2)] p-[var(--spacing4)]',
-            'space-y-[var(--spacing2)]'
+            'rounded-(--radius3) border border-(--app-alert-warning-border)',
+            'bg-(--app-alert-warning-surface) p-(--spacing4)',
+            'space-y-(--spacing2)'
           )}
         >
-          <p className="text-[var(--colorsNeutralNeutral12)] text-[var(--typographyFontSize2)] font-[var(--typographyFontWeightMedium)]">
+          <p className="text-(--app-alert-warning-fg) text-(length:--typographyFontSize2) font-(--typographyFontWeightMedium)">
             Por ley, se aplica el salario mayor. El salario mínimo para este trabajador sería:
           </p>
 
-          <div className="flex flex-col gap-[var(--spacing1)] text-[var(--typographyFontSize2)]">
+          <div className="flex flex-col gap-(--spacing1) text-(length:--typographyFontSize2)">
             <div className="flex justify-between items-baseline">
-              <span className="text-[var(--colorsNeutralNeutral11)]">Bruto mensual:</span>
-              <span className="font-[var(--typographyFontWeightMedium)] text-[var(--colorsNeutralNeutral12)] text-[var(--typographyFontSize3)]">
+              <span className="text-(--app-alert-warning-fg)">Bruto mensual:</span>
+              <span className="font-(--typographyFontWeightMedium) text-(--app-alert-warning-fg) text-(length:--typographyFontSize3)">
                 {formatCurrency(adjustedAmount)}
               </span>
             </div>
 
             <div className="flex justify-between items-baseline">
-              <span className="text-[var(--colorsNeutralNeutral11)]">Bruto anual:</span>
-              <span className="font-[var(--typographyFontWeightMedium)] text-[var(--colorsNeutralNeutral12)] text-[var(--typographyFontSize3)]">
+              <span className="text-(--app-alert-warning-fg)">Bruto anual:</span>
+              <span className="font-(--typographyFontWeightMedium) text-(--app-alert-warning-fg) text-(length:--typographyFontSize3)">
                 {formatCurrency(annualAmount)}
               </span>
             </div>
           </div>
         </div>
 
-        <p className="text-[var(--colorsNeutralNeutral10)] text-[var(--typographyFontSize1)] leading-[var(--typographyLineHeight1)]">
+        <p className="text-(--app-alert-warning-muted) text-(length:--typographyFontSize1) leading-(--typographyLineHeight1)">
           Referencia: Art. 27 del Estatuto de los Trabajadores.
         </p>
 
         {onViewDetails && (
-          <div className="pt-[var(--spacing2)]">
+          <div className="pt-(--spacing2)">
             <Button
               variant="outline"
               size="sm"
               onClick={onViewDetails}
-              className="border-[var(--colorsSemanticWarning7)] text-[var(--colorsSemanticWarning11)] hover:bg-[var(--colorsSemanticWarning2)]"
+              className="border-(--app-alert-warning-border) text-(--app-alert-warning-fg) hover:bg-(--app-alert-warning-hover) hover:text-(--app-alert-warning-fg)"
             >
               Ver desglose completo
             </Button>

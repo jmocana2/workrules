@@ -62,7 +62,7 @@ export function AlertInvalidData({
             </p>
 
             {legalReference && (
-              <p className="text-sm italic opacity-80">({legalReference})</p>
+              <p className="text-sm italic text-foreground/90">({legalReference})</p>
             )}
 
             {suggestions && suggestions.length > 0 && (
@@ -76,7 +76,7 @@ export function AlertInvalidData({
                         variant="outline"
                         size="sm"
                         onClick={() => onSelectSuggestion(suggestion)}
-                        className="justify-start border-destructive/30 hover:border-destructive hover:bg-destructive/10"
+                        className="justify-start border-destructive/30 hover:border-destructive hover:bg-destructive/10 text-foreground"
                       >
                         {suggestion}
                       </Button>

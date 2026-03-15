@@ -98,7 +98,7 @@ export function DataRequestCard({
         {fields.map((field, index) => (
           <div key={field.name} className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">
+              <span className="text-sm font-medium text-foreground">
                 {index + 1}.
               </span>
               <Label className={cn(errors[field.name] && 'text-destructive')}>
@@ -108,7 +108,9 @@ export function DataRequestCard({
               {field.helpText && (
                 <span
                   title={field.helpText}
-                  className="text-muted-foreground cursor-help"
+                  className="text-foreground cursor-help"
+                  role="img"
+                  aria-label={field.helpText}
                 >
                   <HelpCircle className="h-4 w-4" />
                 </span>

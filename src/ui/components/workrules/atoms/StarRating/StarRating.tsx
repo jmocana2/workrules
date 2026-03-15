@@ -126,7 +126,7 @@ export const StarRating = ({
               onFocus={() => setFocusedIndex(index)}
               className={cn(
                 'transition-transform duration-150 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 rounded',
-                isSelected ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-muted-foreground/40'
+                isSelected ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-foreground/60'
               )}
             >
               <Star className={config.icon} strokeWidth={1.5} />
@@ -151,7 +151,7 @@ export const StarRating = ({
             key={value}
             className={cn(
               config.icon,
-              isActive ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-muted-foreground/40'
+              isActive ? 'fill-yellow-400 text-yellow-400' : 'fill-transparent text-foreground/60'
             )}
             strokeWidth={1.5}
           />

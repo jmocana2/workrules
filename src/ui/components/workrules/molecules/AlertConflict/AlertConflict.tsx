@@ -93,8 +93,9 @@ export function AlertConflict({
                 onClick={() => onSelectOption(option)}
                 className={cn(
                   'border-[var(--colorsSemanticWarning9)]',
-                  'text-[var(--colorsSemanticWarning11)]',
+                  'text-foreground',
                   'hover:bg-[var(--colorsSemanticWarning3)]',
+                  'hover:text-foreground',
                   'focus-visible:ring-[var(--colorsSemanticWarning9)]'
                 )}
               >

@@ -1,30 +1,29 @@
 import { cn } from '@/lib/utils';
 import { UserConvenio } from '@core/types';
-import {
-  UploadIcon,
-  MoreVerticalIcon,
-  PencilIcon,
-  TrashIcon,
-  StarIcon,
-  FileTextIcon,
-  LockIcon,
-  GlobeIcon,
-  LoaderIcon,
-  CheckCircleIcon,
-  AlertCircleIcon,
-  ClockIcon,
-} from 'lucide-react';
-import { Button } from '@ui/components/shadcn/button';
 import { Badge } from '@ui/components/shadcn/badge';
-import { ScrollArea } from '@ui/components/shadcn/scroll-area';
-import { Separator } from '@ui/components/shadcn/separator';
-import { Skeleton } from '@ui/components/shadcn/skeleton';
+import { Button } from '@ui/components/shadcn/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@ui/components/shadcn/dropdown-menu';
+import { Separator } from '@ui/components/shadcn/separator';
+import { Skeleton } from '@ui/components/shadcn/skeleton';
+import {
+  AlertCircleIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  FileTextIcon,
+  GlobeIcon,
+  LoaderIcon,
+  LockIcon,
+  MoreVerticalIcon,
+  PencilIcon,
+  StarIcon,
+  TrashIcon,
+  UploadIcon,
+} from 'lucide-react';
 
 export interface ConvenioManagerProps {
   userConvenios: UserConvenio[];
@@ -40,22 +39,22 @@ const statusConfig = {
   pending: {
     icon: ClockIcon,
     label: 'Pendiente',
-    className: 'bg-[var(--colorsSemanticInfo4)] text-[var(--colorsSemanticInfo11)]',
+    className: 'bg-[var(--colorsSemanticInfo4)] text-[var(--colorsSemanticInfo12)]',
   },
   processing: {
     icon: LoaderIcon,
     label: 'Procesando',
-    className: 'bg-[var(--colorsSemanticWarning4)] text-[var(--colorsSemanticWarning11)]',
+    className: 'bg-[var(--colorsSemanticWarning4)] text-[var(--colorsSemanticWarning12)]',
   },
   ready: {
     icon: CheckCircleIcon,
     label: 'Listo',
-    className: 'bg-[var(--colorsSemanticSuccess4)] text-[var(--colorsSemanticSuccess11)]',
+    className: 'bg-[var(--colorsSemanticSuccess4)] text-[var(--colorsSemanticSuccess12)]',
   },
   error: {
     icon: AlertCircleIcon,
     label: 'Error',
-    className: 'bg-[var(--colorsSemanticError4)] text-[var(--colorsSemanticError11)]',
+    className: 'bg-[var(--colorsSemanticError4)] text-[var(--colorsSemanticError12)]',
   },
 };
 
@@ -70,7 +69,7 @@ export function ConvenioManager({
 }: ConvenioManagerProps) {
   if (isLoading) {
     return (
-      <div className={cn('flex flex-col', className)}>
+      <div className={cn('flex flex-col rounded-lg border border-border bg-background p-6', className)}>
         {/* Header skeleton */}
         <div className="flex items-center justify-between mb-4">
           <Skeleton className="h-8 w-32" />
@@ -82,7 +81,7 @@ export function ConvenioManager({
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="p-3 rounded-[var(--radius3)] border border-[var(--colorsNeutralNeutral6)] bg-[var(--colorsNeutralNeutral1)]"
+              className="rounded-(--radius3) border border-border bg-card p-3"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 space-y-2">
@@ -100,10 +99,10 @@ export function ConvenioManager({
   }
 
   return (
-    <div className={cn('flex flex-col', className)}>
+    <div className={cn('flex flex-col rounded-lg border border-border bg-background p-6', className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[var(--typographyFontSize5)] font-[var(--typographyFontWeightBold)] text-[var(--colorsNeutralNeutral12)]">
+        <h2 className="text-(length:--typographyFontSize5) font-(--typographyFontWeightBold) text-foreground">
           Mis convenios
         </h2>
         <Button
@@ -121,19 +120,19 @@ export function ConvenioManager({
       {/* Empty state */}
       {userConvenios.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="mb-4 rounded-full bg-[var(--colorsNeutralNeutral3)] p-4">
-            <FileTextIcon className="h-8 w-8 text-[var(--colorsNeutralNeutral11)]" />
+          <div className="mb-4 rounded-full bg-muted p-4">
+            <FileTextIcon className="h-8 w-8 text-foreground" />
           </div>
-          <p className="text-[var(--typographyFontSize3)] font-[var(--typographyFontWeightMedium)] text-[var(--colorsNeutralNeutral12)] mb-2">
+          <p className="mb-2 text-(length:--typographyFontSize3) font-(--typographyFontWeightMedium) text-foreground">
             No tienes convenios subidos
           </p>
-          <p className="text-[var(--typographyFontSize2)] text-[var(--colorsNeutralNeutral11)] max-w-sm">
+          <p className="max-w-sm text-(length:--typographyFontSize2) text-muted-foreground">
             Sube tu primer convenio en PDF y podrás consultarlo con IA
           </p>
         </div>
       ) : (
         /* List of convenios */
-        <ScrollArea className="max-h-[400px] pr-4">
+        <div className="max-h-100 overflow-y-auto pr-4">
           <ul className="space-y-3">
             {userConvenios.map((convenio) => {
               const StatusIcon = statusConfig[convenio.status].icon;
@@ -144,17 +143,17 @@ export function ConvenioManager({
               return (
                 <li
                   key={convenio.id}
-                  className="p-3 rounded-[var(--radius3)] border border-[var(--colorsNeutralNeutral6)] bg-[var(--colorsNeutralNeutral1)] hover:bg-[var(--colorsNeutralNeutral2)] transition-colors"
+                  className="rounded-(--radius3) border border-border bg-card p-3 transition-colors hover:bg-muted"
                 >
                   <div className="flex items-start justify-between gap-3">
                     {/* Left section: icon + info */}
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       {/* Privacy icon */}
-                      <div className="mt-1 flex-shrink-0">
+                      <div className="mt-1 shrink-0">
                         {convenio.isPrivate ? (
-                          <LockIcon className="h-4 w-4 text-[var(--colorsNeutralNeutral11)]" />
+                          <LockIcon className="h-4 w-4 text-muted-foreground" />
                         ) : (
-                          <GlobeIcon className="h-4 w-4 text-[var(--colorsNeutralNeutral11)]" />
+                          <GlobeIcon className="h-4 w-4 text-muted-foreground" />
                         )}
                       </div>
 
@@ -162,16 +161,16 @@ export function ConvenioManager({
                       <div className="flex-1 min-w-0">
                         {/* Name + favorite */}
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-[var(--typographyFontSize3)] font-[var(--typographyFontWeightMedium)] text-[var(--colorsNeutralNeutral12)] truncate">
+                          <h3 className="truncate text-(length:--typographyFontSize3) font-(--typographyFontWeightMedium) text-foreground">
                             {convenio.nombre}
                           </h3>
                           {convenio.isFavorite && (
-                            <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+                            <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0" />
                           )}
                         </div>
 
                         {/* Sector */}
-                        <p className="text-[var(--typographyFontSize1)] text-[var(--colorsNeutralNeutral11)] mb-2">
+                        <p className="mb-2 text-(length:--typographyFontSize1) text-muted-foreground">
                           {convenio.sector}
                         </p>
 
@@ -194,7 +193,7 @@ export function ConvenioManager({
 
                         {/* Error message */}
                         {convenio.status === 'error' && convenio.errorMessage && (
-                          <p className="text-[var(--typographyFontSize1)] text-[var(--colorsSemanticError11)] mt-2">
+                          <p className="mt-2 text-(length:--typographyFontSize1) text-destructive">
                             {convenio.errorMessage}
                           </p>
                         )}
@@ -207,7 +206,7 @@ export function ConvenioManager({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 flex-shrink-0"
+                          className="h-8 w-8 shrink-0 p-0"
                         >
                           <MoreVerticalIcon className="h-4 w-4" />
                           <span className="sr-only">Abrir menú</span>
@@ -231,7 +230,7 @@ export function ConvenioManager({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => onDelete(convenio.id)}
-                          className="text-[var(--colorsSemanticError11)]"
+                          className="text-destructive"
                         >
                           <TrashIcon className="h-4 w-4 mr-2" />
                           Eliminar
@@ -243,7 +242,7 @@ export function ConvenioManager({
               );
             })}
           </ul>
-        </ScrollArea>
+        </div>
       )}
     </div>
   );

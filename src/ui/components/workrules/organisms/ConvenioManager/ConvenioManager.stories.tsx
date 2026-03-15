@@ -1,7 +1,7 @@
+import type { UserConvenio } from '@core/types';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 import { ConvenioManager } from './ConvenioManager';
-import type { UserConvenio } from '@core/types';
 
 const mockConvenios: UserConvenio[] = [
   {
@@ -67,7 +67,7 @@ const meta: Meta<typeof ConvenioManager> = {
   tags: ['autodocs'],
   decorators: [
     (Story) => (
-      <div className="w-[600px] p-6 bg-[var(--colorsNeutralNeutral1)] rounded-lg">
+      <div className="p-2">
         <Story />
       </div>
     ),

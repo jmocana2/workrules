@@ -96,7 +96,7 @@ const meta = {
       <div style={{ height: '100vh', display: 'flex' }}>
         <Story />
         <div style={{ flex: 1, backgroundColor: 'var(--colorsNeutralNeutral1)', padding: '2rem' }}>
-          <p style={{ color: 'var(--colorsNeutralNeutral11)' }}>
+          <p style={{ color: 'var(--colorsNeutralNeutral12)' }}>
             Contenido principal de la aplicación
           </p>
         </div>
