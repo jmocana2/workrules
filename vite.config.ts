@@ -21,6 +21,8 @@ export default defineConfig({
       "@core": path.resolve(dirname, "./src/core"),
       "@ui": path.resolve(dirname, "./src/ui"),
       "@lib": path.resolve(dirname, "./src/lib"),
+      "@mocks": path.resolve(dirname, "./mocks"),
+      "@constants": path.resolve(dirname, "./src/constants"),
     },
   },
   server: {

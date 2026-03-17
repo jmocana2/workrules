@@ -228,7 +228,7 @@ describe('StarRating', () => {
 
     it('muestra las estrellas inactivas con color gris transparente', () => {
       const { container } = render(<StarRating rating={2} maxStars={5} />);
-      const emptyStars = container.querySelectorAll('.fill-transparent.text-muted-foreground\\/40');
+      const emptyStars = container.querySelectorAll('.fill-transparent.text-foreground\\/60');
       expect(emptyStars).toHaveLength(3);
     });
 

@@ -27,11 +27,14 @@
       "@/*": ["src/*"],
       "@core/*": ["src/core/*"],
       "@ui/*": ["src/ui/*"],
-      "@lib/*": ["src/lib/*"]
+      "@lib/*": ["src/lib/*"],
+      "@mocks/*": ["mocks/*"],
+      "@constants/*": ["src/constants/*"]
     }
   },
   "include": [
     "src",
+    "mocks",
     "vite.config.ts",
     "vitest.unit.config.ts",
     "vitest.setup.ts",

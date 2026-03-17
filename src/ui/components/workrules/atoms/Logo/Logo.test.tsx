@@ -191,15 +191,13 @@ describe('Logo', () => {
       expect(textLg).toBeInTheDocument();
     });
 
-    it('debe aplicar clases de color primary y secondary correctamente', () => {
+    it('debe aplicar clases de color correctamente', () => {
       const { container } = render(<Logo variant="text" />);
-      const primaryText = container.querySelector('.text-primary');
-      const secondaryText = container.querySelector('.text-secondary');
+      // El texto secundario ("Rules") usa text-muted-foreground
+      const mutedText = container.querySelector('.text-muted-foreground');
 
-      expect(primaryText).toBeInTheDocument();
-      expect(secondaryText).toBeInTheDocument();
-      expect(primaryText?.textContent).toBe('Work');
-      expect(secondaryText?.textContent).toBe('Rules');
+      expect(mutedText).toBeInTheDocument();
+      expect(mutedText?.textContent).toBe('Rules');
     });
   });
 

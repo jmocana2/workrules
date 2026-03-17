@@ -15,6 +15,9 @@ const mockConvenios: UserConvenio[] = [
     status: 'ready',
     isFavorite: true,
     uploadedAt: '2026-03-10T10:00:00Z',
+    codigo_boe: 'BOE-A-2026-00001',
+    created_at: '2026-03-10T10:00:00Z',
+    updated_at: '2026-03-10T10:00:00Z',
   },
   {
     id: '2',
@@ -26,6 +29,9 @@ const mockConvenios: UserConvenio[] = [
     isPrivate: true,
     status: 'processing',
     uploadedAt: '2026-03-14T09:30:00Z',
+    codigo_boe: 'BOE-A-2026-00002',
+    created_at: '2026-03-14T09:30:00Z',
+    updated_at: '2026-03-14T09:30:00Z',
   },
   {
     id: '3',
@@ -37,6 +43,9 @@ const mockConvenios: UserConvenio[] = [
     isPrivate: false,
     status: 'pending',
     uploadedAt: '2026-03-14T11:00:00Z',
+    codigo_boe: 'BOE-A-2026-00003',
+    created_at: '2026-03-14T11:00:00Z',
+    updated_at: '2026-03-14T11:00:00Z',
   },
   {
     id: '4',
@@ -49,6 +58,9 @@ const mockConvenios: UserConvenio[] = [
     status: 'error',
     errorMessage: 'No se pudo extraer las tablas salariales del PDF',
     uploadedAt: '2026-03-13T15:00:00Z',
+    codigo_boe: 'BOE-A-2026-00004',
+    created_at: '2026-03-13T15:00:00Z',
+    updated_at: '2026-03-13T15:00:00Z',
   },
 ];
 
@@ -131,6 +143,9 @@ export const AllReady: Story = {
         status: 'ready',
         isFavorite: true,
         uploadedAt: '2026-03-10T10:00:00Z',
+        codigo_boe: 'BOE-A-2026-00001',
+        created_at: '2026-03-10T10:00:00Z',
+        updated_at: '2026-03-10T10:00:00Z',
       },
       {
         id: '2',
@@ -143,6 +158,9 @@ export const AllReady: Story = {
         status: 'ready',
         isFavorite: false,
         uploadedAt: '2026-03-12T14:20:00Z',
+        codigo_boe: 'BOE-A-2026-00002',
+        created_at: '2026-03-12T14:20:00Z',
+        updated_at: '2026-03-12T14:20:00Z',
       },
       {
         id: '3',
@@ -155,6 +173,9 @@ export const AllReady: Story = {
         status: 'ready',
         isFavorite: true,
         uploadedAt: '2026-03-13T08:15:00Z',
+        codigo_boe: 'BOE-A-2026-00003',
+        created_at: '2026-03-13T08:15:00Z',
+        updated_at: '2026-03-13T08:15:00Z',
       },
     ],
     isLoading: false,

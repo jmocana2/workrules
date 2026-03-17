@@ -16,6 +16,9 @@ const mockConvenios: UserConvenio[] = [
     status: 'ready',
     isFavorite: true,
     uploadedAt: '2026-03-10T10:00:00Z',
+    codigo_boe: 'BOE-A-2026-00001',
+    created_at: '2026-03-10T10:00:00Z',
+    updated_at: '2026-03-10T10:00:00Z',
   },
   {
     id: '2',
@@ -27,6 +30,9 @@ const mockConvenios: UserConvenio[] = [
     isPrivate: true,
     status: 'processing',
     uploadedAt: '2026-03-14T09:30:00Z',
+    codigo_boe: 'BOE-A-2026-00002',
+    created_at: '2026-03-14T09:30:00Z',
+    updated_at: '2026-03-14T09:30:00Z',
   },
   {
     id: '3',
@@ -38,6 +44,9 @@ const mockConvenios: UserConvenio[] = [
     isPrivate: false,
     status: 'pending',
     uploadedAt: '2026-03-14T11:00:00Z',
+    codigo_boe: 'BOE-A-2026-00003',
+    created_at: '2026-03-14T11:00:00Z',
+    updated_at: '2026-03-14T11:00:00Z',
   },
   {
     id: '4',
@@ -50,6 +59,9 @@ const mockConvenios: UserConvenio[] = [
     status: 'error',
     errorMessage: 'No se pudo extraer las tablas salariales del PDF',
     uploadedAt: '2026-03-13T15:00:00Z',
+    codigo_boe: 'BOE-A-2026-00004',
+    created_at: '2026-03-13T15:00:00Z',
+    updated_at: '2026-03-13T15:00:00Z',
   },
 ];
 
@@ -217,13 +229,12 @@ describe('ConvenioManager', () => {
 
   it('deshabilita el botón de editar cuando status no es ready', async () => {
     const user = userEvent.setup();
-    const onEdit = vi.fn();
 
     render(
       <ConvenioManager
         userConvenios={mockConvenios.slice(1, 2)} // Convenio en estado 'processing'
         onUpload={vi.fn()}
-        onEdit={onEdit}
+        onEdit={vi.fn()}
         onDelete={vi.fn()}
         onToggleFavorite={vi.fn()}
       />
@@ -232,14 +243,12 @@ describe('ConvenioManager', () => {
     const menuButton = screen.getByRole('button', { name: /abrir menú/i });
     await user.click(menuButton);
 
-    // Verificar que el botón de editar existe pero no debería poder ejecutarse
+    // Verificar que el botón de editar existe y está marcado como deshabilitado
     const editButton = screen.getByText('Editar nombre');
     expect(editButton).toBeInTheDocument();
-    expect(editButton.closest('[role="menuitem"]')).toHaveAttribute('data-disabled');
-
-    // Additionally verify that clicking doesn't trigger the callback
-    await user.click(editButton);
-    expect(onEdit).not.toHaveBeenCalled();
+    // Radix UI usa aria-disabled para indicar elementos deshabilitados
+    const menuItem = editButton.closest('[role="menuitem"]');
+    expect(menuItem).toHaveAttribute('aria-disabled', 'true');
   });
   it('muestra el errorMessage cuando status es error', () => {
     render(

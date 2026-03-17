@@ -1,10 +1,4 @@
-export interface Convenio {
-  id: string;
-  nombre: string;
-  sector: string;
-  ambito: 'estatal' | 'provincial' | 'empresa';
-  vigente: boolean;
-}
+import type { Convenio } from './supabase';
 
 export interface PerfilJson {
   convenio: string;
@@ -20,6 +14,9 @@ export interface UserConvenio extends Convenio {
   uploadedAt: string;
   errorMessage?: string;
   isFavorite?: boolean;
+  // Campos adicionales para UI
+  sector?: string;
+  vigente?: boolean;
 }
 
 export interface ConversationSummary {
