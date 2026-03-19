@@ -34,11 +34,19 @@ import {
 } from '@ui/components/ai-elements/sources';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Separator } from '@ui/components/shadcn/separator';
+import { AlertConflict } from '@ui/components/workrules/molecules/AlertConflict/AlertConflict';
+import { AlertInvalidData } from '@ui/components/workrules/molecules/AlertInvalidData/AlertInvalidData';
+import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { VariablesPanel } from '@ui/components/workrules/organisms/VariablesPanel/VariablesPanel';
 import { Loader2Icon } from 'lucide-react';
-import type { ChatPageProps } from './ChatPage.types';
+import type {
+  AlertConflictPayload,
+  AlertInvalidDataPayload,
+  AlertSMIPayload,
+  ChatPageProps,
+} from './ChatPage.types';
 import { useChatPage } from './useChatPage';
 
 export function ChatPage({
@@ -62,6 +70,9 @@ export function ChatPage({
     isLoading,
     citations,
 
+    // Estado de alertas
+    alertState,
+
     // Refs
     inputRef,
     messagesEndRef,
@@ -76,6 +87,12 @@ export function ChatPage({
     handleSelectConversation,
     handleOpenSettings,
     toggleVariablesPanel,
+
+    // Handlers de alertas
+    handleAlertDismiss,
+    handleInvalidDataSuggestion,
+    handleConflictOption,
+    handleSMIViewDetails,
   } = useChatPage({
     initialConvenioId,
     initialMessages,
@@ -217,6 +234,46 @@ export function ChatPage({
                   </Sources>
                 )}
               </>
+            )}
+
+            {/* Alertas del protocolo (Estados D, E, F) */}
+            {alertState.isVisible && alertState.type === 'smi' && alertState.payload && (
+              <AlertSMI
+                calculatedAmount={(alertState.payload as AlertSMIPayload).calculatedAmount}
+                smiAmount={(alertState.payload as AlertSMIPayload).smiAmount}
+                adjustedAmount={(alertState.payload as AlertSMIPayload).adjustedAmount}
+                payPeriod={(alertState.payload as AlertSMIPayload).payPeriod}
+                year={(alertState.payload as AlertSMIPayload).year}
+                onViewDetails={handleSMIViewDetails}
+                onDismiss={handleAlertDismiss}
+              />
+            )}
+
+            {alertState.isVisible && alertState.type === 'invalid_data' && alertState.payload && (
+              <AlertInvalidData
+                reason={{
+                  field: (alertState.payload as AlertInvalidDataPayload).field,
+                  value: (alertState.payload as AlertInvalidDataPayload).value,
+                  limit: (alertState.payload as AlertInvalidDataPayload).limit,
+                  legalReference: (alertState.payload as AlertInvalidDataPayload).legalReference,
+                }}
+                suggestions={(alertState.payload as AlertInvalidDataPayload).suggestions}
+                onSelectSuggestion={handleInvalidDataSuggestion}
+                onDismiss={handleAlertDismiss}
+              />
+            )}
+
+            {alertState.isVisible && alertState.type === 'conflict' && alertState.payload && (
+              <AlertConflict
+                conflict={{
+                  field1: (alertState.payload as AlertConflictPayload).field1,
+                  field2: (alertState.payload as AlertConflictPayload).field2,
+                  explanation: (alertState.payload as AlertConflictPayload).explanation,
+                }}
+                options={(alertState.payload as AlertConflictPayload).options}
+                onSelectOption={handleConflictOption}
+                onDismiss={handleAlertDismiss}
+              />
             )}
 
             {/* Indicador de "escribiendo..." */}

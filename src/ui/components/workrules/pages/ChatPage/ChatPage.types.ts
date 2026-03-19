@@ -69,6 +69,87 @@ export interface ChatPageState {
   currentConversationId: string | null;
 }
 
+// ============================================================================
+// Tipos para Alertas del Protocolo (Estados D, E, F)
+// ============================================================================
+
+/**
+ * Payload para AlertSMI (Estado E)
+ * Cuando el cálculo resulta inferior al Salario Mínimo Interprofesional
+ */
+export interface AlertSMIPayload {
+  calculatedAmount: number;
+  smiAmount: number;
+  adjustedAmount: number;
+  payPeriod: "14-pagas" | "12-pagas";
+  year: number;
+}
+
+/**
+ * Payload para AlertInvalidData (Estado D)
+ * Cuando el usuario proporciona valores fuera de rango legal
+ */
+export interface AlertInvalidDataPayload {
+  field: string;
+  value: string | number;
+  limit?: string;
+  legalReference?: string;
+  suggestions?: string[];
+}
+
+/**
+ * Opción de resolución para conflictos
+ */
+export interface ConflictOption {
+  label: string;
+  value: string;
+}
+
+/**
+ * Payload para AlertConflict (Estado F)
+ * Cuando los datos proporcionados se contradicen
+ */
+export interface AlertConflictPayload {
+  field1: { name: string; value: string };
+  field2: { name: string; value: string };
+  explanation: string;
+  options: ConflictOption[];
+}
+
+/**
+ * Tipos de alerta soportados
+ */
+export type AlertType = "smi" | "invalid_data" | "conflict";
+
+/**
+ * Union de todos los payloads de alerta
+ */
+export type AlertPayload =
+  | AlertSMIPayload
+  | AlertInvalidDataPayload
+  | AlertConflictPayload;
+
+/**
+ * Estado de alerta en la UI
+ */
+export interface AlertState {
+  type: AlertType | null;
+  payload: AlertPayload | null;
+  isVisible: boolean;
+}
+
+/**
+ * Evento SSE de alerta del backend
+ */
+export interface SSEAlertEvent {
+  type: AlertType;
+  payload: AlertPayload;
+}
+
+// ============================================================================
+// Return type del hook useChatPage
+// ============================================================================
+
 /**
  * Return type del hook useChatPage
  */
@@ -85,6 +166,9 @@ export interface UseChatPageReturn {
   isLoading: boolean;
   error: Error | null;
   citations: Citation[];
+
+  // Estado de alertas
+  alertState: AlertState;
 
   // Refs
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -103,4 +187,13 @@ export interface UseChatPageReturn {
   toggleVariablesPanel: () => void;
   toggleSidebar: () => void;
   setInput: (value: string) => void;
+
+  // Handlers de alertas
+  handleAlertDismiss: () => void;
+  handleInvalidDataSuggestion: (suggestion: string) => void;
+  handleConflictOption: (option: ConflictOption) => void;
+  handleSMIViewDetails: () => void;
+
+  // Util para testing/mocks
+  setAlert: (alertState: AlertState) => void;
 }

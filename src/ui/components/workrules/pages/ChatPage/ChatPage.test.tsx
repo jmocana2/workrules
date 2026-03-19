@@ -294,3 +294,24 @@ describe('ChatPage - Accesibilidad', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('ChatPage - Alertas del Protocolo', () => {
+  it('no muestra alertas por defecto', () => {
+    render(
+      <ChatPage
+        mockConvenios={mockConvenios}
+        mockConversations={[]}
+      />
+    );
+
+    // Ninguna alerta visible
+    expect(screen.queryByText('Alerta de Salario Mínimo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Dato fuera de rango')).not.toBeInTheDocument();
+    expect(screen.queryByText('Conflicto detectado')).not.toBeInTheDocument();
+  });
+
+  // Nota: Los tests de alertas con estado requieren mockear useChatPage
+  // o usar el setAlert que se expone. Dado que ChatPage usa el hook internamente,
+  // para tests más completos de alertas, se pueden crear tests de integración
+  // que simulen respuestas del backend o usar Storybook.
+});

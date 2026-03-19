@@ -19,14 +19,17 @@ import {
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
+  AlertState,
   ChatMessage,
   ChatPageState,
   Citation,
+  ConflictOption,
   Convenio,
   ConversationSummary,
   PerfilJson,
   UseChatPageReturn,
 } from "./ChatPage.types";
+import { clearAlertState, createInitialAlertState } from "./parseAlertEvent";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 
@@ -80,6 +83,11 @@ export function useChatPage(
 
   // Citaciones parseadas del stream
   const [citations, setCitations] = useState<Citation[]>([]);
+
+  // Estado de alertas del protocolo (Estados D, E, F)
+  const [alertState, setAlertState] = useState<AlertState>(
+    createInitialAlertState(),
+  );
 
   // Input controlado localmente
   const [localInput, setLocalInput] = useState("");
@@ -230,8 +238,9 @@ export function useChatPage(
         return;
       }
 
-      // Reset citaciones al enviar nuevo mensaje
+      // Reset citaciones y alertas al enviar nuevo mensaje
       setCitations([]);
+      setAlertState(clearAlertState());
 
       await sendMessage({ text });
       setLocalInput("");
@@ -302,6 +311,59 @@ export function useChatPage(
     setLocalInput(value);
   }, []);
 
+  // ============================================================================
+  // Handlers de alertas del protocolo
+  // ============================================================================
+
+  /**
+   * Descartar la alerta actual
+   */
+  const handleAlertDismiss = useCallback(() => {
+    setAlertState(clearAlertState());
+  }, []);
+
+  /**
+   * Seleccionar una sugerencia de AlertInvalidData
+   * Inserta el texto sugerido en el input y cierra la alerta
+   */
+  const handleInvalidDataSuggestion = useCallback(
+    (suggestion: string) => {
+      setLocalInput(suggestion);
+      setAlertState(clearAlertState());
+      inputRef.current?.focus();
+    },
+    [],
+  );
+
+  /**
+   * Seleccionar una opción de AlertConflict
+   * Envía un mensaje con la opción seleccionada y cierra la alerta
+   */
+  const handleConflictOption = useCallback(
+    async (option: ConflictOption) => {
+      // Enviar mensaje con la opción seleccionada
+      await sendMessage({ text: `Mi respuesta es: ${option.label}` });
+      setAlertState(clearAlertState());
+    },
+    [sendMessage, setAlertState],
+  );
+
+  /**
+   * Ver detalles del SMI
+   * Por ahora solo loguea, se puede expandir para mostrar modal o scroll a detalles
+   */
+  const handleSMIViewDetails = useCallback(() => {
+    // TODO: Implementar visualización de detalles SMI
+    console.log("Ver detalles SMI:", alertState.payload);
+  }, [alertState.payload]);
+
+  /**
+   * Función para establecer alerta manualmente (útil para mocks/testing)
+   */
+  const setAlert = useCallback((newAlertState: AlertState) => {
+    setAlertState(newAlertState);
+  }, []);
+
   return {
     // Estado
     ...state,
@@ -310,6 +372,9 @@ export function useChatPage(
     isLoading,
     error: error || null,
     citations,
+
+    // Estado de alertas
+    alertState,
 
     // Refs
     inputRef,
@@ -328,5 +393,14 @@ export function useChatPage(
     toggleVariablesPanel,
     toggleSidebar,
     setInput,
+
+    // Handlers de alertas
+    handleAlertDismiss,
+    handleInvalidDataSuggestion,
+    handleConflictOption,
+    handleSMIViewDetails,
+
+    // Util para testing/mocks
+    setAlert,
   };
 }
