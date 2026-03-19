@@ -1,9 +1,10 @@
+import { MOCK_CONVENIOS, MOCK_CONVERSATIONS, MOCK_PERFIL_HOSTELERIA } from '@mocks/data/convenios';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { ChatPage } from './ChatPage';
-import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
-import { AlertInvalidData } from '@ui/components/workrules/molecules/AlertInvalidData/AlertInvalidData';
 import { AlertConflict } from '@ui/components/workrules/molecules/AlertConflict/AlertConflict';
-import { MOCK_CONVENIOS, MOCK_PERFIL_HOSTELERIA, MOCK_CONVERSATIONS } from '@mocks/data/convenios';
+import { AlertInvalidData } from '@ui/components/workrules/molecules/AlertInvalidData/AlertInvalidData';
+import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
+import { DataRequestCard } from '@ui/components/workrules/molecules/DataRequestCard/DataRequestCard';
+import { ChatPage } from './ChatPage';
 
 const meta: Meta<typeof ChatPage> = {
   title: 'WorkRules/Pages/ChatPage',
@@ -206,6 +207,212 @@ export const AlertConflictExample: Story = {
         story:
           'Alerta que aparece cuando los datos proporcionados por el usuario ' +
           'se contradicen. El usuario debe seleccionar la opción correcta.',
+      },
+    },
+  },
+};
+
+// ============================================================================
+// Stories de DataRequestCard (Estado B)
+// ============================================================================
+
+/**
+ * Ejemplo de DataRequestCard con campos radio - solicita categoría profesional.
+ */
+export const DataRequestRadioExample: Story = {
+  render: () => (
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      <div className="flex flex-1 flex-col p-6">
+        <h2 className="mb-4 text-lg font-semibold">
+          Ejemplo de DataRequestCard con Radio (Estado B)
+        </h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Este formulario aparece cuando faltan datos para realizar un cálculo.
+          El usuario debe seleccionar una opción.
+        </p>
+        <div className="max-w-3xl">
+          <DataRequestCard
+            title="Necesito más información"
+            convenioName="Hostelería de Valencia"
+            fields={[
+              {
+                name: 'categoria_profesional',
+                label: '¿Cuál es tu categoría profesional?',
+                type: 'radio',
+                required: true,
+                options: [
+                  { value: 'ayudante', label: 'Ayudante de cocina', description: 'Sin experiencia requerida' },
+                  { value: 'cocinero', label: 'Cocinero/a', description: 'Con experiencia' },
+                  { value: 'jefe_cocina', label: 'Jefe/a de cocina', description: 'Responsable de equipo' },
+                ],
+              },
+            ]}
+            maxAttempts={3}
+            currentAttempt={1}
+            onSubmit={(values) => console.log('Valores enviados:', values)}
+            onSkip={() => console.log('Usuario saltó la pregunta')}
+          />
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Formulario de solicitud de datos con opciones de tipo radio. ' +
+          'El usuario selecciona su categoría profesional para el cálculo.',
+      },
+    },
+  },
+};
+
+/**
+ * Ejemplo de DataRequestCard con campo stars - solicita categoría del hotel.
+ */
+export const DataRequestStarsExample: Story = {
+  render: () => (
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      <div className="flex flex-1 flex-col p-6">
+        <h2 className="mb-4 text-lg font-semibold">
+          Ejemplo de DataRequestCard con Estrellas (Estado B)
+        </h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Este formulario solicita la categoría del establecimiento usando un
+          selector de estrellas (1-5).
+        </p>
+        <div className="max-w-3xl">
+          <DataRequestCard
+            title="Categoría del establecimiento"
+            convenioName="Hostelería de Madrid"
+            fields={[
+              {
+                name: 'categoria_hotel',
+                label: '¿Cuántas estrellas tiene el hotel?',
+                type: 'stars',
+                required: true,
+                helpText: 'El salario varía según la categoría del establecimiento',
+              },
+            ]}
+            maxAttempts={3}
+            currentAttempt={1}
+            onSubmit={(values) => console.log('Valores enviados:', values)}
+            onSkip={() => console.log('Usuario saltó la pregunta')}
+          />
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Formulario de solicitud de datos con selector de estrellas. ' +
+          'Útil para preguntar sobre la categoría del establecimiento.',
+      },
+    },
+  },
+};
+
+/**
+ * Ejemplo de DataRequestCard con múltiples campos.
+ */
+export const DataRequestMultipleFieldsExample: Story = {
+  render: () => (
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      <div className="flex flex-1 flex-col p-6">
+        <h2 className="mb-4 text-lg font-semibold">
+          Ejemplo de DataRequestCard con Múltiples Campos (Estado B)
+        </h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Este formulario solicita varios datos necesarios para el cálculo.
+        </p>
+        <div className="max-w-3xl">
+          <DataRequestCard
+            title="Datos del puesto"
+            convenioName="Hostelería de Madrid"
+            fields={[
+              {
+                name: 'categoria_hotel',
+                label: '¿Cuántas estrellas tiene el hotel?',
+                type: 'stars',
+                required: true,
+              },
+              {
+                name: 'categoria_profesional',
+                label: '¿Cuál es tu categoría profesional?',
+                type: 'radio',
+                required: true,
+                options: [
+                  { value: 'recepcionista', label: 'Recepcionista' },
+                  { value: 'camarera_pisos', label: 'Camarera de pisos' },
+                  { value: 'conserje', label: 'Conserje' },
+                ],
+              },
+            ]}
+            maxAttempts={3}
+            currentAttempt={1}
+            onSubmit={(values) => console.log('Valores enviados:', values)}
+            onSkip={() => console.log('Usuario saltó la pregunta')}
+          />
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Formulario con múltiples campos (estrellas + radio). ' +
+          'Solicita toda la información necesaria en un solo paso.',
+      },
+    },
+  },
+};
+
+/**
+ * Ejemplo de DataRequestCard mostrando progreso (2 de 3).
+ */
+export const DataRequestProgressExample: Story = {
+  render: () => (
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      <div className="flex flex-1 flex-col p-6">
+        <h2 className="mb-4 text-lg font-semibold">
+          Ejemplo de DataRequestCard con Progreso (Estado B)
+        </h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Este formulario muestra que es la segunda pregunta de tres.
+        </p>
+        <div className="max-w-3xl">
+          <DataRequestCard
+            title="Siguiente pregunta"
+            convenioName="Convenio Estatal de Hostelería"
+            fields={[
+              {
+                name: 'jornada',
+                label: '¿Cuál es tu tipo de jornada?',
+                type: 'radio',
+                required: true,
+                options: [
+                  { value: 'completa', label: 'Jornada completa', description: '40 horas semanales' },
+                  { value: 'parcial', label: 'Tiempo parcial', description: 'Menos de 40 horas' },
+                ],
+              },
+            ]}
+            maxAttempts={3}
+            currentAttempt={2}            onSubmit={(values) => console.log('Valores enviados:', values)}
+            onSkip={() => console.log('Usuario saltó la pregunta')}
+          />
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Formulario mostrando el progreso (pregunta 2 de 3). ' +
+          'Ayuda al usuario a saber cuántas preguntas faltan.',
       },
     },
   },

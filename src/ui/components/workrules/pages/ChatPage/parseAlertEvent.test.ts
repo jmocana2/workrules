@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   clearAlertState,
+  clearDataRequestState,
   createInitialAlertState,
+  createInitialDataRequestState,
   parseAlertEvent,
+  parseDataRequestEvent,
 } from "./parseAlertEvent";
 
 describe("parseAlertEvent", () => {
@@ -255,6 +258,302 @@ describe("clearAlertState", () => {
       type: null,
       payload: null,
       isVisible: false,
+    });
+  });
+});
+
+// ============================================================================
+// Tests para DataRequest
+// ============================================================================
+
+describe("parseDataRequestEvent", () => {
+  describe("createInitialDataRequestState", () => {
+    it("retorna estado inicial sin formulario visible", () => {
+      const state = createInitialDataRequestState();
+
+      expect(state).toEqual({
+        isVisible: false,
+        payload: null,
+      });
+    });
+  });
+
+  describe("clearDataRequestState", () => {
+    it("retorna estado limpio identico al inicial", () => {
+      const state = clearDataRequestState();
+
+      expect(state).toEqual({
+        isVisible: false,
+        payload: null,
+      });
+    });
+  });
+
+  describe("evento valido con campos radio", () => {
+    it("parsea correctamente evento con opciones radio", () => {
+      const data = JSON.stringify({
+        title: "Necesito mas informacion",
+        convenioName: "Hosteleria de Valencia",
+        fields: [
+          {
+            name: "categoria_profesional",
+            label: "Categoria profesional",
+            type: "radio",
+            required: true,
+            options: [
+              { value: "ayudante", label: "Ayudante de cocina" },
+              { value: "cocinero", label: "Cocinero/a" },
+            ],
+          },
+        ],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+
+      expect(result).not.toBeNull();
+      expect(result?.isVisible).toBe(true);
+      expect(result?.payload?.title).toBe("Necesito mas informacion");
+      expect(result?.payload?.convenioName).toBe("Hosteleria de Valencia");
+      expect(result?.payload?.fields).toHaveLength(1);
+      expect(result?.payload?.fields[0].type).toBe("radio");
+      expect(result?.payload?.maxAttempts).toBe(3);
+      expect(result?.payload?.currentAttempt).toBe(1);
+    });
+  });
+
+  describe("evento valido con campo stars", () => {
+    it("parsea correctamente evento con campo de estrellas", () => {
+      const data = JSON.stringify({
+        title: "Categoria del establecimiento",
+        fields: [
+          {
+            name: "categoria_hotel",
+            label: "Categoria del hotel",
+            type: "stars",
+            required: true,
+            helpText: "Selecciona de 1 a 5 estrellas",
+          },
+        ],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+
+      expect(result).not.toBeNull();
+      expect(result?.payload?.fields[0].type).toBe("stars");
+    });
+  });
+
+  describe("evento valido con multiples campos", () => {
+    it("parsea correctamente evento con varios campos", () => {
+      const data = JSON.stringify({
+        title: "Datos del puesto",
+        convenioName: "Hosteleria Madrid",
+        fields: [
+          {
+            name: "categoria_hotel",
+            label: "Categoria del hotel",
+            type: "stars",
+            required: true,
+          },
+          {
+            name: "categoria_profesional",
+            label: "Categoria profesional",
+            type: "radio",
+            required: true,
+            options: [
+              { value: "recepcionista", label: "Recepcionista" },
+              { value: "camarera", label: "Camarera de pisos" },
+            ],
+          },
+        ],
+        maxAttempts: 3,
+        currentAttempt: 2,
+      });
+
+      const result = parseDataRequestEvent(data);
+
+      expect(result).not.toBeNull();
+      expect(result?.payload?.fields).toHaveLength(2);
+      expect(result?.payload?.currentAttempt).toBe(2);
+    });
+  });
+
+  describe("evento sin convenioName (opcional)", () => {
+    it("parsea correctamente evento sin nombre de convenio", () => {
+      const data = JSON.stringify({
+        title: "Selecciona una opcion",
+        fields: [
+          {
+            name: "jornada",
+            label: "Tipo de jornada",
+            type: "radio",
+            options: [
+              { value: "completa", label: "Jornada completa" },
+              { value: "parcial", label: "Tiempo parcial" },
+            ],
+          },
+        ],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+
+      expect(result).not.toBeNull();
+      expect(result?.payload?.convenioName).toBeUndefined();
+    });
+  });
+
+  describe("eventos invalidos", () => {
+    it("retorna null para JSON invalido", () => {
+      const result = parseDataRequestEvent("not valid json");
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si falta title", () => {
+      const data = JSON.stringify({
+        fields: [{ name: "test", label: "Test", type: "stars" }],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si falta fields", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si fields no es array", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        fields: "not an array",
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si falta maxAttempts", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        fields: [{ name: "test", label: "Test", type: "stars" }],
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si falta currentAttempt", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        fields: [{ name: "test", label: "Test", type: "stars" }],
+        maxAttempts: 3,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si campo tiene type invalido", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        fields: [{ name: "test", label: "Test", type: "invalid_type" }],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si campo radio no tiene options", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        fields: [{ name: "test", label: "Test", type: "radio" }],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si opcion no tiene value", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        fields: [
+          {
+            name: "test",
+            label: "Test",
+            type: "radio",
+            options: [{ label: "Sin value" }],
+          },
+        ],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si opcion no tiene label", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        fields: [
+          {
+            name: "test",
+            label: "Test",
+            type: "radio",
+            options: [{ value: "sin_label" }],
+          },
+        ],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si campo no tiene name", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        fields: [{ label: "Test", type: "stars" }],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
+    });
+
+    it("retorna null si campo no tiene label", () => {
+      const data = JSON.stringify({
+        title: "Test",
+        fields: [{ name: "test", type: "stars" }],
+        maxAttempts: 3,
+        currentAttempt: 1,
+      });
+
+      const result = parseDataRequestEvent(data);
+      expect(result).toBeNull();
     });
   });
 });

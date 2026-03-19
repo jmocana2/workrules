@@ -315,3 +315,23 @@ describe('ChatPage - Alertas del Protocolo', () => {
   // para tests más completos de alertas, se pueden crear tests de integración
   // que simulen respuestas del backend o usar Storybook.
 });
+
+describe('ChatPage - DataRequestCard', () => {
+  it('no muestra DataRequestCard por defecto', () => {
+    render(
+      <ChatPage
+        mockConvenios={mockConvenios}
+        mockConversations={[]}
+      />
+    );
+
+    // El formulario de solicitud de datos no debería estar visible
+    expect(screen.queryByText('Calcular')).not.toBeInTheDocument();
+    expect(screen.queryByText('No lo se - ver todos los rangos')).not.toBeInTheDocument();
+  });
+
+  // Nota: Los tests de DataRequestCard con estado requieren mockear useChatPage
+  // o usar el setDataRequest que se expone. Dado que ChatPage usa el hook internamente,
+  // para tests más completos de data request, se pueden crear tests de integración
+  // que simulen respuestas del backend o usar Storybook.
+});

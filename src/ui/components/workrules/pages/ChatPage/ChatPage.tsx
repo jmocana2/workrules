@@ -37,6 +37,7 @@ import { Separator } from '@ui/components/shadcn/separator';
 import { AlertConflict } from '@ui/components/workrules/molecules/AlertConflict/AlertConflict';
 import { AlertInvalidData } from '@ui/components/workrules/molecules/AlertInvalidData/AlertInvalidData';
 import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
+import { DataRequestCard } from '@ui/components/workrules/molecules/DataRequestCard/DataRequestCard';
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { VariablesPanel } from '@ui/components/workrules/organisms/VariablesPanel/VariablesPanel';
@@ -73,6 +74,9 @@ export function ChatPage({
     // Estado de alertas
     alertState,
 
+    // Estado de data request
+    dataRequestState,
+
     // Refs
     inputRef,
     messagesEndRef,
@@ -93,6 +97,10 @@ export function ChatPage({
     handleInvalidDataSuggestion,
     handleConflictOption,
     handleSMIViewDetails,
+
+    // Handlers de data request
+    handleDataRequestSubmit,
+    handleDataRequestSkip,
   } = useChatPage({
     initialConvenioId,
     initialMessages,
@@ -273,6 +281,19 @@ export function ChatPage({
                 options={(alertState.payload as AlertConflictPayload).options}
                 onSelectOption={handleConflictOption}
                 onDismiss={handleAlertDismiss}
+              />
+            )}
+
+            {/* DataRequestCard (Estado B - Datos incompletos) */}
+            {dataRequestState.isVisible && dataRequestState.payload && (
+              <DataRequestCard
+                title={dataRequestState.payload.title}
+                convenioName={dataRequestState.payload.convenioName}
+                fields={dataRequestState.payload.fields}
+                maxAttempts={dataRequestState.payload.maxAttempts}
+                currentAttempt={dataRequestState.payload.currentAttempt}
+                onSubmit={handleDataRequestSubmit}
+                onSkip={handleDataRequestSkip}
               />
             )}
 

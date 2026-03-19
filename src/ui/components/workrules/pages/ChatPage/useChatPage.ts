@@ -26,10 +26,16 @@ import type {
   ConflictOption,
   Convenio,
   ConversationSummary,
+  DataRequestState,
   PerfilJson,
   UseChatPageReturn,
 } from "./ChatPage.types";
-import { clearAlertState, createInitialAlertState } from "./parseAlertEvent";
+import {
+  clearAlertState,
+  clearDataRequestState,
+  createInitialAlertState,
+  createInitialDataRequestState,
+} from "./parseAlertEvent";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 
@@ -87,6 +93,11 @@ export function useChatPage(
   // Estado de alertas del protocolo (Estados D, E, F)
   const [alertState, setAlertState] = useState<AlertState>(
     createInitialAlertState(),
+  );
+
+  // Estado de data request del protocolo (Estado B)
+  const [dataRequestState, setDataRequestState] = useState<DataRequestState>(
+    createInitialDataRequestState(),
   );
 
   // Input controlado localmente
@@ -238,9 +249,10 @@ export function useChatPage(
         return;
       }
 
-      // Reset citaciones y alertas al enviar nuevo mensaje
+      // Reset citaciones, alertas y data request al enviar nuevo mensaje
       setCitations([]);
       setAlertState(clearAlertState());
+      setDataRequestState(clearDataRequestState());
 
       await sendMessage({ text });
       setLocalInput("");
@@ -364,6 +376,71 @@ export function useChatPage(
     setAlertState(newAlertState);
   }, []);
 
+  // ============================================================================
+  // Handlers de DataRequest del protocolo (Estado B)
+  // ============================================================================
+
+  /**
+   * Manejar envio de respuesta de DataRequestCard
+   * Construye un mensaje con los valores seleccionados
+   */
+  const handleDataRequestSubmit = useCallback(
+    async (values: Record<string, string>) => {
+      if (!dataRequestState.payload) {
+        return;
+      }
+
+      // Construir mensaje con los valores seleccionados
+      const entries = Object.entries(values);
+      const formattedValues = entries
+        .map(([key, value]) => {
+          // Buscar el campo por nombre
+          const field = dataRequestState.payload?.fields.find(
+            (f) => f.name === key,
+          );
+          const fieldLabel = field?.label || key;
+
+          // Si es un campo de opciones, buscar el label de la opcion
+          if (field?.type === "radio" && field.options) {
+            const option = field.options.find((o) => o.value === value);
+            return `${fieldLabel}: ${option?.label || value}`;
+          }
+
+          // Si es estrellas, formatear como "X estrellas"
+          if (field?.type === "stars") {
+            return `${fieldLabel}: ${value} estrellas`;
+          }
+
+          return `${fieldLabel}: ${value}`;
+        })
+        .join(", ");
+
+      const message = `Mis datos son: ${formattedValues}`;
+
+      // Limpiar estado y enviar
+      setDataRequestState(clearDataRequestState());
+      await sendMessage({ text: message });
+    },
+    [dataRequestState.payload, sendMessage],
+  );
+
+  /**
+   * Manejar "No lo se" - solicitar tabla con rangos
+   */
+  const handleDataRequestSkip = useCallback(async () => {
+    setDataRequestState(clearDataRequestState());
+    await sendMessage({
+      text: "No conozco estos datos, muestrame una tabla con todos los rangos posibles",
+    });
+  }, [sendMessage]);
+
+  /**
+   * Funcion para establecer data request manualmente (util para mocks/testing)
+   */
+  const setDataRequest = useCallback((newState: DataRequestState) => {
+    setDataRequestState(newState);
+  }, []);
+
   return {
     // Estado
     ...state,
@@ -375,6 +452,9 @@ export function useChatPage(
 
     // Estado de alertas
     alertState,
+
+    // Estado de data request
+    dataRequestState,
 
     // Refs
     inputRef,
@@ -400,7 +480,12 @@ export function useChatPage(
     handleConflictOption,
     handleSMIViewDetails,
 
+    // Handlers de data request
+    handleDataRequestSubmit,
+    handleDataRequestSkip,
+
     // Util para testing/mocks
     setAlert,
+    setDataRequest,
   };
 }

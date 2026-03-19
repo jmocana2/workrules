@@ -147,6 +147,62 @@ export interface SSEAlertEvent {
 }
 
 // ============================================================================
+// Tipos para DataRequest del Protocolo (Estado B)
+// ============================================================================
+
+/**
+ * Opcion para campos de tipo radio en DataRequestCard
+ */
+export interface DataRequestOption {
+  value: string;
+  label: string;
+  description?: string;
+}
+
+/**
+ * Campo individual en un formulario de solicitud de datos
+ */
+export interface DataRequestField {
+  name: string;
+  label: string;
+  type: "radio" | "stars";
+  options?: DataRequestOption[];
+  required?: boolean;
+  helpText?: string;
+}
+
+/**
+ * Payload para DataRequestCard (Estado B)
+ * Cuando faltan parametros para realizar un calculo
+ */
+export interface DataRequestPayload {
+  title: string;
+  convenioName?: string;
+  fields: DataRequestField[];
+  maxAttempts: number;
+  currentAttempt: number;
+}
+
+/**
+ * Estado de solicitud de datos en la UI
+ */
+export interface DataRequestState {
+  isVisible: boolean;
+  payload: DataRequestPayload | null;
+}
+
+/**
+ * Evento SSE de solicitud de datos del backend
+ */
+export interface SSEDataRequestEvent {
+  title: string;
+  convenioName?: string;
+  fields: DataRequestField[];
+  maxAttempts: number;
+  currentAttempt: number;
+}
+
+// ============================================================================
 // Return type del hook useChatPage
 // ============================================================================
 
@@ -169,6 +225,9 @@ export interface UseChatPageReturn {
 
   // Estado de alertas
   alertState: AlertState;
+
+  // Estado de data request
+  dataRequestState: DataRequestState;
 
   // Refs
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -194,6 +253,11 @@ export interface UseChatPageReturn {
   handleConflictOption: (option: ConflictOption) => void;
   handleSMIViewDetails: () => void;
 
+  // Handlers de data request
+  handleDataRequestSubmit: (values: Record<string, string>) => Promise<void>;
+  handleDataRequestSkip: () => Promise<void>;
+
   // Util para testing/mocks
   setAlert: (alertState: AlertState) => void;
+  setDataRequest: (state: DataRequestState) => void;
 }
