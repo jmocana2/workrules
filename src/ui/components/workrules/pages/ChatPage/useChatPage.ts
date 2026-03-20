@@ -3,13 +3,15 @@
  *
  * Maneja:
  * - Estado del convenio seleccionado
- * - Integración con useChat del AI SDK
+ * - Integración con useChat del AI SDK (mock) o useChatStream (API real)
  * - Parseo de citaciones
  * - Panel de variables
  * - Historial de conversaciones
+ * - Estados especiales del protocolo (incomplete, invalid, smi_alert, conflicting)
  */
 
 import { useChat } from "@ai-sdk/react";
+import { useChatStream } from "@ui/hooks/useChatStream";
 import {
   MOCK_CHAT_MESSAGES,
   MOCK_CONVENIOS,
@@ -35,9 +37,13 @@ import {
   clearDataRequestState,
   createInitialAlertState,
   createInitialDataRequestState,
+  parseDataRequestEvent,
 } from "./parseAlertEvent";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
+
+/** Flag para usar mocks en desarrollo/Storybook */
+const USE_MOCK_API = import.meta.env.VITE_USE_MOCKS === "true";
 
 interface UseChatPageOptions {
   initialConvenioId?: string;
@@ -45,6 +51,8 @@ interface UseChatPageOptions {
   mockConvenios?: Convenio[];
   mockPerfil?: PerfilJson | null;
   mockConversations?: ConversationSummary[];
+  /** Forzar uso de mocks (util para Storybook) */
+  useMocks?: boolean;
 }
 
 export function useChatPage(
@@ -55,6 +63,7 @@ export function useChatPage(
     mockConvenios = MOCK_CONVENIOS,
     mockPerfil,
     mockConversations = MOCK_CONVERSATIONS,
+    useMocks = USE_MOCK_API,
   } = options;
 
   const getMessageText = useCallback((message: UIMessage): string => {
@@ -87,8 +96,8 @@ export function useChatPage(
     currentConversationId: null,
   });
 
-  // Citaciones parseadas del stream
-  const [citations, setCitations] = useState<Citation[]>([]);
+  // Citaciones parseadas del stream (para modo mock)
+  const [mockCitations, setMockCitations] = useState<Citation[]>([]);
 
   // Estado de alertas del protocolo (Estados D, E, F)
   const [alertState, setAlertState] = useState<AlertState>(
@@ -103,23 +112,99 @@ export function useChatPage(
   // Input controlado localmente
   const [localInput, setLocalInput] = useState("");
 
-  // useChat del AI SDK (nueva API)
-  const {
-    messages: aiMessages,
-    sendMessage,
-    status,
-    error,
-    setMessages,
-  } = useChat({
+  // ============================================================================
+  // Hook de Chat Real (useChatStream) - cuando NO usamos mocks
+  // ============================================================================
+  const handleSpecialState = useCallback(
+    (specialState: { type: string; payload: Record<string, unknown> }) => {
+      // Mapear estados especiales del backend a alertas/data request
+      switch (specialState.type) {
+        case "incomplete": {
+          // Estado B - Datos incompletos -> mostrar DataRequestCard
+          const payload = specialState.payload as {
+            missingVariables?: string[];
+            suggestions?: Record<string, string[]>;
+          };
+
+          // Construir DataRequestPayload desde el payload del backend
+          const dataRequestPayload = parseDataRequestEvent(
+            JSON.stringify({
+              title: "Necesito más información",
+              convenioName: state.selectedConvenio?.nombre,
+              fields:
+                payload.missingVariables?.map((v) => ({
+                  name: v,
+                  label: v,
+                  type: "radio" as const,
+                  options:
+                    payload.suggestions?.[v]?.map((s) => ({
+                      value: s,
+                      label: s,
+                    })) || [],
+                })) || [],
+              maxAttempts: 3,
+              currentAttempt: 1,
+            }),
+          );
+
+          if (dataRequestPayload) {
+            setDataRequestState(dataRequestPayload);
+          }
+          break;
+        }
+
+        case "invalid":
+          // Estado D - Datos invalidos
+          setAlertState({
+            type: "invalid_data",
+            payload: specialState.payload as unknown as AlertState["payload"],
+            isVisible: true,
+          });
+          break;
+
+        case "smi_alert":
+          // Estado E - Salario menor al SMI
+          setAlertState({
+            type: "smi",
+            payload: specialState.payload as unknown as AlertState["payload"],
+            isVisible: true,
+          });
+          break;
+
+        case "conflicting":
+          // Estado F - Datos contradictorios
+          setAlertState({
+            type: "conflict",
+            payload: specialState.payload as unknown as AlertState["payload"],
+            isVisible: true,
+          });
+          break;
+      }
+    },
+    [state.selectedConvenio?.nombre],
+  );
+
+  const realChat = useChatStream({
+    convenioId: state.selectedConvenio?.id || null,
+    onSpecialState: handleSpecialState,
+    onError: (err) => {
+      console.error("[useChatPage] Chat error:", err);
+    },
+  });
+
+  // ============================================================================
+  // Hook de Chat Mock (useChat del AI SDK) - para Storybook/desarrollo
+  // ============================================================================
+  const mockChat = useChat({
     transport: new DefaultChatTransport({
       api: SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/chat` : "/api/chat",
     }),
   });
 
-  // Convertir mensajes de AI SDK a nuestro tipo
-  const messages: ChatMessage[] = useMemo(
+  // Convertir mensajes de AI SDK a nuestro tipo (para modo mock)
+  const mockMessages: ChatMessage[] = useMemo(
     () =>
-      aiMessages.map((msg) => {
+      mockChat.messages.map((msg) => {
         const content = getMessageText(msg);
         return {
           ...msg,
@@ -127,15 +212,52 @@ export function useChatPage(
           role: msg.role as "user" | "assistant" | "system",
         };
       }),
-    [aiMessages, getMessageText],
+    [mockChat.messages, getMessageText],
   );
 
-  const isLoading = status === "streaming" || status === "submitted";
+  // ============================================================================
+  // Convertir mensajes de realChat a ChatMessage[]
+  // ============================================================================
+  const realMessages: ChatMessage[] = useMemo(
+    () =>
+      realChat.messages.map((msg) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        createdAt: msg.createdAt,
+        citations: msg.citations?.map((c) => ({
+          source: c.source,
+          url: c.url || "",
+          text: c.section,
+        })),
+        // Agregar parts para compatibilidad con UIMessage
+        parts: [{ type: "text" as const, text: msg.content }],
+      })),
+    [realChat.messages],
+  );
 
-  // Parsear citaciones cuando termina el streaming
+  // ============================================================================
+  // Seleccionar fuente de datos segun modo
+  // ============================================================================
+  const messages: ChatMessage[] = useMocks ? mockMessages : realMessages;
+  const isLoading = useMocks
+    ? mockChat.status === "streaming" || mockChat.status === "submitted"
+    : realChat.isLoading;
+  const error = useMocks ? mockChat.error : realChat.error;
+  const citations: Citation[] = useMocks
+    ? mockCitations
+    : realChat.citations.map((c) => ({
+        source: c.source,
+        url: c.url || "",
+        text: c.section,
+      }));
+
+  // Parsear citaciones cuando termina el streaming (solo modo mock)
   useEffect(() => {
-    if (status === "ready" && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
+    if (!useMocks) return;
+
+    if (mockChat.status === "ready" && mockMessages.length > 0) {
+      const lastMessage = mockMessages[mockMessages.length - 1];
       if (lastMessage.role === "assistant") {
         // Parsear citaciones del mensaje (formato markdown: [texto](url))
         // Regex optimizada para evitar backtracking
@@ -150,11 +272,11 @@ export function useChatPage(
           });
         }
         if (parsedCitations.length > 0) {
-          setCitations(parsedCitations);
+          setMockCitations(parsedCitations);
         }
       }
     }
-  }, [status, messages]);
+  }, [useMocks, mockChat.status, mockMessages]);
 
   // Cargar convenio inicial
   useEffect(() => {
@@ -183,6 +305,12 @@ export function useChatPage(
     setState((prev) => ({ ...prev, perfilJson: MOCK_PERFIL_HOSTELERIA }));
   }, []);
 
+  // Extraer funciones de los hooks de chat para evitar warnings de dependencias
+  const mockSetMessages = mockChat.setMessages;
+  const mockSendMessage = mockChat.sendMessage;
+  const realClearMessages = realChat.clearMessages;
+  const realSendMessage = realChat.sendMessage;
+
   // Limpiar convenio
   const clearConvenio = useCallback(() => {
     setState((prev) => ({
@@ -190,10 +318,14 @@ export function useChatPage(
       selectedConvenio: null,
       perfilJson: null,
     }));
-    setMessages([]);
-    setCitations([]);
+    if (useMocks) {
+      mockSetMessages([]);
+      setMockCitations([]);
+    } else {
+      realClearMessages();
+    }
     setLocalInput("");
-  }, [setMessages]);
+  }, [useMocks, mockSetMessages, realClearMessages]);
 
   // Click en variable del panel
   const handleVariableClick = useCallback(
@@ -250,14 +382,20 @@ export function useChatPage(
       }
 
       // Reset citaciones, alertas y data request al enviar nuevo mensaje
-      setCitations([]);
+      if (useMocks) {
+        setMockCitations([]);
+      }
       setAlertState(clearAlertState());
       setDataRequestState(clearDataRequestState());
 
-      await sendMessage({ text });
+      if (useMocks) {
+        await mockSendMessage({ text });
+      } else {
+        await realSendMessage(text);
+      }
       setLocalInput("");
     },
-    [state.selectedConvenio, sendMessage],
+    [state.selectedConvenio, useMocks, mockSendMessage, realSendMessage],
   );
 
   // Submit con evento de formulario
@@ -271,30 +409,43 @@ export function useChatPage(
 
   // Nueva conversación
   const handleNewConversation = useCallback(() => {
-    setMessages([]);
-    setCitations([]);
+    if (useMocks) {
+      mockSetMessages([]);
+      setMockCitations([]);
+    } else {
+      realClearMessages();
+    }
     setLocalInput("");
+    setAlertState(clearAlertState());
+    setDataRequestState(clearDataRequestState());
     setState((prev) => ({
       ...prev,
       currentConversationId: null,
       selectedConvenio: null,
       perfilJson: null,
     }));
-  }, [setMessages]);
+  }, [useMocks, mockSetMessages, realClearMessages]);
 
   // Seleccionar conversación del historial
   const handleSelectConversation = useCallback(
     (id: string) => {
       setState((prev) => ({ ...prev, currentConversationId: id }));
+
       // En producción, aquí se cargarían los mensajes de la conversación desde el backend
-      const mockMessages: ChatMessage[] = MOCK_CHAT_MESSAGES.map((msg) => ({
-        ...msg,
-        role: msg.role as "user" | "assistant" | "system",
-        parts: [{ type: "text" as const, text: msg.content }],
-      }));
-      setMessages(mockMessages);
+      // Por ahora solo funciona con mocks
+      if (useMocks) {
+        const historicMessages: ChatMessage[] = MOCK_CHAT_MESSAGES.map(
+          (msg) => ({
+            ...msg,
+            role: msg.role as "user" | "assistant" | "system",
+            parts: [{ type: "text" as const, text: msg.content }],
+          }),
+        );
+        mockSetMessages(historicMessages);
+      }
+      // TODO: Implementar carga de conversación desde backend en modo real
     },
-    [setMessages],
+    [useMocks, mockSetMessages],
   );
 
   // Abrir configuración
@@ -354,10 +505,15 @@ export function useChatPage(
   const handleConflictOption = useCallback(
     async (option: ConflictOption) => {
       // Enviar mensaje con la opción seleccionada
-      await sendMessage({ text: `Mi respuesta es: ${option.label}` });
+      const text = `Mi respuesta es: ${option.label}`;
+      if (useMocks) {
+        await mockSendMessage({ text });
+      } else {
+        await realSendMessage(text);
+      }
       setAlertState(clearAlertState());
     },
-    [sendMessage, setAlertState],
+    [useMocks, mockSendMessage, realSendMessage],
   );
 
   /**
@@ -415,13 +571,17 @@ export function useChatPage(
         })
         .join(", ");
 
-      const message = `Mis datos son: ${formattedValues}`;
+      const text = `Mis datos son: ${formattedValues}`;
 
       // Limpiar estado y enviar
       setDataRequestState(clearDataRequestState());
-      await sendMessage({ text: message });
+      if (useMocks) {
+        await mockSendMessage({ text });
+      } else {
+        await realSendMessage(text);
+      }
     },
-    [dataRequestState.payload, sendMessage],
+    [dataRequestState.payload, useMocks, mockSendMessage, realSendMessage],
   );
 
   /**
@@ -429,10 +589,14 @@ export function useChatPage(
    */
   const handleDataRequestSkip = useCallback(async () => {
     setDataRequestState(clearDataRequestState());
-    await sendMessage({
-      text: "No conozco estos datos, muestrame una tabla con todos los rangos posibles",
-    });
-  }, [sendMessage]);
+    const text =
+      "No conozco estos datos, muestrame una tabla con todos los rangos posibles";
+    if (useMocks) {
+      await mockSendMessage({ text });
+    } else {
+      await realSendMessage(text);
+    }
+  }, [useMocks, mockSendMessage, realSendMessage]);
 
   /**
    * Funcion para establecer data request manualmente (util para mocks/testing)
