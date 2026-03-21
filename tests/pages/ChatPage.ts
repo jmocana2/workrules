@@ -6,8 +6,17 @@
 
 import type { Locator, Page } from "@playwright/test";
 
+// Credenciales de test - usar variables de entorno o valores por defecto
+const TEST_EMAIL = process.env.TEST_USER_EMAIL || "test@example.com";
+const TEST_PASSWORD = process.env.TEST_USER_PASSWORD || "testpassword123";
+
 export class ChatPage {
   readonly page: Page;
+
+  // Selectores de Login
+  readonly loginEmailInput: Locator;
+  readonly loginPasswordInput: Locator;
+  readonly loginSubmitButton: Locator;
 
   // Selectores principales
   readonly convenioSelector: Locator;
@@ -43,6 +52,13 @@ export class ChatPage {
 
   constructor(page: Page) {
     this.page = page;
+
+    // Selectores de Login
+    this.loginEmailInput = page.locator('input[type="email"]');
+    this.loginPasswordInput = page.locator('input[type="password"]');
+    this.loginSubmitButton = page.getByRole("button", {
+      name: /iniciar sesion/i,
+    });
 
     // Selectores por data-testid (preferido) o rol
     // El ConvenioSelector usa role="combobox" con aria-label="Seleccionar convenio colectivo"
@@ -88,10 +104,69 @@ export class ChatPage {
   }
 
   /**
-   * Navega a la pagina de chat
+   * Realiza login con credenciales de test
+   */
+  async login(email: string = TEST_EMAIL, password: string = TEST_PASSWORD) {
+    // Rellenar credenciales
+    await this.loginEmailInput.fill(email);
+    await this.loginPasswordInput.fill(password);
+
+    // Enviar formulario
+    await this.loginSubmitButton.click();
+
+    // Esperar a que el login se complete y aparezca el selector de convenio
+    await this.convenioSelector.waitFor({ state: "visible", timeout: 15000 });
+  }
+
+  /**
+   * Navega a la pagina de chat.
+   *
+   * IMPORTANTE: Este metodo asume que VITE_E2E_TESTING=true esta configurado
+   * en playwright.config.ts. Si necesitas autenticacion manual, usa
+   * gotoWithLogin() en su lugar.
+   *
+   * @throws Error si aparece la pagina de login (indica que VITE_E2E_TESTING no esta activo)
    */
   async goto() {
     await this.page.goto("/");
+
+    // Verificar si estamos en la pagina de login (indica que VITE_E2E_TESTING no esta activo)
+    const isLoginPage = await this.loginEmailInput
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
+
+    if (isLoginPage) {
+      throw new Error(
+        "Se detecto la pagina de login. Asegurate de que VITE_E2E_TESTING=true " +
+          "este configurado en playwright.config.ts, o usa gotoWithLogin() en su lugar.",
+      );
+    }
+
+    // Esperar a que el selector de convenio sea visible (indica que la pagina cargo)
+    await this.convenioSelector.waitFor({ state: "visible", timeout: 15000 });
+  }
+
+  /**
+   * Navega a la pagina y hace login manualmente (para tests sin VITE_E2E_TESTING)
+   */
+  async gotoWithLogin(email?: string, password?: string) {
+    await this.page.goto("/");
+
+    // Esperar a que la pagina salga del estado de carga inicial
+    await this.page.waitForFunction(
+      () => !document.body.textContent?.includes("Cargando..."),
+      { timeout: 15000 },
+    );
+
+    // Si estamos en la pagina de login, hacer login
+    const isLoginPage = await this.loginEmailInput.isVisible({ timeout: 2000 })
+      .catch(() => false);
+    if (isLoginPage) {
+      await this.login(email, password);
+      return;
+    }
+
+    await this.convenioSelector.waitFor({ state: "visible", timeout: 15000 });
   }
 
   /**
