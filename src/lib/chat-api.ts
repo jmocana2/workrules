@@ -108,6 +108,34 @@ export function getChatEndpoint(): string {
 }
 
 /**
+ * Obtiene la anon key publica de Supabase para el header apikey
+ */
+function getSupabaseAnonKey(): string {
+  const anonKeyFromVite = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const anonKeyFromProcess =
+    (globalThis as { process?: { env?: Record<string, string | undefined> } })
+      .process?.env?.VITE_SUPABASE_ANON_KEY;
+
+  const anonKey = anonKeyFromVite ?? anonKeyFromProcess;
+  if (!anonKey) {
+    throw new Error("VITE_SUPABASE_ANON_KEY no está configurada");
+  }
+
+  return anonKey;
+}
+
+/**
+ * Headers comunes para llamadas al chat
+ */
+function buildChatHeaders(token: string): Record<string, string> {
+  return {
+    "Content-Type": "application/json",
+    "apikey": getSupabaseAnonKey(),
+    "Authorization": `Bearer ${token}`,
+  };
+}
+
+/**
  * Parsea una linea de evento SSE
  */
 export function parseSSELine(line: string): SSEEvent | null {
@@ -276,10 +304,7 @@ export async function streamChat(
   try {
     const response = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
+      headers: buildChatHeaders(token),
       body: JSON.stringify({
         convenio_id: convenioId,
         pregunta,
@@ -351,10 +376,7 @@ export async function sendChat(
 
   const response = await fetch(endpoint, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
-    },
+    headers: buildChatHeaders(token),
     body: JSON.stringify({
       convenio_id: convenioId,
       pregunta,

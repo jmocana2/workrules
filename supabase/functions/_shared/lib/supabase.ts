@@ -330,7 +330,7 @@ export async function searchSemanticCache(
   const supabase = getSupabaseClient(client);
 
   const { data, error } = await supabase.rpc("search_semantic_cache", {
-    query_embedding: embedding,
+    p_query_embedding: embedding,
     similarity_threshold: threshold,
     p_convenio_id: convenioId,
   });

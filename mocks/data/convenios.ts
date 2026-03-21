@@ -7,7 +7,7 @@ import type { Convenio, PerfilJson, ConversationSummary } from '@core/types';
 
 export const MOCK_CONVENIOS: Convenio[] = [
   {
-    id: '1',
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     nombre: 'Hostelería de Madrid',
     ambito: 'provincial',
     codigo_boe: 'BOE-A-2023-12345',
@@ -18,7 +18,7 @@ export const MOCK_CONVENIOS: Convenio[] = [
     updated_at: '2023-01-15T10:00:00Z',
   },
   {
-    id: '2',
+    id: 'b2c3d4e5-f6a7-8901-bcde-f23456789012',
     nombre: 'Convenio Estatal de Hostelería',
     ambito: 'estatal',
     codigo_boe: 'BOE-A-2023-23456',
@@ -29,7 +29,7 @@ export const MOCK_CONVENIOS: Convenio[] = [
     updated_at: '2023-03-20T10:00:00Z',
   },
   {
-    id: '3',
+    id: 'c3d4e5f6-a7b8-9012-cdef-345678901234',
     nombre: 'Comercio de Barcelona',
     ambito: 'provincial',
     codigo_boe: 'BOE-A-2023-34567',
@@ -40,7 +40,7 @@ export const MOCK_CONVENIOS: Convenio[] = [
     updated_at: '2023-02-10T10:00:00Z',
   },
   {
-    id: '4',
+    id: 'd4e5f6a7-b8c9-0123-def0-456789012345',
     nombre: 'Construcción y Obras Públicas',
     ambito: 'estatal',
     codigo_boe: 'BOE-A-2023-45678',
@@ -51,7 +51,7 @@ export const MOCK_CONVENIOS: Convenio[] = [
     updated_at: '2023-04-15T10:00:00Z',
   },
   {
-    id: '5',
+    id: 'e5f6a7b8-c9d0-1234-ef01-567890123456',
     nombre: 'Empresa XYZ S.A.',
     ambito: 'empresa',
     codigo_boe: 'BOE-A-2023-56789',
@@ -89,7 +89,7 @@ export const MOCK_CONVERSATIONS: ConversationSummary[] = [
   {
     id: '1',
     title: 'Cálculo de salario camarero',
-    convenioId: '1',
+    convenioId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     convenioNombre: 'Hostelería de Madrid',
     lastMessageAt: new Date().toISOString(),
     preview: '¿Cuál es el salario base para un camarero con 3 años de antigüedad?',
@@ -97,7 +97,7 @@ export const MOCK_CONVERSATIONS: ConversationSummary[] = [
   {
     id: '2',
     title: 'Vacaciones y permisos',
-    convenioId: '1',
+    convenioId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     convenioNombre: 'Hostelería de Madrid',
     lastMessageAt: new Date(Date.now() - 86400000).toISOString(),
     preview: '¿Cuántos días de vacaciones corresponden?',
@@ -105,7 +105,7 @@ export const MOCK_CONVERSATIONS: ConversationSummary[] = [
   {
     id: '3',
     title: 'Pagas extraordinarias',
-    convenioId: '2',
+    convenioId: 'b2c3d4e5-f6a7-8901-bcde-f23456789012',
     convenioNombre: 'Convenio Estatal de Hostelería',
     lastMessageAt: new Date(Date.now() - 172800000).toISOString(),
     preview: '¿Cuándo se cobran las pagas extra?',

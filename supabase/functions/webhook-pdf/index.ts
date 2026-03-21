@@ -1,13 +1,13 @@
 // supabase/functions/webhook-pdf/index.ts
 
-import { corsHeaders } from '../_shared/lib/cors.ts';
-import { buildNotImplementedResponse } from './handlers.ts';
+import { corsHeaders } from "../_shared/lib/cors.ts";
+import { buildNotImplementedResponse } from "./handlers.ts";
 
-const jsonHeaders = { ...corsHeaders, 'Content-Type': 'application/json' };
+const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
 
 Deno.serve((_req: Request) => {
-  if (_req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+  if (_req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   // TODO: Implementar procesamiento de PDFs en Fase 3+

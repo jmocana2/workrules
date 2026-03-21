@@ -158,9 +158,10 @@ function mapApiError(error: unknown): AnthropicError {
 // ============================================
 
 /**
- * Enviar mensaje a Claude con streaming SSE
+ * Enviar mensaje a Claude con streaming
  *
- * @returns ReadableStream que emite chunks de texto como SSE
+ * @returns ReadableStream que emite chunks de texto plano
+ * El formateo SSE se realiza en handlers.ts handleStreamResponse
  *
  * @example
  * const stream = await streamChatResponse({
@@ -168,9 +169,8 @@ function mapApiError(error: unknown): AnthropicError {
  *   userMessage: "Cual es el salario base?",
  * });
  *
- * return new Response(stream, {
- *   headers: { 'Content-Type': 'text/event-stream' }
- * });
+ * // Usar con handleStreamResponse para SSE
+ * return handleStreamResponse(stream, cleanup, citations, headers);
  */
 export async function streamChatResponse(
   options: StreamOptions,
@@ -191,7 +191,8 @@ export async function streamChatResponse(
       messages: [{ role: "user", content: validOptions.userMessage }],
     });
 
-    // 4. Crear ReadableStream para SSE
+    // 4. Crear ReadableStream con texto plano (sin formato SSE)
+    // El formateo SSE se hace en handlers.ts handleStreamResponse
     const encoder = new TextEncoder();
 
     return new ReadableStream<Uint8Array>({
@@ -201,22 +202,18 @@ export async function streamChatResponse(
             if (event.type === "content_block_delta") {
               const delta = event.delta;
               if ("text" in delta) {
-                // Emitir como SSE
-                const sseData = `data: ${JSON.stringify({ type: "text", content: delta.text })}\n\n`;
-                controller.enqueue(encoder.encode(sseData));
+                // Emitir texto plano sin formato SSE
+                controller.enqueue(encoder.encode(delta.text));
               }
-            } else if (event.type === "message_stop") {
-              // Emitir evento de fin
-              const sseData = `data: ${JSON.stringify({ type: "done" })}\n\n`;
-              controller.enqueue(encoder.encode(sseData));
             }
+            // message_stop ya no necesita evento especial,
+            // el stream se cierra naturalmente
           }
           controller.close();
         } catch (error) {
+          // En caso de error, lanzar para que el handler lo gestione
           const mapped = mapApiError(error);
-          const sseError = `data: ${JSON.stringify({ type: "error", error: mapped.message, code: mapped.code })}\n\n`;
-          controller.enqueue(encoder.encode(sseError));
-          controller.close();
+          controller.error(mapped);
         }
       },
     });

@@ -235,21 +235,27 @@ export function useChatStream(
 
           onDone: () => {
             if (currentMessageRef.current) {
-              // Actualizar citaciones finales
-              currentMessageRef.current.citations = streamCitations;
+              // Capturar el mensaje final ANTES de cualquier cambio de estado
+              // Esto evita race condition con el finally block que hace currentMessageRef.current = null
+              const finalMessage: ChatStreamMessage = {
+                ...currentMessageRef.current,
+                citations: [...streamCitations],
+              };
+
+              // Actualizar citaciones
               setCitations(streamCitations);
 
-              // Actualizar mensaje final
+              // Actualizar mensaje final con copia del objeto
               setMessages((prev) => {
                 const updated = [...prev];
                 const lastIndex = updated.length - 1;
                 if (lastIndex >= 0 && updated[lastIndex].role === "assistant") {
-                  updated[lastIndex] = { ...currentMessageRef.current! };
+                  updated[lastIndex] = finalMessage;
                 }
                 return updated;
               });
 
-              onFinish?.(currentMessageRef.current);
+              onFinish?.(finalMessage);
             }
           },
 
