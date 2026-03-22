@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: workrules-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      # Configuracion basica
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+
+      # Timezone
+      - GENERIC_TIMEZONE=Europe/Madrid
+      - TZ=Europe/Madrid
+
+      # Seguridad (cambiar en produccion)
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+
+      # Persistencia
+      - N8N_USER_FOLDER=/home/node/.n8n
+
+      # Logs
+      - N8N_LOG_LEVEL=info
+
+    volumes:
+      # Persistir datos de n8n (workflows, credenciales, etc)
+      - n8n_data:/home/node/.n8n
+      # Montar carpeta local para importar/exportar workflows
+      - ./workflows:/home/node/workflows
+
+    # Permitir acceso a host.docker.internal (para conectar con Supabase local)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  n8n_data:
+    driver: local

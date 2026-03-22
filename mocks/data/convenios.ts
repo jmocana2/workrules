@@ -7,15 +7,16 @@ import type { Convenio, PerfilJson, ConversationSummary } from '@core/types';
 
 export const MOCK_CONVENIOS: Convenio[] = [
   {
-    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    nombre: 'Hostelería de Madrid',
+    // ID real del convenio indexado en Supabase local
+    id: 'ee00cc1d-8405-4551-940d-50d85c3d4003',
+    nombre: 'Convenio colectivo de Hosteleria de Madrid',
     ambito: 'provincial',
-    codigo_boe: 'BOE-A-2023-12345',
-    url_boe: 'https://boe.es/buscar/doc.php?id=BOE-A-2023-12345',
-    fecha_publicacion: '2023-01-15',
-    fecha_vigencia_inicio: '2023-02-01',
-    created_at: '2023-01-15T10:00:00Z',
-    updated_at: '2023-01-15T10:00:00Z',
+    codigo_boe: 'BOCM-20240406',
+    url_boe: 'https://www.ccoo-servicios.es/archivos/BOCM-20240406-Conv-hosteleria.pdf',
+    fecha_publicacion: '2024-04-06',
+    fecha_vigencia_inicio: '2024-01-01',
+    created_at: '2024-04-06T10:00:00Z',
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'b2c3d4e5-f6a7-8901-bcde-f23456789012',
@@ -64,7 +65,7 @@ export const MOCK_CONVENIOS: Convenio[] = [
 ];
 
 export const MOCK_PERFIL_HOSTELERIA: PerfilJson = {
-  convenio: 'Hostelería de Madrid',
+  convenio: 'Convenio colectivo de Hosteleria de Madrid',
   variables_criticas: ['Categoría Profesional', 'Antigüedad', 'Jornada'],
   valores_posibles: {
     'Categoría Profesional': [
@@ -89,16 +90,16 @@ export const MOCK_CONVERSATIONS: ConversationSummary[] = [
   {
     id: '1',
     title: 'Cálculo de salario camarero',
-    convenioId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    convenioNombre: 'Hostelería de Madrid',
+    convenioId: 'ee00cc1d-8405-4551-940d-50d85c3d4003',
+    convenioNombre: 'Convenio colectivo de Hosteleria de Madrid',
     lastMessageAt: new Date().toISOString(),
     preview: '¿Cuál es el salario base para un camarero con 3 años de antigüedad?',
   },
   {
     id: '2',
     title: 'Vacaciones y permisos',
-    convenioId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-    convenioNombre: 'Hostelería de Madrid',
+    convenioId: 'ee00cc1d-8405-4551-940d-50d85c3d4003',
+    convenioNombre: 'Convenio colectivo de Hosteleria de Madrid',
     lastMessageAt: new Date(Date.now() - 86400000).toISOString(),
     preview: '¿Cuántos días de vacaciones corresponden?',
   },
