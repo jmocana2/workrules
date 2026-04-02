@@ -739,7 +739,7 @@ COMMENT ON FUNCTION search_chunks_by_convenio IS 'Busca chunks similares de un c
 
 -- Función para buscar en caché semántico
 CREATE OR REPLACE FUNCTION search_semantic_cache(
-    query_embedding vector(1536),
+    p_query_embedding vector(1536),
     similarity_threshold float DEFAULT 0.95,
     p_convenio_id UUID DEFAULT NULL
 )
@@ -757,14 +757,14 @@ BEGIN
     SELECT
         sc.id as cache_id,
         sc.response as cached_response,
-        1 - (sc.query_embedding <=> query_embedding) as similarity,
+        1 - (sc.query_embedding <=> p_query_embedding) as similarity,
         sc.hit_count
     FROM semantic_cache sc
     WHERE
         sc.expires_at > CURRENT_TIMESTAMP
-        AND 1 - (sc.query_embedding <=> query_embedding) > similarity_threshold
+        AND 1 - (sc.query_embedding <=> p_query_embedding) > similarity_threshold
         AND (p_convenio_id IS NULL OR sc.convenio_id = p_convenio_id)
-    ORDER BY sc.query_embedding <=> query_embedding
+    ORDER BY sc.query_embedding <=> p_query_embedding
     LIMIT 1;
 END;
 $$;

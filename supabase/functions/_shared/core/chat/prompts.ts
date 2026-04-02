@@ -74,33 +74,40 @@ const SYSTEM_PROMPT_ASK_QUESTION =
 
 ## REGLAS ESTRICTAS
 
-1. **GROUNDING OBLIGATORIO**: Solo puedes afirmar informacion que aparezca EXPLICITAMENTE en los chunks de contexto. Si la informacion no esta, di "No encuentro esa informacion en el convenio."
+1. **GROUNDING OBLIGATORIO**: Solo puedes afirmar informacion que aparezca EXPLICITAMENTE en los chunks de contexto proporcionados. Si la informacion no esta en el contexto, di "No encuentro esa informacion en el convenio."
 
-2. **CITAS OBLIGATORIAS**: Cada afirmacion debe incluir referencia al articulo. Formato: "Segun el Art. X..."
+2. **CITAS OBLIGATORIAS DEL CONTEXTO**: Las referencias a articulos DEBEN extraerse del contexto proporcionado. Cada chunk viene con su articulo entre parentesis, por ejemplo: "[1] (Art. 18)". USA ESE NUMERO DE ARTICULO en tu respuesta, NO inventes otros.
 
-3. **SIN ALUCINACIONES**: Nunca inventes datos, cifras o articulos. Si no sabes algo, dilo claramente.
+3. **PROHIBIDO USAR CONOCIMIENTO PREVIO**: NO uses tu conocimiento sobre otros convenios o versiones anteriores. La UNICA fuente valida es el contexto proporcionado en esta consulta.
 
-4. **RESPUESTAS CONCISAS**: Responde de forma directa y estructurada. Evita rodeos.
+4. **SIN ALUCINACIONES**: Nunca inventes datos, cifras o articulos. Si el contexto menciona "Art. 18" para vacaciones, cita "Art. 18", NO otro numero.
 
-5. **FUERA DE ALCANCE**: Si te preguntan sobre temas que requieren asesoria legal (despidos, demandas, IRPF, Seguridad Social), indica que consulten con un profesional.
+5. **RESPUESTAS CONCISAS**: Responde de forma directa y estructurada. Evita rodeos.
+
+6. **FUERA DE ALCANCE**: Si te preguntan sobre temas que requieren asesoria legal (despidos, demandas, IRPF, Seguridad Social), indica que consulten con un profesional.
 
 ## FORMATO DE RESPUESTA
 
 [Respuesta directa a la pregunta]
 
-**Referencia:** Art. [numero] del Convenio de {{convenio_name}}
+**Referencia:** Art. [numero del contexto] del Convenio de {{convenio_name}}
 
 [Matices o condiciones adicionales si los hay]
 
 ## EJEMPLO
 
+Contexto proporcionado:
+[1] (Art. 18) - Vacaciones
+Las personas trabajadoras disfrutaran de 30 dias naturales de vacaciones...
+
 Pregunta: "Cuantos dias de vacaciones tengo?"
 
-Respuesta: Segun el convenio, corresponden **30 dias naturales** de vacaciones anuales.
+Respuesta correcta:
+Segun el convenio, corresponden **30 dias naturales** de vacaciones anuales.
 
-**Referencia:** Art. 25 del Convenio de {{convenio_name}}
+**Referencia:** Art. 18 del Convenio de {{convenio_name}}
 
-Si tu antiguedad supera 15 anos, se anaden 2 dias adicionales segun el Art. 25.3.`;
+IMPORTANTE: El articulo citado (Art. 18) viene del contexto [1], NO de conocimiento previo.`;
 
 // ============================================
 // TEMPLATE: CALCULATE-SALARY
@@ -371,7 +378,17 @@ export function buildUserMessage(
 export function formatChunksForContext(chunks: ChunkResult[]): string {
   return chunks
     .map((chunk, i) => {
-      const ref = chunk.articulo ? ` (Art. ${chunk.articulo})` : "";
+      // Normalizar artículo: evitar duplicar "Art." si ya viene en el valor
+      let ref = "";
+      if (chunk.articulo) {
+        const articulo = chunk.articulo.trim();
+        // Si ya empieza con "Art.", "Artículo" o "Articulo", usarlo tal cual
+        if (/^Art(?:[íi]culo|\.)/i.test(articulo)) {
+          ref = ` (${articulo})`;
+        } else {
+          ref = ` (Art. ${articulo})`;
+        }
+      }
       const seccion = chunk.seccion ? ` - ${chunk.seccion}` : "";
       return `[${i + 1}]${ref}${seccion}\n${chunk.content}`;
     })

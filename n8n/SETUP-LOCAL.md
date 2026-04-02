@@ -82,9 +82,12 @@ Antes de indexar, crea el bucket en Supabase local:
 -- SQL Editor > New Query
 
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('convenios-pdf', 'convenios-pdf', true)
-ON CONFLICT (id) DO NOTHING;
+VALUES ('convenios-pdf', 'convenios-pdf', false)
+ON CONFLICT (id) DO UPDATE
+SET public = false;
 ```
+
+> **Nota**: El bucket es **privado**. Para leer PDFs usa signed URLs o requests autenticadas; evita cualquier URL pública del bucket.
 
 ## 6. Activar el Workflow
 
@@ -102,7 +105,7 @@ curl -X POST http://localhost:5678/webhook/ingesta-convenio \
     "codigo_regcon": "28000005011981",
     "ambito": "provincial",
     "fecha_vigencia": "2024-01-01",
-    "pdf_url": "https://www.boe.es/boe/dias/2024/01/15/pdfs/BOE-A-2024-123.pdf"
+    "pdf_url": "https://www.ccoo-servicios.es/archivos/BOCM-20240406-Conv-hosteleria.pdf"
   }'
 ```
 

@@ -120,7 +120,7 @@ export type AskQuestionResult =
 // ============================================
 
 const DEFAULT_CHUNK_LIMIT = 5;
-const DEFAULT_CHUNK_THRESHOLD = 0.7;
+const DEFAULT_CHUNK_THRESHOLD = 0.5;
 const CACHE_THRESHOLD = 0.95;
 const MODEL_NAME = "claude-sonnet-4-20250514";
 
