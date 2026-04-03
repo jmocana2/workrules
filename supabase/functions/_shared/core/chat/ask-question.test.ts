@@ -1,11 +1,8 @@
 // supabase/functions/_shared/core/chat/ask-question.test.ts
 
 import { assertEquals, assertExists } from "@std/assert";
-import {
-  askQuestion,
-  type AskQuestionDeps,
-  type AskQuestionInput,
-} from "./ask-question.ts";
+import { AnthropicError } from "../../lib/anthropic.ts";
+import { EmbeddingError } from "../../lib/openai.ts";
 import type {
   CacheHit,
   ChunkSearchResult,
@@ -13,8 +10,11 @@ import type {
   QuotaStatus,
 } from "../../lib/supabase.ts";
 import { RepositoryError } from "../../lib/supabase.ts";
-import { EmbeddingError } from "../../lib/openai.ts";
-import { AnthropicError } from "../../lib/anthropic.ts";
+import {
+  askQuestion,
+  type AskQuestionDeps,
+  type AskQuestionInput,
+} from "./ask-question.ts";
 
 // ============================================
 // TEST FIXTURES
@@ -125,7 +125,12 @@ function createMockDeps(overrides: MockOverrides = {}): {
       calls.checkUserQuota.push(args);
       return (
         overrides.checkUserQuota?.() ??
-        Promise.resolve({ hasQuota: true, used: 1, limit: 5, tier: "free" as const })
+          Promise.resolve({
+            hasQuota: true,
+            used: 1,
+            limit: 5,
+            tier: "free" as const,
+          })
       );
     },
     embedQuestion: (...args) => {
@@ -142,7 +147,8 @@ function createMockDeps(overrides: MockOverrides = {}): {
     },
     searchChunksByConvenio: (...args) => {
       calls.searchChunksByConvenio.push(args);
-      return overrides.searchChunksByConvenio?.() ?? Promise.resolve(MOCK_CHUNKS);
+      return overrides.searchChunksByConvenio?.() ??
+        Promise.resolve(MOCK_CHUNKS);
     },
     getPerfilByConvenio: (...args) => {
       calls.getPerfilByConvenio.push(args);
@@ -152,12 +158,15 @@ function createMockDeps(overrides: MockOverrides = {}): {
       calls.createChatResponse.push(args);
       return (
         overrides.createChatResponse?.() ??
-        Promise.resolve("El salario base segun el Art. 24 es de 20.000 euros anuales.")
+          Promise.resolve(
+            "El salario base segun el Art. 24 es de 20.000 euros anuales.",
+          )
       );
     },
     streamChatResponse: (...args) => {
       calls.streamChatResponse.push(args);
-      return overrides.streamChatResponse?.() ?? Promise.resolve(new ReadableStream());
+      return overrides.streamChatResponse?.() ??
+        Promise.resolve(new ReadableStream());
     },
     saveToSemanticCache: (...args) => {
       calls.saveToSemanticCache.push(args);
@@ -183,7 +192,12 @@ function createMockDeps(overrides: MockOverrides = {}): {
 Deno.test("askQuestion - retorna quota_exceeded si usuario no tiene cuota", async () => {
   const { deps, calls } = createMockDeps({
     checkUserQuota: () =>
-      Promise.resolve({ hasQuota: false, used: 5, limit: 5, tier: "free" as const }),
+      Promise.resolve({
+        hasQuota: false,
+        used: 5,
+        limit: 5,
+        tier: "free" as const,
+      }),
   });
 
   const result = await askQuestion(DEFAULT_INPUT, deps);
@@ -303,7 +317,7 @@ Deno.test("askQuestion - pasa convenioId y embedding a searchChunksByConvenio", 
   const callArgs = calls.searchChunksByConvenio[0];
   assertEquals(callArgs[0], VALID_EMBEDDING); // embedding
   assertEquals(callArgs[1], VALID_UUID); // convenioId
-  assertEquals(callArgs[2], 5); // limit
+  assertEquals(callArgs[2], 8); // limit (increased for better context retrieval)
 });
 
 // ============================================
@@ -316,7 +330,10 @@ Deno.test("askQuestion - llama a createChatResponse con prompts construidos", as
   await askQuestion(DEFAULT_INPUT, deps);
 
   assertEquals(calls.createChatResponse.length, 1);
-  const callArgs = calls.createChatResponse[0][0] as { systemPrompt: string; userMessage: string };
+  const callArgs = calls.createChatResponse[0][0] as {
+    systemPrompt: string;
+    userMessage: string;
+  };
   assertExists(callArgs.systemPrompt);
   assertExists(callArgs.userMessage);
   assertEquals(callArgs.systemPrompt.includes("Hosteleria de Valencia"), true);
@@ -361,6 +378,34 @@ Deno.test("askQuestion - incluye citations de los chunks usados", async () => {
     assertEquals(result.citations.length, MOCK_CHUNKS.length);
     assertEquals(result.citations[0].articulo, "Art. 24");
     assertEquals(result.citations[0].chunk_id, "chunk-1");
+  }
+});
+
+Deno.test("askQuestion - omite articulo en citations de tabla salarial", async () => {
+  const { deps } = createMockDeps({
+    searchChunksByConvenio: () =>
+      Promise.resolve([
+        {
+          chunk_id: "chunk-tabla",
+          convenio_id: VALID_UUID,
+          contenido: "Tabla salarial 2026 para camarero",
+          metadata: {
+            articulo: "Art. 1",
+            seccion: "Tablas salariales",
+            tipo: "tabla_salarial",
+          },
+          similarity: 0.91,
+        },
+      ]),
+  });
+
+  const result = await askQuestion(DEFAULT_INPUT, deps);
+
+  assertEquals(result.type, "success");
+  if (result.type === "success") {
+    assertEquals(result.citations.length, 1);
+    assertEquals(result.citations[0].articulo, undefined);
+    assertEquals(result.citations[0].seccion, "Tablas salariales");
   }
 });
 

@@ -34,80 +34,132 @@ En centros de menos de 20 trabajadores, no son necesariamente ininterrumpidos.
 
 ## B) Periodos de Prueba
 
-| Grupo/Categoria | Duracion Periodo Prueba |
-|-----------------|------------------------|
-| Grupo I (Mandos) | _____ meses |
-| Grupo II (Tecnicos) | _____ meses |
-| Grupo III (Administrativos) | _____ meses |
-| Grupo IV (Recepcion) | _____ meses |
-| Grupo V (Cocina) | _____ meses |
-| Grupo VI (Restaurante/Bar) | _____ meses |
-| Grupo VII (Pisos/Limpieza) | _____ meses |
-| Grupo VIII (Servicios auxiliares) | _____ meses |
+El convenio de Hostelería de Madrid **no establece periodos de prueba específicos por categoría**. Se remite a normativa externa.
 
-- **Articulo de referencia:** Art. _____
+> **Art. 8 - Período de prueba:** "Se estará a la legislación vigente y a lo dispuesto en el Acuerdo Laboral de Ámbito Estatal vigente para el Sector de Hostelería."
+
+- **Articulo de referencia:** Art. 8
 
 ---
 
-## C) Grupos y Categorias Profesionales
+## C) Niveles Retributivos y Categorias Profesionales
 
-### Grupo I - Mandos
-| Nivel | Categoria | Funciones principales |
-|-------|-----------|----------------------|
-| 1 | _____ | _____ |
-| 2 | _____ | _____ |
+> **Nota:** El convenio organiza las categorías por NIVELES RETRIBUTIVOS (I a V), no por grupos funcionales.
 
-### Grupo II - Tecnicos
-| Nivel | Categoria | Funciones principales |
-|-------|-----------|----------------------|
-| 1 | _____ | _____ |
-| 2 | _____ | _____ |
+### NIVEL I (Jefaturas)
+- Jefe/a de Administración (Contable General, Jefe/a de Contabilidad)
+- Jefe/a Comercial
+- Jefe/a de Primera de Casinos
+- Jefe/a de Cocina
+- Jefe/a de Catering
+- Jefe/a de Restaurante o Sala (Jefe/a de Comedor, Primer/a Maitre, Maestresala)
+- Jefe/a de Operaciones Catering
+- Jefe/a de Servicios de Catering
+- Jefe/a de Servicios Técnicos
 
-### Grupo III - Administrativos
-| Nivel | Categoria | Funciones principales |
-|-------|-----------|----------------------|
-| 1 | _____ | _____ |
-| 2 | _____ | _____ |
+### NIVEL II-A (Segundas Jefaturas)
+- Jefe/a de Segunda de Casinos
+- Segundo/a Jefe/a de Cocina
+- Segundo/a Jefe/a de Restaurante o Sala (Segundo/a Jefe/a de Comedor, Primer/a Encargado/a de Mostrador)
 
-### Grupo IV - Recepcion/Conserjeria
-| Nivel | Categoria | Funciones principales |
-|-------|-----------|----------------------|
-| 1 | _____ | _____ |
-| 2 | _____ | _____ |
-| 3 | _____ | _____ |
+### NIVEL II-B (Especialistas Senior)
+- Jefe/a de Partida
+- Repostero/a de Catering
+- Jefe/a de Sala de Catering
+- Supervisor/a de Catering
+- Jefe/a de Sector
+- Segundo/a Encargado/a de Mostrador
+- Sumiller
+- Barman/Barwoman
 
-### Grupo V - Cocina
-| Nivel | Categoria | Funciones principales |
-|-------|-----------|----------------------|
-| 1 | Jefe de cocina | _____ |
-| 2 | Segundo jefe cocina | _____ |
-| 3 | Cocinero | _____ |
-| 4 | Ayudante de cocina | _____ |
-| 5 | Pinche | _____ |
+### NIVEL II-C (Sector Catering)
+- Oficial/a de Repostero/a de Catering
+- Cocinero/a de Catering
+- Jefe/a de Equipo de Catering
 
-### Grupo VI - Restaurante/Bar/Sala
-| Nivel | Categoria | Funciones principales |
-|-------|-----------|----------------------|
-| 1 | Jefe de sala | _____ |
-| 2 | Camarero | _____ |
-| 3 | Ayudante camarero | _____ |
-| 4 | Barman | _____ |
+### NIVEL III / III-A (Oficiales y Encargados)
+- Recepcionista, Administrativo/a (Tenedor/a de cuentas, Interventor/a, Contable, Oficial de 1ª, Facturista, Cajero/a)
+- Relaciones Públicas
+- Comercial
+- Oficial/a de Primera de Casinos
+- Cocinero/a
+- Repostero/a
+- Encargado/a de Economato (Bodeguero/a, Encargado/a de Almacén)
+- Camarero/a (Dependiente de Cafetería, Dependiente de 1ª, Planchista, Cafetero/a, Cajero/a de Comedor, Segundo/a Barman)
+- Conductor/a de Equipo de Catering
+- Ayudante de Supervisor/a
+- Encargado/a de Sección o Turno (Encargado/a de Sala, de Lencería, de Fregadores)
+- Lencero/a, Planchador/a, Lavandero/a
+- Especialista de Mantenimiento y Servicios (Mecánico/a, Ebanista, Carpintero/a, Electricista, Albañil, Pintor/a, Conductor/a, Fontanero/a, Jardinero/a)
 
-### Grupo VII - Pisos/Limpieza
-| Nivel | Categoria | Funciones principales |
-|-------|-----------|----------------------|
-| 1 | Gobernanta | _____ |
-| 2 | Subgobernanta | _____ |
-| 3 | Camarera de pisos | _____ |
-| 4 | Limpiador/a | _____ |
+### NIVEL III-B (Sector Catering)
+- Ayudante de Equipo de Catering
+- Especialista de Mantenimiento y Servicios Técnicos de Catering (flota, instalaciones, edificios)
 
-### Grupo VIII - Servicios Auxiliares/Mantenimiento
-| Nivel | Categoria | Funciones principales |
-|-------|-----------|----------------------|
-| 1 | _____ | _____ |
-| 2 | _____ | _____ |
+### NIVEL IV (Ayudantes)
+- Ayudante de Recepción (Intérprete, Conserje de Casino, Ordenanza de Salón)
+- Ayudante Administrativo (Oficial de Contabilidad, Oficial de 2ª, Auxiliar de Oficina)
+- Telefonista
+- Oficial/a de Segunda de Casinos
+- Ayudante de Economato
+- Ayudante de Cocina (Ayudante de Repostero/a, Oficial/a de Repostero/a)
+- Preparador/a o Montador/a de Catering
+- Ayudante de Camarero/a (Ayudante Cafeterías, Dependiente de 2ª, Ayudante de Barman)
+- Ayudante de Equipo de Catering
+- Repartidor
 
-- **Articulo de referencia:** Art. _____
+### NIVEL V (Auxiliares)
+- Portero/a, Aparcacoches, Vigilante, Botones, Cobrador/a, Taquillero/a, Guardarropa, Auxiliar de Oficina, Auxiliar de Recepción
+- Auxiliar de Casinos, Aspirante de Casinos
+- Auxiliar de Cocina y Economato (Marmitón, Pinche, Fregador/a, Mozo de Almacén, Personal de Platería)
+- Auxiliar de Preparación/Montaje de Catering
+- Auxiliar de Limpieza (Personal de Limpieza, Fregador/a, Limpiador/a, Mozo de Lavandería)
+- Auxiliar de Mantenimiento y Servicios (Ayudante de Mecánico/a, Ebanista, Carpintero/a, Electricista, Lavacoches)
+
+- **Articulo de referencia:** Anexo I - Tablas Salariales
+
+---
+
+## C.2) Clasificación de Establecimientos a Efectos Retributivos
+
+### CLASE A (Alta categoría)
+- Restaurantes de 5 y 4 tenedores
+- Bar-Restaurante de 5 y 4 tenedores
+- Restaurante-Espectáculo
+- Salones de banquetes
+- Cafeterías de 3 tazas
+- Discotecas y Salas de Baile
+- Salas de Fiesta
+- Servicios de comida y bebida en Casinos de 1ª y 2ª categoría
+
+### CLASE B (Media-alta categoría)
+- Restaurantes de 3 tenedores
+- Bar-Restaurante de 3 tenedores
+- Autoservicio de Restauración
+- Cafeterías de 2 tazas
+- Bares Especiales (Pub, bares de copas, bares americanos, whisquerías)
+- Cafés Espectáculo
+- Salas de Juventud
+- Salones de Juegos y Recreativos
+- Salones de Recreo y Diversión (Billares, Futbolines)
+- Servicios de comida y bebida en Casinos de 3ª y 4ª categoría
+
+### CLASE C (Categoría estándar)
+- Restaurantes de 2 y 1 tenedor
+- Bar-Restaurante de 2 y 1 tenedor
+- Cafeterías de 1 taza
+- Chocolaterías, Heladerías, Salones de Té, Croisanterías
+- Cafés-Bares
+- Bares
+- Tabernas
+- Bodegas
+
+### CLASE D (Catering)
+- Empresas de Catering
+
+> **Nota:** Los establecimientos no listados se clasifican por asimilación a la actividad y categoría más similar.
+
+- **Articulo de referencia:** Anexo I - Clasificación de Establecimientos
 
 ---
 
@@ -163,9 +215,16 @@ En centros de menos de 20 trabajadores, no son necesariamente ininterrumpidos.
 ## E) Complementos Salariales
 
 ### Plus de Nocturnidad
-- **Porcentaje:** _____% sobre salario base
-- **Horario nocturno:** de _____ a _____ horas
-- **Articulo de referencia:** Art. _____
+- **Horario nocturno:** de 22:00 a 08:00 horas
+- **Tramos y porcentajes:**
+  - **22:00 a 00:00:** 1% sobre salario base
+  - **00:00 a 08:00:** 25% sobre salario base
+- **Fórmula de cálculo:** `Incremento valor hora nocturna = (Salario Base x %) / (4 x 40)`
+- **Jornada nocturna completa:** Si se trabajan 5 o más horas entre las 22:00 y las 08:00, toda la jornada se considera nocturna (se aplica el 25%)
+- **Vacaciones, festivos, IT y descansos:** Se abona la media de lo percibido por nocturnidad en los últimos 3 meses trabajados (excepto si la nocturnidad es esporádica)
+- **Trabajos nocturnos por naturaleza:** Personal de salas de baile, discotecas, salas de fiesta, tablaos flamencos y cafés-teatros (no tienen plus adicional, ya está contemplado en su salario)
+- **Condiciones más beneficiosas:** Se respetan las que pudieran existir en la empresa
+- **Articulo de referencia:** Art. 27
 
 ### Plus de Antiguedad / Trienios
 - **Importe por trienio:** _____ EUR o _____% del salario base
@@ -173,10 +232,12 @@ En centros de menos de 20 trabajadores, no son necesariamente ininterrumpidos.
 - **Articulo de referencia:** Art. _____
 
 ### Horas Extraordinarias
-- **Recargo hora extra normal:** _____% sobre hora ordinaria
-- **Recargo hora extra festiva:** _____% sobre hora ordinaria
-- **Maximo horas extra anuales:** _____ horas (legal: 80h)
-- **Articulo de referencia:** Art. _____
+- **Definición:** Se considera hora extraordinaria toda aquella que se realice sobre la duración máxima de la jornada ordinaria semanal de trabajo establecida en el calendario laboral.
+- **Recargo hora extra:** 100% sobre la hora ordinaria
+- **Compensación alternativa:** Por pacto individual o acuerdo colectivo, puede compensarse en tiempo de descanso retribuido a razón de 1,5 horas de descanso por cada hora extraordinaria trabajada.
+- **Control:** La empresa debe entregar mensualmente a la Representación Legal de los trabajadores (o a cada trabajador si no existe RLT) una relación firmada y sellada con el nombre del trabajador y número de horas extras realizadas.
+- **Maximo horas extra anuales:** 80 horas (límite legal Art. 35.2 ET)
+- **Articulo de referencia:** Art. 15
 
 ### Plus de Idiomas
 - **Existe:** Si / No
@@ -284,8 +345,8 @@ En centros de menos de 20 trabajadores, no son necesariamente ininterrumpidos.
 | Periodo de prueba | Art. _____ | Pag. _____ |
 | Grupos profesionales | Art. _____ | Pag. _____ |
 | Tablas salariales | Art. _____ / Anexo _____ | Pag. _____ |
-| Horas extraordinarias | Art. _____ | Pag. _____ |
-| Plus nocturnidad | Art. _____ | Pag. _____ |
+| Horas extraordinarias | Art. 15 | Pag. _____ |
+| Plus nocturnidad | Art. 27 | Pag. _____ |
 | Antiguedad/Trienios | Art. _____ | Pag. _____ |
 | Pagas extraordinarias | Art. _____ | Pag. _____ |
 | Licencias y permisos | Art. _____ | Pag. _____ |

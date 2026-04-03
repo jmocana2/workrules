@@ -9,15 +9,15 @@ export interface ChatRequest {
 
 /** Respuesta no-streaming */
 export interface ChatResponse {
-  status: 'ok' | 'error' | 'incomplete';
+  status: "ok" | "error" | "incomplete";
   respuesta: string;
   fuentes: ChatCitation[];
   metadata: ChatMetadata;
 }
 
-/** Citacion a un articulo del convenio */
+/** Citacion a un articulo del convenio o a una tabla/anexo sin articulo */
 export interface ChatCitation {
-  articulo: string;
+  articulo?: string;
   seccion: string | null;
   chunk_id: string;
   relevance_score: number;
@@ -29,16 +29,16 @@ export interface ChatMetadata {
   tokens_used: number;
   chunks_retrieved: number;
   cache_hit: boolean;
-  classification: 'general' | 'salary' | 'incomplete' | 'invalid';
+  classification: "general" | "salary" | "incomplete" | "invalid";
   latency_ms: number;
 }
 
 /** Evento SSE para streaming */
 export type SSEEvent =
-  | { type: 'text'; content: string }
-  | { type: 'citation'; articulo: string; seccion: string | null }
-  | { type: 'done'; metadata: ChatMetadata }
-  | { type: 'error'; message: string };
+  | { type: "text"; content: string }
+  | { type: "citation"; articulo?: string; seccion: string | null }
+  | { type: "done"; metadata: ChatMetadata }
+  | { type: "error"; message: string };
 
 // ============================================
 // CALCULATE SALARY TYPES
@@ -49,7 +49,7 @@ export type SSEEvent =
  */
 export interface ExtractedVariables {
   categoria?: string;
-  jornada?: 'completa' | 'parcial';
+  jornada?: "completa" | "parcial";
   horasSemanales?: number;
   horasExtra?: number;
   horasNocturnas?: number;
@@ -62,7 +62,7 @@ export interface ExtractedVariables {
 /**
  * Estado de clasificacion de datos
  */
-export type DataState = 'complete' | 'incomplete' | 'invalid' | 'conflicting';
+export type DataState = "complete" | "incomplete" | "invalid" | "conflicting";
 
 /**
  * Variable invalida con detalle del error
@@ -138,7 +138,7 @@ export interface SalaryBreakdown {
  * Resultado exitoso de calculo completo
  */
 export interface CalculateSalarySuccess {
-  type: 'salary_calculated';
+  type: "salary_calculated";
   response: string;
   metadata: CalculateSalaryMetadata;
   citations: ChatCitation[];
@@ -149,7 +149,7 @@ export interface CalculateSalarySuccess {
  * Datos incompletos - necesita mas info
  */
 export interface CalculateSalaryIncomplete {
-  type: 'incomplete_data';
+  type: "incomplete_data";
   message: string;
   missingVariables: string[];
   suggestions: Record<string, string[]>;
@@ -159,7 +159,7 @@ export interface CalculateSalaryIncomplete {
  * Datos invalidos o conflictivos
  */
 export interface CalculateSalaryInvalid {
-  type: 'invalid_data';
+  type: "invalid_data";
   message: string;
   invalidVariables: InvalidVariable[];
   conflictingVariables?: ConflictingVariables[];

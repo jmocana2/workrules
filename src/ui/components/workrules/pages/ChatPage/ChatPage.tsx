@@ -166,7 +166,7 @@ export function ChatPage({
         </header>
 
         {/* Área de mensajes */}
-        <ScrollArea className="flex-1 px-6 py-4">
+        <ScrollArea className="flex-1 overflow-hidden px-6 py-4">
           <div className="mx-auto max-w-3xl space-y-6">
             {messages.length === 0 ? (
               // Estado vacío

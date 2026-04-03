@@ -229,6 +229,39 @@ export function extractVariables(
 }
 
 /**
+ * Verifica si el mensaje es una pregunta informativa sobre el convenio
+ * (busca información, no cálculo)
+ *
+ * @param message - Mensaje del usuario (en minúsculas)
+ * @returns true si parece pregunta informativa
+ */
+function isInformativeQuestion(message: string): boolean {
+  // Patrones que indican búsqueda de información, no cálculo
+  const informativePatterns = [
+    /qu[ée]\s{1,3}dice/i, // "qué dice el convenio"
+    /qu[ée]\s{1,3}establece/i, // "qué establece"
+    /qu[ée]\s{1,3}indica/i, // "qué indica"
+    /qu[ée]\s{1,3}regula/i, // "qué regula"
+    /qu[ée]\s{1,3}contempla/i, // "qué contempla"
+    /c[oó]mo\s{1,3}(?:se\s{1,3})?regula/i, // "cómo se regula"
+    /c[oó]mo\s{1,3}funciona/i, // "cómo funciona"
+    /informaci[oó]n\s{1,3}sobre/i, // "información sobre"
+    /explica(?:me)?\s/i, // "explícame", "explica"
+    /cu[aá]l\s{1,3}es\s{1,3}(?:el|la)\s{1,3}regulaci[oó]n/i, // "cuál es la regulación"
+    /existe\s{1,3}(?:el|la|un|una)?/i, // "existe plus de..."
+    /hay\s{1,3}(?:alg[uú]n|alguna)/i, // "hay algún plus"
+    /seg[uú]n\s{1,3}el\s{1,3}convenio/i, // "según el convenio"
+    /art[ií]culo/i, // pregunta sobre artículo específico
+  ];
+
+  for (const pattern of informativePatterns) {
+    if (pattern.test(message)) return true;
+  }
+
+  return false;
+}
+
+/**
  * Verifica si el mensaje parece una consulta de calculo salarial
  * (vs una pregunta general sobre el convenio)
  *
@@ -238,8 +271,16 @@ export function extractVariables(
  * @example
  * isSalaryQuery("cuanto cobra un camarero?"); // true
  * isSalaryQuery("que dice el articulo 14?"); // false
+ * isSalaryQuery("que dice el convenio sobre horas extraordinarias?"); // false
  */
 export function isSalaryQuery(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+
+  // Si es una pregunta informativa, no es consulta de salario
+  if (isInformativeQuestion(lowerMessage)) {
+    return false;
+  }
+
   const keywords = [
     "salario",
     "sueldo",
@@ -247,8 +288,6 @@ export function isSalaryQuery(message: string): boolean {
     "nomina",
     "nómina",
   ];
-
-  const lowerMessage = message.toLowerCase();
 
   // Buscar keywords simples
   for (const kw of keywords) {

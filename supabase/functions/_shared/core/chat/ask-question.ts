@@ -36,6 +36,7 @@ import {
   buildUserMessage,
   extractPromptContext,
 } from "./prompts.ts";
+import { expandQuery } from "./query-expander.ts";
 import type { ChatCitation } from "./types.ts";
 
 // ============================================
@@ -119,8 +120,8 @@ export type AskQuestionResult =
 // CONSTANTES
 // ============================================
 
-const DEFAULT_CHUNK_LIMIT = 5;
-const DEFAULT_CHUNK_THRESHOLD = 0.5;
+const DEFAULT_CHUNK_LIMIT = 8;
+const DEFAULT_CHUNK_THRESHOLD = 0.45;
 const CACHE_THRESHOLD = 0.95;
 const MODEL_NAME = "claude-sonnet-4-20250514";
 
@@ -184,21 +185,37 @@ export const defaultDeps: AskQuestionDeps = {
 // ============================================
 
 /**
+ * Devuelve el artículo utilizable de un chunk.
+ * Para `tabla_salarial` se omite porque suele venir mal referenciado.
+ */
+function getChunkArticulo(
+  metadata: Record<string, unknown>,
+): string | undefined {
+  const tipo = metadata?.tipo as string | undefined;
+
+  return tipo === "tabla_salarial"
+    ? undefined
+    : (metadata?.articulo as string | undefined);
+}
+
+/**
  * Convierte ChunkSearchResult a ChunkResult para prompts
+ * Ignora el artículo para chunks de tipo "tabla_salarial" ya que suelen tener
+ * artículos incorrectos (ej: "Art. 1" cuando realmente son del Anexo)
  */
 function mapChunksToPromptFormat(
   chunks: ChunkSearchResult[],
 ): ChunkResult[] {
-  return chunks.map((c) => ({
-    content: c.contenido,
-    articulo: (c.metadata as Record<string, unknown>)?.articulo as
-      | string
-      | undefined,
-    seccion: (c.metadata as Record<string, unknown>)?.seccion as
-      | string
-      | undefined,
-    similarity: c.similarity,
-  }));
+  return chunks.map((c) => {
+    const metadata = c.metadata as Record<string, unknown>;
+
+    return {
+      content: c.contenido,
+      articulo: getChunkArticulo(metadata),
+      seccion: metadata?.seccion as string | undefined,
+      similarity: c.similarity,
+    };
+  });
 }
 
 /**
@@ -207,14 +224,16 @@ function mapChunksToPromptFormat(
 function buildCitations(
   chunks: ChunkSearchResult[],
 ): ChatCitation[] {
-  return chunks.map((c) => ({
-    articulo: ((c.metadata as Record<string, unknown>)?.articulo as string) ||
-      "N/A",
-    seccion: ((c.metadata as Record<string, unknown>)?.seccion as string) ||
-      null,
-    chunk_id: c.chunk_id,
-    relevance_score: c.similarity,
-  }));
+  return chunks.map((c) => {
+    const metadata = c.metadata as Record<string, unknown>;
+
+    return {
+      articulo: getChunkArticulo(metadata),
+      seccion: (metadata?.seccion as string) || null,
+      chunk_id: c.chunk_id,
+      relevance_score: c.similarity,
+    };
+  });
 }
 
 // ============================================
@@ -259,9 +278,10 @@ export async function askQuestion(
     }
 
     // ========================================
-    // 2. Generar embedding de la pregunta
+    // 2. Expandir consulta con sinónimos y generar embedding
     // ========================================
-    const embedding = await deps.embedQuestion(input.pregunta);
+    const expandedQuery = expandQuery(input.pregunta);
+    const embedding = await deps.embedQuestion(expandedQuery);
 
     // ========================================
     // 3. Buscar en semantic cache
@@ -348,7 +368,10 @@ export async function askQuestion(
             fullResponse,
             input.convenioId,
           ).catch((err) => {
-            console.error("[ask-question] Stream cleanup - Error saving to cache:", err);
+            console.error(
+              "[ask-question] Stream cleanup - Error saving to cache:",
+              err,
+            );
           });
 
           // Guardar en historial si hay session (fire and forget)
@@ -358,14 +381,20 @@ export async function askQuestion(
               "user",
               input.pregunta,
             ).catch((err) => {
-              console.error("[ask-question] Stream cleanup - Error saving user message:", err);
+              console.error(
+                "[ask-question] Stream cleanup - Error saving user message:",
+                err,
+              );
             });
             deps.saveChatMessage(
               input.sessionId,
               "assistant",
               fullResponse,
             ).catch((err) => {
-              console.error("[ask-question] Stream cleanup - Error saving assistant message:", err);
+              console.error(
+                "[ask-question] Stream cleanup - Error saving assistant message:",
+                err,
+              );
             });
           }
 
@@ -373,7 +402,10 @@ export async function askQuestion(
           try {
             await deps.incrementQueryCount(input.userId);
           } catch (err) {
-            console.error("[ask-question] Stream cleanup - Error incrementing query count:", err);
+            console.error(
+              "[ask-question] Stream cleanup - Error incrementing query count:",
+              err,
+            );
           }
         },
       };

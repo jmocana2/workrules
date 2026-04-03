@@ -290,6 +290,34 @@ Deno.test('isSalaryQuery - rechaza pregunta sobre despido', () => {
   assertEquals(isSalaryQuery('como funciona el despido'), false);
 });
 
+Deno.test('isSalaryQuery - rechaza pregunta informativa sobre horas extraordinarias', () => {
+  assertEquals(isSalaryQuery('que dice el convenio sobre horas extraordinarias'), false);
+});
+
+Deno.test('isSalaryQuery - rechaza pregunta informativa sobre horas extra', () => {
+  assertEquals(isSalaryQuery('que establece el convenio sobre horas extra'), false);
+});
+
+Deno.test('isSalaryQuery - rechaza pregunta informativa sobre plus nocturnidad', () => {
+  assertEquals(isSalaryQuery('existe plus de nocturnidad en el convenio'), false);
+});
+
+Deno.test('isSalaryQuery - rechaza pregunta informativa sobre complementos', () => {
+  assertEquals(isSalaryQuery('que dice el convenio sobre complementos salariales'), false);
+});
+
+Deno.test('isSalaryQuery - rechaza pregunta informativa sobre salario', () => {
+  assertEquals(isSalaryQuery('como se regula el salario segun el convenio'), false);
+});
+
+Deno.test('isSalaryQuery - acepta calculo de horas extra', () => {
+  assertEquals(isSalaryQuery('calcula mi salario con 10 horas extra'), true);
+});
+
+Deno.test('isSalaryQuery - acepta cuanto cobra con horas extra', () => {
+  assertEquals(isSalaryQuery('cuanto cobra un camarero con horas extra'), true);
+});
+
 // ============================================
 // mergeVariables
 // ============================================

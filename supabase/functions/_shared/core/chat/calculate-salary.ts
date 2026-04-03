@@ -54,6 +54,7 @@ import {
   buildUserMessage,
   extractPromptContext,
 } from "./prompts.ts";
+import { expandQuery } from "./query-expander.ts";
 import type {
   CalculateSalaryIncomplete,
   CalculateSalaryInput,
@@ -137,8 +138,8 @@ export const defaultDeps: CalculateSalaryDeps = {
 // CONSTANTES
 // ============================================
 
-const DEFAULT_CHUNK_LIMIT = 5;
-const DEFAULT_CHUNK_THRESHOLD = 0.7;
+const DEFAULT_CHUNK_LIMIT = 8;
+const DEFAULT_CHUNK_THRESHOLD = 0.45;
 const CACHE_THRESHOLD = 0.95;
 const MODEL_NAME = "claude-sonnet-4-20250514";
 
@@ -197,9 +198,10 @@ export async function calculateSalary(
     }
 
     // ========================================
-    // 2. Generar embedding + buscar cache
+    // 2. Expandir consulta con sinónimos y generar embedding
     // ========================================
-    const embedding = await deps.embedQuestion(input.pregunta);
+    const expandedQuery = expandQuery(input.pregunta);
+    const embedding = await deps.embedQuestion(expandedQuery);
 
     const cacheHit = await deps.searchSemanticCache(
       embedding,
@@ -432,33 +434,51 @@ export async function calculateSalary(
 // ============================================
 
 /**
+ * Devuelve el artículo utilizable de un chunk.
+ * Para `tabla_salarial` se omite porque suele venir mal referenciado.
+ */
+function getChunkArticulo(
+  metadata: Record<string, unknown>,
+): string | undefined {
+  const tipo = metadata?.tipo as string | undefined;
+
+  return tipo === "tabla_salarial"
+    ? undefined
+    : (metadata?.articulo as string | undefined);
+}
+
+/**
  * Convierte ChunkSearchResult a ChunkResult para prompts
+ * Ignora el artículo para chunks de tipo "tabla_salarial" ya que suelen tener
+ * artículos incorrectos (ej: "Art. 1" cuando realmente son del Anexo)
  */
 function mapChunksToPromptFormat(chunks: ChunkSearchResult[]): ChunkResult[] {
-  return chunks.map((c) => ({
-    content: c.contenido,
-    articulo: (c.metadata as Record<string, unknown>)?.articulo as
-      | string
-      | undefined,
-    seccion: (c.metadata as Record<string, unknown>)?.seccion as
-      | string
-      | undefined,
-    similarity: c.similarity,
-  }));
+  return chunks.map((c) => {
+    const metadata = c.metadata as Record<string, unknown>;
+
+    return {
+      content: c.contenido,
+      articulo: getChunkArticulo(metadata),
+      seccion: metadata?.seccion as string | undefined,
+      similarity: c.similarity,
+    };
+  });
 }
 
 /**
  * Construye citaciones desde los chunks usados
  */
 function buildCitations(chunks: ChunkSearchResult[]): ChatCitation[] {
-  return chunks.map((c) => ({
-    articulo: ((c.metadata as Record<string, unknown>)?.articulo as string) ||
-      "N/A",
-    seccion: ((c.metadata as Record<string, unknown>)?.seccion as string) ||
-      null,
-    chunk_id: c.chunk_id,
-    relevance_score: c.similarity,
-  }));
+  return chunks.map((c) => {
+    const metadata = c.metadata as Record<string, unknown>;
+
+    return {
+      articulo: getChunkArticulo(metadata),
+      seccion: (metadata?.seccion as string) || null,
+      chunk_id: c.chunk_id,
+      relevance_score: c.similarity,
+    };
+  });
 }
 
 /**

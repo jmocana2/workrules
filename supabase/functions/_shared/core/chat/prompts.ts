@@ -86,6 +86,10 @@ const SYSTEM_PROMPT_ASK_QUESTION =
 
 6. **FUERA DE ALCANCE**: Si te preguntan sobre temas que requieren asesoria legal (despidos, demandas, IRPF, Seguridad Social), indica que consulten con un profesional.
 
+7. **SINONIMOS Y TERMINOLOGIA**: Los convenios usan terminologia variada. Si el usuario pregunta por un concepto (ej: "grupos profesionales") y el contexto contiene informacion equivalente con otra denominacion (ej: "niveles retributivos", "categorias profesionales", "clasificacion profesional"), RESPONDE con esa informacion. No digas "no existe" si hay informacion relacionada. Prioriza dar informacion util sobre ser literalista.
+
+8. **REFERENCIAS DE TABLAS SALARIALES**: Cuando la informacion provenga de tablas salariales o anexos (chunks sin articulo especifico entre parentesis), cita como "Anexo - Tablas Salariales" o "Tablas Salariales del Convenio". NO inventes un numero de articulo si el chunk no lo tiene.
+
 ## FORMATO DE RESPUESTA
 
 [Respuesta directa a la pregunta]
@@ -387,6 +391,18 @@ export function formatChunksForContext(chunks: ChunkResult[]): string {
           ref = ` (${articulo})`;
         } else {
           ref = ` (Art. ${articulo})`;
+        }
+      } else {
+        // Si no tiene artículo, verificar si es tabla salarial por contenido
+        const content = chunk.content.toLowerCase();
+        if (
+          content.includes("salario") ||
+          content.includes("€") ||
+          content.includes("eur") ||
+          content.includes("nivel") ||
+          content.includes("tabla")
+        ) {
+          ref = " (Anexo - Tablas Salariales)";
         }
       }
       const seccion = chunk.seccion ? ` - ${chunk.seccion}` : "";
