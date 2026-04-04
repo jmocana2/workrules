@@ -7,6 +7,79 @@
 
 ---
 
+## Flujo de Calculo Salarial
+
+El convenio de Hostelería de Madrid tiene una estructura salarial compleja donde el salario base depende de múltiples variables. A continuación se detalla el flujo de decisión:
+
+```mermaid
+flowchart TD
+    START([Usuario pregunta salario]) --> Q1{¿Categoría profesional?}
+
+    Q1 -->|"Ayudante cocina, Camarero, etc."| CAT[Categoría identificada]
+    Q1 -->|"No especificada"| ASK_CAT[Solicitar categoría]
+    ASK_CAT --> CAT
+
+    CAT --> Q2{¿Tipo de establecimiento?}
+
+    Q2 -->|"Hotel, Restaurante, Bar..."| EST[Establecimiento identificado]
+    Q2 -->|"No especificado"| CHECK_CAT{¿Categoría tiene<br/>tabla única?}
+
+    CHECK_CAT -->|"Sí (ej: Catering)"| CALC[Calcular salario]
+    CHECK_CAT -->|"No (múltiples tablas)"| ASK_EST[Solicitar tipo establecimiento]
+    ASK_EST --> EST
+
+    EST --> Q3{¿Clase del establecimiento?}
+
+    Q3 -->|"Lujo/5*, 4*, 3*, etc."| CLASE[Clase identificada]
+    Q3 -->|"Inferible del tipo"| INFER[Inferir clase A/B/C/D]
+    Q3 -->|"No determinable"| ASK_CLASE[Solicitar clase/categoría]
+
+    INFER --> CLASE
+    ASK_CLASE --> CLASE
+    CLASE --> CALC
+
+    CALC --> Q4{¿Variables adicionales?}
+
+    Q4 -->|"Jornada parcial"| PRORRATEO[Aplicar prorrateo]
+    Q4 -->|"Horas extra"| EXTRAS[Calcular +100%]
+    Q4 -->|"Nocturnidad"| NOCT[Aplicar 1%/25%]
+    Q4 -->|"Antigüedad"| ANT[Aplicar trienios]
+    Q4 -->|"Ninguna"| RESULT
+
+    PRORRATEO --> Q4
+    EXTRAS --> Q4
+    NOCT --> Q4
+    ANT --> Q4
+
+    Q4 -->|"Todas aplicadas"| RESULT([Mostrar resultado<br/>con desglose])
+```
+
+### Variables Críticas para Cálculo
+
+| Variable | Obligatoria | Opciones/Valores | Notas |
+|----------|-------------|------------------|-------|
+| **Categoría profesional** | ✅ Sí | Ver sección C | Nivel I a V |
+| **Tipo establecimiento** | ⚠️ Depende | Comedor, Cafetería, Bar, Hotel, Catering... | Algunas categorías tienen tabla única |
+| **Clase establecimiento** | ⚠️ Depende | A (Lujo), B, C, D (Catering) | Se puede inferir en algunos casos |
+| **Jornada** | ❌ No | Completa (40h), Parcial (Xh) | Default: completa |
+| **Horas extra** | ❌ No | 0-80h/año | Límite legal 80h anuales |
+| **Horas nocturnas** | ❌ No | Horas entre 22:00-08:00 | Tramos 1% y 25% |
+| **Antigüedad** | ❌ No | Años en empresa | Trienios |
+
+### Tablas Salariales por Subsector
+
+El convenio tiene **tablas salariales separadas** para cada subsector:
+
+1. **Comedor** (Restaurantes, Hoteles con comedor)
+2. **Cafetería** (Cafeterías 1-3 tazas)
+3. **Bar** (Bares, Tabernas, Cafés-Bar)
+4. **Colectividades** (Comedores colectivos)
+5. **Catering** (Empresas de catering)
+
+Cada tabla tiene sus propios salarios por nivel y categoría de establecimiento (Lujo/A, B, C).
+
+---
+
 ## A) Jornada y Tiempo de Trabajo
 
 ### Jornada Laboral

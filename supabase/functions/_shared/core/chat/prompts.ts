@@ -374,6 +374,75 @@ export function buildUserMessage(
 }
 
 /**
+ * Determina la referencia apropiada para un chunk sin artículo
+ * Prioriza la sección si existe, con fallback a detección por contenido
+ */
+function getRefSinArticulo(chunk: ChunkResult): string {
+  const seccionLower = (chunk.seccion || "").toLowerCase();
+  const content = chunk.content.toLowerCase();
+
+  // Si tiene sección de ANEXO, usarla directamente
+  if (seccionLower.includes("anexo")) {
+    return ` (${chunk.seccion})`;
+  }
+
+  // Si tiene sección que indica categorías/clasificación profesional
+  if (
+    seccionLower.includes("clasificación profesional") ||
+    seccionLower.includes("clasificacion profesional") ||
+    seccionLower.includes("categorías profesionales") ||
+    seccionLower.includes("categorias profesionales") ||
+    seccionLower.includes("grupos profesionales") ||
+    seccionLower.includes("niveles retributivos")
+  ) {
+    return ` (${chunk.seccion})`;
+  }
+
+  // Si tiene sección de disposiciones
+  if (
+    seccionLower.includes("disposicion") ||
+    seccionLower.includes("disposición")
+  ) {
+    return ` (${chunk.seccion})`;
+  }
+
+  // Fallback: detectar por contenido si es tabla salarial
+  // Solo si contiene indicadores claros de tabla salarial (euros, salario base, etc.)
+  // y NO si solo menciona "nivel" (que puede ser clasificación profesional)
+  if (
+    content.includes("€") ||
+    content.includes("eur") ||
+    content.includes("salario base") ||
+    content.includes("retribución anual") ||
+    content.includes("retribucion anual") ||
+    (content.includes("salario") && content.includes("tabla"))
+  ) {
+    return " (Anexo - Tablas Salariales)";
+  }
+
+  // Si menciona niveles con categorías profesionales, usar esa referencia
+  if (
+    content.includes("nivel") &&
+    (content.includes("categoría") ||
+      content.includes("categoria") ||
+      content.includes("recepcion") ||
+      content.includes("recepción") ||
+      content.includes("cocina") ||
+      content.includes("camarero") ||
+      content.includes("ayudante"))
+  ) {
+    return " (Clasificación Profesional)";
+  }
+
+  // Si tiene sección pero no encaja en categorías anteriores, usarla
+  if (chunk.seccion) {
+    return ` (${chunk.seccion})`;
+  }
+
+  return "";
+}
+
+/**
  * Formatea chunks RAG para incluir en contexto
  *
  * @param chunks - Array de chunks con contenido y metadata
@@ -393,19 +462,14 @@ export function formatChunksForContext(chunks: ChunkResult[]): string {
           ref = ` (Art. ${articulo})`;
         }
       } else {
-        // Si no tiene artículo, verificar si es tabla salarial por contenido
-        const content = chunk.content.toLowerCase();
-        if (
-          content.includes("salario") ||
-          content.includes("€") ||
-          content.includes("eur") ||
-          content.includes("nivel") ||
-          content.includes("tabla")
-        ) {
-          ref = " (Anexo - Tablas Salariales)";
-        }
+        // Sin artículo: usar sección o detectar por contenido
+        ref = getRefSinArticulo(chunk);
       }
-      const seccion = chunk.seccion ? ` - ${chunk.seccion}` : "";
+      // Solo añadir sección si no está ya incluida en ref
+      const seccion =
+        chunk.seccion && !ref.includes(chunk.seccion)
+          ? ` - ${chunk.seccion}`
+          : "";
       return `[${i + 1}]${ref}${seccion}\n${chunk.content}`;
     })
     .join("\n\n");

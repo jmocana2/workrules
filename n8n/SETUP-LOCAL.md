@@ -60,18 +60,28 @@ También necesitas crear otra credencial para el service role:
 - **Type**: `Anthropic API`
 - **API Key**: tu key de Anthropic
 
-## 4. Actualizar URLs en el Workflow
+## 4. Configurar Variable de Entorno SUPABASE_URL
 
-Después de importar, edita estos nodos para usar Supabase local:
-| Nodo | URL Original | URL Local |
-|------|--------------|-----------|
-| `HTTP Supabase storage PDF` | `https://xxx.supabase.co/storage/v1/...` | `http://host.docker.internal:54321/storage/v1/...` |
-| `Save md in supabase1` | `https://xxx.supabase.co/rest/v1/convenios` | `http://host.docker.internal:54321/rest/v1/convenios` |
-| `Bulk Insert Chunks` | `https://xxx.supabase.co/rest/v1/convenio_chunks` | `http://host.docker.internal:54321/rest/v1/convenio_chunks` |
-| `HTTP Supabase Delete Perfil` | `https://xxx.supabase.co/rest/v1/convenio_perfiles` | `http://host.docker.internal:54321/rest/v1/convenio_perfiles` |
-| `HTTP Supabase Insert Perfil` | `https://xxx.supabase.co/rest/v1/convenio_perfiles` | `http://host.docker.internal:54321/rest/v1/convenio_perfiles` |
+El workflow usa la variable de entorno `$env.SUPABASE_URL` para todas las conexiones a Supabase. Esto permite cambiar entre entorno local y produccion sin modificar el workflow.
+
+La variable ya esta configurada en `.env` (copiado de `.env.example`):
+
+```env
+# Para desarrollo local con Supabase local
+SUPABASE_URL=http://host.docker.internal:54321
+
+# Para produccion, cambiar a:
+# SUPABASE_URL=https://tu-proyecto.supabase.co
+```
 
 > **Nota**: Usa `host.docker.internal` en lugar de `localhost` porque n8n corre dentro de Docker.
+
+Los nodos que usan esta variable son:
+- `HTTP Supabase storage PDF`
+- `Save md in supabase1`
+- `Bulk Insert Chunks`
+- `HTTP Supabase Delete Perfil`
+- `HTTP Supabase Insert Perfil`
 
 ## 5. Crear Bucket de Storage
 
@@ -98,15 +108,7 @@ SET public = false;
 ## 7. Probar con un Convenio
 
 ```bash
-curl -X POST http://localhost:5678/webhook/ingesta-convenio \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nombre": "Convenio Colectivo de Hosteleria de Madrid",
-    "codigo_regcon": "28000005011981",
-    "ambito": "provincial",
-    "fecha_vigencia": "2024-01-01",
-    "pdf_url": "https://www.ccoo-servicios.es/archivos/BOCM-20240406-Conv-hosteleria.pdf"
-  }'
+curl -X POST http://localhost:5678/webhook/ingesta-convenio -H "Content-Type: application/json" -d '{"nombre": "Convenio Colectivo de Hosteleria de Madrid", "codigo_regcon": "28000005011981", "ambito": "provincial", "fecha_vigencia": "2024-01-01", "pdf_url": "https://www.ccoo-servicios.es/archivos/BOCM-20240406-Conv-hosteleria.pdf"}'
 ```
 
 > **Tip**: Busca PDFs de convenios reales en el BOE: https://www.boe.es/buscar/boe.php
@@ -116,7 +118,8 @@ curl -X POST http://localhost:5678/webhook/ingesta-convenio \
 ### n8n no conecta con Supabase
 
 - Verifica que Supabase esta corriendo: `supabase status`
-- Usa `host.docker.internal` no `localhost`
+- Verifica que `SUPABASE_URL` esta configurado en `.env`
+- Para local debe ser `http://host.docker.internal:54321` (no `localhost`)
 - Verifica que las credenciales estan bien configuradas
 
 ### Error de CORS en Storage

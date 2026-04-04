@@ -186,16 +186,40 @@ export const defaultDeps: AskQuestionDeps = {
 
 /**
  * Devuelve el artículo utilizable de un chunk.
- * Para `tabla_salarial` se omite porque suele venir mal referenciado.
+ * Omite el artículo para:
+ * - `tabla_salarial`: suele venir mal referenciado
+ * - Contenido de ANEXOS: no tienen artículos numerados
+ * - Secciones sin artículo real (clasificación profesional, categorías, etc.)
  */
 function getChunkArticulo(
   metadata: Record<string, unknown>,
 ): string | undefined {
   const tipo = metadata?.tipo as string | undefined;
+  const seccion = (metadata?.seccion as string | undefined)?.toLowerCase() || "";
+  const articulo = metadata?.articulo as string | undefined;
 
-  return tipo === "tabla_salarial"
-    ? undefined
-    : (metadata?.articulo as string | undefined);
+  // Tipos que NO deben mostrar artículo
+  if (tipo === "tabla_salarial") {
+    return undefined;
+  }
+
+  // Secciones de ANEXO no tienen artículos numerados
+  const esAnexo =
+    seccion.includes("anexo") ||
+    seccion.includes("tabla") ||
+    seccion.includes("disposicion") ||
+    seccion.includes("clasificación profesional") ||
+    seccion.includes("clasificacion profesional") ||
+    seccion.includes("categorías profesionales") ||
+    seccion.includes("categorias profesionales") ||
+    seccion.includes("niveles retributivos") ||
+    seccion.includes("grupos profesionales");
+
+  if (esAnexo) {
+    return undefined;
+  }
+
+  return articulo;
 }
 
 /**
