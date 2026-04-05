@@ -426,7 +426,392 @@ El convenio de Hostelería de Madrid **no establece periodos de prueba específi
 
 ---
 
-## K) Notas Adicionales
+## K) Flujos de Test - Analisis de Casos
+
+### Test C1: Salario Ayudante de Cocina
+
+**Pregunta del usuario:**
+> "¿Cuál es el salario base de un ayudante de cocina?"
+#### Flujo Actual (Implementado)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant S as Sistema
+    participant DB as Base de Datos
+
+    U->>S: "¿Cuál es el salario base de un ayudante de cocina?"    S->>S: isSalaryQuery() → true
+    S->>S: extractVariables()
+    Note over S: categoria: "ayudante de cocina"<br/>jornada: undefined<br/>tipoEstablecimiento: undefined
+    S->>DB: getPerfilByConvenio()
+    DB-->>S: variables_criticas: ["categoria"]
+    S->>S: classifyDataState()
+    Note over S: Estado: INCOMPLETO<br/>Falta: categoria profesional
+    S-->>U: "Para calcular el salario...<br/>necesito saber tu Categoría profesional"
+    Note over U,S: ⚠️ PROBLEMA: El sistema pide<br/>categoria aunque ya la tiene
+```
+
+#### Problema Detectado
+
+El sistema actual tiene dos issues:
+
+1. **No reconoce "ayudante de cocina" como categoría válida**: Aunque el usuario especifica la categoría en la pregunta, el sistema no la detecta correctamente y vuelve a preguntarla.
+
+2. **No pregunta por tipo/clase de establecimiento**: El convenio de Hostelería Madrid tiene **5 tablas salariales diferentes** (Comedor, Cafetería, Bar, Colectividades, Catering), cada una con clases (A/Lujo, B, C). El "Ayudante de cocina" aparece en TODAS las tablas con salarios diferentes.
+
+#### Flujo Esperado (Correcto)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant S as Sistema
+    participant DB as Base de Datos
+
+    U->>S: "¿Cual es el salario base de un ayudante de cocina?"
+    S->>S: isSalaryQuery() → true
+    S->>S: extractVariables()
+    Note over S: categoria: "ayudante de cocina" ✓<br/>tipoEstablecimiento: undefined<br/>claseEstablecimiento: undefined
+    S->>DB: getPerfilByConvenio()
+    DB-->>S: variables_criticas: ["categoria", "tipo_establecimiento"]
+    S->>S: classifyDataState()
+    Note over S: Estado: INCOMPLETO<br/>Falta: tipo_establecimiento
+    S-->>U: Respuesta datos incompletos
+
+    Note over U,S: OPCIÓN A: Preguntar tipo establecimiento
+    S-->>U: "Para calcular el salario de Ayudante de cocina,<br/>necesito saber el tipo de establecimiento:<br/>- Comedor (Restaurantes, Hoteles)<br/>- Cafetería<br/>- Bar<br/>- Colectividades<br/>- Catering"
+
+    Note over U,S: OPCIÓN B: Mostrar rango de valores
+    S-->>U: "El salario de Ayudante de cocina varía<br/>según el establecimiento:<br/>• Comedor Lujo: 1.140,49€<br/>• Comedor Clase B: 1.089,86€<br/>• ...<br/>¿En qué tipo de establecimiento trabajas?"
+```
+
+#### Arbol de Decision Completo
+
+```mermaid
+flowchart TD
+    START([Test C1: Salario Ayudante Cocina]) --> EXTRACT[Extraer variables del mensaje]
+
+    EXTRACT --> CAT_CHECK{¿Categoría<br/>identificada?}
+
+    CAT_CHECK -->|"Sí: Ayudante cocina"| CAT_VALID{¿Categoría válida<br/>en convenio?}
+    CAT_CHECK -->|"No"| ASK_CAT[/"Pregunta 1:<br/>¿Cuál es tu categoría profesional?<br/><br/>Opciones:<br/>• Jefe de cocina<br/>• Cocinero<br/>• Ayudante de cocina<br/>• Pinche"/]
+
+    ASK_CAT --> CAT_VALID
+
+    CAT_VALID -->|"Sí: NIVEL IV"| EST_CHECK{¿Tipo establecimiento<br/>especificado?}
+    CAT_VALID -->|"No existe"| NO_CAT[/"No encuentro esa categoría<br/>en el convenio.<br/>Categorías similares: ..."/]
+
+    EST_CHECK -->|"Sí"| CLASE_CHECK{¿Clase/Nivel<br/>especificado?}
+    EST_CHECK -->|"No"| MULTI_TABLE{¿Categoría aparece<br/>en múltiples tablas?}
+
+    MULTI_TABLE -->|"Sí"| ASK_EST[/"Pregunta 2:<br/>¿En qué tipo de establecimiento<br/>trabajas?<br/><br/>Opciones:<br/>• Comedor/Restaurante/Hotel<br/>• Cafetería<br/>• Bar/Taberna<br/>• Colectividades<br/>• Catering"/]
+    MULTI_TABLE -->|"No (ej: Catering)"| CALC_DIRECT[Calcular con tabla única]
+
+    ASK_EST --> CLASE_CHECK
+
+    CLASE_CHECK -->|"Sí: Lujo, B, C"| CALC[Calcular salario exacto]
+    CLASE_CHECK -->|"No"| CAN_INFER{¿Se puede inferir<br/>la clase?}
+
+    CAN_INFER -->|"Sí"| INFER[Inferir clase por tipo]
+    CAN_INFER -->|"No"| ASK_CLASE[/"Pregunta 3:<br/>¿Qué categoría tiene el establecimiento?<br/><br/>Opciones según tipo:<br/>• Lujo/Clase A (5-4 tenedores, 3 tazas)<br/>• Clase B (3 tenedores, 2 tazas)<br/>• Clase C (1-2 tenedores, 1 taza)"/]
+
+    INFER --> CALC
+    ASK_CLASE --> CALC
+    CALC_DIRECT --> RESULT
+
+    CALC --> RESULT([Mostrar salario con desglose:<br/>- Salario base mensual<br/>- Referencia tabla salarial<br/>- Artículo convenio])
+
+    style START fill:#e1f5fe
+    style RESULT fill:#c8e6c9
+    style ASK_CAT fill:#fff3e0
+    style ASK_EST fill:#fff3e0
+    style ASK_CLASE fill:#fff3e0
+    style NO_CAT fill:#ffcdd2
+```
+
+#### Variables Necesarias para Test C1
+
+| Variable | Valor en pregunta | Estado | Acción requerida |
+|----------|-------------------|--------|------------------|
+| **Categoría profesional** | "ayudante de cocina" | ✅ Presente | Detectar correctamente |
+| **Tipo establecimiento** | No especificado | ❌ Faltante | Preguntar |
+| **Clase establecimiento** | No especificado | ⚠️ Depende | Preguntar o inferir |
+| **Jornada** | No especificada | ➖ Opcional | Default: completa |
+
+#### Salarios de Referencia - Ayudante de Cocina (Nivel IV)
+
+> **Fuente:** Valores extraídos de las tablas salariales indexadas del convenio (Anexo I - Tablas Salariales 2024)
+
+| Subsector | Clase | Salario Mensual | Salario Anual |
+|-----------|-------|-----------------|---------------|
+| **Comedor** | Lujo/A | 1.145,76 € | 16.040,64 € |
+| **Comedor** | Primera | 1.145,76 € | 16.040,64 € |
+| **Comedor** | Segunda | 1.145,76 € | 16.040,64 € |
+| **Comedor** | Tercera | 1.073,78 € | 15.032,92 € |
+| **Catering** | D | 1.150,73 € | 16.110,22 € |
+| **Sección 3ª** | - | 1.095,93 € | 15.343,02 € |
+
+**Condiciones adicionales:**
+- Plus convenio durante 11 meses
+- Manutención por cuenta de la empresa
+- Promoción automática: Ayudantes con +4 años de antigüedad perciben salario de categoría superior (Art. 24)
+
+#### Respuesta Esperada del Chat
+
+**Opción 1: Solicitar tipo de establecimiento**
+
+```
+He identificado que buscas el salario de **Ayudante de cocina**
+(Nivel IV) según el Convenio de Hostelería de Madrid.
+
+**Necesito más información**
+Convenio: Convenio colectivo de Hostelería de Madrid
+Pregunta 1 de 2
+
+El salario de Ayudante de cocina varía según el tipo de establecimiento.
+¿En qué tipo trabajas?
+
+- **Comedor** (Restaurantes, Hoteles con comedor)
+- **Cafetería** (Cafeterías 1-3 tazas)
+- **Bar** (Bares, Tabernas, Cafés-Bar)
+- **Colectividades** (Comedores colectivos)
+- **Catering** (Empresas de catering)
+
+[btn: Calcular] [btn: Ver todos los rangos]
+```
+
+**Opción 2: Mostrar rango completo**
+
+```
+El salario base de **Ayudante de cocina** (Nivel IV) según el
+Convenio de Hostelería de Madrid varía entre:
+
+| Establecimiento | Clase | Salario mensual |
+|-----------------|-------|-----------------|
+| Comedor         | Lujo/A | 1.145,76 €     |
+| Comedor         | Primera | 1.145,76 €    |
+| Comedor         | Segunda | 1.145,76 €    |
+| Comedor         | Tercera | 1.073,78 €    |
+| Catering        | D | 1.150,73 €         |
+| Sección 3ª      | - | 1.095,93 €         |
+
+**Referencia:** Anexo I - Tablas Salariales 2024
+
+¿En qué tipo de establecimiento trabajas para darte el valor exacto?
+```
+
+---
+
+### Test C1.1: Boton "No lo se, ver todos los rangos"
+
+**Contexto:** El usuario presiona el boton despues de que el sistema pide la categoria profesional.
+
+#### Flujo Actual (Con Bug)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant FE as Frontend
+    participant BE as Backend
+    participant RAG as Busqueda RAG
+    participant LLM as Claude
+
+    U->>FE: Click "No lo se, ver todos los rangos"
+    FE->>BE: POST /chat<br/>"No conozco estos datos,<br/>muestrame una tabla con<br/>todos los rangos posibles"
+
+    BE->>BE: isSalaryQuery(mensaje)
+    Note over BE: ❌ Retorna FALSE<br/>"rangos" y "tabla" no son<br/>keywords de salario
+
+    BE->>BE: Ruta a askQuestion()<br/>(pregunta general)
+
+    BE->>RAG: searchChunks(embedding)
+    Note over RAG: Embedding de "tabla rangos posibles"<br/>tiene baja similitud con<br/>chunks de tablas salariales
+
+    RAG-->>BE: chunks = [] (vacio o pocos)
+
+    BE->>LLM: Prompt con chunks vacios
+    Note over LLM: Regla: "Si no esta en chunks,<br/>di No encuentro esa informacion"
+
+    LLM-->>BE: "No encuentro esa informacion<br/>en el convenio..."
+    BE-->>FE: Respuesta
+    FE-->>U: ❌ "No encuentro esa informacion"
+```
+
+#### Causa Raiz del Bug
+
+| Paso | Componente | Problema |
+|------|------------|----------|
+| 1 | `useChatPage.ts:590` | Envia texto generico: "muestrame tabla con todos los rangos" |
+| 2 | `variable-extractor.ts:276` | `isSalaryQuery()` no detecta "rangos" como consulta salarial |
+| 3 | `handlers.ts:192` | Ruta incorrecta: va a `askQuestion()` en vez de `calculateSalary()` |
+| 4 | `ask-question.ts` | Busqueda RAG con embedding generico → 0 chunks |
+| 5 | `prompts.ts:77` | Prompt dice "si no hay info en chunks, responde que no encuentras" |
+
+**Contraste:** La pregunta directa "¿Cuales son los rangos de un ayudante de cocina?" SÍ funciona porque:
+- Contiene "rangos" + "ayudante de cocina" (categoria especifica)
+- El embedding tiene mayor similitud con chunks de tablas salariales
+- RAG devuelve chunks relevantes → Claude puede responder
+
+#### Flujo Esperado (Corregido)
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant FE as Frontend
+    participant BE as Backend
+    participant DB as Base de Datos
+    participant LLM as Claude
+
+    U->>FE: Click "No lo se, ver todos los rangos"
+
+    alt Opcion A: Mejorar mensaje del frontend
+        FE->>BE: POST /chat<br/>"Muestrame tabla de salarios<br/>para ayudante de cocina<br/>en todos los establecimientos"
+        Note over FE,BE: Mensaje incluye categoria<br/>+ contexto salarial
+    else Opcion B: Handler especifico
+        FE->>BE: POST /chat<br/>action: "show_salary_ranges"<br/>categoria: "ayudante de cocina"
+        Note over FE,BE: Accion especifica con<br/>contexto de la sesion
+    end
+
+    BE->>DB: Buscar tablas salariales<br/>para categoria
+    DB-->>BE: Todas las tablas con<br/>"ayudante de cocina"
+
+    BE->>LLM: Prompt con tablas completas
+    LLM-->>BE: Tabla formateada con rangos
+
+    BE-->>FE: Respuesta con tabla
+    FE-->>U: ✅ Tabla de rangos salariales
+```
+
+#### Soluciones Propuestas
+
+**Solucion 1: Mejorar el mensaje enviado (Frontend)**
+
+Archivo: `src/ui/components/workrules/pages/ChatPage/useChatPage.ts`
+
+```typescript
+// ANTES (linea 594)
+const text = "No conozco estos datos, muestrame una tabla con todos los rangos posibles";
+
+// DESPUÉS - incluir contexto de la pregunta original
+const text = `Muestrame una tabla con todos los salarios posibles para ${categoriaEnContexto || 'todas las categorias'} segun el convenio`;
+```
+
+**Solucion 2: Mejorar isSalaryQuery() (Backend)**
+
+Archivo: `supabase/functions/_shared/core/chat/variable-extractor.ts`
+
+```typescript
+// Agregar deteccion de "ver rangos/tabla de salarios"
+if (/(?:tabla|rangos?|todos?\s+los).{0,20}(?:salario|sueldo|retribuc)/i.test(lowerMessage)) {
+  return true;
+}
+if (/muestr(?:a|ame).{0,30}(?:rangos?|tabla)/i.test(lowerMessage)) {
+  return true;
+}
+```
+
+**Solucion 3: Crear handler especifico para "show_ranges" (Backend)**
+
+Archivo: `supabase/functions/_shared/core/chat/handlers.ts`
+
+```typescript
+// Antes de clasificar como salario/pregunta
+if (isShowRangesRequest(request.pregunta)) {
+  return showSalaryRanges({
+    convenioId: request.convenio_id,
+    categoria: request.variables?.categoria, // de sesion anterior
+    userId,
+  });
+}
+```
+
+**Solucion 4: Mejorar prompt para busquedas genericas (Backend)**
+
+Archivo: `supabase/functions/_shared/core/chat/prompts.ts`
+
+```typescript
+// Agregar fallback cuando no hay chunks
+// Si la pregunta es sobre "rangos/tabla" y no hay chunks,
+// buscar con keywords alternativos: "tabla salarial", "retribuciones"
+```
+
+#### Matriz de Impacto de Soluciones
+
+| Solucion | Esfuerzo | Impacto | Riesgo | Estado |
+|----------|----------|---------|--------|--------|
+| 1. Mejorar mensaje FE | Bajo | Medio | Bajo | ✅ **IMPLEMENTADO** |
+| 2. Mejorar isSalaryQuery | Medio | Alto | Medio | ✅ **IMPLEMENTADO** |
+| 3. Handler show_ranges | Alto | Alto | Medio | ✅ **IMPLEMENTADO** |
+| 4. Mejorar prompts | Medio | Medio | Alto | Evaluar con mas tests |
+
+#### Cambios Implementados (2026-04-05)
+
+**Solucion 1: Frontend - `useChatPage.ts`**
+```typescript
+// Antes: mensaje generico
+const text = "No conozco estos datos, muestrame una tabla con todos los rangos posibles";
+// Antes: mensaje generico
+const text = "No conozco estos datos, muestrame una tabla con todos los rangos posibles";
+
+// DESPUÉS: incluye contexto de categoria
+const categoriaDetectada = /* extraido del ultimo mensaje */;
+const text = `Muestrame una tabla con todos los salarios posibles para ${categoriaDetectada} segun el convenio`;```typescript
+// Nuevos patrones en isSalaryQuery():
+if (/rangos?\s{0,3}salarial/i.test(lowerMessage)) return true;
+if (/tabla.{0,20}(?:salario|sueldo|rangos?|retribuc)/i.test(lowerMessage)) return true;
+if (/muestr(?:a|ame).{0,30}(?:rangos?|tabla)/i.test(lowerMessage)) return true;
+
+// Nueva funcion isShowRangesRequest() para detectar "ver todos los rangos"
+```
+
+**Solucion 3: Backend - `handlers.ts`**
+```typescript
+// Nueva funcion transformRangesRequest() que convierte:
+// "No lo se, muestrame rangos" → "Muestrame tabla salarial completa para [categoria]"
+
+// En classifyAndExecute():
+if (isShowRangesRequest(request.pregunta)) {
+  const transformedPregunta = transformRangesRequest(request.pregunta);
+  return askQuestion({ pregunta: transformedPregunta, ... });
+}
+```
+
+#### Respuesta Esperada del Boton
+
+Cuando el usuario presiona "No lo se, ver todos los rangos" para Ayudante de Cocina:
+
+```markdown
+## Rangos salariales - Ayudante de Cocina
+
+Segun el Convenio de Hosteleria de Madrid, el salario de
+**Ayudante de Cocina** (Nivel IV) varia segun el establecimiento:
+
+### Por Subsector y Clase
+
+| Subsector | Clase | Salario Mensual | Salario Anual |
+|-----------|-------|-----------------|---------------|
+| Comedor | Lujo/A | 1.145,76 € | 16.040,64 € |
+| Comedor | Primera | 1.145,76 € | 16.040,64 € |
+| Comedor | Segunda | 1.145,76 € | 16.040,64 € |
+| Comedor | Tercera | 1.073,78 € | 15.032,92 € |
+| Catering | D | 1.150,73 € | 16.110,22 € |
+| Seccion 3a | - | 1.095,93 € | 15.343,02 € |
+
+### Condiciones Adicionales
+- **Manutención:** A cargo de la empresa
+- **Plus convenio:** Durante 11 meses
+- **Promoción automática:** Ayudantes con +4 años de antigüedad
+  perciben salario de categoria superior (Art. 24)
+
+**Referencia:** Anexo I - Tablas Salariales 2024
+
+---
+¿En qué tipo de establecimiento trabajas?
+Esto me permitirá darte el cálculo exacto.
+```
+
+---
+
+## L) Notas Adicionales
 
 _Espacio para anotaciones durante la revision del PDF:_
 

@@ -261,6 +261,50 @@ function isInformativeQuestion(message: string): boolean {
   return false;
 }
 
+/** Keywords simples que indican consulta salarial */
+const SALARY_KEYWORDS = [
+  "salario",
+  "sueldo",
+  "nocturnidad",
+  "nomina",
+  "nómina",
+];
+
+/** Patrones regex que indican consulta salarial */
+const SALARY_PATTERNS: RegExp[] = [
+  /cuant[oa]\s{1,3}(?:cobr|gan|pag)/i,
+  /calcula(?:r|me)?/i,
+  /horas?\s{1,3}extra/i,
+  /retribuci[oó]n/i,
+  /precio\s{1,3}hora/i,
+  /valor\s{1,3}hora/i,
+  /coste\s{1,3}laboral/i,
+  /plus(?:es)?/i,
+  /complemento(?:s)?/i,
+  // Patrones para rangos/tablas salariales
+  /rangos?\s{0,3}salarial/i,
+  /tabla.{0,20}(?:salario|sueldo|rangos?|retribuc)/i,
+  /muestr(?:a|ame).{0,30}(?:rangos?|tabla)/i,
+  /todos?\s{0,3}los\s{0,3}rangos/i,
+];
+
+/**
+ * Verifica si el mensaje contiene keywords o patrones salariales
+ */
+function matchesSalaryPatterns(message: string): boolean {
+  // Buscar keywords simples
+  for (const kw of SALARY_KEYWORDS) {
+    if (message.includes(kw)) return true;
+  }
+
+  // Buscar patrones regex
+  for (const pattern of SALARY_PATTERNS) {
+    if (pattern.test(message)) return true;
+  }
+
+  return false;
+}
+
 /**
  * Verifica si el mensaje parece una consulta de calculo salarial
  * (vs una pregunta general sobre el convenio)
@@ -281,29 +325,36 @@ export function isSalaryQuery(message: string): boolean {
     return false;
   }
 
-  const keywords = [
-    "salario",
-    "sueldo",
-    "nocturnidad",
-    "nomina",
-    "nómina",
+  return matchesSalaryPatterns(lowerMessage);
+}
+
+/**
+ * Verifica si el mensaje es una solicitud de mostrar rangos/opciones/tabla salarial
+ * (sin necesidad de variables especificas)
+ *
+ * @param message - Mensaje del usuario
+ * @returns true si es solicitud de mostrar rangos u opciones
+ */
+export function isShowRangesRequest(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+
+  // Patrones especificos para "ver todos los rangos" o "mostrar opciones"
+  const patterns = [
+    /no\s{1,3}(?:lo\s{1,3})?(?:se|conozco).{0,20}(?:rangos?|tabla|opciones)/i,
+    /muestr(?:a|ame).{0,20}(?:todos?\s{0,3}los\s{0,3})?rangos/i,
+    /(?:ver|mostrar)\s{1,3}todos?\s{0,3}los\s{0,3}rangos/i,
+    /tabla\s{1,3}(?:completa|con\s{1,3}todos)/i,
+    /todos?\s{0,3}los\s{0,3}(?:rangos?|salarios?)\s{0,3}posibles/i,
+    // Nuevos patrones para solicitud de opciones/tipos/clases
+    /tipos?\s{1,3}de\s{1,3}establecimiento/i,
+    /clases?\s{1,3}(?:de\s{1,3}establecimiento|disponibles)/i,
+    /muestr(?:a|ame).{0,30}(?:tipos?|clases?|opciones).{0,20}(?:disponibles|del\s{1,3}convenio)/i,
+    /para\s{1,3}[a-záéíóúñ\s]{1,40},?\s{0,3}muestr(?:a|ame)/i,
   ];
 
-  // Buscar keywords simples
-  for (const kw of keywords) {
-    if (lowerMessage.includes(kw)) return true;
+  for (const pattern of patterns) {
+    if (pattern.test(lowerMessage)) return true;
   }
-
-  // Patrones mas complejos
-  if (/cuant[oa]\s{1,3}(?:cobr|gan|pag)/i.test(lowerMessage)) return true;
-  if (/calcula(?:r|me)?/i.test(lowerMessage)) return true;
-  if (/horas?\s{1,3}extra/i.test(lowerMessage)) return true;
-  if (/retribuci[oó]n/i.test(lowerMessage)) return true;
-  if (/precio\s{1,3}hora/i.test(lowerMessage)) return true;
-  if (/valor\s{1,3}hora/i.test(lowerMessage)) return true;
-  if (/coste\s{1,3}laboral/i.test(lowerMessage)) return true;
-  if (/plus(?:es)?/i.test(lowerMessage)) return true;
-  if (/complemento(?:s)?/i.test(lowerMessage)) return true;
 
   return false;
 }

@@ -585,18 +585,59 @@ export function useChatPage(
   );
 
   /**
-   * Manejar "No lo se" - solicitar tabla con rangos
+   * Manejar "No lo se" - mostrar opciones de establecimiento/clase
+   *
+   * Cuando el usuario no conoce los datos solicitados (ej: tipo de establecimiento),
+   * pedimos al backend que muestre las OPCIONES disponibles segun el convenio,
+   * para que el usuario pueda elegir.
    */
   const handleDataRequestSkip = useCallback(async () => {
+    // Extraer contexto del ultimo mensaje del usuario
+    const lastUserMessage = messages
+      .filter((m) => m.role === "user")
+      .pop();
+    const contexto = lastUserMessage?.content?.toLowerCase() || "";
+
+    // Extraer categoria profesional usando busqueda de texto simple
+    // para evitar regex complejas que disparan sonarjs/regex-complexity
+    const categoriasConocidas = [
+      "ayudante de cocina",
+      "jefe de cocina",
+      "cocinero",
+      "camarero",
+      "ayudante de camarero",
+      "recepcionista",
+      "gobernanta",
+      "pinche",
+      "barman",
+      "jefe de sala",
+      "camarera de pisos",
+    ];
+
+    let categoriaDetectada = "";
+    for (const cat of categoriasConocidas) {
+      if (contexto.includes(cat)) {
+        categoriaDetectada = cat;
+        break;
+      }
+    }
+
     setDataRequestState(clearDataRequestState());
-    const text =
-      "No conozco estos datos, muestrame una tabla con todos los rangos posibles";
+
+    // Construir mensaje pidiendo las OPCIONES disponibles, no los salarios
+    let text: string;
+    if (categoriaDetectada) {
+      text = `Para ${categoriaDetectada}, muestrame los tipos de establecimiento y clases disponibles en el convenio con sus salarios correspondientes`;
+    } else {
+      text = "Muestrame los tipos de establecimiento, clases y categorias profesionales disponibles en el convenio";
+    }
+
     if (useMocks) {
       await mockSendMessage({ text });
     } else {
       await realSendMessage(text);
     }
-  }, [useMocks, mockSendMessage, realSendMessage]);
+  }, [messages, useMocks, mockSendMessage, realSendMessage]);
 
   /**
    * Funcion para establecer data request manualmente (util para mocks/testing)
