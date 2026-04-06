@@ -308,6 +308,7 @@ export async function calculateSalary(
       perfilContexto,
       input.pregunta,
       promptContext.variablesUsuario,
+      input.messages,
     );
 
     // ========================================

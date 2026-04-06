@@ -37,7 +37,7 @@ import {
   extractPromptContext,
 } from "./prompts.ts";
 import { expandQuery } from "./query-expander.ts";
-import type { ChatCitation } from "./types.ts";
+import type { ChatCitation, ChatHistoryMessage } from "./types.ts";
 
 // ============================================
 // TIPOS
@@ -56,6 +56,8 @@ export interface AskQuestionInput {
   variables?: Record<string, string>;
   /** Si true, retorna streaming SSE */
   stream?: boolean;
+  /** Historial de mensajes anteriores para contexto multi-turno */
+  messages?: ChatHistoryMessage[];
 }
 
 export interface AskQuestionMetadata {
@@ -368,6 +370,7 @@ export async function askQuestion(
       perfilContexto,
       input.pregunta,
       input.variables,
+      input.messages,
     );
 
     // ========================================

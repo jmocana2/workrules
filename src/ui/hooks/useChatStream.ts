@@ -13,6 +13,7 @@
 
 import {
   ChatApiError,
+  type ChatHistoryMessage,
   type SSECitationEvent,
   type SSEStatusEvent,
   streamChat,
@@ -181,6 +182,17 @@ export function useChatStream(
     };
 
     currentMessageRef.current = assistantMessage;
+
+    // Construir historial de mensajes anteriores para contexto multi-turno
+    // Usamos el estado actual de messages (antes de añadir el nuevo mensaje del usuario)
+    // Limitamos a los últimos 10 mensajes para no sobrecargar el contexto
+    const historyMessages: ChatHistoryMessage[] = messages
+      .slice(-10)
+      .map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
     setMessages((prev) => [...prev, assistantMessage]);
 
     // Acumular citaciones durante el streaming
@@ -194,6 +206,7 @@ export function useChatStream(
           sessionId,
           stream: true,
           signal: abortControllerRef.current.signal,
+          messages: historyMessages,
         },
         {
           onText: (chunk) => {
@@ -294,7 +307,7 @@ export function useChatStream(
       setIsLoading(false);
       currentMessageRef.current = null;
     }
-  }, [convenioId, sessionId, onSpecialState, onFinish, onError]);
+  }, [convenioId, sessionId, messages, onSpecialState, onFinish, onError]);
 
   /**
    * Limpia el estado especial

@@ -811,6 +811,257 @@ Esto me permitirá darte el cálculo exacto.
 
 ---
 
+### Test C1.2: Problema de Perdida de Contexto Multi-turno
+
+**Contexto:** Tras el flujo "No lo se, ver todos los rangos", el usuario responde "Seria en una whisqueria" pero el sistema pierde el contexto de que estabamos hablando de salarios de ayudante de cocina.
+
+#### Causa Raiz Identificada (2026-04-06)
+
+El sistema **NO enviaba el historial de mensajes anteriores** al backend. Cada peticion era **stateless**:
+
+```typescript
+// ANTES - chat-api.ts
+body: JSON.stringify({
+  convenio_id: convenioId,
+  pregunta,           // Solo la pregunta actual, SIN historial
+  session_id: sessionId,
+  stream: true,
+}),
+```
+
+#### Solucion Implementada (2026-04-06)
+
+Se implemento soporte para enviar el historial de conversacion al backend:
+
+**Archivos modificados:**
+
+1. `supabase/functions/_shared/core/chat/types.ts`
+   - Nuevo tipo `ChatHistoryMessage`
+   - Campo `messages?: ChatHistoryMessage[]` en `ChatRequest` y `CalculateSalaryInput`
+
+2. `src/lib/chat-api.ts`
+   - Nuevo campo `messages` en `ChatApiOptions`
+   - Se envia `messages` en el body de la peticion
+
+3. `src/ui/hooks/useChatStream.ts`
+   - Construye `historyMessages` con los ultimos 10 mensajes
+   - Los pasa a `streamChat()`
+
+4. `supabase/functions/_shared/core/chat/prompts.ts`
+   - Nueva funcion `formatHistoryForContext()`
+   - `buildUserMessage()` ahora recibe y formatea `historyMessages`
+   - El historial se incluye ANTES del contexto RAG en el prompt
+
+5. `supabase/functions/_shared/core/chat/ask-question.ts` y `calculate-salary.ts`
+   - Pasan `input.messages` a `buildUserMessage()`
+
+6. `supabase/functions/_shared/core/chat/handlers.ts`
+   - Pasa `request.messages` a los use cases
+
+#### Flujo Corregido
+
+```mermaid
+sequenceDiagram
+    participant U as Usuario
+    participant FE as Frontend
+    participant BE as Backend
+    participant LLM as Claude
+
+    U->>FE: "Seria en una whisqueria"
+    FE->>BE: POST /chat<br/>pregunta: "Seria en una whisqueria"<br/>messages: [<br/>  {user: "salario ayudante cocina?"},<br/>  {assistant: "tabla con rangos..."},<br/>  ...<br/>]
+
+    BE->>BE: buildUserMessage() incluye historial
+    Note over BE: --- HISTORIAL ---<br/>Usuario: salario ayudante cocina?<br/>Asistente: tabla con rangos...<br/>--- CONTEXTO RAG ---<br/>...<br/>--- PREGUNTA ACTUAL ---<br/>Seria en una whisqueria
+
+    BE->>LLM: Prompt CON contexto completo
+    Note over LLM: Claude entiende que<br/>"whisqueria" es respuesta<br/>a pregunta sobre salarios
+
+    LLM-->>BE: "En una whisqueria (Clase B),<br/>el salario de Ayudante de cocina<br/>es 1.145,76 euros/mes"
+
+    BE-->>FE: Respuesta con calculo correcto
+    FE-->>U: Salario especifico para whisqueria
+```
+
+#### Validacion
+
+- [x] Tests Deno pasan (315/315)
+- [x] TypeScript compila sin errores
+- [x] ESLint sin warnings
+- [ ] Test manual pendiente
+
+---
+
+### Test C1.3: Mencionar Excepciones (Manutencion en Whisquerias)
+
+**Contexto:** El convenio indica que las whisquerias estan EXCLUIDAS del derecho a manutencion. El chat debe mencionar esta excepcion.
+
+#### Problema Detectado
+
+El chat calculo correctamente el salario (1.145,76 + 191,22 = 1.336,98 euros), pero no menciono que:
+
+> "En la seccion quinta, **excepto en bares americanos y whisquerias**, la manutencion sera a cargo de la empresa..."
+
+#### Solucion Implementada (2026-04-06)
+
+Se anadieron reglas en los prompts para que Claude mencione excepciones relevantes:
+
+**Archivo:** `supabase/functions/_shared/core/chat/prompts.ts`
+
+**Regla 9 en ASK-QUESTION:**
+```
+9. **EXCEPCIONES Y CONDICIONES ESPECIALES**: Si el contexto menciona excepciones,
+   exclusiones o condiciones especiales que apliquen al caso del usuario
+   (ej: "excepto en whisquerias", "salvo para contratos temporales"),
+   DEBES mencionarlas en tu respuesta.
+```
+
+**Regla 7 en CALCULATE-SALARY:**
+```
+7. **EXCEPCIONES Y COMPLEMENTOS ESPECIALES**: Si el contexto menciona excepciones
+   o condiciones especiales para el tipo de establecimiento o categoria del usuario
+   (ej: "excepto en whisquerias la manutencion no aplica"), DEBES mencionarlas.
+   Indica claramente que complementos SI aplican y cuales NO aplican.
+```
+
+#### Respuesta Esperada Tras Fix
+
+```
+En una whisqueria (Clase B), el salario de Ayudante de cocina es:
+
+| Concepto | Importe |
+|----------|---------|
+| Salario Base | 1.145,76 € |
+| Plus Convenio | 191,22 € |
+| **TOTAL MENSUAL** | **1.336,98 €** |
+
+**Nota importante:** Las whisquerias y bares americanos estan excluidos
+del derecho a manutencion segun el convenio (a diferencia de otros
+establecimientos de hosteleria donde si aplica).
+```
+
+#### Solucion Adicional: Query Expander (2026-04-06)
+
+El problema es que la busqueda RAG no recuperaba el chunk con la excepcion de manutencion porque "whisqueria" tiene baja similitud semantica con "excepto bares americanos y whisquerias".
+
+**Archivo:** `supabase/functions/_shared/core/chat/query-expander.ts`
+
+Se anadieron sinonimos para tipos de establecimiento con excepciones:
+
+```typescript
+whiskeria: [
+  "whisquería",
+  "bares especiales",
+  "sección quinta",
+  "excepto manutención",
+  "clase B",
+],
+whisqueria: [
+  "whiskería",
+  "bares especiales",
+  "sección quinta",
+  "excepto manutención",
+  "clase B",
+],
+```
+
+Ahora cuando el usuario dice "seria en una whisqueria", la query se expande a:
+```
+seria en una whisqueria whisquería bares especiales sección quinta excepto manutención clase B
+```
+
+Esto mejora la similitud semantica con los chunks que contienen las excepciones.
+
+#### Validacion
+
+- [x] Tests Deno pasan (319/319)
+- [x] Test manual realizado
+- [ ] **PROBLEMA PENDIENTE**: El chat sigue incluyendo manutencion incorrectamente
+
+---
+
+### Test C1.4: PROBLEMA PENDIENTE - Manutencion en Whisquerias
+
+**Estado:** ❌ NO RESUELTO (2026-04-06)
+
+#### Problema Actual
+
+A pesar de los cambios en prompts y query-expander, el chat **sigue incluyendo la manutencion** (57,82€) para whisquerias cuando NO deberia:
+
+```
+Respuesta actual del chat (INCORRECTA):
+- Salario base: 1.145,76€
+- Plus convenio: 191,22€
+- Manutención: 57,82€  ← NO DEBERIA APARECER
+- Total: 1.394,80€     ← INCORRECTO (deberia ser 1.336,98€)
+```
+
+#### Causa Raiz Identificada
+
+El **perfil JSON** del convenio (`convenio_perfiles.perfil_data`) tiene la manutencion SIN la excepcion:
+
+```json
+{
+  "nombre": "Manutención",
+  "articulo": "Art. 28",
+  "condicion": "Establecimientos con servicio restaurante/elaboren comidas",
+  "valor_2025": 57.82
+  // FALTA: "excepcion": "NO aplica a whisquerias ni bares americanos"
+}
+```
+
+Claude lee el perfil JSON y ve que la manutencion aplica a "establecimientos con servicio restaurante", y como una whisqueria puede tener cocina, asume que aplica.
+
+El chunk con la excepcion (124/144/160) dice:
+> "En la seccion quinta, **excepto en bares americanos y whisquerias**, la manutencion sera a cargo de la empresa..."
+
+Pero este chunk **no se esta recuperando** en la busqueda RAG, o no tiene suficiente peso frente al perfil JSON.
+
+#### Solucion Propuesta para Proxima Sesion
+
+**Opcion 1: Actualizar el perfil JSON** (RECOMENDADA)
+
+Modificar el campo de manutencion en `convenio_perfiles` para incluir la excepcion:
+
+```json
+{
+  "nombre": "Manutención",
+  "articulo": "Art. 28",
+  "condicion": "Establecimientos con servicio restaurante/elaboren comidas",
+  "excepcion": "NO aplica a whisquerias ni bares americanos (seccion quinta del convenio)",
+  "valor_2025": 57.82
+}
+```
+
+**Opcion 2: Busqueda RAG adicional**
+
+Hacer una segunda busqueda especifica cuando se detecta un tipo de establecimiento con excepciones conocidas.
+
+**Opcion 3: Aumentar chunks recuperados**
+
+Subir `DEFAULT_CHUNK_LIMIT` de 8 a 12-15 para aumentar probabilidad de recuperar el chunk de excepciones.
+
+#### Archivos Modificados en Esta Sesion (pendientes de validar)
+
+| Archivo | Cambio | Estado |
+|---------|--------|--------|
+| `prompts.ts` | Reglas 7 y 9 sobre excepciones | ✅ Implementado |
+| `query-expander.ts` | Sinonimos para whisqueria | ✅ Implementado |
+| `query-expander.test.ts` | Tests para whisqueria | ✅ 319 tests pasan |
+| `types.ts` | Campo `messages` para historial | ✅ Implementado |
+| `chat-api.ts` | Enviar historial al backend | ✅ Implementado |
+| `useChatStream.ts` | Construir historial | ✅ Implementado |
+| `ask-question.ts` | Pasar historial a prompt | ✅ Implementado |
+| `calculate-salary.ts` | Pasar historial a prompt | ✅ Implementado |
+| `handlers.ts` | Pasar messages a use cases | ✅ Implementado |
+
+#### Proximos Pasos
+
+1. [ ] Actualizar perfil JSON con excepcion de manutencion
+2. [ ] Probar flujo completo
+3. [ ] Verificar calculo correcto: 1.145,76 + 191,22 = **1.336,98€** (sin manutencion)
+
+---
+
 ## L) Notas Adicionales
 
 _Espacio para anotaciones durante la revision del PDF:_

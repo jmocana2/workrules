@@ -7,6 +7,8 @@
  * @module prompts
  */
 
+import type { ChatHistoryMessage } from "./types.ts";
+
 // ============================================
 // TIPOS
 // ============================================
@@ -90,6 +92,8 @@ const SYSTEM_PROMPT_ASK_QUESTION =
 
 8. **REFERENCIAS DE TABLAS SALARIALES**: Cuando la informacion provenga de tablas salariales o anexos (chunks sin articulo especifico entre parentesis), cita como "Anexo - Tablas Salariales" o "Tablas Salariales del Convenio". NO inventes un numero de articulo si el chunk no lo tiene.
 
+9. **EXCEPCIONES Y CONDICIONES ESPECIALES**: Si el contexto menciona excepciones, exclusiones o condiciones especiales que apliquen al caso del usuario (ej: "excepto en whisquerias", "salvo para contratos temporales", "no aplica a jornada parcial"), DEBES mencionarlas en tu respuesta. Estas excepciones son informacion crucial para el usuario.
+
 ## FORMATO DE RESPUESTA
 
 [Respuesta directa a la pregunta]
@@ -133,6 +137,8 @@ const SYSTEM_PROMPT_CALCULATE_SALARY =
 5. **VERIFICACION SMI**: Si el resultado es inferior al SMI vigente ({{smi_mensual}} euros/mes en 14 pagas), indica que se aplica el SMI por ley.
 
 6. **FUERA DE ALCANCE**: NO calcules retenciones IRPF ni cuotas de Seguridad Social. Indica que consulten con su gestoria para el neto.
+
+7. **EXCEPCIONES Y COMPLEMENTOS ESPECIALES**: Si el contexto menciona excepciones o condiciones especiales para el tipo de establecimiento o categoria del usuario (ej: "excepto en whisquerias la manutencion no aplica", "solo para establecimientos con servicio de restaurante"), DEBES mencionarlas. Indica claramente que complementos SI aplican y cuales NO aplican segun el caso concreto.
 
 ## FORMATO DE RESPUESTA
 
@@ -323,12 +329,28 @@ export function buildSystemPrompt(
 }
 
 /**
+ * Formatea el historial de conversación para incluir en el prompt
+ *
+ * @param messages - Mensajes anteriores de la conversación
+ * @returns String formateado con el historial
+ */
+function formatHistoryForContext(messages: ChatHistoryMessage[]): string {
+  return messages
+    .map((m) => {
+      const role = m.role === "user" ? "Usuario" : "Asistente";
+      return `${role}: ${m.content}`;
+    })
+    .join("\n\n");
+}
+
+/**
  * Construye el mensaje de usuario con contexto RAG
  *
  * @param chunks - Chunks relevantes de la busqueda vectorial
  * @param perfilContexto - Perfil del convenio (opcional)
  * @param userQuestion - Pregunta original del usuario
  * @param variablesUsuario - Variables proporcionadas por el usuario
+ * @param historyMessages - Historial de mensajes anteriores para contexto multi-turno
  * @returns Mensaje formateado para enviar como user message
  *
  * @example
@@ -343,22 +365,37 @@ export function buildUserMessage(
   perfilContexto: PerfilContexto | null,
   userQuestion: string,
   variablesUsuario?: Record<string, string>,
+  historyMessages?: ChatHistoryMessage[],
 ): string {
   const parts: string[] = [];
 
-  // 1. Chunks de contexto
+  // 1. Historial de conversación (si existe)
+  // IMPORTANTE: Incluir primero para dar contexto a la pregunta actual
+  if (historyMessages && historyMessages.length > 0) {
+    parts.push("--- HISTORIAL DE CONVERSACION ---");
+    parts.push(
+      "A continuacion se muestra el historial de mensajes anteriores de esta conversacion.",
+    );
+    parts.push(
+      "Usa este contexto para entender mejor la pregunta actual del usuario.",
+    );
+    parts.push("");
+    parts.push(formatHistoryForContext(historyMessages));
+  }
+
+  // 2. Chunks de contexto
   if (chunks.length > 0) {
-    parts.push("--- CONTEXTO DEL CONVENIO ---");
+    parts.push("\n--- CONTEXTO DEL CONVENIO ---");
     parts.push(formatChunksForContext(chunks));
   }
 
-  // 2. Perfil JSON (si existe)
+  // 3. Perfil JSON (si existe)
   if (perfilContexto) {
     parts.push("\n--- PERFIL DEL CONVENIO ---");
     parts.push(formatPerfilForContext(perfilContexto));
   }
 
-  // 3. Variables del usuario (si las hay)
+  // 4. Variables del usuario (si las hay)
   if (variablesUsuario && Object.keys(variablesUsuario).length > 0) {
     parts.push("\n--- DATOS DEL USUARIO ---");
     for (const [key, value] of Object.entries(variablesUsuario)) {
@@ -366,8 +403,8 @@ export function buildUserMessage(
     }
   }
 
-  // 4. Pregunta del usuario
-  parts.push("\n--- PREGUNTA ---");
+  // 5. Pregunta del usuario
+  parts.push("\n--- PREGUNTA ACTUAL ---");
   parts.push(userQuestion);
 
   return parts.join("\n");

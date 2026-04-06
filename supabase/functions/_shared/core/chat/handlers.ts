@@ -248,6 +248,7 @@ export async function classifyAndExecute(
       sessionId: request.session_id,
       variables: request.variables,
       stream: request.stream,
+      messages: request.messages,
     });
   }
 
@@ -266,6 +267,7 @@ export async function classifyAndExecute(
         string | number | undefined
       >,
       stream: request.stream,
+      messages: request.messages,
     });
   }
 
@@ -277,6 +279,7 @@ export async function classifyAndExecute(
     sessionId: request.session_id,
     variables: request.variables,
     stream: request.stream,
+    messages: request.messages,
   });
 }
 

@@ -121,3 +121,36 @@ Deno.test("hasExpandableTerms - detecta términos acentuados", () => {
   assertEquals(hasExpandableTerms("cómo se calcula la indemnización"), true);
   assertEquals(hasExpandableTerms("cómo funciona la antigüedad"), true);
 });
+
+// ============================================
+// Tipos de establecimiento con excepciones
+// ============================================
+
+Deno.test("expandQuery - expande whisquería con términos de excepciones", () => {
+  const result = expandQuery("trabajo en una whiskeria");
+
+  assertEquals(result.includes("whiskeria"), true);
+  assertEquals(result.includes("bares especiales"), true);
+  assertEquals(result.includes("sección quinta"), true);
+  assertEquals(result.includes("excepto manutención"), true);
+});
+
+Deno.test("expandQuery - expande whisquería con acento", () => {
+  const result = expandQuery("sería en una whisquería");
+
+  assertEquals(result.includes("bares especiales"), true);
+  assertEquals(result.includes("excepto manutención"), true);
+});
+
+Deno.test("expandQuery - expande bares americanos", () => {
+  const result = expandQuery("trabajo en bares americanos");
+
+  // Debe incluir términos relacionados con la excepción
+  assertEquals(result.includes("bares especiales"), true);
+  assertEquals(result.includes("sección quinta"), true);
+});
+
+Deno.test("hasExpandableTerms - detecta whisquería", () => {
+  assertEquals(hasExpandableTerms("trabajo en una whiskeria"), true);
+  assertEquals(hasExpandableTerms("sería en una whisquería"), true);
+});

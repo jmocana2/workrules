@@ -1,3 +1,9 @@
+/** Mensaje del historial de conversación */
+export interface ChatHistoryMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 /** Request del endpoint POST /chat */
 export interface ChatRequest {
   convenio_id: string;
@@ -5,6 +11,8 @@ export interface ChatRequest {
   variables?: Record<string, string>;
   session_id?: string;
   stream?: boolean;
+  /** Historial de mensajes anteriores para contexto multi-turno */
+  messages?: ChatHistoryMessage[];
 }
 
 /** Respuesta no-streaming */
@@ -105,6 +113,8 @@ export interface CalculateSalaryInput {
   /** Variables ya conocidas del usuario (de turnos anteriores) */
   variablesConocidas?: ExtractedVariables;
   stream?: boolean;
+  /** Historial de mensajes anteriores para contexto multi-turno */
+  messages?: ChatHistoryMessage[];
 }
 
 /**

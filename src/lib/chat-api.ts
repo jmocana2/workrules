@@ -65,6 +65,12 @@ export interface ChatApiResponse {
   };
 }
 
+/** Mensaje del historial para enviar al backend */
+export interface ChatHistoryMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 /** Opciones para la llamada al chat */
 export interface ChatApiOptions {
   convenioId: string;
@@ -73,6 +79,8 @@ export interface ChatApiOptions {
   variables?: Record<string, string | number>;
   stream?: boolean;
   signal?: AbortSignal;
+  /** Historial de mensajes anteriores para contexto multi-turno */
+  messages?: ChatHistoryMessage[];
 }
 
 /** Callback para eventos de streaming */
@@ -287,7 +295,8 @@ export async function streamChat(
   options: ChatApiOptions,
   callbacks: StreamCallbacks = {},
 ): Promise<void> {
-  const { convenioId, pregunta, sessionId, variables, signal } = options;
+  const { convenioId, pregunta, sessionId, variables, signal, messages } =
+    options;
   const { onError } = callbacks;
 
   // Obtener token de auth
@@ -311,6 +320,7 @@ export async function streamChat(
         session_id: sessionId,
         variables,
         stream: true,
+        messages,
       }),
       signal,
     });
@@ -361,7 +371,8 @@ export async function streamChat(
 export async function sendChat(
   options: Omit<ChatApiOptions, "stream">,
 ): Promise<ChatApiResponse> {
-  const { convenioId, pregunta, sessionId, variables, signal } = options;
+  const { convenioId, pregunta, sessionId, variables, signal, messages } =
+    options;
 
   const token = await getAuthToken();
 
@@ -383,6 +394,7 @@ export async function sendChat(
       session_id: sessionId,
       variables,
       stream: false,
+      messages,
     }),
     signal,
   });

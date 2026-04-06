@@ -67,6 +67,37 @@ const LABOR_SYNONYMS: Record<string, string[]> = {
   hotel: ["establecimiento hotelero", "alojamiento"],
   bar: ["establecimiento de bebidas", "cafetería"],
   catering: ["restauración colectiva", "servicios de catering"],
+
+  // Tipos de establecimiento con excepciones especiales
+  // Estos términos expanden a "excepto/excluido" para recuperar chunks de excepciones
+  whiskeria: [
+    "whisquería",
+    "bares especiales",
+    "sección quinta",
+    "excepto manutención",
+    "clase B",
+  ],
+  whisqueria: [
+    "whiskería",
+    "bares especiales",
+    "sección quinta",
+    "excepto manutención",
+    "clase B",
+  ],
+  "bar americano": [
+    "bares americanos",
+    "bares especiales",
+    "sección quinta",
+    "excepto manutención",
+  ],
+  "bares americanos": [
+    "bar americano",
+    "bares especiales",
+    "sección quinta",
+    "excepto manutención",
+  ],
+  discoteca: ["salas de fiestas", "salas de baile", "clase A"],
+  "sala de fiestas": ["discoteca", "salas de baile", "clase A"],
 };
 
 /**
