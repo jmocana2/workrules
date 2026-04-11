@@ -1,68 +1,30 @@
-¿Cual es el salario base de un ayudante de cocina?Referencias: Tablas Salariales del Convenio Colectivo de Hostelería de MadridPara calcular el salario según el Convenio Colectivo de Hostelería de Madrid, necesito saber tu Categoría profesional.Para calcular el salario segun el Convenio de Convenio Colectivo de Hosteleria de Madrid, necesito saber tu Categoría profesional.
+¿Cuanto cobra un recepcionista de hotel de 4 estrellas?
 
-Para ayudante de cocina, muéstrame los tipos de establecimiento y clases disponibles en el convenio con sus salarios correspondientes
-Según el convenio, para la categoría de Ayudante de Cocina, aquí tienes la información completa sobre tipos de establecimiento, clases y salarios:
+Cálculo para Recepcionista - Hotel 4 estrellas:
 
-1. Tipos de establecimiento donde puede trabajar:
-Establecimientos de hostelería (restaurantes, bares, cafeterías, etc.)
-Catering
-Cafeterías (con servicio de mostrador y sala)
-2. Clases de establecimiento:
-Clase A: Establecimientos de hostelería de lujo
-Clase B: Establecimientos de categoría media (whisquerías, cafés espectáculo, etc.)
-Clase C: Restaurantes de dos y un tenedor, bar-restaurante, cafeterías de una taza, bares, tabernas, etc.
-Clase D: Catering
-3. Tabla de salarios por tipo y clase:
-ESTABLECIMIENTOS DE HOSTELERÍA (Clases A, B, C)
+Paso 1: Salario base mensual
+
+Salario base: 1.283,83 euros/mes (según Perfil del Convenio - Categoría Recepcionista clase A)
+Paso 2: Plus de convenio
+
+Plus convenio: 191,22 euros (Art. convenio)
+Aplicación: 191,22 × 11 ÷ 12 = 175,285 euros mensuales
+Paso 3: Total mensual
 
 
 
-CLASE	LUJO (A)	PRIMERA (B)	SEGUNDA (B)	TERCERA (C)	CUARTA (C)
-Ayudante de Cocina	1.145,76€	1.145,76€	1.145,76€	1.073,78€	No aplica
-Beneficios adicionales:
 
-Manutención: 57,82€ (cuenta de la empresa)
-Plus convenio: 191,22€ (durante 11 meses)
-CATERING (Clase D - Sección Tercera)
+Concepto	Importe
+Salario Base	1.283,83 euros
+Plus Convenio (11 meses)	175,29 euros
+TOTAL BRUTO	1.459,12 euros
+Referencias:
 
+Salario base: Perfil del Convenio (Tablas 2025)
+Plus convenio: Art. convenio (191,22 euros durante 11 meses)
+Notas importantes:
 
-
-OCUPACIÓN	SALARIO
-Ayudante de cocinero/a	1.095,93€
-Beneficios adicionales:
-
-Plus convenio: 175,11€ (durante 11 meses)
-Derecho a manutención cuando la jornada coincida con horario de comidas/cenas
-CAFETERÍAS (con servicio de mostrador y sala)
-
-
-
-CATEGORÍA	3 TAZAS	2 TAZAS	1 TAZA
-Ayudante de cocina	283,78€	289,79€	280,69€
-Beneficios adicionales:
-
-Plus convenio: 175,11€ (durante 11 meses)
-Derecho a manutención cuando elaboren comidas o tengan servicio de restaurante
-Referencias: Tablas Salariales del Convenio de Convenio Colectivo de Hostelería de Madrid y Art. 24 para clasificación de establecimientos.
-
-Nota importante: Los salarios mostrados son mensuales y el salario de aprendiz es por 30 horas semanales de trabajo efectivo en todas las modalidades.
-
-Sería en una whiskeria
-
-Para una whiskería, según el convenio, se clasifica como Clase B (categoría especial).
-
-Salario para Ayudante de Cocina en Whiskería:
-Salario base mensual: 1.145,76€
-
-Beneficios adicionales:
-
-Plus convenio: 191,22€ (durante 11 meses)
-Manutención: 57,82€ (cuenta de la empresa)
-Desglose económico mensual:
-Salario base: 1.145,76€
-Plus convenio: 191,22€ (11 meses)
-Manutención: 57,82€
-Total aproximado: 1.394,80€
-Referencia: Tablas Salariales del Convenio de Convenio Colectivo de Hostelería de Madrid
-
-Nota importante: Las whisquerías están específicamente mencionadas en la Clase B como establecimientos de categoría media, por lo que aplican las condiciones salariales de esta clasificación.
+Este cálculo NO incluye la manutención ya que no se especifica si el hotel elabora comidas o tiene servicio de restaurante
+Si el establecimiento tiene servicio de restaurante, se añadirían 57,82 euros de manutención
+No se incluyen complementos de nocturnidad al no especificarse horarios nocturnos
+Nota: Este cálculo es una aproximación bruta. Para el salario neto, consulte con su asesoría fiscal.

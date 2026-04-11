@@ -41,14 +41,19 @@
     },
     "categorias_profesionales": {
       "type": "array",
-      "description": "Lista de categorias/puestos profesionales del convenio con su salario base",
+      "description": "Lista COMPLETA de categorias/puestos profesionales del convenio. IMPORTANTE: Extraer TODAS las categorias que aparezcan en las tablas salariales, no solo las principales",
       "items": {
         "type": "object",
-        "required": ["nombre"],
+        "required": ["nombre", "nivel"],
         "properties": {
           "nombre": {
             "type": "string",
             "description": "Nombre de la categoria profesional tal como aparece en el convenio"
+          },
+          "sinonimos": {
+            "type": "array",
+            "description": "Nombres alternativos o equivalentes para esta categoria segun el convenio (ej: 'Camarero/a' puede ser 'Dependiente de Cafeteria', 'Dependiente de 1a')",
+            "items": { "type": "string" }
           },
           "grupo": {
             "type": "string",
@@ -56,25 +61,59 @@
           },
           "nivel": {
             "type": "string",
-            "description": "Nivel dentro del grupo si aplica"
+            "description": "Nivel retributivo (I, II-A, II-B, III, IV, V, etc.). OBLIGATORIO para poder calcular salarios"
           },
           "area_funcional": {
             "type": "string",
-            "description": "Area funcional si el convenio las define"
+            "description": "Area funcional si el convenio las define (Cocina, Sala, Recepcion, Administracion, etc.)"
+          },
+          "salarios": {
+            "type": "object",
+            "description": "Salarios base mensuales por tipo/clase de establecimiento. Las claves son los tipos (A, B, C, D, Lujo, Primera, etc.) y los valores son los importes en euros",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0
+            }
           },
           "salario_base_anual": {
             "type": "number",
-            "description": "Salario base anual en euros. Null si no aparece en el convenio",
+            "description": "Salario base anual en euros (si el convenio no distingue por tipo de establecimiento)",
             "minimum": 0
           },
           "salario_base_mensual": {
             "type": "number",
-            "description": "Salario base mensual en euros (si el convenio lo expresa asi)",
+            "description": "Salario base mensual en euros (si el convenio no distingue por tipo de establecimiento)",
             "minimum": 0
           }
         }
       },
       "minItems": 1
+    },
+    "mapeo_establecimientos": {
+      "type": "object",
+      "description": "Mapeo de tipos de establecimiento comunes a las clases/tipos del convenio. Permite traducir 'hotel 4 estrellas' a 'Clase A'. Las claves son terminos comunes y los valores son las clases del convenio",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "examples": [
+        {
+          "hotel 5 estrellas": "A",
+          "hotel 4 estrellas": "A",
+          "hotel 3 estrellas": "B",
+          "hotel 2 estrellas": "C",
+          "restaurante 5 tenedores": "A",
+          "restaurante 4 tenedores": "A",
+          "restaurante 3 tenedores": "B",
+          "cafeteria 3 tazas": "A",
+          "cafeteria 2 tazas": "B",
+          "cafeteria 1 taza": "C",
+          "bar": "C",
+          "taberna": "C",
+          "whisqueria": "B",
+          "discoteca": "A",
+          "catering": "D"
+        }
+      ]
     },
     "jornada": {
       "type": "object",
@@ -147,6 +186,10 @@
           "condicion": {
             "type": "string",
             "description": "Condicion para aplicar el complemento si la hay"
+          },
+          "excepcion": {
+            "type": "string",
+            "description": "Excepciones o exclusiones: tipos de establecimiento, categorias o situaciones donde NO aplica este complemento (ej: 'No aplica a whisquerias ni bares americanos')"
           },
           "articulo": {
             "type": "string",

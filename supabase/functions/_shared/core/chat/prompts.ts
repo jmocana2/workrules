@@ -50,13 +50,36 @@ export interface ChunkResult {
 }
 
 /**
+ * Categoria profesional con salarios por tipo de establecimiento
+ */
+export interface CategoriaProfesional {
+  nombre: string;
+  sinonimos?: string[];
+  grupo?: string;
+  nivel?: string;
+  area_funcional?: string;
+  /** Salarios por tipo/clase de establecimiento (A, B, C, D, Lujo, Primera...) */
+  salarios?: Record<string, number>;
+  salario_base_anual?: number;
+  salario_base_mensual?: number;
+}
+
+/**
  * Perfil JSON simplificado para contexto
  */
 export interface PerfilContexto {
   variables_criticas: string[];
-  categorias_profesionales?: { nombre: string; salario_base_anual?: number }[];
+  categorias_profesionales?: CategoriaProfesional[];
+  /** Mapeo de tipos de establecimiento comunes a clases del convenio */
+  mapeo_establecimientos?: Record<string, string>;
   jornada?: { horas_anuales?: number };
-  complementos?: { nombre: string; valor?: number; tipo?: string }[];
+  complementos?: {
+    nombre: string;
+    valor?: number;
+    tipo?: string;
+    condicion?: string;
+    excepcion?: string;
+  }[];
   tablas_salariales?: { ano_referencia?: string };
 }
 
@@ -130,7 +153,12 @@ const SYSTEM_PROMPT_CALCULATE_SALARY =
 
 2. **CHAIN OF THOUGHT**: Muestra SIEMPRE el paso a paso del calculo. Cada operacion debe ser verificable.
 
-3. **PRECISION DECIMAL**: Los calculos deben ser exactos. No redondees hasta el resultado final (2 decimales).
+3. **PRECISION DECIMAL MAXIMA**:
+   - Realiza TODOS los calculos intermedios con MAXIMA precision (sin redondear)
+   - Muestra valores intermedios con AL MENOS 3-4 decimales
+   - SOLO redondea a 2 decimales el TOTAL BRUTO FINAL de la tabla resumen
+   - Ejemplo CORRECTO: 191,22 × 11 ÷ 12 = 175,285 → mostrar como "175,285 euros" o "175,29 euros"
+   - Ejemplo INCORRECTO: 191,22 × 11 ÷ 12 = 175,12 euros (perdiste precision)
 
 4. **CITAS OBLIGATORIAS**: Indica que articulo del convenio respalda cada concepto (salario base, plus, recargo).
 
@@ -149,16 +177,16 @@ const SYSTEM_PROMPT_CALCULATE_SALARY =
 - Valor hora: X euros / {{horas_anuales}}h = Z euros/hora
 
 **Paso 2:** [Calculo de complementos/extras]
-- [Concepto]: [Operacion] = Resultado
+- [Concepto]: [Operacion con precision] = Resultado.XXX euros (muestra 3-4 decimales)
 
 **Paso 3:** [Total]
 
 | Concepto | Importe |
 |----------|---------|
 | Salario Base | X,XX euros |
-| [Complemento 1] | Y,YY euros |
-| [Complemento 2] | Z,ZZ euros |
-| **TOTAL BRUTO** | **W,WW euros** |
+| [Complemento 1] | Y,YY euros (redondeado desde Y.YYY) |
+| [Complemento 2] | Z,ZZ euros (redondeado desde Z.ZZZ) |
+| **TOTAL BRUTO** | **W,WW euros** (AQUI SI redondear a 2 decimales) |
 
 **Referencias:**
 - Tabla salarial: Art. [X] ({{ano_tablas}})
@@ -177,12 +205,12 @@ Respuesta:
 **Paso 1:** Valor hora ordinaria
 - Salario base anual: 19.850,00 euros (Art. 31, Tabla 2024)
 - Jornada anual: 1.826 horas
-- Valor hora: 19.850 / 1.826 = **10,87 euros/hora**
+- Valor hora: 19.850 / 1.826 = 10,8730... = **10,873 euros/hora**
 
 **Paso 2:** Horas extraordinarias
 - Recargo laborables: +75% (Art. 32)
-- Valor hora extra: 10,87 x 1,75 = **19,02 euros/hora**
-- Total extras: 19,02 x 10 = **190,20 euros**
+- Valor hora extra: 10,873 x 1,75 = 19,02775 = **19,028 euros/hora**
+- Total extras: 19,028 x 10 = **190,28 euros**
 
 | Concepto | Importe |
 |----------|---------|
@@ -392,7 +420,9 @@ export function buildUserMessage(
   // 3. Perfil JSON (si existe)
   if (perfilContexto) {
     parts.push("\n--- PERFIL DEL CONVENIO ---");
-    parts.push(formatPerfilForContext(perfilContexto));
+    parts.push(
+      formatPerfilForContext(perfilContexto, userQuestion, variablesUsuario),
+    );
   }
 
   // 4. Variables del usuario (si las hay)
@@ -513,12 +543,166 @@ export function formatChunksForContext(chunks: ChunkResult[]): string {
 }
 
 /**
+ * Verifica si una categoría coincide con un término (nombre o sinónimos)
+ */
+function categoryMatchesTerm(
+  cat: CategoriaProfesional,
+  normalizedTerm: string,
+): boolean {
+  // Match por nombre
+  if (normalizeForMatch(cat.nombre) === normalizedTerm) {
+    return true;
+  }
+
+  // Match por sinónimos
+  if (cat.sinonimos) {
+    return cat.sinonimos.some(
+      (sin) => normalizeForMatch(sin) === normalizedTerm,
+    );
+  }
+
+  return false;
+}
+
+/**
+ * Verifica si la pregunta contiene la categoría o sus sinónimos
+ */
+function questionContainsCategory(
+  cat: CategoriaProfesional,
+  normalizedQuestion: string,
+): boolean {
+  const normalizedName = normalizeForMatch(cat.nombre);
+
+  // Match exacto o parcial en nombre
+  if (
+    normalizedQuestion.includes(normalizedName) ||
+    normalizedName.includes(normalizedQuestion)
+  ) {
+    return true;
+  }
+
+  // Match por sinónimos
+  if (cat.sinonimos) {
+    return cat.sinonimos.some((sin) => {
+      const normalizedSin = normalizeForMatch(sin);
+      return (
+        normalizedQuestion.includes(normalizedSin) ||
+        normalizedSin.includes(normalizedQuestion)
+      );
+    });
+  }
+
+  return false;
+}
+
+/**
+ * Añade categoría de variables del usuario al conjunto
+ */
+function addCategoryFromVariables(
+  cats: CategoriaProfesional[],
+  variablesUsuario: Record<string, string> | undefined,
+  selected: Set<CategoriaProfesional>,
+): void {
+  if (!variablesUsuario?.categoria) return;
+
+  const normalizedCategoria = normalizeForMatch(variablesUsuario.categoria);
+  const match = cats.find((cat) =>
+    categoryMatchesTerm(cat, normalizedCategoria)
+  );
+  if (match) {
+    selected.add(match);
+  }
+}
+
+/**
+ * Añade categorías mencionadas en la pregunta
+ */
+function addCategoriesFromQuestion(
+  cats: CategoriaProfesional[],
+  normalizedQuestion: string,
+  selected: Set<CategoriaProfesional>,
+  maxCategories: number,
+): void {
+  if (!normalizedQuestion) return;
+
+  for (const cat of cats) {
+    if (selected.has(cat)) continue;
+
+    if (questionContainsCategory(cat, normalizedQuestion)) {
+      selected.add(cat);
+    }
+
+    if (selected.size >= maxCategories) break;
+  }
+}
+
+/**
+ * Completa con categorías comunes hasta alcanzar el máximo
+ */
+function fillWithCommonCategories(
+  cats: CategoriaProfesional[],
+  selected: Set<CategoriaProfesional>,
+  maxCategories: number,
+): void {
+  const remaining = maxCategories - selected.size;
+  if (remaining <= 0) return;
+
+  let added = 0;
+  for (const cat of cats) {
+    if (selected.has(cat)) continue;
+    selected.add(cat);
+    added++;
+    if (added >= remaining) break;
+  }
+}
+
+/**
+ * Selecciona categorías relevantes para incluir en el contexto
+ * Prioriza:
+ * 1. Categorías mencionadas en variables del usuario
+ * 2. Categorías que matchean con términos en la pregunta
+ * 3. Categorías comunes (primeras N posiciones) como fallback
+ *
+ * @param cats - Array de categorías profesionales
+ * @param userQuestion - Pregunta del usuario (opcional)
+ * @param variablesUsuario - Variables extraídas del usuario (opcional)
+ * @param maxCategories - Número máximo de categorías a retornar (default: 15)
+ * @returns Array de categorías seleccionadas
+ */
+function selectRelevantCategories(
+  cats: CategoriaProfesional[],
+  userQuestion?: string,
+  variablesUsuario?: Record<string, string>,
+  maxCategories = 15,
+): CategoriaProfesional[] {
+  const selected = new Set<CategoriaProfesional>();
+  const normalizedQuestion = userQuestion ? normalizeForMatch(userQuestion) : "";
+
+  // 1. Priorizar categoría de variables del usuario
+  addCategoryFromVariables(cats, variablesUsuario, selected);
+
+  // 2. Buscar categorías mencionadas en la pregunta
+  addCategoriesFromQuestion(cats, normalizedQuestion, selected, maxCategories);
+
+  // 3. Completar con categorías comunes
+  fillWithCommonCategories(cats, selected, maxCategories);
+
+  return Array.from(selected);
+}
+
+/**
  * Formatea Perfil JSON de forma compacta para contexto
  *
  * @param perfil - Perfil del convenio
+ * @param userQuestion - Pregunta del usuario (opcional, para búsqueda inteligente)
+ * @param variablesUsuario - Variables del usuario (opcional, para priorización)
  * @returns String compacto con info relevante
  */
-export function formatPerfilForContext(perfil: PerfilContexto): string {
+export function formatPerfilForContext(
+  perfil: PerfilContexto,
+  userQuestion?: string,
+  variablesUsuario?: Record<string, string>,
+): string {
   const lines: string[] = [];
 
   if (perfil.variables_criticas?.length > 0) {
@@ -527,16 +711,35 @@ export function formatPerfilForContext(perfil: PerfilContexto): string {
 
   const cats = perfil.categorias_profesionales;
   if (cats && cats.length > 0) {
-    const categorias = cats
-      .slice(0, 10) // Limitar a 10 para no saturar
+    // Selección inteligente de categorías relevantes
+    const selectedCats = selectRelevantCategories(
+      cats,
+      userQuestion,
+      variablesUsuario,
+      15, // Aumentado de 10 a 15 para dar más contexto
+    );
+
+    const categorias = selectedCats
       .map((c) => {
         if (c.salario_base_anual) {
           return `${c.nombre} (${c.salario_base_anual} euros/ano)`;
+        }
+        // Para categorías con salarios por establecimiento, mostrar ejemplo
+        if (c.salarios && Object.keys(c.salarios).length > 0) {
+          const firstSalary = Object.values(c.salarios)[0];
+          return `${c.nombre} (${firstSalary} euros/mes clase ${Object.keys(c.salarios)[0]})`;
         }
         return c.nombre;
       })
       .join(", ");
     lines.push(`Categorias: ${categorias}`);
+
+    // Indicar si hay más categorías disponibles
+    if (cats.length > selectedCats.length) {
+      lines.push(
+        `(${cats.length - selectedCats.length} categorias adicionales disponibles)`,
+      );
+    }
   }
 
   if (perfil.jornada?.horas_anuales) {
@@ -545,7 +748,8 @@ export function formatPerfilForContext(perfil: PerfilContexto): string {
 
   const comps = perfil.complementos;
   if (comps && comps.length > 0) {
-    const complementos = comps
+    // Formatear complementos con valor
+    const complementosBasicos = comps
       .slice(0, 5) // Limitar a 5
       .map((c) => {
         if (c.valor && c.tipo) {
@@ -555,7 +759,16 @@ export function formatPerfilForContext(perfil: PerfilContexto): string {
         return c.nombre;
       })
       .join(", ");
-    lines.push(`Complementos: ${complementos}`);
+    lines.push(`Complementos: ${complementosBasicos}`);
+
+    // Mostrar excepciones de complementos (IMPORTANTE para calculos correctos)
+    const excepciones = comps
+      .filter((c) => c.excepcion)
+      .map((c) => `- ${c.nombre}: ${c.excepcion}`);
+    if (excepciones.length > 0) {
+      lines.push(`EXCEPCIONES de complementos:`);
+      lines.push(...excepciones);
+    }
   }
 
   if (perfil.tablas_salariales?.ano_referencia) {
@@ -605,4 +818,181 @@ export function extractPromptContext(
   }
 
   return context;
+}
+
+// ============================================
+// FUNCIONES DE BÚSQUEDA EN PERFIL (v2)
+// ============================================
+
+/**
+ * Normaliza un string para comparación flexible
+ * - Minúsculas
+ * - Sin acentos
+ * - Sin caracteres especiales
+ */
+function normalizeForMatch(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // Quitar acentos
+    .replace(/[^a-z0-9\s]/g, " ") // Solo alfanuméricos
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Busca una categoría profesional en el perfil por nombre o sinónimos
+ *
+ * @param perfil - Perfil del convenio
+ * @param query - Término de búsqueda (ej: "recepcionista", "ayudante de cocina")
+ * @returns La categoría encontrada o null
+ *
+ * @example
+ * const cat = findCategoriaEnPerfil(perfil, "recepcionista");
+ * if (cat) {
+ *   console.log(cat.nivel); // "III"
+ *   console.log(cat.salarios?.["A"]); // 1283.83
+ * }
+ */
+export function findCategoriaEnPerfil(
+  perfil: PerfilContexto | null,
+  query: string,
+): CategoriaProfesional | null {
+  if (!perfil?.categorias_profesionales) return null;
+
+  const normalizedQuery = normalizeForMatch(query);
+
+  for (const cat of perfil.categorias_profesionales) {
+    // Match por nombre exacto normalizado
+    if (normalizeForMatch(cat.nombre) === normalizedQuery) {
+      return cat;
+    }
+
+    // Match parcial (query contenido en nombre)
+    if (normalizeForMatch(cat.nombre).includes(normalizedQuery)) {
+      return cat;
+    }
+
+    // Match por sinónimos
+    if (cat.sinonimos) {
+      for (const sinonimo of cat.sinonimos) {
+        const normalizedSinonimo = normalizeForMatch(sinonimo);
+        if (
+          normalizedSinonimo === normalizedQuery ||
+          normalizedSinonimo.includes(normalizedQuery)
+        ) {
+          return cat;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Mapea un tipo de establecimiento a su clase salarial
+ *
+ * @param perfil - Perfil del convenio
+ * @param establecimiento - Tipo de establecimiento (ej: "hotel 4 estrellas", "bar")
+ * @returns La clase salarial (A, B, C, D...) o null
+ *
+ * @example
+ * const clase = mapearEstablecimiento(perfil, "hotel 4 estrellas");
+ * console.log(clase); // "A"
+ */
+export function mapearEstablecimiento(
+  perfil: PerfilContexto | null,
+  establecimiento: string,
+): string | null {
+  if (!perfil?.mapeo_establecimientos) return null;
+
+  const normalizedEstab = normalizeForMatch(establecimiento);
+
+  // Buscar coincidencia exacta o parcial
+  for (const [key, clase] of Object.entries(perfil.mapeo_establecimientos)) {
+    const normalizedKey = normalizeForMatch(key);
+    if (
+      normalizedKey === normalizedEstab ||
+      normalizedKey.includes(normalizedEstab) ||
+      normalizedEstab.includes(normalizedKey)
+    ) {
+      return clase;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Resultado de búsqueda de salario en el perfil
+ */
+export interface SalarioPerfilResult {
+  salario: number;
+  nivel: string;
+  clase: string | null;
+  categoria: CategoriaProfesional;
+}
+
+/**
+ * Intenta obtener el salario de una categoría directamente del perfil
+ * sin necesidad de RAG. Útil para consultas salariales directas.
+ *
+ * @param perfil - Perfil del convenio
+ * @param categoria - Nombre de la categoría (ej: "recepcionista")
+ * @param establecimiento - Tipo de establecimiento (ej: "hotel 4 estrellas")
+ * @returns Objeto con salario y metadata, o null si no encuentra
+ *
+ * @example
+ * const result = getSalarioFromPerfil(perfil, "recepcionista", "hotel 4 estrellas");
+ * if (result) {
+ *   console.log(result.salario); // 1283.83
+ *   console.log(result.nivel); // "III"
+ *   console.log(result.clase); // "A"
+ * }
+ */
+export function getSalarioFromPerfil(
+  perfil: PerfilContexto | null,
+  categoria: string,
+  establecimiento?: string,
+): SalarioPerfilResult | null {
+  const cat = findCategoriaEnPerfil(perfil, categoria);
+  if (!cat) return null;
+
+  // Si tiene salarios por tipo de establecimiento
+  if (cat.salarios && Object.keys(cat.salarios).length > 0) {
+    // Si se especifica establecimiento, mapear a clase
+    if (establecimiento) {
+      const clase = mapearEstablecimiento(perfil, establecimiento);
+      if (clase && cat.salarios[clase] !== undefined) {
+        return {
+          salario: cat.salarios[clase],
+          nivel: cat.nivel || "",
+          clase,
+          categoria: cat,
+        };
+      }
+    }
+
+    // Sin establecimiento, devolver el primer salario disponible
+    const [primeraClase, primerSalario] = Object.entries(cat.salarios)[0];
+    return {
+      salario: primerSalario,
+      nivel: cat.nivel || "",
+      clase: primeraClase,
+      categoria: cat,
+    };
+  }
+
+  // Fallback a salario único
+  if (cat.salario_base_mensual) {
+    return {
+      salario: cat.salario_base_mensual,
+      nivel: cat.nivel || "",
+      clase: null,
+      categoria: cat,
+    };
+  }
+
+  return null;
 }

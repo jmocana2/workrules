@@ -266,7 +266,7 @@ Deno.test("formatPerfilForContext - formatea perfil compacto", () => {
   assertStringIncludes(result, "Nocturnidad (25%)");
 });
 
-Deno.test("formatPerfilForContext - limita categorias a 10", () => {
+Deno.test("formatPerfilForContext - limita categorias a 15 por defecto", () => {
   const perfil: PerfilContexto = {
     variables_criticas: [],
     categorias_profesionales: Array.from({ length: 20 }, (_, i) => ({
@@ -276,9 +276,9 @@ Deno.test("formatPerfilForContext - limita categorias a 10", () => {
 
   const result = formatPerfilForContext(perfil);
 
-  // Debe tener solo 10
+  // Debe tener solo 15 (límite por defecto de selectRelevantCategories)
   const matches = result.match(/Categoria\d+/g) || [];
-  assertEquals(matches.length, 10);
+  assertEquals(matches.length, 15);
 });
 
 Deno.test("formatPerfilForContext - limita complementos a 5", () => {

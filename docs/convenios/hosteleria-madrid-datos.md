@@ -979,16 +979,16 @@ Esto mejora la similitud semantica con los chunks que contienen las excepciones.
 
 ---
 
-### Test C1.4: PROBLEMA PENDIENTE - Manutencion en Whisquerias
+### Test C1.4: Manutencion en Whisquerias
 
-**Estado:** ❌ NO RESUELTO (2026-04-06)
+**Estado:** ✅ SOLUCION IMPLEMENTADA (2026-04-07)
 
-#### Problema Actual
+#### Problema Original
 
-A pesar de los cambios en prompts y query-expander, el chat **sigue incluyendo la manutencion** (57,82€) para whisquerias cuando NO deberia:
+A pesar de los cambios en prompts y query-expander, el chat **incluia la manutencion** (57,82€) para whisquerias cuando NO deberia:
 
 ```
-Respuesta actual del chat (INCORRECTA):
+Respuesta del chat (INCORRECTA):
 - Salario base: 1.145,76€
 - Plus convenio: 191,22€
 - Manutención: 57,82€  ← NO DEBERIA APARECER
@@ -997,50 +997,103 @@ Respuesta actual del chat (INCORRECTA):
 
 #### Causa Raiz Identificada
 
-El **perfil JSON** del convenio (`convenio_perfiles.perfil_data`) tiene la manutencion SIN la excepcion:
+El **perfil JSON** del convenio (`convenio_perfiles.perfil_data`) tenia la manutencion SIN la excepcion, y la funcion `formatPerfilForContext()` no mostraba excepciones.
+
+#### Solucion Implementada (2026-04-07)
+
+**1. Modificar schema del perfil JSON** (`database/perfil_schema.json`)
+
+Se añadio el campo `excepcion` al tipo de complemento:
 
 ```json
 {
-  "nombre": "Manutención",
-  "articulo": "Art. 28",
-  "condicion": "Establecimientos con servicio restaurante/elaboren comidas",
-  "valor_2025": 57.82
-  // FALTA: "excepcion": "NO aplica a whisquerias ni bares americanos"
+  "excepcion": {
+    "type": "string",
+    "description": "Excepciones o exclusiones: tipos de establecimiento, categorias o situaciones donde NO aplica este complemento"
+  }
 }
 ```
 
-Claude lee el perfil JSON y ve que la manutencion aplica a "establecimientos con servicio restaurante", y como una whisqueria puede tener cocina, asume que aplica.
+**2. Actualizar tipo TypeScript** (`prompts.ts`)
 
-El chunk con la excepcion (124/144/160) dice:
-> "En la seccion quinta, **excepto en bares americanos y whisquerias**, la manutencion sera a cargo de la empresa..."
+```typescript
+complementos?: {
+  nombre: string;
+  valor?: number;
+  tipo?: string;
+  condicion?: string;
+  excepcion?: string;  // NUEVO
+}[];
+```
 
-Pero este chunk **no se esta recuperando** en la busqueda RAG, o no tiene suficiente peso frente al perfil JSON.
+**3. Modificar `formatPerfilForContext()`** (`prompts.ts`)
 
-#### Solucion Propuesta para Proxima Sesion
+Ahora muestra las excepciones de complementos de forma destacada:
 
-**Opcion 1: Actualizar el perfil JSON** (RECOMENDADA)
-
-Modificar el campo de manutencion en `convenio_perfiles` para incluir la excepcion:
-
-```json
-{
-  "nombre": "Manutención",
-  "articulo": "Art. 28",
-  "condicion": "Establecimientos con servicio restaurante/elaboren comidas",
-  "excepcion": "NO aplica a whisquerias ni bares americanos (seccion quinta del convenio)",
-  "valor_2025": 57.82
+```typescript
+// Mostrar excepciones de complementos (IMPORTANTE para calculos correctos)
+const excepciones = comps
+  .filter((c) => c.excepcion)
+  .map((c) => `- ${c.nombre}: ${c.excepcion}`);
+if (excepciones.length > 0) {
+  lines.push(`EXCEPCIONES de complementos:`);
+  lines.push(...excepciones);
 }
 ```
 
-**Opcion 2: Busqueda RAG adicional**
+**4. Script SQL para actualizar datos** (`supabase/snippets/add-manutencion-exception.sql`)
 
-Hacer una segunda busqueda especifica cuando se detecta un tipo de establecimiento con excepciones conocidas.
+Script para añadir la excepcion al perfil del convenio de Hosteleria Madrid:
 
-**Opcion 3: Aumentar chunks recuperados**
+```sql
+UPDATE convenio_perfiles
+SET perfil_data = jsonb_set(
+  perfil_data,
+  '{complementos}',
+  (SELECT jsonb_agg(
+    CASE
+      WHEN elem->>'nombre' ILIKE '%manutenci%'
+      THEN elem || '{"excepcion": "NO aplica a whisquerias ni bares americanos (Art. 28 seccion quinta)"}'::jsonb
+      ELSE elem
+    END
+  ) FROM jsonb_array_elements(perfil_data->'complementos') elem)
+)
+WHERE convenio_id IN (SELECT id FROM convenios WHERE nombre ILIKE '%hosteleria%madrid%');
+```
 
-Subir `DEFAULT_CHUNK_LIMIT` de 8 a 12-15 para aumentar probabilidad de recuperar el chunk de excepciones.
+#### Archivos Modificados (2026-04-07)
 
-#### Archivos Modificados en Esta Sesion (pendientes de validar)
+| Archivo | Cambio | Estado |
+|---------|--------|--------|
+| `database/perfil_schema.json` | Campo `excepcion` en complementos | ✅ Implementado |
+| `prompts.ts` | Tipo PerfilContexto con excepcion | ✅ Implementado |
+| `prompts.ts` | formatPerfilForContext muestra excepciones | ✅ Implementado |
+| `n8n/nodes/indexer/ref_extract_perfil_claude.js` | Prompt extrae excepciones | ✅ Implementado |
+| `add-manutencion-exception.sql` | Script para actualizar BD existente | ✅ Creado |
+
+#### Validacion
+
+- [x] Tests Deno pasan (319/319)
+- [x] TypeScript compila sin errores
+- [ ] Ejecutar script SQL en Supabase
+- [ ] Test manual: verificar calculo correcto 1.336,98€ (sin manutencion)
+
+#### Respuesta Esperada Tras Aplicar Fix
+
+```
+En una whisqueria (Clase B), el salario de Ayudante de cocina es:
+
+| Concepto | Importe |
+|----------|---------|
+| Salario Base | 1.145,76 € |
+| Plus Convenio | 191,22 € |
+| **TOTAL MENSUAL** | **1.336,98 €** |
+
+**Nota:** Las whisquerias y bares americanos estan EXCLUIDOS del derecho
+a manutencion segun el Art. 28 del convenio.
+```
+
+#### Archivos Modificados en Sesiones Anteriores
 
 | Archivo | Cambio | Estado |
 |---------|--------|--------|
@@ -1056,11 +1109,13 @@ Subir `DEFAULT_CHUNK_LIMIT` de 8 a 12-15 para aumentar probabilidad de recuperar
 
 #### Proximos Pasos
 
-1. [ ] Actualizar perfil JSON con excepcion de manutencion
-2. [ ] Probar flujo completo
-3. [ ] Verificar calculo correcto: 1.145,76 + 191,22 = **1.336,98€** (sin manutencion)
-
----
+1. [x] Actualizar schema con campo excepcion
+2. [x] Actualizar formatPerfilForContext
+3. [x] Actualizar prompt del indexer n8n
+4. [ ] **OPCION A**: Ejecutar script SQL en Supabase para actualizar perfil existente
+5. [ ] **OPCION B**: Re-indexar el convenio de Hosteleria Madrid desde n8n (el nuevo prompt extraera las excepciones automaticamente)
+6. [ ] Probar flujo completo
+7. [ ] Verificar calculo correcto: 1.145,76 + 191,22 = **1.336,98€** (sin manutencion)---
 
 ## L) Notas Adicionales
 

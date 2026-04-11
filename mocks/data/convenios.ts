@@ -8,7 +8,7 @@ import type { Convenio, ConversationSummary, PerfilJson } from "@core/types";
 export const MOCK_CONVENIOS: Convenio[] = [
   {
     // ID real del convenio indexado en Supabase local
-    id: "e5b4b3bb-c7d3-46fd-8339-7ba3a43d4474",
+    id: "0ba9d392-42cc-4d78-ac21-47775877387d",
     nombre: "Convenio colectivo de Hosteleria de Madrid",
     ambito: "provincial",
     codigo_boe: "BOCM-20240406",
