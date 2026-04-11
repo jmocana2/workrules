@@ -9,12 +9,13 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import {
   buildSystemPrompt,
   buildUserMessage,
+  type ChunkResult,
+  extractPromptContext,
   formatChunksForContext,
   formatPerfilForContext,
-  extractPromptContext,
-  type PromptContext,
-  type ChunkResult,
+  normalizePerfilContexto,
   type PerfilContexto,
+  type PromptContext,
 } from "./prompts.ts";
 
 // ============================================
@@ -142,7 +143,11 @@ Deno.test("buildSystemPrompt - lanza error con template desconocido", () => {
 
 Deno.test("buildUserMessage - incluye chunks formateados", () => {
   const chunks: ChunkResult[] = [
-    { content: "Articulo sobre vacaciones...", articulo: "25", similarity: 0.9 },
+    {
+      content: "Articulo sobre vacaciones...",
+      articulo: "25",
+      similarity: 0.9,
+    },
     { content: "Otro contenido relevante...", similarity: 0.85 },
   ];
 
@@ -307,6 +312,28 @@ Deno.test("formatPerfilForContext - incluye ano de tablas salariales", () => {
   assertStringIncludes(result, "Ano tablas salariales: 2024");
 });
 
+Deno.test("formatPerfilForContext - incluye numero de pagas anuales", () => {
+  const perfil: PerfilContexto = {
+    variables_criticas: [],
+    numero_pagas: 14,
+  };
+
+  const result = formatPerfilForContext(perfil);
+
+  assertStringIncludes(result, "Numero de pagas anuales: 14");
+});
+
+Deno.test("formatPerfilForContext - lee num_pagas desde tablas salariales", () => {
+  const perfil: PerfilContexto = {
+    variables_criticas: [],
+    tablas_salariales: { ano_referencia: "2024", num_pagas: 14 },
+  };
+
+  const result = formatPerfilForContext(perfil);
+
+  assertStringIncludes(result, "Numero de pagas anuales: 14");
+});
+
 Deno.test("formatPerfilForContext - formatea complementos con cantidad fija", () => {
   const perfil: PerfilContexto = {
     variables_criticas: [],
@@ -357,4 +384,13 @@ Deno.test("extractPromptContext - maneja perfil null", () => {
   assertEquals(result.convenioName, "Test Convenio");
   assertEquals(result.anoTablas, undefined);
   assertEquals(result.horasAnuales, undefined);
+});
+
+Deno.test("normalizePerfilContexto - propaga num_pagas al campo canonico", () => {
+  const result = normalizePerfilContexto({
+    variables_criticas: [],
+    tablas_salariales: { ano_referencia: "2024", num_pagas: 14 },
+  });
+
+  assertEquals(result?.numero_pagas, 14);
 });

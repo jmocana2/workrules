@@ -1,7 +1,10 @@
 // supabase/functions/_shared/lib/supabase.ts
 // Repository para operaciones de base de datos (PostgreSQL + pgvector)
 
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  createClient,
+  SupabaseClient,
+} from "https://esm.sh/@supabase/supabase-js@2";
 
 // ============================================
 // Types
@@ -152,6 +155,56 @@ export function validateNonEmptyString(
   return { valid: true };
 }
 
+/**
+ * Valida una clausula `select` de PostgREST antes de enviarla al servidor.
+ * Previene tokens truncados como `perfil_data-` o accesores JSON incompletos.
+ */
+export function validatePostgrestSelectClause(
+  value: unknown,
+): { valid: boolean; error?: string } {
+  if (!value) {
+    return { valid: false, error: "select clause is required" };
+  }
+
+  if (typeof value !== "string") {
+    return { valid: false, error: "select clause must be a string" };
+  }
+
+  const selectClause = value.trim();
+  if (selectClause.length === 0) {
+    return { valid: false, error: "select clause cannot be empty" };
+  }
+
+  const lastChar = selectClause[selectClause.length - 1];
+  if (lastChar === "," || lastChar === "-") {
+    return {
+      valid: false,
+      error: `select clause cannot end with "${lastChar}"`,
+    };
+  }
+
+  if (/(->>?)(\s*(,|$))/.test(selectClause)) {
+    return {
+      valid: false,
+      error: "select clause has an incomplete JSON accessor",
+    };
+  }
+
+  return { valid: true };
+}
+
+function getValidatedSelectClause<const T extends string>(
+  selectClause: T,
+): T {
+  const normalized = selectClause.trim();
+  const validation = validatePostgrestSelectClause(normalized);
+  if (!validation.valid) {
+    throw new RepositoryError(validation.error!, "INVALID_INPUT");
+  }
+
+  return normalized as T;
+}
+
 // ============================================
 // Supabase Client
 // ============================================
@@ -259,7 +312,7 @@ export async function getPerfilByConvenio(
 
   const { data, error } = await supabase
     .from("convenio_perfiles")
-    .select("perfil_data")
+    .select(getValidatedSelectClause("perfil_data"))
     .eq("convenio_id", convenioId)
     .maybeSingle();
 
@@ -290,7 +343,11 @@ export async function getConvenioById(
 
   const { data, error } = await supabase
     .from("convenios")
-    .select("id, nombre, codigo_regcon, ambito, fecha_vigencia, estado")
+    .select(
+      getValidatedSelectClause(
+        "id, nombre, codigo_regcon, ambito, fecha_vigencia, estado",
+      ),
+    )
     .eq("id", convenioId)
     .maybeSingle();
 
@@ -322,9 +379,9 @@ export async function searchSemanticCache(
     );
   }
 
-  const convenioValidation = validateUUID(convenioId, 'convenioId');
+  const convenioValidation = validateUUID(convenioId, "convenioId");
   if (!convenioValidation.valid) {
-    throw new RepositoryError(convenioValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(convenioValidation.error!, "INVALID_INPUT");
   }
 
   const supabase = getSupabaseClient(client);
@@ -403,9 +460,9 @@ export async function saveToSemanticCache(
     throw new RepositoryError(responseValidation.error!, "INVALID_INPUT");
   }
 
-  const convenioValidation = validateUUID(convenioId, 'convenioId');
+  const convenioValidation = validateUUID(convenioId, "convenioId");
   if (!convenioValidation.valid) {
-    throw new RepositoryError(convenioValidation.error!, 'INVALID_INPUT');
+    throw new RepositoryError(convenioValidation.error!, "INVALID_INPUT");
   }
 
   const supabase = getSupabaseClient(client);
@@ -452,7 +509,7 @@ export async function getOrCreateChatSession(
   // Buscar sesion existente reciente (ultimas 24h)
   const { data: existing, error: lookupError } = await supabase
     .from("chat_sessions")
-    .select("id")
+    .select(getValidatedSelectClause("id"))
     .eq("user_id", userId)
     .eq("convenio_id", convenioId)
     .gte(
@@ -482,7 +539,7 @@ export async function getOrCreateChatSession(
       convenio_id: convenioId,
       title: title || "Nueva consulta",
     })
-    .select("id")
+    .select(getValidatedSelectClause("id"))
     .single();
 
   if (error) {
@@ -558,7 +615,11 @@ export async function checkUserQuota(
 
   const { data, error } = await supabase
     .from("user_profiles")
-    .select("subscription_tier, monthly_queries_used, monthly_query_limit")
+    .select(
+      getValidatedSelectClause(
+        "subscription_tier, monthly_queries_used, monthly_query_limit",
+      ),
+    )
     .eq("id", userId)
     .maybeSingle();
 

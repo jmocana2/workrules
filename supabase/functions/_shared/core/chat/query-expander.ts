@@ -9,6 +9,12 @@
  * Mapa de sinónimos del dominio laboral español.
  * Clave: término que puede usar el usuario
  * Valor: términos alternativos que aparecen en los convenios
+ *
+ * TODO: Este diccionario manual no escala bien con muchos convenios.
+ * En el futuro considerar:
+ * - Embeddings semánticos para expansión dinámica
+ * - LLM para generar expansiones contextuales
+ * - Base de datos de sinónimos por sector/convenio
  */
 const LABOR_SYNONYMS: Record<string, string[]> = {
   // Categorías y clasificación profesional
@@ -98,6 +104,42 @@ const LABOR_SYNONYMS: Record<string, string[]> = {
   ],
   discoteca: ["salas de fiestas", "salas de baile", "clase A"],
   "sala de fiestas": ["discoteca", "salas de baile", "clase A"],
+
+  // Términos coloquiales de hostelería que NO aparecen en convenios
+  // pero que usuarios utilizan frecuentemente
+  "camarera de pisos": [
+    "personal de limpieza",
+    "auxiliar de limpieza",
+    "limpiador",
+    "limpiadora",
+    "camarera de habitaciones",
+    "personal de habitaciones",
+  ],
+  "camarero de pisos": [
+    "personal de limpieza",
+    "auxiliar de limpieza",
+    "limpiador",
+    "personal de habitaciones",
+  ],
+  "camarera de piso": [
+    "personal de limpieza",
+    "auxiliar de limpieza",
+    "limpiadora",
+    "camarera de habitaciones",
+  ],
+  "camarero de piso": [
+    "personal de limpieza",
+    "auxiliar de limpieza",
+    "limpiador",
+  ],
+
+  // Otros términos coloquiales comunes
+  "pinche de cocina": ["ayudante de cocina", "auxiliar de cocina", "pinche"],
+  friegaplatos: ["fregador", "limpiador de vajilla", "fregadora"],
+  "jefe de cocina": ["chef", "cocinero jefe"],
+  "segundo de cocina": ["segundo jefe de cocina", "subchef"],
+  botones: ["mozo de equipaje", "portero", "auxiliar de conserjería"],
+  "empleada de hogar": ["personal de limpieza", "limpiadora"],
 };
 
 /**

@@ -48,11 +48,12 @@ import {
   buildInvalidMessage,
   classifyDataState,
 } from "./data-classifier.ts";
-import type { ChunkResult, PerfilContexto } from "./prompts.ts";
+import type { ChunkResult } from "./prompts.ts";
 import {
   buildSystemPrompt,
   buildUserMessage,
   extractPromptContext,
+  normalizePerfilContexto,
 } from "./prompts.ts";
 import { expandQuery } from "./query-expander.ts";
 import type {
@@ -247,12 +248,14 @@ export async function calculateSalary(
       deps.getPerfilByConvenio(input.convenioId),
     ]);
 
-    const perfilContexto = perfil as PerfilContexto | null;
+    const perfilContexto = normalizePerfilContexto(perfil);
 
     // ========================================
     // 5. Extraer variables del mensaje
     // ========================================
-    const extractedVars = extractVariables(input.pregunta, perfilContexto);
+    // IMPORTANTE: Usar expandedQuery para que los sinónimos del query-expander
+    // ayuden a encontrar categorías (ej: "camarera de pisos" → "auxiliar de limpieza")
+    const extractedVars = extractVariables(expandedQuery, perfilContexto);
 
     // Merge con variables conocidas de turnos anteriores
     const allVariables = mergeVariables(

@@ -73,6 +73,8 @@ export interface PerfilContexto {
   /** Mapeo de tipos de establecimiento comunes a clases del convenio */
   mapeo_establecimientos?: Record<string, string>;
   jornada?: { horas_anuales?: number };
+  /** Numero total de pagas anuales del convenio (campo canonico para prompts) */
+  numero_pagas?: number;
   complementos?: {
     nombre: string;
     valor?: number;
@@ -80,7 +82,11 @@ export interface PerfilContexto {
     condicion?: string;
     excepcion?: string;
   }[];
-  tablas_salariales?: { ano_referencia?: string };
+  tablas_salariales?: {
+    ano_referencia?: string;
+    num_pagas?: number;
+    pagas_extra?: number;
+  };
 }
 
 // ============================================
@@ -167,6 +173,10 @@ const SYSTEM_PROMPT_CALCULATE_SALARY =
 6. **FUERA DE ALCANCE**: NO calcules retenciones IRPF ni cuotas de Seguridad Social. Indica que consulten con su gestoria para el neto.
 
 7. **EXCEPCIONES Y COMPLEMENTOS ESPECIALES**: Si el contexto menciona excepciones o condiciones especiales para el tipo de establecimiento o categoria del usuario (ej: "excepto en whisquerias la manutencion no aplica", "solo para establecimientos con servicio de restaurante"), DEBES mencionarlas. Indica claramente que complementos SI aplican y cuales NO aplican segun el caso concreto.
+
+8. **CATEGORIA IDENTIFICADA ES LA CORRECTA**: Si has identificado una categoria profesional en los datos del usuario (ej: "Auxiliar de Limpieza"), esa ES la categoria correcta para el calculo. NO sugieras que podria ser otra categoria diferente ni menciones ambiguedades sobre el nombre que uso el usuario en su pregunta. Calcula directamente con la categoria identificada.
+
+9. **NUMERO DE PAGAS**: El perfil del convenio especifica el numero total de pagas anuales (ej: 14 pagas = 12 mensualidades + 2 pagas extra). DEBES usar este numero para calcular el salario anual total. NO asumas 12 pagas si el convenio indica otro numero. Formula: Salario anual = Salario base mensual × Numero de pagas del convenio.
 
 ## FORMATO DE RESPUESTA
 
@@ -533,10 +543,9 @@ export function formatChunksForContext(chunks: ChunkResult[]): string {
         ref = getRefSinArticulo(chunk);
       }
       // Solo añadir sección si no está ya incluida en ref
-      const seccion =
-        chunk.seccion && !ref.includes(chunk.seccion)
-          ? ` - ${chunk.seccion}`
-          : "";
+      const seccion = chunk.seccion && !ref.includes(chunk.seccion)
+        ? ` - ${chunk.seccion}`
+        : "";
       return `[${i + 1}]${ref}${seccion}\n${chunk.content}`;
     })
     .join("\n\n");
@@ -676,7 +685,9 @@ function selectRelevantCategories(
   maxCategories = 15,
 ): CategoriaProfesional[] {
   const selected = new Set<CategoriaProfesional>();
-  const normalizedQuestion = userQuestion ? normalizeForMatch(userQuestion) : "";
+  const normalizedQuestion = userQuestion
+    ? normalizeForMatch(userQuestion)
+    : "";
 
   // 1. Priorizar categoría de variables del usuario
   addCategoryFromVariables(cats, variablesUsuario, selected);
@@ -704,6 +715,8 @@ export function formatPerfilForContext(
   variablesUsuario?: Record<string, string>,
 ): string {
   const lines: string[] = [];
+  const numeroPagas = perfil.numero_pagas ??
+    perfil.tablas_salariales?.num_pagas;
 
   if (perfil.variables_criticas?.length > 0) {
     lines.push(`Variables criticas: ${perfil.variables_criticas.join(", ")}`);
@@ -727,7 +740,9 @@ export function formatPerfilForContext(
         // Para categorías con salarios por establecimiento, mostrar ejemplo
         if (c.salarios && Object.keys(c.salarios).length > 0) {
           const firstSalary = Object.values(c.salarios)[0];
-          return `${c.nombre} (${firstSalary} euros/mes clase ${Object.keys(c.salarios)[0]})`;
+          return `${c.nombre} (${firstSalary} euros/mes clase ${
+            Object.keys(c.salarios)[0]
+          })`;
         }
         return c.nombre;
       })
@@ -737,13 +752,19 @@ export function formatPerfilForContext(
     // Indicar si hay más categorías disponibles
     if (cats.length > selectedCats.length) {
       lines.push(
-        `(${cats.length - selectedCats.length} categorias adicionales disponibles)`,
+        `(${
+          cats.length - selectedCats.length
+        } categorias adicionales disponibles)`,
       );
     }
   }
 
   if (perfil.jornada?.horas_anuales) {
     lines.push(`Jornada anual: ${perfil.jornada.horas_anuales} horas`);
+  }
+
+  if (typeof numeroPagas === "number") {
+    lines.push(`Numero de pagas anuales: ${numeroPagas}`);
   }
 
   const comps = perfil.complementos;
@@ -795,21 +816,23 @@ export function extractPromptContext(
     convenioName,
   };
 
-  if (perfil) {
-    if (perfil.tablas_salariales?.ano_referencia) {
-      context.anoTablas = perfil.tablas_salariales.ano_referencia;
+  const perfilNormalizado = normalizePerfilContexto(perfil);
+
+  if (perfilNormalizado) {
+    if (perfilNormalizado.tablas_salariales?.ano_referencia) {
+      context.anoTablas = perfilNormalizado.tablas_salariales.ano_referencia;
     }
 
-    if (perfil.jornada?.horas_anuales) {
-      context.horasAnuales = perfil.jornada.horas_anuales;
+    if (perfilNormalizado.jornada?.horas_anuales) {
+      context.horasAnuales = perfilNormalizado.jornada.horas_anuales;
     }
 
-    if (perfil.variables_criticas?.length > 0) {
-      context.variablesFaltantes = [...perfil.variables_criticas];
+    if (perfilNormalizado.variables_criticas?.length > 0) {
+      context.variablesFaltantes = [...perfilNormalizado.variables_criticas];
     }
 
     // Construir opciones de variables
-    const categorias = perfil.categorias_profesionales;
+    const categorias = perfilNormalizado.categorias_profesionales;
     if (categorias && categorias.length > 0) {
       context.opcionesVariables = {
         categoria: categorias.map((c) => c.nombre),
@@ -818,6 +841,34 @@ export function extractPromptContext(
   }
 
   return context;
+}
+
+/**
+ * Normaliza el perfil para exponer aliases canonicos usados por los prompts.
+ *
+ * Algunos perfiles llegan con `tablas_salariales.num_pagas`; este helper lo copia
+ * a `numero_pagas` para que el prompt pueda consumirlo de forma consistente.
+ */
+export function normalizePerfilContexto(
+  perfil: PerfilContexto | Record<string, unknown> | null,
+): PerfilContexto | null {
+  if (!perfil) {
+    return null;
+  }
+
+  const perfilContexto = perfil as PerfilContexto;
+  const numeroPagas = typeof perfilContexto.numero_pagas === "number"
+    ? perfilContexto.numero_pagas
+    : perfilContexto.tablas_salariales?.num_pagas;
+
+  if (typeof numeroPagas !== "number") {
+    return perfilContexto;
+  }
+
+  return {
+    ...perfilContexto,
+    numero_pagas: numeroPagas,
+  };
 }
 
 // ============================================

@@ -26,7 +26,13 @@ REGLAS ESTRICTAS:
 5. Si hay ambiguedad en un dato, incluyelo en el array "notas_extraccion" explicando la ambiguedad.
 6. Responde UNICAMENTE con el JSON. Sin texto antes ni despues. Sin bloques de codigo markdown.
 7. El JSON debe ser valido y parseable directamente.
-8. IMPORTANTE: Extrae TODAS las categorias profesionales que aparezcan en las tablas salariales, no solo las principales.`;
+8. IMPORTANTE: Extrae TODAS las categorias profesionales que aparezcan en las tablas salariales, no solo las principales.
+9. SINONIMOS OBLIGATORIOS: Para cada categoria profesional, DEBES incluir:
+   - Variaciones de genero del nombre principal (masculino/femenino)
+   - TODOS los sinonimos que el convenio liste entre parentesis
+   - Variaciones de genero de terminos cortos (1-2 palabras) en los sinonimos
+   - Sé conservador: NO generes todas las combinaciones posibles, solo las mas relevantes
+   - Ejemplo: "Gobernanta" → ["Gobernante"]; "Auxiliar (o Ayudante, Mozo/a)" → ["Ayudante", "Mozo", "Moza"]`;
 
 function buildUserPrompt(markdown) {
   return `Analiza el siguiente convenio colectivo y extrae un JSON estructurado con esta informacion:
@@ -36,8 +42,13 @@ function buildUserPrompt(markdown) {
 2. **Variables criticas**: lista de variables que un usuario necesitaria para un calculo salarial preciso. Solo incluye variables que REALMENTE afecten al salario segun este convenio.
 
 3. **Categorias profesionales**: Extrae TODAS las categorias/puestos que aparezcan en las tablas salariales y clasificacion profesional del convenio. NO solo las principales, TODAS. Para cada una incluye:
-   - nombre: nombre exacto tal como aparece
-   - sinonimos: array de nombres alternativos que el convenio liste para esta categoria. Por ejemplo, si dice "Camarero/a (o Dependiente de Cafeteria, Dependiente de 1a, Planchista...)", incluye todos esos sinonimos en el array.
+   - nombre: nombre exacto tal como aparece en el convenio
+   - sinonimos: array de nombres alternativos. DEBES incluir:
+     * Variaciones de género del NOMBRE PRINCIPAL: Si el convenio lista "Auxiliar de Limpieza", incluye "Auxiliares de Limpieza" en sinonimos
+     * TODOS los sinónimos que el convenio liste entre paréntesis: Si dice "Auxiliar de Limpieza (o Personal de Limpieza, Fregador/a, Limpiador/a)", incluye TODOS esos terminos en el array
+     * Variaciones de género de términos cortos en los sinónimos: Si un sinónimo es "Fregador/a", incluye "Fregador" y "Fregadora"
+     * NO generes todas las combinaciones posibles de género/número de TODOS los sinónimos (solo los más relevantes)
+     * Ejemplo: "Auxiliar de Limpieza (o Personal de Limpieza, Fregador/a, Limpiador/a)" → sinonimos: ["Auxiliares de Limpieza", "Personal de Limpieza", "Fregador", "Fregadora", "Limpiador", "Limpiadora"]
    - grupo: grupo profesional si existe
    - nivel: OBLIGATORIO - nivel retributivo (I, II-A, II-B, II-C, III, III-A, III-B, IV, V, etc.)
    - area_funcional: area funcional si el convenio la define (Cocina, Sala, Recepcion, Administracion, etc.)
@@ -93,8 +104,8 @@ FORMATO DE SALIDA - JSON con esta estructura:
   "variables_criticas": ["string"],
   "categorias_profesionales": [
     {
-      "nombre": "string",
-      "sinonimos": ["string"],
+      "nombre": "string (nombre exacto del convenio)",
+      "sinonimos": ["variacion genero", "variacion singular/plural", "denominacion alternativa"],
       "grupo": "string",
       "nivel": "string (OBLIGATORIO)",
       "area_funcional": "string",
@@ -119,6 +130,57 @@ FORMATO DE SALIDA - JSON con esta estructura:
   "variables_especificas": { "nombre_variable": ["valor1", "valor2"] },
   "notas_extraccion": ["string"]
 }
+
+EJEMPLOS CONCRETOS DE CATEGORIAS PROFESIONALES:
+
+Ejemplo 1 - Categoria simple:
+Convenio: "Gobernanta"
+Extraccion:
+{
+  "nombre": "Gobernanta",
+  "sinonimos": ["Gobernante"],
+  "nivel": "IV",
+  "salarios": { "A": 1400.00 }
+}
+
+Ejemplo 2 - Categoria con sinonimos del convenio:
+Convenio: "Auxiliar de Limpieza (o Personal de Limpieza, Fregador/a, Limpiador/a, Mozo de Lavanderia)"
+Extraccion:
+{
+  "nombre": "Auxiliar de Limpieza",
+  "sinonimos": [
+    "Auxiliares de Limpieza",
+    "Personal de Limpieza",
+    "Fregador",
+    "Fregadora",
+    "Limpiador",
+    "Limpiadora",
+    "Mozo de Lavanderia",
+    "Moza de Lavanderia"
+  ],
+  "nivel": "V",
+  "salarios": { "A": 1150.00 }
+}
+
+Ejemplo 3 - Categoria con muchos sinonimos (ser selectivo):
+Convenio: "Camarero/a (o Dependiente de Cafeteria, Dependiente de 1a, Planchista, Cafetero/a)"
+Extraccion:
+{
+  "nombre": "Camarero/a",
+  "sinonimos": [
+    "Camarero",
+    "Camarera",
+    "Dependiente de Cafeteria",
+    "Dependiente de 1a",
+    "Planchista",
+    "Cafetero",
+    "Cafetera"
+  ],
+  "nivel": "III",
+  "salarios": { "A": 1283.83 }
+}
+
+IMPORTANTE: Extrae TODOS los sinonimos que el convenio mencione. Genera variaciones de genero solo de terminos cortos y relevantes. Se conservador para evitar explotar el array.
 
 Omite campos sin informacion. No inventes datos.
 

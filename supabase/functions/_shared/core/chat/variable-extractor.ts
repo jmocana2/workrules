@@ -143,10 +143,11 @@ function extractNivelHotel(text: string): string | null {
 
 /**
  * Busca una categoria profesional conocida en el mensaje
+ * Busca tanto en el nombre como en los sinónimos de la categoría
  */
 function findCategoria(
   message: string,
-  categorias: Array<{ nombre: string }>,
+  categorias: Array<{ nombre: string; sinonimos?: string[] }>,
 ): string | undefined {
   const lowerMessage = message.toLowerCase();
 
@@ -156,8 +157,18 @@ function findCategoria(
   );
 
   for (const cat of sorted) {
+    // Buscar en nombre
     if (lowerMessage.includes(cat.nombre.toLowerCase())) {
       return cat.nombre;
+    }
+
+    // Buscar en sinónimos
+    if (cat.sinonimos && cat.sinonimos.length > 0) {
+      for (const sinonimo of cat.sinonimos) {
+        if (lowerMessage.includes(sinonimo.toLowerCase())) {
+          return cat.nombre;
+        }
+      }
     }
   }
 

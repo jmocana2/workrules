@@ -30,11 +30,12 @@ import {
   searchChunksByConvenio as defaultSearchChunksByConvenio,
   searchSemanticCache as defaultSearchSemanticCache,
 } from "../../lib/supabase.ts";
-import type { ChunkResult, PerfilContexto } from "./prompts.ts";
+import type { ChunkResult } from "./prompts.ts";
 import {
   buildSystemPrompt,
   buildUserMessage,
   extractPromptContext,
+  normalizePerfilContexto,
 } from "./prompts.ts";
 import { expandQuery } from "./query-expander.ts";
 import type { ChatCitation, ChatHistoryMessage } from "./types.ts";
@@ -197,7 +198,8 @@ function getChunkArticulo(
   metadata: Record<string, unknown>,
 ): string | undefined {
   const tipo = metadata?.tipo as string | undefined;
-  const seccion = (metadata?.seccion as string | undefined)?.toLowerCase() || "";
+  const seccion = (metadata?.seccion as string | undefined)?.toLowerCase() ||
+    "";
   const articulo = metadata?.articulo as string | undefined;
 
   // Tipos que NO deben mostrar artículo
@@ -206,8 +208,7 @@ function getChunkArticulo(
   }
 
   // Secciones de ANEXO no tienen artículos numerados
-  const esAnexo =
-    seccion.includes("anexo") ||
+  const esAnexo = seccion.includes("anexo") ||
     seccion.includes("tabla") ||
     seccion.includes("disposicion") ||
     seccion.includes("clasificación profesional") ||
@@ -360,7 +361,7 @@ export async function askQuestion(
     // ========================================
     // 6. Construir prompts
     // ========================================
-    const perfilContexto = perfil as PerfilContexto | null;
+    const perfilContexto = normalizePerfilContexto(perfil);
     const promptContext = extractPromptContext(perfilContexto, convenio.nombre);
     const systemPrompt = buildSystemPrompt("ask-question", promptContext);
 

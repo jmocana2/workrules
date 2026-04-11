@@ -1,30 +1,30 @@
-¿Cuanto cobra un recepcionista de hotel de 4 estrellas?
+¿Cuál es el salario mínimo del convenio?
+Análisis del salario mínimo del Convenio de Hostelería de Madrid (2025):
 
-Cálculo para Recepcionista - Hotel 4 estrellas:
+Paso 1: Identificación del nivel salarial más bajo
 
-Paso 1: Salario base mensual
+Según las tablas salariales 2025 (Art. 25, Anexo III), el Nivel V es el más bajo
+Salario base mensual Nivel V: 1.175,66 euros (Tabla 2025)
+Paso 2: Complementos mínimos garantizados
 
-Salario base: 1.283,83 euros/mes (según Perfil del Convenio - Categoría Recepcionista clase A)
-Paso 2: Plus de convenio
-
-Plus convenio: 191,22 euros (Art. convenio)
-Aplicación: 191,22 × 11 ÷ 12 = 175,285 euros mensuales
-Paso 3: Total mensual
+Plus convenio: 191,22 euros × 11 meses ÷ 12 meses = 175,285 euros/mes
+Manutención: Solo aplica si el establecimiento tiene servicio de restaurante y/o elabora comidas (57,82 euros)
+Paso 3: Cálculo del salario mínimo
 
 
 
 
 Concepto	Importe
-Salario Base	1.283,83 euros
-Plus Convenio (11 meses)	175,29 euros
-TOTAL BRUTO	1.459,12 euros
+Salario Base (Nivel V)	1.175,66 euros
+Plus Convenio	175,29 euros
+SALARIO MÍNIMO CONVENIO	1.350,95 euros
+Consideraciones adicionales:
+
+Manutención (+57,82 euros): Solo para establecimientos con servicio de restaurante y/o que elaboren comidas
+Verificación SMI: El salario mínimo del convenio (1.350,95 euros) es superior al SMI 2025 (1.221 euros), por lo que se aplica el del convenio
 Referencias:
 
-Salario base: Perfil del Convenio (Tablas 2025)
-Plus convenio: Art. convenio (191,22 euros durante 11 meses)
-Notas importantes:
-
-Este cálculo NO incluye la manutención ya que no se especifica si el hotel elabora comidas o tiene servicio de restaurante
-Si el establecimiento tiene servicio de restaurante, se añadirían 57,82 euros de manutención
-No se incluyen complementos de nocturnidad al no especificarse horarios nocturnos
-Nota: Este cálculo es una aproximación bruta. Para el salario neto, consulte con su asesoría fiscal.
+Tabla salarial 2025: Art. 25, Anexo III
+Plus convenio: Art. 31 (191,22 euros durante 11 meses)
+Manutención: Anexo III (57,82 euros, condicionada)
+Nota: Este es el salario mínimo bruto según convenio. Para establecimientos con restaurante, se añadirían 57,82 euros de manutención. Para el salario neto, consulte con su asesoría fiscal.
