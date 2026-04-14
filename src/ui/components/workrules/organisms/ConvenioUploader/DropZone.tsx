@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { useCallback, useState } from 'react';
+import { useCallback, useId, useState } from 'react';
 
 interface DropZoneProps {
   onFileSelect: (file: File) => void;
@@ -14,6 +14,7 @@ export function DropZone({
 }: DropZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const errorId = useId();
 
   const validateFile = useCallback((file: File): string | null => {
     // Validar tipo MIME
@@ -85,6 +86,7 @@ export function DropZone({
       tabIndex={disabled ? -1 : 0}
       aria-disabled={disabled}
       aria-label="Subir archivo PDF"
+      aria-describedby={error ? errorId : undefined}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       onDrop={handleDrop}
@@ -127,7 +129,10 @@ export function DropZone({
 
       {/* Error */}
       {error && (
-        <div className="mt-4 px-3 py-2 rounded-md bg-[var(--colorsSemanticErrorAlpha3)] border border-[var(--colorsSemanticError9)]">
+        <div
+          id={errorId}
+          className="mt-4 px-3 py-2 rounded-md bg-[var(--colorsSemanticErrorAlpha3)] border border-[var(--colorsSemanticError9)]"
+        >
           <p className="text-xs text-[var(--colorsSemanticError11)]">
             {error}
           </p>

@@ -227,9 +227,8 @@ Por tanto, asignar:
 {
   "nombre": "Camarero/a",
   "nivel": "III",  // NO "I"
-  "sinonimos": ["Camarero", "Camarera", "Dependiente de Cafetería", ...]
+  "sinonimos": ["Camarero", "Camarera", "Dependiente de Cafetería"]
 }
-
 IMPORTANTE: Extrae TODOS los sinonimos que el convenio mencione. Genera variaciones de genero solo de terminos cortos y relevantes. Se conservador para evitar explotar el array.
 
 Omite campos sin informacion. No inventes datos.

@@ -57,6 +57,22 @@
   --app-dropzone-text-primary: var(--colorsDefaultBlack, #111111);
   --app-dropzone-text-secondary: var(--colorsNeutralNeutral8, #5a6169);
   --app-dropzone-text-muted: var(--colorsNeutralNeutral9, #696e77);
+
+  /* UploadProgress component */
+  --app-upload-bg: var(--colorsDefaultWhite, #ffffff);
+  --app-upload-border: #d9d9e0;
+  --app-upload-filename: #1c2024;
+  --app-upload-cancel: #60646c;
+  --app-upload-cancel-hover: #1c2024;
+  --app-upload-progressbar-bg: #e8e8ec;
+  --app-upload-processing-hint: #8b8d98;
+
+  /* ConvenioPreview component */
+  --app-preview-bg: var(--colorsDefaultWhite, #ffffff);
+  --app-preview-border: #d9d9e0;
+  --app-preview-header-text: #1c2024;
+  --app-preview-label-text: #8b8d98;
+  --app-preview-value-text: #1c2024;
 }
 
 .dark {
@@ -110,6 +126,22 @@
   --app-dropzone-text-primary: var(--colorsNeutralNeutral12, #edeef0);
   --app-dropzone-text-secondary: var(--colorsNeutralNeutral11, #b0b4ba);
   --app-dropzone-text-muted: var(--colorsNeutralNeutral11, #b0b4ba);
+
+  /* UploadProgress component */
+  --app-upload-bg: var(--panelSolid, #18191b);
+  --app-upload-border: var(--colorsNeutralNeutral6, #363a3f);
+  --app-upload-filename: var(--colorsNeutralNeutral12, #edeef0);
+  --app-upload-cancel: var(--colorsNeutralNeutral11, #b0b4ba);
+  --app-upload-cancel-hover: var(--colorsNeutralNeutral12, #edeef0);
+  --app-upload-progressbar-bg: var(--colorsNeutralNeutral4, #272a2d);
+  --app-upload-processing-hint: var(--colorsNeutralNeutral9, #696e77);
+
+  /* ConvenioPreview component */
+  --app-preview-bg: var(--panelSolid, #111923);
+  --app-preview-border: var(--colorsNeutralNeutral6, #363a3f);
+  --app-preview-header-text: var(--colorsNeutralNeutral12, #edeef0);
+  --app-preview-label-text: var(--colorsNeutralNeutral9, #696e77);
+  --app-preview-value-text: var(--colorsNeutralNeutral12, #edeef0);
 }
 
 /* Tailwind aliases → Style Dictionary tokens */
