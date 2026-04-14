@@ -2,6 +2,7 @@ export { Sidebar } from './Sidebar/Sidebar';
 export { ConvenioSelector } from './ConvenioSelector/ConvenioSelector';
 export { VariablesPanel } from './VariablesPanel/VariablesPanel';
 export { ConvenioManager } from './ConvenioManager/ConvenioManager';
+export { DropZone } from './ConvenioUploader';
 
 // Types
 export type { SidebarProps } from './Sidebar/Sidebar';

@@ -51,6 +51,12 @@
   --app-button-destructive-bg: #b4232b;
   --app-button-destructive-fg: #ffffff;
   --app-button-destructive-hover: #9f1f26;
+
+  /* DropZone component */
+  --app-dropzone-icon: var(--colorsNeutralNeutral11, #5f6670);
+  --app-dropzone-text-primary: var(--colorsDefaultBlack, #111111);
+  --app-dropzone-text-secondary: var(--colorsNeutralNeutral8, #5a6169);
+  --app-dropzone-text-muted: var(--colorsNeutralNeutral9, #696e77);
 }
 
 .dark {
@@ -98,6 +104,12 @@
   --app-button-destructive-bg: #ff7a80;
   --app-button-destructive-fg: #2b0a0b;
   --app-button-destructive-hover: #ff9095;
+
+  /* DropZone component */
+  --app-dropzone-icon: var(--colorsNeutralNeutral11, #b0b4ba);
+  --app-dropzone-text-primary: var(--colorsNeutralNeutral12, #edeef0);
+  --app-dropzone-text-secondary: var(--colorsNeutralNeutral11, #b0b4ba);
+  --app-dropzone-text-muted: var(--colorsNeutralNeutral11, #b0b4ba);
 }
 
 /* Tailwind aliases → Style Dictionary tokens */
