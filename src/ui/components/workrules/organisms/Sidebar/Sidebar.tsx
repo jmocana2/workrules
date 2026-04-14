@@ -4,6 +4,7 @@ import { Button } from '@ui/components/shadcn/button';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Separator } from '@ui/components/shadcn/separator';
 import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
+import { ConvenioUploader } from '@ui/components/workrules/organisms/ConvenioUploader';
 import { CrownIcon, MessageSquareIcon, PlusIcon, SettingsIcon } from 'lucide-react';
 
 export interface SidebarProps {
@@ -13,6 +14,7 @@ export interface SidebarProps {
   onNewConversation: () => void;
   onSelectConversation: (id: string) => void;
   onOpenSettings: () => void;
+  onConvenioUploaded?: (convenioId: string) => void;
   className?: string;
 }
 
@@ -23,6 +25,7 @@ export function Sidebar({
   onNewConversation,
   onSelectConversation,
   onOpenSettings,
+  onConvenioUploaded,
   className,
 }: SidebarProps) {
   return (
@@ -118,6 +121,18 @@ export function Sidebar({
       </ScrollArea>
 
       <Separator className="bg-border" />
+
+      {/* Uploader de convenios (solo premium) */}
+      {userPlan === 'premium' && (
+        <div className="p-4">
+          <ConvenioUploader
+            isPremium={true}
+            onConvenioReady={onConvenioUploaded}
+          />
+        </div>
+      )}
+
+      {userPlan === 'premium' && <Separator className="bg-border" />}
 
       {/* Footer con Plan Badge y Settings */}
       <footer className="flex items-center justify-between border-t border-border p-4">

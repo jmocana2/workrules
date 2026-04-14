@@ -81,6 +81,9 @@ const meta = {
     onOpenSettings: {
       description: 'Callback ejecutado al hacer clic en el botón de configuración',
     },
+    onConvenioUploaded: {
+      description: 'Callback ejecutado cuando se completa la subida de un convenio (solo premium)',
+    },
     className: {
       control: 'text',
       description: 'Clases CSS adicionales',
@@ -90,6 +93,7 @@ const meta = {
     onNewConversation: fn(),
     onSelectConversation: fn(),
     onOpenSettings: fn(),
+    onConvenioUploaded: fn(),
   },
   decorators: [
     (Story: () => React.JSX.Element) => (
@@ -131,6 +135,9 @@ export const Empty: Story = {
 
 /**
  * Sidebar con plan Premium
+ *
+ * Incluye el ConvenioUploader que permite a usuarios premium subir sus propios convenios colectivos.
+ * El uploader solo se muestra para usuarios con plan premium.
  */
 export const Premium: Story = {
   args: {
