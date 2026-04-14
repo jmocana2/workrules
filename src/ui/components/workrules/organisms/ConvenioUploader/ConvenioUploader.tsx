@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useConvenioUpload } from '@/ui/hooks/useConvenioUpload';
+import { useEffect, useRef, useState } from 'react';
+import { ConvenioPreview } from './ConvenioPreview';
 import { DropZone } from './DropZone';
 import { UploadProgress } from './UploadProgress';
-import { ConvenioPreview } from './ConvenioPreview';
 import { VisibilitySelector } from './VisibilitySelector';
-import { useConvenioUpload } from '@/ui/hooks/useConvenioUpload';
 
 interface ConvenioUploaderProps {
   isPremium?: boolean;
@@ -14,6 +14,9 @@ export function ConvenioUploader({
   isPremium = false,
   onConvenioReady
 }: ConvenioUploaderProps) {
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
   const [pendingUpload, setPendingUpload] = useState<{
     fileUrl: string;
     fileName: string;
@@ -29,21 +32,49 @@ export function ConvenioUploader({
   } = useConvenioUpload({
     onSuccess: (convenioId) => {
       onConvenioReady?.(convenioId);
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+      }
       // Reset despues de 3 segundos de mostrar "ready"
-      setTimeout(reset, 3000);
+      resetTimeoutRef.current = setTimeout(() => {
+        reset();
+        resetTimeoutRef.current = null;
+      }, 3000);
     }
   });
+
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+        resetTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // No renderizar si no es premium
   if (!isPremium) return null;
 
   const handleFileSelect = async (file: File) => {
-    const result = await uploadFile(file);
-    if (result) {
-      setPendingUpload({
-        fileUrl: result.fileUrl,
-        fileName: file.name
-      });
+    setUploadErrorMessage(null);
+    setIsUploading(true);
+
+    try {
+      const result = await uploadFile(file);
+      if (result) {
+        setPendingUpload({
+          fileUrl: result.fileUrl,
+          fileName: file.name
+        });
+      } else {
+        setUploadErrorMessage('No se pudo completar la subida. Intentalo de nuevo.');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error inesperado al subir archivo';
+      console.error('Error en handleFileSelect', error);
+      setUploadErrorMessage(message);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -63,7 +94,16 @@ export function ConvenioUploader({
     <div className="space-y-3">
       {/* Estado idle: mostrar dropzone */}
       {state.status === 'idle' && (
-        <DropZone onFileSelect={handleFileSelect} />
+        <DropZone
+          onFileSelect={handleFileSelect}
+          disabled={isUploading}
+        />
+      )}
+
+      {uploadErrorMessage && state.status === 'idle' && (
+        <div className="px-3 py-2 rounded-md border border-[var(--colorsSemanticError9)] bg-[var(--colorsSemanticErrorAlpha3)]">
+          <p className="text-sm text-[var(--colorsSemanticError11)]">{uploadErrorMessage}</p>
+        </div>
       )}
 
       {/* Estado uploading/validating/processing/ready/error: mostrar progress */}

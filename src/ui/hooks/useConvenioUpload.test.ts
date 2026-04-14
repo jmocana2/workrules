@@ -22,6 +22,7 @@ vi.mock("@/lib/supabase", () => ({
 describe("useConvenioUpload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("should start in idle state", () => {
@@ -35,18 +36,23 @@ describe("useConvenioUpload", () => {
       data: { user: { id: "user-123" } },
     });
 
-    // Mock storage upload
-    const mockUpload = vi.fn().mockResolvedValue({
-      data: { path: "user-123/test.pdf" },
-      error: null,
+    // Mock session for access token
+    (supabase.auth as any).getSession = vi.fn().mockResolvedValue({
+      data: { session: { access_token: "fake-token" } },
     });
+
+    // Mock fetch for file upload
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    });
+    vi.stubGlobal("fetch", mockFetch);
 
     const mockGetPublicUrl = vi.fn().mockReturnValue({
       data: { publicUrl: "https://example.com/test.pdf" },
     });
 
     (supabase.storage.from as any).mockReturnValue({
-      upload: mockUpload,
       getPublicUrl: mockGetPublicUrl,
     });
 
@@ -71,14 +77,18 @@ describe("useConvenioUpload", () => {
       data: { user: { id: "user-123" } },
     });
 
-    const mockUpload = vi.fn().mockResolvedValue({
-      data: null,
-      error: new Error("Upload failed"),
+    // Mock session for access token
+    (supabase.auth as any).getSession = vi.fn().mockResolvedValue({
+      data: { session: { access_token: "fake-token" } },
     });
 
-    (supabase.storage.from as any).mockReturnValue({
-      upload: mockUpload,
+    // Mock fetch to return error
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ error: "Upload failed" }),
     });
+    vi.stubGlobal("fetch", mockFetch);
 
     const onError = vi.fn();
     const { result } = renderHook(() => useConvenioUpload({ onError }));
