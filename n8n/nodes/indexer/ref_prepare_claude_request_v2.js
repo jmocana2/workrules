@@ -32,7 +32,17 @@ REGLAS ESTRICTAS:
    - TODOS los sinonimos que el convenio liste entre parentesis
    - Variaciones de genero de terminos cortos (1-2 palabras) en los sinonimos
    - Sé conservador: NO generes todas las combinaciones posibles, solo las mas relevantes
-   - Ejemplo: "Gobernanta" → ["Gobernante"]; "Auxiliar (o Ayudante, Mozo/a)" → ["Ayudante", "Mozo", "Moza"]`;
+   - Ejemplo: "Gobernanta" → ["Gobernante"]; "Auxiliar (o Ayudante, Mozo/a)" → ["Ayudante", "Mozo", "Moza"]
+10. MANEJO DE SALTOS DE PÁGINA Y ENCABEZADOS DUPLICADOS:
+   - Los convenios procesados pueden tener saltos de página que crean secciones duplicadas o fragmentadas
+   - Ignora completamente encabezados de páginas (ej: "BOCM", "B.O.C.M.", "BOLETÍN OFICIAL", "Pág. XX", "SÁBADO", fechas de publicación)
+   - Si encuentras MÚLTIPLES secciones con el MISMO NIVEL (ej: dos secciones "NIVEL III" separadas), combínalas en una sola
+   - Usa el CONTEXTO y la COHERENCIA SEMÁNTICA para determinar el nivel correcto de cada categoría:
+     * Personal cualificado (Cocinero/a, Recepcionista, Camarero/a) suele estar en NIVEL III
+     * Personal de supervisión (Jefe de Cocina, Encargado/a) suele estar en NIVEL II o superior
+     * Ayudantes y auxiliares suelen estar en NIVEL IV o V
+   - Si una categoría aparece en dos niveles diferentes y hay evidencia de salto de página entre ellos, elige el nivel que tenga categorías de similar cualificación
+   - En caso de duda genuina entre dos niveles para la misma categoría, documéntalo en "notas_extraccion"`;
 
 function buildUserPrompt(markdown) {
   return `Analiza el siguiente convenio colectivo y extrae un JSON estructurado con esta informacion:
@@ -54,6 +64,16 @@ function buildUserPrompt(markdown) {
    - area_funcional: area funcional si el convenio la define (Cocina, Sala, Recepcion, Administracion, etc.)
    - salarios: objeto con salario base MENSUAL por tipo/clase de establecimiento. Las claves son los tipos del convenio (A, B, C, D, Lujo, Primera, Segunda, Tercera, Cuarta) y los valores son los importes en euros. Ejemplo: {"A": 1283.83, "B": 1250.91, "C": 1160.37, "D": 1277.36}
    - salario_base_mensual: solo si el convenio NO distingue por tipo de establecimiento
+
+   IMPORTANTE - CLASIFICACIÓN PROFESIONAL Y SALTOS DE PÁGINA:
+   - Los convenios pueden tener saltos de página que FRAGMENTAN las tablas de clasificación profesional
+   - Si encuentras la MISMA categoría profesional listada en MÚLTIPLES NIVELES diferentes:
+     1. Verifica si hay encabezados de página entre las secciones (ej: "Pág. 42", "BOCM-...", "B.O.C.M. Núm. XX")
+     2. Busca CONTINUIDAD LÓGICA: si ves "Recepcionista", "Cocinero/a", "Encargado/a de Economato" en NIVEL III, y después de un salto de página aparece una nueva sección con "Camarero/a", "Conductor/a", "Ayudante de Supervisor/a" bajo un encabezado "NIVEL I", es MUY PROBABLE que sea una CONTINUACIÓN del NIVEL III
+     3. Usa el CONTEXTO de categorías similares: Camarero/a cualificado tiene nivel similar a Cocinero/a y Recepcionista
+     4. En hostelería: Cocinero/a, Recepcionista, Camarero/a, Repostero/a son típicamente NIVEL III; Ayudante de Camarero/a, Ayudante de Cocina son NIVEL IV o V
+   - Si detectas este patrón de fragmentación, COMBINA las secciones y asigna el nivel correcto basándote en la coherencia semántica
+   - Si después del análisis aún tienes duda genuina, documéntalo en "notas_extraccion"
 
 4. **Mapeo de establecimientos**: Crea un objeto que mapee tipos de establecimiento comunes a las clases salariales del convenio. Busca en el convenio la clasificacion de establecimientos y crea el mapeo. Ejemplo:
    {
@@ -178,6 +198,36 @@ Extraccion:
   ],
   "nivel": "III",
   "salarios": { "A": 1283.83 }
+}
+
+Ejemplo 4 - Manejo de saltos de página (CASO REAL):
+Convenio tiene salto de página que fragmenta NIVEL III:
+
+Sección 1 (antes del salto):
+"NIVEL III (Nivel III-A Sector Catering)
+- Recepcionista, Administrativo/a (...)
+- Cocinero/a (o Cocinero/a)
+- Repostero/a (o Repostero/a)
+- Encargado/a de Economato (...)"
+
+[SALTO DE PÁGINA: "Pág. 42 SÁBADO 6 DE ABRIL DE 2024 B.O.C.M. Núm. 82", "BOCM-20240406-2"]
+
+Sección 2 (después del salto - INCORRECTAMENTE etiquetada):
+"### NIVEL I
+- Camarero/a (o Camarero/a, Dependiente de Cafetería, ...)
+- Conductor/a de Equipo de Catering (o Conductor/a)
+- Ayudante de Supervisor/a"
+
+EXTRACCIÓN CORRECTA: Detectar que "Camarero/a" y "Conductor/a de Equipo de Catering" son CONTINUACIÓN de NIVEL III (no NIVEL I), porque:
+1. Hay encabezado de página entre las secciones
+2. Camarero/a tiene cualificación similar a Cocinero/a y Recepcionista
+3. "Conductor/a de Equipo" aparece explícitamente con "(Nivel III-A Sector Catering)" en la primera sección
+
+Por tanto, asignar:
+{
+  "nombre": "Camarero/a",
+  "nivel": "III",  // NO "I"
+  "sinonimos": ["Camarero", "Camarera", "Dependiente de Cafetería", ...]
 }
 
 IMPORTANTE: Extrae TODOS los sinonimos que el convenio mencione. Genera variaciones de genero solo de terminos cortos y relevantes. Se conservador para evitar explotar el array.

@@ -1,30 +1,58 @@
-¿Cuál es el salario mínimo del convenio?
-Análisis del salario mínimo del Convenio de Hostelería de Madrid (2025):
+Comparar salario de cocinero vs jefe de cocina
 
-Paso 1: Identificación del nivel salarial más bajo
+Comparativa salarial: Cocinero/a vs Jefe de Cocina (2025):
 
-Según las tablas salariales 2025 (Art. 25, Anexo III), el Nivel V es el más bajo
-Salario base mensual Nivel V: 1.175,66 euros (Tabla 2025)
-Paso 2: Complementos mínimos garantizados
+COCINERO/A
+Paso 1: Salario base mensual
 
-Plus convenio: 191,22 euros × 11 meses ÷ 12 meses = 175,285 euros/mes
-Manutención: Solo aplica si el establecimiento tiene servicio de restaurante y/o elabora comidas (57,82 euros)
-Paso 3: Cálculo del salario mínimo
+Salario base: 1.283,83 euros/mes (Tablas salariales 2025)
+Jornada anual: 1.800 horas
+Valor hora: 1.283,83 × 14 ÷ 12 = 1.497,80 euros/mes anual ÷ 150h/mes = 9,985 euros/hora
+Paso 2: Complementos mensuales
+
+Plus convenio: 191,22 × 11 ÷ 12 = 175,285 euros/mes
+Manutención: 57,82 euros/mes
+Paso 3: Total mensual Cocinero/a
 
 
 
 
 Concepto	Importe
-Salario Base (Nivel V)	1.175,66 euros
+Salario Base	1.283,83 euros
 Plus Convenio	175,29 euros
-SALARIO MÍNIMO CONVENIO	1.350,95 euros
-Consideraciones adicionales:
+Manutención	57,82 euros
+TOTAL BRUTO	1.516,94 euros
+JEFE DE COCINA
+Paso 1: Salario base mensual
 
-Manutención (+57,82 euros): Solo para establecimientos con servicio de restaurante y/o que elaboren comidas
-Verificación SMI: El salario mínimo del convenio (1.350,95 euros) es superior al SMI 2025 (1.221 euros), por lo que se aplica el del convenio
+Salario base: 1.415,47 euros/mes (Tablas salariales 2025)
+Valor hora: 1.415,47 × 14 ÷ 12 = 1.651,38 euros/mes anual ÷ 150h/mes = 11,009 euros/hora
+Paso 2: Complementos mensuales
+
+Plus convenio: 191,22 × 11 ÷ 12 = 175,285 euros/mes
+Manutención: 57,82 euros/mes
+Paso 3: Total mensual Jefe de Cocina
+
+
+
+
+Concepto	Importe
+Salario Base	1.415,47 euros
+Plus Convenio	175,29 euros
+Manutención	57,82 euros
+TOTAL BRUTO	1.648,58 euros
+COMPARATIVA RESUMEN
+
+
+
+Categoría	Salario Base	Total Bruto	Diferencia
+Cocinero/a	1.283,83 euros	1.516,94 euros	-
+Jefe de Cocina	1.415,47 euros	1.648,58 euros	+131,64 euros
+Diferencia porcentual: El Jefe de Cocina cobra un 8,68% más que el Cocinero/a.
+
 Referencias:
 
-Tabla salarial 2025: Art. 25, Anexo III
-Plus convenio: Art. 31 (191,22 euros durante 11 meses)
-Manutención: Anexo III (57,82 euros, condicionada)
-Nota: Este es el salario mínimo bruto según convenio. Para establecimientos con restaurante, se añadirían 57,82 euros de manutención. Para el salario neto, consulte con su asesoría fiscal.
+Tablas salariales: 2025
+Plus convenio: Durante 11 meses (191,22 euros)
+Manutención: Personal de cocina (57,82 euros)
+Nota: Estos cálculos son aproximaciones brutas. Para el salario neto, consulte con su asesoría fiscal.
