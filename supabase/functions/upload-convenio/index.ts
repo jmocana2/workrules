@@ -1,7 +1,7 @@
 // supabase/functions/upload-convenio/index.ts
 // Edge Function: POST /upload-convenio - Subida de convenios colectivos (Premium)
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "@supabase/supabase-js";
 import { corsHeaders } from "../_shared/lib/cors.ts";
 
 // ============================================
@@ -116,6 +116,7 @@ function validateRequest(
 
 /**
  * Dispara el webhook de n8n para iniciar el procesamiento
+ * Timeout de 5 segundos - el procesamiento real puede tardar minutos
  */
 async function triggerN8nWebhook(payload: {
   convenio_id: string;
@@ -132,11 +133,18 @@ async function triggerN8nWebhook(payload: {
   }
 
   try {
+    // Timeout de 5 segundos para el webhook
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
     const response = await fetch(n8nWebhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.warn(
@@ -148,7 +156,14 @@ async function triggerN8nWebhook(payload: {
       );
     }
   } catch (error) {
-    console.error("[upload-convenio] Error calling n8n webhook:", error);
+    // Si es timeout, está bien - el webhook se disparó correctamente
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log(
+        `[upload-convenio] n8n webhook timeout (expected) - processing continues in background`,
+      );
+    } else {
+      console.error("[upload-convenio] Error calling n8n webhook:", error);
+    }
     // No propagamos el error - el webhook es opcional
   }
 }
@@ -279,18 +294,7 @@ Deno.serve(async (req: Request) => {
     const convenioId = convenio.id;
 
     // ========================================
-    // 8. Disparar webhook a n8n
-    // ========================================
-    await triggerN8nWebhook({
-      convenio_id: convenioId,
-      pdf_url: file_url,
-      nombre_archivo,
-      visibilidad,
-      owner_id: user.id,
-    });
-
-    // ========================================
-    // 9. Actualizar estado a "procesando"
+    // 8. Actualizar estado a "procesando" ANTES del webhook
     // ========================================
     const { error: updateError } = await supabase
       .from("convenios")
@@ -304,6 +308,32 @@ Deno.serve(async (req: Request) => {
       );
       // No fallamos la request - el convenio se quedará en "pendiente"
     }
+
+    // ========================================
+    // 9. Disparar webhook a n8n
+    // ========================================
+    // Reemplazar localhost por host.docker.internal para que n8n pueda acceder desde Docker
+    let pdfUrlForN8n = file_url;
+    try {
+      const parsedUrl = new URL(file_url);
+      if (parsedUrl.hostname === "localhost") {
+        parsedUrl.hostname = "host.docker.internal";
+        pdfUrlForN8n = parsedUrl.toString();
+      }
+    } catch {
+      // If URL parsing fails, use original URL
+      console.warn(
+        "[upload-convenio] Could not parse file_url for localhost replacement",
+      );
+    }
+
+    await triggerN8nWebhook({
+      convenio_id: convenioId,
+      pdf_url: pdfUrlForN8n,
+      nombre_archivo,
+      visibilidad,
+      owner_id: user.id,
+    });
 
     // ========================================
     // 10. Responder con éxito

@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useConvenioUpload } from "./useConvenioUpload";
 
@@ -48,12 +48,14 @@ describe("useConvenioUpload", () => {
     });
     vi.stubGlobal("fetch", mockFetch);
 
-    const mockGetPublicUrl = vi.fn().mockReturnValue({
-      data: { publicUrl: "https://example.com/test.pdf" },
+    // Mock createSignedUrl (instead of getPublicUrl)
+    const mockCreateSignedUrl = vi.fn().mockResolvedValue({
+      data: { signedUrl: "https://example.com/test.pdf?token=abc123" },
+      error: null,
     });
 
     (supabase.storage.from as any).mockReturnValue({
-      getPublicUrl: mockGetPublicUrl,
+      createSignedUrl: mockCreateSignedUrl,
     });
 
     const { result } = renderHook(() => useConvenioUpload());
@@ -67,7 +69,7 @@ describe("useConvenioUpload", () => {
 
     expect(result.current.state.status).toBe("preview");
     expect(uploadResult).toEqual({
-      fileUrl: "https://example.com/test.pdf",
+      fileUrl: "https://example.com/test.pdf?token=abc123",
       filePath: expect.stringContaining("user-123/"),
     });
   });
@@ -104,6 +106,9 @@ describe("useConvenioUpload", () => {
   });
 
   it("should confirm upload and start polling", async () => {
+    // Use fake timers to control setTimeout
+    vi.useFakeTimers();
+
     // Mock edge function response
     (supabase.functions.invoke as any).mockResolvedValue({
       data: { convenio_id: "convenio-123" },
@@ -139,16 +144,37 @@ describe("useConvenioUpload", () => {
     });
 
     expect(result.current.state.status).toBe("processing");
+    if (result.current.state.status === "processing") {
+      expect(result.current.state.progress).toBe(0);
+      expect(result.current.state.estimatedTimeLeft).toBe(150);
+    }
 
-    // Wait for polling to complete
-    await waitFor(() => {
-      expect(result.current.state.status).toBe("ready");
-    }, { timeout: 1000 });
+    // Advance timers to trigger polling
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
 
+    // Should transition to 100% processing
+    expect(result.current.state.status).toBe("processing");
+    if (result.current.state.status === "processing") {
+      expect(result.current.state.progress).toBe(100);
+    }
+
+    // Advance timers past the 800ms transition
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(900);
+    });
+
+    // Now should be ready
+    expect(result.current.state.status).toBe("ready");
     expect(onSuccess).toHaveBeenCalledWith("convenio-123");
+
+    vi.useRealTimers();
   });
 
   it("should handle processing errors", async () => {
+    vi.useFakeTimers();
+
     (supabase.functions.invoke as any).mockResolvedValue({
       data: { convenio_id: "convenio-123" },
       error: null,
@@ -181,12 +207,16 @@ describe("useConvenioUpload", () => {
       );
     });
 
-    // Wait for polling to detect error
-    await waitFor(() => {
-      expect(result.current.state.status).toBe("error");
-    }, { timeout: 1000 });
+    // Advance timers to trigger polling
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
 
+    // Should detect error
+    expect(result.current.state.status).toBe("error");
     expect(onError).toHaveBeenCalledWith("Processing failed");
+
+    vi.useRealTimers();
   });
 
   it("should reset state and cleanup", async () => {

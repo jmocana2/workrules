@@ -56,7 +56,7 @@ export function ChatPage({
   mockConvenios = MOCK_CONVENIOS,
   mockPerfil,
   mockConversations = MOCK_CONVERSATIONS,
-  mockUserPlan = 'free',
+  mockUserPlan = 'premium',
   className,
 }: ChatPageProps) {
   const {

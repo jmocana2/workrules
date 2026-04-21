@@ -20,8 +20,8 @@ export const MOCK_CONVENIOS: Convenio[] = [
     updated_at: new Date().toISOString(),
   },
   {
-    id: "b2c3d4e5-f6a7-8901-bcde-f23456789012",
-    nombre: "Convenio Estatal de Hostelería",
+    id: "1ee80c2a-64f5-4416-bd75-7b098feaecb1",
+    nombre: "Convenio TIC",
     ambito: "estatal",
     codigo_boe: "BOE-A-2023-23456",
     url_boe: "https://boe.es/buscar/doc.php?id=BOE-A-2023-23456",

@@ -142,24 +142,32 @@ describe('UploadProgress', () => {
   });
 
   describe('Estado "processing"', () => {
-    it('muestra el texto "Procesando convenio..."', () => {
-      render(<UploadProgress {...defaultProps} status="processing" />);
+    it('muestra el texto "Procesando convenio..." con porcentaje', () => {
+      render(<UploadProgress {...defaultProps} status="processing" processingProgress={45} />);
 
-      expect(screen.getByText('Procesando convenio...')).toBeInTheDocument();
+      expect(screen.getByText(/Procesando convenio\.\.\. 45%/)).toBeInTheDocument();
     });
 
-    it('muestra mensaje adicional "Esto puede tardar unos minutos..."', () => {
+    it('muestra tiempo estimado restante', () => {
+      render(<UploadProgress {...defaultProps} status="processing" estimatedTimeLeft={90} />);
+
+      expect(
+        screen.getByText(/Tiempo estimado restante:/i)
+      ).toBeInTheDocument();
+    });
+
+    it('muestra mensaje descriptivo del procesamiento', () => {
       render(<UploadProgress {...defaultProps} status="processing" />);
 
       expect(
-        screen.getByText(/Esto puede tardar unos minutos/i)
+        screen.getByText(/Extrayendo texto, generando embeddings/i)
       ).toBeInTheDocument();
     });
 
     it('usa el color correcto (Warning)', () => {
-      render(<UploadProgress {...defaultProps} status="processing" />);
+      render(<UploadProgress {...defaultProps} status="processing" processingProgress={50} />);
 
-      const statusLabel = screen.getByText('Procesando convenio...');
+      const statusLabel = screen.getByText(/Procesando convenio\.\.\. 50%/);
       expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticWarning9)' });
     });
 
@@ -170,10 +178,18 @@ describe('UploadProgress', () => {
       expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
     });
 
-    it('NO muestra barra de progreso', () => {
-      render(<UploadProgress {...defaultProps} status="processing" />);
+    it('SÍ muestra barra de progreso', () => {
+      render(<UploadProgress {...defaultProps} status="processing" processingProgress={60} />);
 
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      const progressBar = screen.queryByRole('progressbar');
+      expect(progressBar).toBeInTheDocument();
+    });
+
+    it('actualiza el ancho de la barra según el porcentaje de procesamiento', () => {
+      render(<UploadProgress {...defaultProps} status="processing" processingProgress={75} />);
+
+      const progressBar = screen.getByRole('progressbar');
+      expect(progressBar).toHaveStyle({ width: '75%' });
     });
   });
 
@@ -370,8 +386,8 @@ describe('UploadProgress', () => {
       statusLabel = screen.getByText('Validando estructura...');
       expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticInfo9)' });
 
-      rerender(<UploadProgress {...defaultProps} status="processing" />);
-      statusLabel = screen.getByText('Procesando convenio...');
+      rerender(<UploadProgress {...defaultProps} status="processing" processingProgress={50} />);
+      statusLabel = screen.getByText(/Procesando convenio\.\.\. 50%/);
       expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticWarning9)' });
 
       rerender(<UploadProgress {...defaultProps} status="ready" />);
@@ -418,11 +434,27 @@ describe('UploadProgress', () => {
       expect(onCancel).toHaveBeenCalledTimes(3);
     });
 
-    it('muestra mensaje de procesamiento completo', () => {
-      render(<UploadProgress {...defaultProps} status="processing" />);
+    it('muestra mensaje de procesamiento con tiempo estimado', () => {
+      render(<UploadProgress {...defaultProps} status="processing" estimatedTimeLeft={120} />);
 
       expect(
-        screen.getByText('Esto puede tardar unos minutos. Te notificaremos cuando esté listo.')
+        screen.getByText(/Tiempo estimado restante: ~2 min/)
+      ).toBeInTheDocument();
+    });
+
+    it('formatea correctamente el tiempo restante en segundos', () => {
+      render(<UploadProgress {...defaultProps} status="processing" estimatedTimeLeft={45} />);
+
+      expect(
+        screen.getByText(/~45 seg/)
+      ).toBeInTheDocument();
+    });
+
+    it('muestra "Finalizando..." cuando el tiempo restante es 0', () => {
+      render(<UploadProgress {...defaultProps} status="processing" estimatedTimeLeft={0} />);
+
+      expect(
+        screen.getByText(/Finalizando\.\.\./)
       ).toBeInTheDocument();
     });
   });

@@ -59,28 +59,37 @@ COMMENT ON COLUMN user_profiles.reset_date IS 'Fecha de reinicio del contador me
 CREATE TABLE convenios (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     nombre VARCHAR(500) NOT NULL,
-    codigo_regcon VARCHAR(100) UNIQUE NOT NULL,
-    ambito VARCHAR(200) NOT NULL,
-    fecha_vigencia DATE NOT NULL,
+    codigo_regcon VARCHAR(100),
+    ambito VARCHAR(200),
+    fecha_vigencia DATE,
     url_pdf TEXT,
     markdown_completo TEXT,
     version VARCHAR(50) DEFAULT '1.0',
-    estado VARCHAR(50) DEFAULT 'activo' CHECK (estado IN ('activo', 'derogado', 'pendiente', 'archivado')),
+    estado VARCHAR(50) DEFAULT 'activo' CHECK (estado IN ('activo', 'derogado', 'pendiente', 'archivado', 'procesando', 'error')),
+    visibilidad VARCHAR(10) DEFAULT 'publico' CHECK (visibilidad IN ('publico', 'privado')),
+    owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    error_message TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Índices para convenios
-CREATE INDEX idx_convenios_codigo_regcon ON convenios(codigo_regcon);
+CREATE UNIQUE INDEX idx_convenios_codigo_regcon_unique ON convenios(codigo_regcon) WHERE codigo_regcon IS NOT NULL;
 CREATE INDEX idx_convenios_estado ON convenios(estado);
 CREATE INDEX idx_convenios_fecha_vigencia ON convenios(fecha_vigencia);
 CREATE INDEX idx_convenios_ambito ON convenios(ambito);
+CREATE INDEX idx_convenios_owner ON convenios(owner_id);
+CREATE INDEX idx_convenios_visibilidad ON convenios(visibilidad);
 
 -- Comentarios
 COMMENT ON TABLE convenios IS 'Tabla principal de convenios colectivos';
-COMMENT ON COLUMN convenios.codigo_regcon IS 'Código único del Registro de Convenios';
-COMMENT ON COLUMN convenios.ambito IS 'Ámbito de aplicación del convenio (provincial, estatal, empresa, etc.)';
+COMMENT ON COLUMN convenios.codigo_regcon IS 'Código único del Registro de Convenios (NULL para convenios privados subidos por usuarios)';
+COMMENT ON COLUMN convenios.ambito IS 'Ámbito de aplicación del convenio (provincial, estatal, empresa, etc.) (NULL permitido para convenios privados)';
+COMMENT ON COLUMN convenios.fecha_vigencia IS 'Fecha de vigencia del convenio (NULL permitido para convenios privados)';
 COMMENT ON COLUMN convenios.markdown_completo IS 'Markdown completo del convenio parseado por LlamaParse';
+COMMENT ON COLUMN convenios.visibilidad IS 'Visibilidad del convenio: publico (todos) o privado (solo owner)';
+COMMENT ON COLUMN convenios.owner_id IS 'Usuario que subió el convenio (NULL para convenios públicos del sistema)';
+COMMENT ON COLUMN convenios.error_message IS 'Mensaje de error si el procesamiento falló (solo si estado = error)';
 
 -- -----------------------------------------------------------------------------
 -- Tabla: convenio_chunks
@@ -466,15 +475,36 @@ CREATE POLICY "Los usuarios pueden crear su propio perfil"
     WITH CHECK (auth.uid() = id);
 
 -- -----------------------------------------------------------------------------
--- Políticas: convenios (públicos)
+-- Políticas: convenios
 -- -----------------------------------------------------------------------------
 
--- Todos pueden leer convenios activos
-CREATE POLICY "Convenios públicos legibles por todos"
+-- SELECT: Ver convenios públicos, propios, o legacy sin owner
+CREATE POLICY "convenios_visibility"
     ON convenios FOR SELECT
-    USING (estado = 'activo');
+    USING (
+        -- Convenios públicos: deben ser activos y públicos
+        (visibilidad = 'publico' AND estado = 'activo')
+        -- Convenios propios: el owner siempre puede ver sus convenios (cualquier estado/visibilidad)
+        OR (owner_id = auth.uid())
+        -- Convenios legacy sin owner: visibles para todos si están activos
+        OR (owner_id IS NULL AND estado = 'activo')
+    );
 
--- Solo admins pueden modificar (implementar con roles en el futuro)
+-- INSERT: Usuarios autenticados pueden crear convenios
+CREATE POLICY "usuarios_pueden_crear_convenios"
+    ON convenios FOR INSERT
+    WITH CHECK (
+        auth.uid() IS NOT NULL
+        AND owner_id = auth.uid()
+    );
+
+-- UPDATE: Usuarios pueden actualizar solo sus propios convenios
+CREATE POLICY "usuarios_pueden_actualizar_sus_convenios"
+    ON convenios FOR UPDATE
+    USING (owner_id = auth.uid())
+    WITH CHECK (owner_id = auth.uid());
+
+-- Solo admins pueden modificar convenios públicos (implementar con roles en el futuro)
 -- CREATE POLICY "Solo admins pueden modificar convenios"
 --     ON convenios FOR ALL
 --     USING (auth.jwt() ->> 'role' = 'admin');

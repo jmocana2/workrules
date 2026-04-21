@@ -2,12 +2,26 @@ import { cn } from '@/lib/utils';
 
 export type UploadStatus = 'uploading' | 'validating' | 'processing' | 'ready' | 'error';
 
+function formatTimeLeft(seconds: number): string {
+  if (seconds <= 0) return 'Finalizando...';
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  if (minutes > 0) {
+    return `~${minutes} min ${remainingSeconds} seg`;
+  }
+  return `~${remainingSeconds} seg`;
+}
+
 export interface UploadProgressProps {
   status: UploadStatus;
   progress?: number;
   fileName: string;
   errorMessage?: string;
   onCancel?: () => void;
+  processingProgress?: number;
+  estimatedTimeLeft?: number;
 }
 
 interface StatusConfig {
@@ -50,18 +64,22 @@ export function UploadProgress({
   fileName,
   errorMessage,
   onCancel,
+  processingProgress = 0,
+  estimatedTimeLeft = 0,
 }: UploadProgressProps) {
   const config = STATUS_CONFIG[status];
   const clampedProgress = Math.min(100, Math.max(0, progress));
+  const clampedProcessingProgress = Math.min(100, Math.max(0, processingProgress));
   const showCancelButton = onCancel && status !== 'ready' && status !== 'error';
-  const showProgressBar = status === 'uploading';
+  const showProgressBar = status === 'uploading' || status === 'processing';
   const showProcessingMessage = status === 'processing';
+  const currentProgress = status === 'processing' ? clampedProcessingProgress : clampedProgress;
 
   return (
     <div
       className={cn(
         'p-4 rounded-lg border',
-        'bg-[var(--app-upload-bg)] border-[var(--app-upload-border)]'
+        'bg-(--app-upload-bg) border-(--app-upload-border)'
       )}
     >
       {/* Header */}
@@ -71,7 +89,7 @@ export function UploadProgress({
             {config.icon}
           </span>
           <span
-            className="text-sm font-medium text-[var(--app-upload-filename)] truncate max-w-[150px]"
+            className="text-sm font-medium text-(--app-upload-filename) truncate max-w-37.5"
             title={fileName}
           >
             {fileName}
@@ -81,7 +99,7 @@ export function UploadProgress({
           <button
             onClick={onCancel}
             className={cn(
-              'text-xs text-[var(--app-upload-cancel)] hover:text-[var(--app-upload-cancel-hover)]',
+              'text-xs text-(--app-upload-cancel) hover:text-(--app-upload-cancel-hover)',
               'transition-colors duration-200'
             )}
             type="button"
@@ -100,12 +118,12 @@ export function UploadProgress({
           <div
             className="h-full transition-all duration-300 ease-out"
             style={{
-              width: `${clampedProgress}%`,
+              width: `${currentProgress}%`,
               backgroundColor: config.color,
             }}
             role="progressbar"
-            aria-label={`Progreso de subida de ${fileName}`}
-            aria-valuenow={clampedProgress}
+            aria-label={`Progreso de ${status === 'uploading' ? 'subida' : 'procesamiento'} de ${fileName}`}
+            aria-valuenow={currentProgress}
             aria-valuemin={0}
             aria-valuemax={100}
           />
@@ -120,17 +138,23 @@ export function UploadProgress({
           <>
             {config.label}
             {status === 'uploading' && ` ${Math.round(progress)}%`}
-          </>
+            {status === 'processing' && ` ${Math.round(clampedProcessingProgress)}%`}          </>
         )}
       </div>
 
       {/* Processing Message */}
       {showProcessingMessage && (
-        <p
-          className="text-xs mt-2"
-          style={{ color: 'var(--app-upload-processing-hint)' }}
-        >
-          Esto puede tardar unos minutos. Te notificaremos cuando esté listo.        </p>
+        <div className="text-xs mt-2 space-y-1">
+          <p style={{ color: 'var(--app-upload-processing-hint)' }}>
+            Tiempo estimado restante: {formatTimeLeft(estimatedTimeLeft)}
+          </p>
+          <p
+            className="text-[10px]"
+            style={{ color: 'var(--colorsNeutralNeutral9)' }}
+          >
+            Extrayendo texto, generando embeddings y analizando estructura...
+          </p>
+        </div>
       )}
     </div>
   );

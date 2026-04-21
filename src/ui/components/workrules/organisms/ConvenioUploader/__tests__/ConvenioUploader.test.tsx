@@ -1,8 +1,8 @@
+import * as useConvenioUploadModule from '@/ui/hooks/useConvenioUpload';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ConvenioUploader } from '../ConvenioUploader';
-import * as useConvenioUploadModule from '@/ui/hooks/useConvenioUpload';
 
 // Mock del hook useConvenioUpload
 const mockReset = vi.fn();
@@ -121,6 +121,8 @@ describe('ConvenioUploader', () => {
           status: 'processing',
           fileName: 'convenio.pdf',
           convenioId: 'abc-123',
+          progress: 0,
+          estimatedTimeLeft: 0,
         },
         visibility: 'privado',
         setVisibility: mockSetVisibility,
@@ -133,7 +135,8 @@ describe('ConvenioUploader', () => {
     it('muestra el mensaje de procesamiento', () => {
       render(<ConvenioUploader isPremium={true} />);
       expect(screen.getByText(/procesando convenio/i)).toBeInTheDocument();
-      expect(screen.getByText(/esto puede tardar unos minutos/i)).toBeInTheDocument();
+      expect(screen.getByText(/tiempo estimado restante/i)).toBeInTheDocument();
+      expect(screen.getByText(/extrayendo texto.*generando embeddings/i)).toBeInTheDocument();
     });
   });
 

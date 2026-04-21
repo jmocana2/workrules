@@ -5,13 +5,13 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "ingesta-convenio",
-        "responseMode": "responseNode",
+        "responseMode": "lastNode",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [0, 0],
-      "id": "41d90b67-88f2-4978-bd2f-9e93f90226ab",
+      "position": [8400, 800],
+      "id": "7cc020f6-bd7e-4e0a-a242-045f6f582082",
       "name": "Webhook",
       "webhookId": "01c36b3d-fb3a-4df1-8577-16f5b82c6e6f"
     },
@@ -28,8 +28,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [496, 0],
-      "id": "beb0e5cf-1e1a-4cfb-b71d-5fcbe06bcdae",
+      "position": [8896, 800],
+      "id": "8a1c544b-fedb-4954-8f35-1eb4cd7459eb",
       "name": "HTTP Supabase storage PDF",
       "credentials": {
         "supabaseApi": {
@@ -52,8 +52,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [208, 0],
-      "id": "a7ebd262-2330-4d5d-b331-8adcad980aab",
+      "position": [8608, 800],
+      "id": "c7529b40-4be7-4130-8db2-6fbaaa80e51b",
       "name": "HTTP PDF Request"
     },
     {
@@ -62,8 +62,8 @@
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [736, 272],
-      "id": "73dee932-9b69-4bae-9af6-3a321d5a3071",
+      "position": [9136, 1072],
+      "id": "d8b02360-96bf-43f0-bfa9-fcd4bb46bcfa",
       "name": "Wait",
       "webhookId": "e7907ffd-20a4-42e8-9fdf-ec94c7eeb960"
     },
@@ -96,8 +96,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [496, 272],
-      "id": "a43357c8-ac7a-4496-ba55-57c69a4c04c0",
+      "position": [8896, 1072],
+      "id": "3e1b340c-279c-4363-82a9-616f4af13f1a",
       "name": "HTTP LlamaParse PDF",
       "credentials": {
         "httpHeaderAuth": {
@@ -121,8 +121,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [976, 272],
-      "id": "c8a4ca03-da35-410b-a7b8-fe061534b5ec",
+      "position": [9376, 1072],
+      "id": "d02621e8-523d-4168-8cd9-09c08282988f",
       "name": "Check LlamaParse Status",
       "credentials": {
         "httpHeaderAuth": {
@@ -207,8 +207,8 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [1248, 256],
-      "id": "adc0f23f-680d-42df-9b81-8651c6aa00f5",
+      "position": [9648, 1056],
+      "id": "eccd505d-4d68-4f08-9499-9da8052def26",
       "name": "Is Processing Complete?"
     },
     {
@@ -226,8 +226,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [1520, 240],
-      "id": "16636805-cd63-435f-82d7-f50c166e2805",
+      "position": [9920, 1040],
+      "id": "6ddc992a-28ea-4471-b9dc-b939bad5e5d4",
       "name": "Get Markdown Result",
       "credentials": {
         "httpHeaderAuth": {
@@ -242,8 +242,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1776, 240],
-      "id": "32c82596-4adf-4af2-ad4d-eddb5f76fc52",
+      "position": [10176, 1040],
+      "id": "d9650927-2698-4362-9e99-38dbf91f60c1",
       "name": "Clear Retry Counter"
     },
     {
@@ -252,8 +252,8 @@
       },
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [1504, 528],
-      "id": "244617c5-97b3-4897-aaa1-edd2de8719b7",
+      "position": [9904, 1328],
+      "id": "ab267c6e-e224-479f-81c5-fb8446546ba9",
       "name": "Stop and Error"
     },
     {
@@ -262,8 +262,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1360, 0],
-      "id": "cd283a65-2e9b-4906-8f83-9082de02b5a2",
+      "position": [9760, 800],
+      "id": "c49ecca3-071f-4dd2-8e3c-d8c51cc5889b",
       "name": "Check Retry Limit"
     },
     {
@@ -272,8 +272,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2672, 240],
-      "id": "3b1f7c87-579e-4d69-bbd8-f6f6a7f621b8",
+      "position": [11072, 1040],
+      "id": "12dd2537-cae0-4957-8900-2eed8baa013f",
       "name": "Chunk Markdown"
     },
     {
@@ -282,8 +282,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2928, 240],
-      "id": "ce4da75f-b408-4add-86bf-f82adb6f44a2",
+      "position": [11328, 1040],
+      "id": "4271f7e2-fb3d-45b0-bb0b-32885fea0dc4",
       "name": "Prepare Chunks for Insert"
     },
     {
@@ -292,8 +292,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3168, 240],
-      "id": "6b50a533-3240-4e0d-8568-d5dcc159da29",
+      "position": [11568, 1040],
+      "id": "74b7dea9-e98e-49db-9a85-16d5d03d4e6f",
       "name": "Prepare Batch for OpenAI",
       "notes": "NUEVO I1.8: Prepara payload para OpenAI Embeddings API"
     },
@@ -325,8 +325,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3408, 240],
-      "id": "6ff3e1b3-afb7-4edf-80bf-23282e6c2f8a",
+      "position": [11808, 1040],
+      "id": "30a7f21d-ff05-41a2-bbe2-8365cb636e40",
       "name": "HTTP Request OpenAI Embeddings",
       "credentials": {
         "openAiApi": {
@@ -342,8 +342,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3648, 240],
-      "id": "c596ee18-0d34-4388-933a-6db6dbc743f9",
+      "position": [12048, 1040],
+      "id": "1c6b6be5-d425-4981-9503-32463dfe15d4",
       "name": "Merge Embeddings with Chunks",
       "notes": "NUEVO I1.8: Combina embeddings con chunks y valida dimensiones"
     },
@@ -373,8 +373,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3888, 240],
-      "id": "a001f898-c4fb-48ec-b4be-6d687f8a150d",
+      "position": [12288, 1040],
+      "id": "e64b2062-83c1-4f67-a382-d8a45ef3ecc6",
       "name": "Bulk Insert Chunks",
       "credentials": {
         "supabaseApi": {
@@ -389,47 +389,25 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [4128, 240],
-      "id": "5cafc67a-1d88-4c7d-8a2f-6100e2b48fdf",
+      "position": [12528, 1040],
+      "id": "e37f1579-d318-46f1-8ac3-f6932f0690c4",
       "name": "Chunks Branch Complete",
       "notes": "Pasa datos al merge para que ambas ramas completen"
     },
     {
       "parameters": {
-        "jsCode": "// ============================================\n// NODO: Prepare Response (ACTUALIZADO I1.9)\n// Recoge datos de ambas ramas: chunks + perfil\n// ============================================\n\nconst convenioData = $('Save md in supabase1').first().json;\nconst markdownData = $('Extract and clean md1').first().json;\nconst chunksData = $('Merge Embeddings with Chunks').first().json;\n\n// Intentar obtener datos del perfil (puede no existir si esa rama falló)\nlet perfilData = null;\ntry {\n  perfilData = $('Upsert Perfil Supabase').first().json;\n} catch (e) {\n  console.log('⚠ Rama de perfil no disponible (posible error): ' + e.message);\n}\n\n// Construir response\nconst response = {\n  status: 'success',\n  message: 'Convenio procesado correctamente con embeddings' + (perfilData ? ' y perfil JSON' : ''),\n  data: {\n    convenio_id: convenioData.id,\n    nombre: convenioData.nombre,\n    codigo_regcon: convenioData.codigo_regcon,\n    markdown_length: markdownData.longitud,\n    pdf_url: convenioData.url_pdf,\n    chunks_generados: chunksData.total_chunks,\n    embeddings_generados: chunksData.total_chunks,\n    embedding_usage: chunksData.embedding_usage || {}\n  }\n};\n\n// Añadir info del perfil si existe\nif (perfilData) {\n  response.data.perfil = {\n    perfil_id: perfilData.perfil_id,\n    operation: perfilData.operation,\n    categorias: perfilData.validation?.stats?.categorias || 0,\n    complementos: perfilData.validation?.stats?.complementos || 0,\n    variables_criticas: perfilData.validation?.stats?.variables_criticas || 0,\n    is_valid: perfilData.validation?.is_valid || false,\n    claude_usage: perfilData.claude_usage || {}\n  };\n} else {\n  response.data.perfil = {\n    status: 'skipped_or_failed',\n    message: 'La extracción de perfil JSON no se completó. Los chunks y embeddings se procesaron correctamente.'\n  };\n}\n\nreturn [{ json: response }];"
+        "jsCode": "// Obtener la respuesta de LlamaParse\nconst llamaParseResult = $input.first().json;\n\n// Extraer el markdown\nconst markdown = llamaParseResult.markdown || \n                 llamaParseResult.text;\n\n// Validar que tenemos contenido\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No se pudo extraer el markdown de LlamaParse. Respuesta vacía.');\n}\n\n// Limpiar y normalizar el markdown\nconst cleanMarkdown = markdown\n  .replace(/\\n{3,}/g, '\\n\\n')      // Normalizar múltiples saltos\n  .replace(/\\r\\n/g, '\\n')          // Normalizar line endings\n  .trim();\n\n// Obtener datos del webhook (están dentro de body)\nconst webhookData = $('Webhook').first().json.body;\n\n// Retornar datos estructurados\nreturn {\n  json: {\n    markdown_completo: cleanMarkdown,\n    longitud: cleanMarkdown.length,\n    convenio_id: webhookData.convenio_id,\n    nombre: webhookData.nombre_archivo,\n    // Campos opcionales (pueden no venir en el payload)\n    ambito: webhookData.ambito || null,\n    fecha_vigencia: webhookData.fecha_vigencia || null\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [4560, 560],
-      "id": "0dac4f79-e104-4af9-a51d-a33ee2d04b60",
-      "name": "Prepare Response"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [4800, 560],
-      "id": "a452190a-37f1-4176-8d09-177395e5a191",
-      "name": "Respond to Webhook"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Obtener la respuesta de LlamaParse\nconst llamaParseResult = $input.first().json;\n\n// Extraer el markdown\nconst markdown = llamaParseResult.markdown || \n                 llamaParseResult.text;\n\n// Validar que tenemos contenido\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No se pudo extraer el markdown de LlamaParse. Respuesta vacía.');\n}\n\n// Limpiar y normalizar el markdown\nconst cleanMarkdown = markdown\n  .replace(/\\n{3,}/g, '\\n\\n')      // Normalizar múltiples saltos\n  .replace(/\\r\\n/g, '\\n')          // Normalizar line endings\n  .trim();\n\n// Obtener datos del webhook (están dentro de body)\nconst webhookData = $('Webhook').first().json.body;\n\n// Retornar datos estructurados\nreturn {\n  json: {\n    markdown_completo: cleanMarkdown,\n    longitud: cleanMarkdown.length,\n    convenio_id: webhookData.codigo_regcon,\n    nombre: webhookData.nombre,\n    // Campos opcionales (pueden no venir en el payload)\n    ambito: webhookData.ambito || null,\n    fecha_vigencia: webhookData.fecha_vigencia || null\n  }\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2080, 240],
-      "id": "e077f968-4ecd-4073-80aa-b9f6a1c4dc78",
+      "position": [10480, 1040],
+      "id": "152ef0de-e10c-469f-9d47-242c117d76c7",
       "name": "Extract and clean md1"
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://host.docker.internal:54321/rest/v1/convenios",
+        "method": "PATCH",
+        "url": "=http://host.docker.internal:54321/rest/v1/convenios?id=eq.{{ $('Webhook').first().json.body.convenio_id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
@@ -449,32 +427,8 @@
         "bodyParameters": {
           "parameters": [
             {
-              "name": "nombre",
-              "value": "={{ $('Webhook').first().json.body.nombre }}"
-            },
-            {
-              "name": "codigo_regcon",
-              "value": "={{ $('Webhook').first().json.body.codigo_regcon }}"
-            },
-            {
-              "name": "ambito",
-              "value": "={{ $('Webhook').first().json.body.ambito || 'Sin especificar' }}"
-            },
-            {
-              "name": "fecha_vigencia",
-              "value": "={{ $('Webhook').first().json.body.fecha_vigencia }}"
-            },
-            {
-              "name": "url_pdf",
-              "value": "={{ $('Webhook').first().json.body.pdf_url }}"
-            },
-            {
               "name": "markdown_completo",
               "value": "={{ $('Extract and clean md1').first().json.markdown_completo }}"
-            },
-            {
-              "name": "estado",
-              "value": "activo"
             }
           ]
         },
@@ -482,8 +436,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2320, 240],
-      "id": "40cffe8e-3d8a-4785-bf61-e9d23837478a",
+      "position": [10720, 1040],
+      "id": "706931ce-6a32-4d8c-a799-afb6e1eb590e",
       "name": "Save md in supabase1",
       "retryOnFail": false,
       "notesInFlow": false,
@@ -500,8 +454,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2672, 816],
-      "id": "887137e6-5e57-4d3d-b90c-036bad18de34",
+      "position": [11072, 1616],
+      "id": "f37e535b-beb7-4c10-b48a-7ba6c5baf6f1",
       "name": "Prepare Claude Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara el payload para Claude API"
@@ -528,8 +482,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [2912, 816],
-      "id": "ee37866b-2d8c-47c3-8b9a-93fd8c30ddb9",
+      "position": [11312, 1616],
+      "id": "af43e144-2293-4b99-a723-979767822460",
       "name": "HTTP Claude API",
       "credentials": {
         "anthropicApi": {
@@ -546,8 +500,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2912, 1104],
-      "id": "5b7a4c7c-f3d7-41a4-a2b0-937f5157abe0",
+      "position": [11312, 1904],
+      "id": "d11e095e-171c-4b53-8815-77aae0d05849",
       "name": "Extract Perfil Claude",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Claude API"
@@ -558,8 +512,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3152, 1104],
-      "id": "302ecca8-6f0d-4b68-b3f7-9eaf145fc305",
+      "position": [11552, 1904],
+      "id": "8e8ac1be-8e6f-4eb4-876a-c8379890352c",
       "name": "Validate Perfil JSON",
       "notes": "NUEVO I1.9: Parsea, valida y normaliza el JSON del perfil"
     },
@@ -569,8 +523,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3360, 1104],
-      "id": "61808387-eeb2-48e2-9513-423f1a68b7d8",
+      "position": [11760, 1904],
+      "id": "20822986-89f4-4357-b15d-47df0b063975",
       "name": "Prepare Supabase Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara datos para upsert en Supabase"
@@ -585,8 +539,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3584, 864],
-      "id": "5a18d59b-5483-4736-b8c1-5210324c023b",
+      "position": [11984, 1664],
+      "id": "67618822-61e4-4641-a622-3a4fd1ebb883",
       "name": "HTTP Supabase Delete Perfil",
       "credentials": {
         "supabaseApi": {
@@ -619,8 +573,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [3824, 864],
-      "id": "dc627d48-bb84-4c32-81cb-77b14a1a7c2d",
+      "position": [12224, 1664],
+      "id": "3bbb565a-d1e6-42ef-9fb3-8292934f0a07",
       "name": "HTTP Supabase Insert Perfil",
       "credentials": {
         "supabaseApi": {
@@ -637,23 +591,59 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [4064, 864],
-      "id": "1e30abb8-4565-415c-8703-806265d208d5",
+      "position": [12464, 1664],
+      "id": "1beb8972-a296-4457-9303-4b8e42b7d18d",
       "name": "Upsert Perfil Supabase",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Supabase"
     },
     {
       "parameters": {
-        "mode": "chooseBranch",
-        "output": "wait"
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
-      "position": [4320, 560],
-      "id": "754e9db2-be8f-4d92-8d05-165bc4044a7c",
+      "position": [12720, 1360],
+      "id": "aae7af11-93b1-4a30-90b8-5d8a10317e87",
       "name": "Wait Both Branches",
       "notes": "NUEVO I1.9: Espera a que ambas ramas (chunks + perfil) terminen antes de responder"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "convenios",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.convenio_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "estado",
+              "fieldValue": "activo"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [13072, 1360],
+      "id": "e65005eb-f93a-44da-b066-68d640641026",
+      "name": "Update Convenio Status",
+      "credentials": {
+        "supabaseApi": {
+          "id": "zTfHTKIsATQcLHo2",
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Actualiza el estado del convenio a activo cuando el procesamiento termina exitosamente"
     }
   ],
   "pinData": {},
@@ -972,18 +962,7 @@
       "main": [
         [
           {
-            "node": "Prepare Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Response": {
-      "main": [
-        [
-          {
-            "node": "Respond to Webhook",
+            "node": "Update Convenio Status",
             "type": "main",
             "index": 0
           }
@@ -996,7 +975,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "951d1793-1c13-44d2-9753-b60a2da8b0dc",
+  "versionId": "0ab14f50-f8ca-4679-b020-d6ab7305ec5a",
   "meta": {
     "instanceId": "f72a9e83ddf781aec5a22208462a7d8c35ce6440f1e460ba7b8702ce4b52a0a2"
   },

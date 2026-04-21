@@ -101,11 +101,10 @@ export function ConvenioUploader({
       )}
 
       {uploadErrorMessage && state.status === 'idle' && (
-        <div className="px-3 py-2 rounded-md border border-[var(--colorsSemanticError9)] bg-[var(--colorsSemanticErrorAlpha3)]">
-          <p className="text-sm text-[var(--colorsSemanticError11)]">{uploadErrorMessage}</p>
+        <div role="alert" className="px-3 py-2 rounded-md border border-(--colorsSemanticError9) bg-(--colorsSemanticErrorAlpha3)">
+          <p className="text-sm text-(--colorsSemanticError11)">{uploadErrorMessage}</p>
         </div>
       )}
-
       {/* Estado uploading/validating/processing/ready/error: mostrar progress */}
       {(state.status === 'uploading' ||
         state.status === 'validating' ||
@@ -118,6 +117,8 @@ export function ConvenioUploader({
           fileName={state.fileName}
           errorMessage={state.status === 'error' ? state.error : undefined}
           onCancel={state.status !== 'ready' && state.status !== 'error' ? handleCancel : undefined}
+          processingProgress={state.status === 'processing' ? state.progress : undefined}
+          estimatedTimeLeft={state.status === 'processing' ? state.estimatedTimeLeft : undefined}
         />
       )}
 
@@ -141,9 +142,9 @@ export function ConvenioUploader({
         <button
           onClick={reset}
           className="w-full px-3 py-2 text-sm rounded-md
-            border border-[var(--colorsNeutralNeutral6)]
-            text-[var(--colorsNeutralNeutral11)]
-            hover:bg-[var(--colorsNeutralNeutral3)]"
+            border border-(--colorsNeutralNeutral6)
+            text-(--colorsNeutralNeutral11)
+            hover:bg-(--colorsNeutralNeutral3)"
         >
           Intentar de nuevo
         </button>
