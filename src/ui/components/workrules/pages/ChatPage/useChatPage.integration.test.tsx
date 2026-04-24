@@ -9,6 +9,7 @@
  * - Estado F: Datos conflictivos -> AlertConflict
  */
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useChatPage } from './useChatPage';
@@ -48,6 +49,28 @@ vi.mock('@ui/hooks/useChatStream', () => ({
   }),
 }));
 
+// Mock de supabase
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    from: vi.fn(),
+    auth: {
+      onAuthStateChange: vi.fn(() => ({
+        data: {
+          subscription: {
+            unsubscribe: vi.fn(),
+          },
+        },
+      })),
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: null },
+        error: null,
+      }),
+    },
+  },
+  getSupabaseClient: vi.fn(),
+  createChatSession: vi.fn().mockResolvedValue('mock-session-id'),
+}));
+
 // Mock de convenios
 const MOCK_CONVENIO = {
   id: 'test-convenio-id',
@@ -58,6 +81,31 @@ const MOCK_CONVENIO = {
   updated_at: '2024-01-01T00:00:00Z',
 };
 
+// Helper para crear QueryClient
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+}
+
+// Wrapper para renderHook con QueryClient
+function renderHookWithQueryClient<TProps, TResult>(
+  hook: (props: TProps) => TResult
+) {
+  const queryClient = createTestQueryClient();
+  return renderHook(hook, {
+    wrapper: ({ children }) => (
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    ),
+  });
+}
+
 describe('useChatPage - Mapeo de Estados del Protocolo', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -66,7 +114,7 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
 
   describe('Estado B - Datos incompletos', () => {
     it('muestra DataRequestCard cuando recibe estado incomplete', () => {
-      const { result } = renderHook(() =>
+      const { result } = renderHookWithQueryClient(() =>
         useChatPage({
           mockConvenios: [MOCK_CONVENIO],
           useMocks: false,
@@ -111,7 +159,7 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
 
   describe('Estado D - Datos invalidos', () => {
     it('muestra AlertInvalidData cuando recibe estado invalid', () => {
-      const { result } = renderHook(() =>
+      const { result } = renderHookWithQueryClient(() =>
         useChatPage({
           mockConvenios: [MOCK_CONVENIO],
           useMocks: false,
@@ -146,7 +194,7 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
 
   describe('Estado E - Alerta SMI', () => {
     it('muestra AlertSMI cuando recibe estado smi_alert', () => {
-      const { result } = renderHook(() =>
+      const { result } = renderHookWithQueryClient(() =>
         useChatPage({
           mockConvenios: [MOCK_CONVENIO],
           useMocks: false,
@@ -181,7 +229,7 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
 
   describe('Estado F - Datos conflictivos', () => {
     it('muestra AlertConflict cuando recibe estado conflicting', () => {
-      const { result } = renderHook(() =>
+      const { result } = renderHookWithQueryClient(() =>
         useChatPage({
           mockConvenios: [MOCK_CONVENIO],
           useMocks: false,
@@ -219,7 +267,7 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
 
   describe('Handlers de alertas', () => {
     it('handleAlertDismiss limpia el estado de alerta', () => {
-      const { result } = renderHook(() =>
+      const { result } = renderHookWithQueryClient(() =>
         useChatPage({
           mockConvenios: [MOCK_CONVENIO],
           useMocks: false,
@@ -249,7 +297,7 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
     });
 
     it('handleInvalidDataSuggestion actualiza el input y cierra la alerta', () => {
-      const { result } = renderHook(() =>
+      const { result } = renderHookWithQueryClient(() =>
         useChatPage({
           mockConvenios: [MOCK_CONVENIO],
           useMocks: false,

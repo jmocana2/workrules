@@ -10,14 +10,18 @@
  * - Estados especiales del protocolo (incomplete, invalid, smi_alert, conflicting)
  */
 
+import { createChatSession } from "@/lib/supabase";
 import { useChat } from "@ai-sdk/react";
-import { useChatStream } from "@ui/hooks/useChatStream";
 import {
   MOCK_CHAT_MESSAGES,
   MOCK_CONVENIOS,
   MOCK_CONVERSATIONS,
   MOCK_PERFIL_HOSTELERIA,
 } from "@mocks/data/convenios";
+import { useChatSessions } from "@ui/hooks/useChatSessions";
+import { useChatStream } from "@ui/hooks/useChatStream";
+import { useConvenioVariables } from "@ui/hooks/useConvenioVariables";
+import { useSupabase } from "@ui/hooks/useSupabase";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
@@ -66,6 +70,23 @@ export function useChatPage(
     useMocks = USE_MOCK_API,
   } = options;
 
+  // ============================================================================
+  // Hooks de data fetching (TFM.3)
+  // ============================================================================
+  const { user } = useSupabase();
+  const { data: realConversations } = useChatSessions(
+    useMocks ? null : user?.id ?? null,
+  );
+
+  // Estado local para convenio seleccionado (necesario para el hook de variables)
+  const [selectedConvenioId, setSelectedConvenioId] = useState<string | null>(
+    initialConvenioId ?? null,
+  );
+
+  const { data: realPerfilJson } = useConvenioVariables(
+    useMocks ? null : selectedConvenioId,
+  );
+
   const getMessageText = useCallback((message: UIMessage): string => {
     // Intentar obtener content legacy
     const legacyContent = (message as { content?: unknown }).content;
@@ -87,14 +108,32 @@ export function useChatPage(
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Estado local
+  const shouldUseMocks = useMocks;
   const [state, setState] = useState<ChatPageState>({
     selectedConvenio: null,
-    perfilJson: mockPerfil || null,
+    perfilJson: shouldUseMocks ? (mockPerfil || null) : null,
     isVariablesPanelCollapsed: false,
     isSidebarCollapsed: false,
-    conversations: mockConversations,
+    conversations: shouldUseMocks ? mockConversations : [],
     currentConversationId: null,
   });
+
+  // Estado para session_id (se crea automáticamente al enviar el primer mensaje)
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Actualizar conversaciones cuando lleguen datos reales
+  useEffect(() => {
+    if (!shouldUseMocks && realConversations !== undefined) {
+      setState((prev) => ({ ...prev, conversations: realConversations }));
+    }
+  }, [shouldUseMocks, realConversations]);
+
+  // Actualizar perfil cuando lleguen datos reales o cambie el convenio
+  useEffect(() => {
+    if (!shouldUseMocks && realPerfilJson !== undefined) {
+      setState((prev) => ({ ...prev, perfilJson: realPerfilJson }));
+    }
+  }, [shouldUseMocks, realPerfilJson]);
 
   // Citaciones parseadas del stream (para modo mock)
   const [mockCitations, setMockCitations] = useState<Citation[]>([]);
@@ -131,17 +170,15 @@ export function useChatPage(
             JSON.stringify({
               title: "Necesito más información",
               convenioName: state.selectedConvenio?.nombre,
-              fields:
-                payload.missingVariables?.map((v) => ({
-                  name: v,
-                  label: v,
-                  type: "radio" as const,
-                  options:
-                    payload.suggestions?.[v]?.map((s) => ({
-                      value: s,
-                      label: s,
-                    })) || [],
+              fields: payload.missingVariables?.map((v) => ({
+                name: v,
+                label: v,
+                type: "radio" as const,
+                options: payload.suggestions?.[v]?.map((s) => ({
+                  value: s,
+                  label: s,
                 })) || [],
+              })) || [],
               maxAttempts: 3,
               currentAttempt: 1,
             }),
@@ -186,6 +223,7 @@ export function useChatPage(
 
   const realChat = useChatStream({
     convenioId: state.selectedConvenio?.id || null,
+    sessionId: shouldUseMocks ? undefined : sessionId || undefined,
     onSpecialState: handleSpecialState,
     onError: (err) => {
       console.error("[useChatPage] Chat error:", err);
@@ -237,24 +275,24 @@ export function useChatPage(
   );
 
   // ============================================================================
-  // Seleccionar fuente de datos segun modo
+  // Seleccionar fuente de datos según modo (real o mock)
   // ============================================================================
-  const messages: ChatMessage[] = useMocks ? mockMessages : realMessages;
-  const isLoading = useMocks
+  const messages: ChatMessage[] = shouldUseMocks ? mockMessages : realMessages;
+  const isLoading = shouldUseMocks
     ? mockChat.status === "streaming" || mockChat.status === "submitted"
     : realChat.isLoading;
-  const error = useMocks ? mockChat.error : realChat.error;
-  const citations: Citation[] = useMocks
+  const error = shouldUseMocks ? mockChat.error : realChat.error;
+  const citations: Citation[] = shouldUseMocks
     ? mockCitations
     : realChat.citations.map((c) => ({
-        source: c.source,
-        url: c.url || "",
-        text: c.section,
-      }));
+      source: c.source,
+      url: c.url || "",
+      text: c.section,
+    }));
 
   // Parsear citaciones cuando termina el streaming (solo modo mock)
   useEffect(() => {
-    if (!useMocks) return;
+    if (!shouldUseMocks) return;
 
     if (mockChat.status === "ready" && mockMessages.length > 0) {
       const lastMessage = mockMessages[mockMessages.length - 1];
@@ -276,7 +314,7 @@ export function useChatPage(
         }
       }
     }
-  }, [useMocks, mockChat.status, mockMessages]);
+  }, [useMocks, mockChat.status, mockMessages, shouldUseMocks]);
 
   // Cargar convenio inicial
   useEffect(() => {
@@ -300,10 +338,14 @@ export function useChatPage(
   // Seleccionar convenio
   const selectConvenio = useCallback((convenio: Convenio) => {
     setState((prev) => ({ ...prev, selectedConvenio: convenio }));
+    setSelectedConvenioId(convenio.id);
 
-    // En producción, aquí se haría fetch del perfil desde el backend
-    setState((prev) => ({ ...prev, perfilJson: MOCK_PERFIL_HOSTELERIA }));
-  }, []);
+    // En modo mock, usar perfil mock
+    if (useMocks) {
+      setState((prev) => ({ ...prev, perfilJson: MOCK_PERFIL_HOSTELERIA }));
+    }
+    // En modo real, el perfil se actualizará automáticamente vía useEffect
+  }, [useMocks]);
 
   // Extraer funciones de los hooks de chat para evitar warnings de dependencias
   const mockSetMessages = mockChat.setMessages;
@@ -318,6 +360,7 @@ export function useChatPage(
       selectedConvenio: null,
       perfilJson: null,
     }));
+    setSelectedConvenioId(null);
     if (useMocks) {
       mockSetMessages([]);
       setMockCitations([]);
@@ -381,6 +424,26 @@ export function useChatPage(
         return;
       }
 
+      // Si es el primer mensaje y no hay sesión, crearla con el texto del usuario como título
+      if (
+        !shouldUseMocks && !sessionId && user?.id && state.selectedConvenio.id
+      ) {
+        const newSessionId = await createChatSession(
+          user.id,
+          state.selectedConvenio.id,
+          text,
+        );
+        if (newSessionId) {
+          // Establecer el sessionId y esperar al siguiente tick para que el hook lo recoja
+          setSessionId(newSessionId);
+          // Pequeño delay para asegurar que el ref en useChatStream se actualice
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        } else {
+          console.error("[useChatPage] Failed to create chat session");
+          // Consider: return early or show user feedback
+        }
+      }
+
       // Reset citaciones, alertas y data request al enviar nuevo mensaje
       if (useMocks) {
         setMockCitations([]);
@@ -395,7 +458,15 @@ export function useChatPage(
       }
       setLocalInput("");
     },
-    [state.selectedConvenio, useMocks, mockSendMessage, realSendMessage],
+    [
+      state.selectedConvenio,
+      useMocks,
+      mockSendMessage,
+      realSendMessage,
+      sessionId,
+      user?.id,
+      shouldUseMocks,
+    ],
   );
 
   // Submit con evento de formulario
@@ -416,6 +487,8 @@ export function useChatPage(
       realClearMessages();
     }
     setLocalInput("");
+    setSelectedConvenioId(null);
+    setSessionId(null); // Resetear session_id para crear una nueva sesión
     setAlertState(clearAlertState());
     setDataRequestState(clearDataRequestState());
     setState((prev) => ({
@@ -627,9 +700,11 @@ export function useChatPage(
     // Construir mensaje pidiendo las OPCIONES disponibles, no los salarios
     let text: string;
     if (categoriaDetectada) {
-      text = `Para ${categoriaDetectada}, muestrame los tipos de establecimiento y clases disponibles en el convenio con sus salarios correspondientes`;
+      text =
+        `Para ${categoriaDetectada}, muestrame los tipos de establecimiento y clases disponibles en el convenio con sus salarios correspondientes`;
     } else {
-      text = "Muestrame los tipos de establecimiento, clases y categorias profesionales disponibles en el convenio";
+      text =
+        "Muestrame los tipos de establecimiento, clases y categorias profesionales disponibles en el convenio";
     }
 
     if (useMocks) {

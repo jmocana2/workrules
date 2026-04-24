@@ -1,7 +1,6 @@
 // Tipos de dominio
 export type {
   // Convenios
-  AmbitoConvenio,
   Convenio,
   PerfilConvenio,
   CategoriasProfesionales,

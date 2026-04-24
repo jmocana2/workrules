@@ -9,17 +9,19 @@
 // Convenios
 // ============================================
 
-export type AmbitoConvenio = 'estatal' | 'provincial' | 'empresa';
-
 export interface Convenio {
   id: string;
   nombre: string;
-  ambito: AmbitoConvenio;
-  codigo_boe: string;
-  url_boe?: string;
-  fecha_publicacion?: string;
-  fecha_vigencia_inicio?: string;
-  fecha_vigencia_fin?: string;
+  codigo_regcon?: string | null;
+  ambito?: string | null;
+  fecha_vigencia?: string | null;
+  url_pdf?: string | null;
+  markdown_completo?: string | null;
+  version?: string;
+  estado?: 'activo' | 'derogado' | 'pendiente' | 'archivado' | 'procesando' | 'error';
+  visibilidad?: 'publico' | 'privado';
+  owner_id?: string | null;
+  error_message?: string | null;
   created_at: string;
   updated_at: string;
 }

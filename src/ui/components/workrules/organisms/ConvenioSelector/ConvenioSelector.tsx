@@ -11,17 +11,9 @@
  * - Chip removible para el convenio seleccionado
  */
 
-import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import type { Convenio } from '@core/types';
-import { Button } from '@/ui/components/shadcn/button';
 import { Badge } from '@/ui/components/shadcn/badge';
-import { Skeleton } from '@/ui/components/shadcn/skeleton';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/ui/components/shadcn/popover';
+import { Button } from '@/ui/components/shadcn/button';
 import {
   Command,
   CommandEmpty,
@@ -30,8 +22,16 @@ import {
   CommandItem,
   CommandList,
 } from '@/ui/components/shadcn/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/ui/components/shadcn/popover';
+import { Skeleton } from '@/ui/components/shadcn/skeleton';
 import { ConvenioChip } from '@/ui/components/workrules/atoms/ConvenioChip/ConvenioChip';
-import { ChevronsUpDown, Check } from 'lucide-react';
+import type { Convenio } from '@core/types';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export interface ConvenioSelectorProps {
   /** Convenio actualmente seleccionado */
@@ -95,6 +95,8 @@ function getAmbitoBadgeClasses(ambito: Convenio['ambito']): string {
       return 'bg-[var(--colorsSemanticSuccess1)] text-[var(--colorsSemanticSuccess12)] border border-[var(--colorsSemanticSuccess9)]';
     case 'empresa':
       return 'bg-[var(--colorsSemanticInfo1)] text-[var(--colorsSemanticInfo12)] border border-[var(--colorsSemanticInfo9)]';
+    default:
+      return 'bg-muted text-muted-foreground border border-border';
   }
 }
 
@@ -109,6 +111,8 @@ function getAmbitoLabel(ambito: Convenio['ambito']): string {
       return 'Provincial';
     case 'empresa':
       return 'Empresa';
+    default:
+      return 'Sin ámbito';
   }
 }
 
@@ -227,7 +231,7 @@ export function ConvenioSelector({
         <div className="flex items-center">
           <ConvenioChip
             nombre={selectedConvenio.nombre}
-            ambito={selectedConvenio.ambito}
+            ambito={selectedConvenio.ambito as 'estatal' | 'provincial' | 'empresa' | undefined}
             removable
             onRemove={handleClear}
           />

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { StarRating } from './StarRating';
@@ -123,7 +123,9 @@ describe('StarRating', () => {
       buttons[0].focus();
 
       await user.keyboard('{ArrowRight}');
-      expect(buttons[1]).toHaveFocus();
+      await waitFor(() => {
+        expect(buttons[1]).toHaveFocus();
+      });
     });
 
     it('navega con flecha izquierda', async () => {
@@ -134,7 +136,9 @@ describe('StarRating', () => {
       buttons[2].focus();
 
       await user.keyboard('{ArrowLeft}');
-      expect(buttons[1]).toHaveFocus();
+      await waitFor(() => {
+        expect(buttons[1]).toHaveFocus();
+      });
     });
 
     it('no navega más allá del inicio con flecha izquierda', async () => {
@@ -145,7 +149,9 @@ describe('StarRating', () => {
       buttons[0].focus();
 
       await user.keyboard('{ArrowLeft}');
-      expect(buttons[0]).toHaveFocus();
+      await waitFor(() => {
+        expect(buttons[0]).toHaveFocus();
+      });
     });
 
     it('no navega más allá del final con flecha derecha', async () => {
@@ -157,7 +163,9 @@ describe('StarRating', () => {
       buttons[lastIndex].focus();
 
       await user.keyboard('{ArrowRight}');
-      expect(buttons[lastIndex]).toHaveFocus();
+      await waitFor(() => {
+        expect(buttons[lastIndex]).toHaveFocus();
+      });
     });
 
     it('selecciona con Enter', async () => {
@@ -170,7 +178,9 @@ describe('StarRating', () => {
       buttons[3].focus();
       await user.keyboard('{Enter}');
 
-      expect(handleChange).toHaveBeenCalledWith(4);
+      await waitFor(() => {
+        expect(handleChange).toHaveBeenCalledWith(4);
+      });
     });
 
     it('selecciona con Space', async () => {
@@ -183,7 +193,9 @@ describe('StarRating', () => {
       buttons[2].focus();
       await user.keyboard(' ');
 
-      expect(handleChange).toHaveBeenCalledWith(3);
+      await waitFor(() => {
+        expect(handleChange).toHaveBeenCalledWith(3);
+      });
     });
   });
 

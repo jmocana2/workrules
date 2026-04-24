@@ -41,6 +41,7 @@ import { DataRequestCard } from '@ui/components/workrules/molecules/DataRequestC
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { VariablesPanel } from '@ui/components/workrules/organisms/VariablesPanel/VariablesPanel';
+import { useConvenios } from '@ui/hooks';
 import { Loader2Icon } from 'lucide-react';
 import type {
   AlertConflictPayload,
@@ -59,6 +60,11 @@ export function ChatPage({
   mockUserPlan = 'premium',
   className,
 }: ChatPageProps) {
+  // Usar convenios reales de Supabase (o mocks en Storybook)
+  const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
+  const { data: realConvenios = [], isLoading: loadingConvenios } = useConvenios();
+  const convenios = useMocks ? mockConvenios : realConvenios;
+
   const {
     // Estado
     selectedConvenio,
@@ -155,8 +161,8 @@ export function ChatPage({
           <div className="flex h-16 items-center gap-4 px-6">
             <ConvenioSelector
               selectedConvenio={selectedConvenio}
-              convenios={mockConvenios}
-              isLoading={false}
+              convenios={convenios}
+              isLoading={loadingConvenios}
               onSelect={selectConvenio}
               onClear={clearConvenio}
               placeholder={CHAT_TEXTS.convenioSelector.placeholder}

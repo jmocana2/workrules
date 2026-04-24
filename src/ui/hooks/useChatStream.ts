@@ -133,6 +133,10 @@ export function useChatStream(
   const abortControllerRef = useRef<AbortController | null>(null);
   const currentMessageRef = useRef<ChatStreamMessage | null>(null);
 
+  // Ref para sessionId actualizado (para evitar problemas de closure)
+  const sessionIdRef = useRef(sessionId);
+  sessionIdRef.current = sessionId;
+
   /**
    * Envia un mensaje al chat
    */
@@ -203,7 +207,7 @@ export function useChatStream(
         {
           convenioId,
           pregunta: trimmedText,
-          sessionId,
+          sessionId: sessionIdRef.current,
           stream: true,
           signal: abortControllerRef.current.signal,
           messages: historyMessages,
@@ -307,7 +311,7 @@ export function useChatStream(
       setIsLoading(false);
       currentMessageRef.current = null;
     }
-  }, [convenioId, sessionId, messages, onSpecialState, onFinish, onError]);
+  }, [convenioId, messages, onSpecialState, onFinish, onError]);
 
   /**
    * Limpia el estado especial
