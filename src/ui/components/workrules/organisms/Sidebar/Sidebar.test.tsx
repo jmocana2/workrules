@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeAll } from 'vitest';
+import type { ConversationSummary } from '@core/types';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { Sidebar } from './Sidebar';
-import type { ConversationSummary } from '@core/types';
 
 // Mock ResizeObserver para ScrollArea de Radix
 beforeAll(() => {
@@ -238,47 +238,6 @@ describe('Sidebar', () => {
     const badge = screen.getByRole('status', { name: /plan premium/i });
     const svgIcon = badge.querySelector('svg');
     expect(svgIcon).toBeInTheDocument();
-  });
-
-  it('debe renderizar el botón de configuración', () => {
-    const onNewConversation = vi.fn();
-    const onSelectConversation = vi.fn();
-    const onOpenSettings = vi.fn();
-
-    render(
-      <Sidebar
-        conversations={mockConversations}
-        userPlan="free"
-        onNewConversation={onNewConversation}
-        onSelectConversation={onSelectConversation}
-        onOpenSettings={onOpenSettings}
-      />
-    );
-
-    const settingsButton = screen.getByRole('button', { name: /abrir configuración/i });
-    expect(settingsButton).toBeInTheDocument();
-  });
-
-  it('debe llamar a onOpenSettings cuando se hace clic en configuración', async () => {
-    const user = userEvent.setup();
-    const onNewConversation = vi.fn();
-    const onSelectConversation = vi.fn();
-    const onOpenSettings = vi.fn();
-
-    render(
-      <Sidebar
-        conversations={mockConversations}
-        userPlan="free"
-        onNewConversation={onNewConversation}
-        onSelectConversation={onSelectConversation}
-        onOpenSettings={onOpenSettings}
-      />
-    );
-
-    const settingsButton = screen.getByRole('button', { name: /abrir configuración/i });
-    await user.click(settingsButton);
-
-    expect(onOpenSettings).toHaveBeenCalledTimes(1);
   });
 
   it('debe aceptar className personalizada', () => {

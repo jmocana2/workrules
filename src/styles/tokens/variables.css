@@ -230,3 +230,116 @@
   --spacing8: 3rem;
   --spacing9: 4rem;
 }
+
+/* Light theme overrides */
+[data-theme="light"] {
+  /* Accent - Teal Light */
+  --colorsAccentAccent1: #fafefd;
+  --colorsAccentAccent2: #f3fbf9;
+  --colorsAccentAccent3: #e0f8f3;
+  --colorsAccentAccent4: #ccf3ea;
+  --colorsAccentAccent5: #b8eae0;
+  --colorsAccentAccent6: #a1ded2;
+  --colorsAccentAccent7: #83cdc1;
+  --colorsAccentAccent8: #53b9ab;
+  --colorsAccentAccent9: #12a594;
+  --colorsAccentAccent10: #0d9b8a;
+  --colorsAccentAccent11: #008573;
+  --colorsAccentAccent12: #0d3d38;
+
+  /* Neutral - Slate Light */
+  --colorsNeutralNeutral1: #fcfcfd;
+  --colorsNeutralNeutral2: #f9f9fb;
+  --colorsNeutralNeutral3: #f0f0f3;
+  --colorsNeutralNeutral4: #e8e8ec;
+  --colorsNeutralNeutral5: #e0e1e6;
+  --colorsNeutralNeutral6: #d9d9e0;
+  --colorsNeutralNeutral7: #cdced6;
+  --colorsNeutralNeutral8: #b9bbc6;
+  --colorsNeutralNeutral9: #8b8d98;
+  --colorsNeutralNeutral10: #80838d;
+  --colorsNeutralNeutral11: #60646c;
+  --colorsNeutralNeutral12: #1c2024;
+
+  /* Semantic - Success Light */
+  --colorsSemanticSuccess1: #fbfefc;
+  --colorsSemanticSuccess2: #f4fbf6;
+  --colorsSemanticSuccess3: #e6f6eb;
+  --colorsSemanticSuccess4: #d6f1df;
+  --colorsSemanticSuccess5: #c4e8d1;
+  --colorsSemanticSuccess6: #adddc0;
+  --colorsSemanticSuccess7: #8eceaa;
+  --colorsSemanticSuccess8: #5bb98b;
+  --colorsSemanticSuccess9: #30a46c;
+  --colorsSemanticSuccess10: #2b9a66;
+  --colorsSemanticSuccess11: #218358;
+  --colorsSemanticSuccess12: #193b2d;
+
+  /* Semantic - Error Light */
+  --colorsSemanticError1: #fffcfc;
+  --colorsSemanticError2: #fff7f7;
+  --colorsSemanticError3: #feebe7;
+  --colorsSemanticError4: #ffdcd3;
+  --colorsSemanticError5: #ffcdc2;
+  --colorsSemanticError6: #fdbdaf;
+  --colorsSemanticError7: #f5a898;
+  --colorsSemanticError8: #ec8e7b;
+  --colorsSemanticError9: #e5484d;
+  --colorsSemanticError10: #dc3e42;
+  --colorsSemanticError11: #ce2c31;
+  --colorsSemanticError12: #641723;
+
+  /* Semantic - Warning Light */
+  --colorsSemanticWarning1: #fefdfb;
+  --colorsSemanticWarning2: #fef9e7;
+  --colorsSemanticWarning3: #fef2c7;
+  --colorsSemanticWarning4: #feea9c;
+  --colorsSemanticWarning5: #fde272;
+  --colorsSemanticWarning6: #f3d768;
+  --colorsSemanticWarning7: #e4c767;
+  --colorsSemanticWarning8: #d5ae39;
+  --colorsSemanticWarning9: #ffe629;
+  --colorsSemanticWarning10: #f5d90a;
+  --colorsSemanticWarning11: #9e6c00;
+  --colorsSemanticWarning12: #473b1f;
+
+  /* Semantic - Info Light */
+  --colorsSemanticInfo1: #fafdff;
+  --colorsSemanticInfo2: #f1fafd;
+  --colorsSemanticInfo3: #e1f6fd;
+  --colorsSemanticInfo4: #d1f0fa;
+  --colorsSemanticInfo5: #bee7f5;
+  --colorsSemanticInfo6: #a9daed;
+  --colorsSemanticInfo7: #8dcae3;
+  --colorsSemanticInfo8: #60b3d7;
+  --colorsSemanticInfo9: #00a2c7;
+  --colorsSemanticInfo10: #0797b9;
+  --colorsSemanticInfo11: #107d98;
+  --colorsSemanticInfo12: #0d3c48;
+
+  /* Semantic - Error Alpha Light (over white background) */
+  --colorsSemanticErrorAlpha1: rgba(229, 72, 77, 0.02);
+  --colorsSemanticErrorAlpha2: rgba(229, 72, 77, 0.05);
+  --colorsSemanticErrorAlpha3: rgba(229, 72, 77, 0.10);
+  --colorsSemanticErrorAlpha4: rgba(229, 72, 77, 0.17);
+  --colorsSemanticErrorAlpha5: rgba(229, 72, 77, 0.24);
+  --colorsSemanticErrorAlpha6: rgba(229, 72, 77, 0.32);
+  --colorsSemanticErrorAlpha7: rgba(229, 72, 77, 0.42);
+  --colorsSemanticErrorAlpha8: rgba(229, 72, 77, 0.58);
+  --colorsSemanticErrorAlpha9: rgba(229, 72, 77, 0.87);
+  --colorsSemanticErrorAlpha10: rgba(220, 62, 67, 0.92);
+  --colorsSemanticErrorAlpha11: rgba(206, 44, 49, 0.98);
+  --colorsSemanticErrorAlpha12: rgba(100, 23, 35, 1);
+
+  /* Tokens principales */
+  --tokensColorsPageBackground: #ffffff;
+  --tokensColorsText: #1c2024;
+  --tokensColorsAccentSurface: rgba(18, 165, 148, 0.05);
+  --tokensColorsOverlay: rgba(0, 0, 0, 0.3);
+  --tokensColorsSurface: rgba(0, 0, 0, 0.05);
+
+  /* Panels */
+  --panelDefault: rgba(255, 255, 255, 0.9);
+  --panelSolid: #ffffff;
+  --panelTranslucent: rgba(255, 255, 255, 0.85);
+}

@@ -4,8 +4,9 @@ import { Button } from '@ui/components/shadcn/button';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Separator } from '@ui/components/shadcn/separator';
 import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
+import { ThemeToggle } from '@ui/components/workrules/atoms/ThemeToggle';
 import { ConvenioUploader } from '@ui/components/workrules/organisms/ConvenioUploader';
-import { CrownIcon, MessageSquareIcon, PlusIcon, SettingsIcon } from 'lucide-react';
+import { CrownIcon, MessageSquareIcon, PlusIcon } from 'lucide-react';
 
 export interface SidebarProps {
   currentConversationId?: string;
@@ -134,8 +135,7 @@ export function Sidebar({
 
       {userPlan === 'premium' && <Separator className="bg-border" />}
 
-      {/* Footer con Plan Badge y Settings */}
-      <footer className="flex items-center justify-between border-t border-border p-4">
+      {/* Footer con Plan Badge y Theme Toggle */}      <footer className="flex items-center justify-between border-t border-border p-4">
         <div
           className={cn(
             'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium',
@@ -150,15 +150,9 @@ export function Sidebar({
           <span className="font-semibold capitalize">{userPlan}</span>
         </div>
 
-        <Button
-          onClick={onOpenSettings}
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9"
-          aria-label="Abrir configuración"
-        >
-          <SettingsIcon className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle size="md" />
+        </div>
       </footer>
     </aside>
   );
