@@ -25,7 +25,6 @@ export function Sidebar({
   userPlan,
   onNewConversation,
   onSelectConversation,
-  onOpenSettings,
   onConvenioUploaded,
   className,
 }: SidebarProps) {
