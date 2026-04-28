@@ -421,7 +421,7 @@ export async function calculateSalary(
         latencyMs: Date.now() - startTime,
         variablesUsadas: allVariables,
       },
-      citations: buildCitations(chunks),
+      citations: buildCitations(chunks, convenio.url_pdf ?? null),
       desglose: {
         // El desglose real viene en el response de Claude
         conceptos: [],
@@ -472,15 +472,21 @@ function mapChunksToPromptFormat(chunks: ChunkSearchResult[]): ChunkResult[] {
 /**
  * Construye citaciones desde los chunks usados
  */
-function buildCitations(chunks: ChunkSearchResult[]): ChatCitation[] {
+function buildCitations(
+  chunks: ChunkSearchResult[],
+  convenioUrlPdf: string | null,
+): ChatCitation[] {
   return chunks.map((c) => {
     const metadata = c.metadata as Record<string, unknown>;
+    const pagina = typeof metadata?.pagina === "number" ? metadata.pagina : null;
 
     return {
       articulo: getChunkArticulo(metadata),
       seccion: (metadata?.seccion as string) || null,
       chunk_id: c.chunk_id,
       relevance_score: c.similarity,
+      url_pdf: convenioUrlPdf,
+      pagina,
     };
   });
 }

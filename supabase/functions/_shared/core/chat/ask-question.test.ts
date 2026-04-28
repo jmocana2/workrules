@@ -678,3 +678,74 @@ Deno.test("askQuestion streaming - cleanup no falla si incrementQueryCount falla
     // Test passes if no exception is thrown
   }
 });
+
+// ============================================
+// CITATIONS URL_PDF TESTS
+// ============================================
+
+Deno.test("askQuestion - citations incluyen url_pdf del convenio", async () => {
+  const { deps } = createMockDeps({
+    getConvenioById: () =>
+      Promise.resolve({
+        ...MOCK_CONVENIO,
+        url_pdf: "https://bocm.es/hosteleria-2024.pdf",
+      }),
+  });
+
+  const result = await askQuestion(DEFAULT_INPUT, deps);
+
+  assertEquals(result.type, "success");
+  if (result.type === "success") {
+    assertEquals(result.citations[0].url_pdf, "https://bocm.es/hosteleria-2024.pdf");
+    assertEquals(result.citations[1].url_pdf, "https://bocm.es/hosteleria-2024.pdf");
+  }
+});
+
+Deno.test("askQuestion - citations url_pdf es null si convenio no lo tiene", async () => {
+  const { deps } = createMockDeps();
+
+  const result = await askQuestion(DEFAULT_INPUT, deps);
+
+  assertEquals(result.type, "success");
+  if (result.type === "success") {
+    assertEquals(result.citations[0].url_pdf, null);
+  }
+});
+
+Deno.test("askQuestion - citations incluyen pagina del chunk metadata", async () => {
+  const { deps } = createMockDeps({
+    getConvenioById: () =>
+      Promise.resolve({
+        ...MOCK_CONVENIO,
+        url_pdf: "https://bocm.es/hosteleria-2024.pdf",
+      }),
+    searchChunksByConvenio: () =>
+      Promise.resolve([
+        {
+          chunk_id: "chunk-pagina",
+          convenio_id: VALID_UUID,
+          contenido: "Articulo con pagina conocida",
+          metadata: { articulo: "Art. 24", seccion: "Retribuciones", pagina: 42 },
+          similarity: 0.9,
+        },
+      ]),
+  });
+
+  const result = await askQuestion(DEFAULT_INPUT, deps);
+
+  assertEquals(result.type, "success");
+  if (result.type === "success") {
+    assertEquals(result.citations[0].pagina, 42);
+  }
+});
+
+Deno.test("askQuestion - citations pagina es null si no esta en metadata", async () => {
+  const { deps } = createMockDeps();
+
+  const result = await askQuestion(DEFAULT_INPUT, deps);
+
+  assertEquals(result.type, "success");
+  if (result.type === "success") {
+    assertEquals(result.citations[0].pagina, null);
+  }
+});

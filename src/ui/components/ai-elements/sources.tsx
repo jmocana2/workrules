@@ -58,21 +58,36 @@ export const SourcesContent = ({
   />
 );
 
-export type SourceProps = ComponentProps<"a">;
+export type SourceProps = Omit<ComponentProps<"a">, "href"> & {
+  href?: string;
+};
 
-export const Source = ({ href, title, children, ...props }: SourceProps) => (
-  <a
-    className="flex items-center gap-2"
-    href={href}
-    rel="noreferrer"
-    target="_blank"
-    {...props}
-  >
-    {children ?? (
-      <>
-        <BookIcon className="h-4 w-4" />
-        <span className="block font-medium">{title}</span>
-      </>
-    )}
-  </a>
-);
+export const Source = ({ href, title, children, className, ...props }: SourceProps) => {
+  const content = children ?? (
+    <>
+      <BookIcon className="h-4 w-4 shrink-0" />
+      <span className="block font-medium">{title}</span>
+    </>
+  );
+
+  if (!href) {
+    return (
+      <span className={cn("flex items-center gap-2 text-muted-foreground", className)}>
+        {content}
+      </span>
+    );
+  }
+
+  return (
+    <a
+      aria-label={title ? `Abrir PDF oficial - ${title}` : "Abrir PDF oficial"}
+      className={cn("flex items-center gap-2", className)}
+      href={href}
+      rel="noopener noreferrer"
+      target="_blank"
+      {...props}
+    >
+      {content}
+    </a>
+  );
+};

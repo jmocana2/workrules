@@ -29,6 +29,8 @@ export interface ChatCitation {
   seccion: string | null;
   chunk_id: string;
   relevance_score: number;
+  url_pdf: string | null;
+  pagina: number | null;
 }
 
 /** Metadata de la respuesta */
@@ -44,7 +46,7 @@ export interface ChatMetadata {
 /** Evento SSE para streaming */
 export type SSEEvent =
   | { type: "text"; content: string }
-  | { type: "citation"; articulo?: string; seccion: string | null }
+  | { type: "citation"; articulo?: string; seccion: string | null; url_pdf: string | null; pagina: number | null }
   | { type: "done"; metadata: ChatMetadata }
   | { type: "error"; message: string };
 

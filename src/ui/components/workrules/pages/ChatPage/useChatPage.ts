@@ -256,6 +256,14 @@ export function useChatPage(
   // ============================================================================
   // Convertir mensajes de realChat a ChatMessage[]
   // ============================================================================
+
+  function buildPdfHref(
+    urlPdf: string | null | undefined,
+    pagina: number | null | undefined,
+  ): string {
+    if (!urlPdf) return "";
+    return pagina != null ? `${urlPdf}#page=${pagina}` : urlPdf;
+  }
   const realMessages: ChatMessage[] = useMemo(
     () =>
       realChat.messages.map((msg) => ({
@@ -265,7 +273,7 @@ export function useChatPage(
         createdAt: msg.createdAt,
         citations: msg.citations?.map((c) => ({
           source: c.source,
-          url: c.url || "",
+          url: buildPdfHref(c.url_pdf, c.pagina) || c.url || "",
           text: c.section,
         })),
         // Agregar parts para compatibilidad con UIMessage
@@ -286,7 +294,7 @@ export function useChatPage(
     ? mockCitations
     : realChat.citations.map((c) => ({
       source: c.source,
-      url: c.url || "",
+      url: buildPdfHref(c.url_pdf, c.pagina) || c.url || "",
       text: c.section,
     }));
 

@@ -43,6 +43,7 @@ export interface Convenio {
   ambito: string;
   fecha_vigencia: string;
   estado: string;
+  url_pdf?: string | null;
 }
 
 /** Codigos de error del repository */

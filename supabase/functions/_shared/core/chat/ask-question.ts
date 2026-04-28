@@ -250,15 +250,19 @@ function mapChunksToPromptFormat(
  */
 function buildCitations(
   chunks: ChunkSearchResult[],
+  convenioUrlPdf: string | null,
 ): ChatCitation[] {
   return chunks.map((c) => {
     const metadata = c.metadata as Record<string, unknown>;
+    const pagina = typeof metadata?.pagina === "number" ? metadata.pagina : null;
 
     return {
       articulo: getChunkArticulo(metadata),
       seccion: (metadata?.seccion as string) || null,
       chunk_id: c.chunk_id,
       relevance_score: c.similarity,
+      url_pdf: convenioUrlPdf,
+      pagina,
     };
   });
 }
@@ -484,7 +488,7 @@ export async function askQuestion(
         model: MODEL_NAME,
         latencyMs: Date.now() - startTime,
       },
-      citations: buildCitations(chunks),
+      citations: buildCitations(chunks, convenio.url_pdf ?? null),
     };
   } catch (error) {
     // ========================================

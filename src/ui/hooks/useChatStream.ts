@@ -32,6 +32,8 @@ export interface ChatStreamMessage {
     source: string;
     url?: string;
     section?: string;
+    url_pdf?: string | null;
+    pagina?: number | null;
   }>;
   createdAt: Date;
 }
@@ -78,6 +80,8 @@ export interface UseChatStreamReturn {
     source: string;
     url?: string;
     section?: string;
+    url_pdf?: string | null;
+    pagina?: number | null;
   }>;
   /** Cambiar el input */
   setInput: (value: string) => void;
@@ -233,6 +237,8 @@ export function useChatStream(
               source: citation.articulo,
               url: citation.url,
               section: citation.seccion,
+              url_pdf: citation.url_pdf,
+              pagina: citation.pagina,
             };
             streamCitations.push(newCitation);
 

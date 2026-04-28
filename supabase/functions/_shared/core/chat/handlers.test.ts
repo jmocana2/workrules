@@ -257,7 +257,7 @@ Deno.test('mapResultToHttpResponse - success returns 200 with respuesta', () => 
       latencyMs: 1200,
     },
     citations: [
-      { articulo: 'Art. 24', seccion: null, chunk_id: 'chunk-1', relevance_score: 0.92 },
+      { articulo: 'Art. 24', seccion: null, chunk_id: 'chunk-1', relevance_score: 0.92, url_pdf: null, pagina: null },
     ],
   };
 

@@ -25,6 +25,8 @@ export interface SSECitationEvent {
   articulo: string;
   seccion?: string;
   url?: string;
+  url_pdf?: string | null;
+  pagina?: number | null;
 }
 
 export interface SSEStatusEvent {

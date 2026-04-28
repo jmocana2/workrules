@@ -466,6 +466,8 @@ export function handleStreamResponse(
               type: "citation",
               articulo: citation.articulo,
               seccion: citation.seccion,
+              url_pdf: citation.url_pdf,
+              pagina: citation.pagina,
             })
           }\n\n`;
           controller.enqueue(encoder.encode(citationEvent));
