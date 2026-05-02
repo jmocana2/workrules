@@ -17,6 +17,8 @@ export interface VariablesPanelProps {
   onVariableClick: (variable: string, value: string) => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  isMobile?: boolean;
+  inDrawer?: boolean;
   className?: string;
 }
 
@@ -25,10 +27,15 @@ export function VariablesPanel({
   onVariableClick,
   isCollapsed = false,
   onToggleCollapse,
+  isMobile = false,
+  inDrawer = false,
   className,
 }: VariablesPanelProps) {
-  const panelShellClass = 'flex h-full flex-col border-l border-border bg-card';
-  const headerClass = 'flex items-center justify-between border-b border-border px-4 py-3';
+  const panelShellClass = cn(
+    'flex h-full flex-col',
+    inDrawer ? 'bg-card' : 'bg-muted/50'
+  );
+  const headerClass = 'flex items-center justify-between px-4 py-3';
   const toggleButtonClass = 'h-7 w-7 text-muted-foreground hover:bg-muted hover:text-foreground';
 
   // Estado colapsado - solo botón de expandir
@@ -60,7 +67,7 @@ export function VariablesPanel({
       <div
         className={cn(
           panelShellClass,
-          'w-64',
+          isMobile ? 'w-full' : 'w-64',
           className
         )}
       >
@@ -102,7 +109,7 @@ export function VariablesPanel({
       <div
         className={cn(
           panelShellClass,
-          'w-64',
+          isMobile ? 'w-full' : 'w-64',
           className
         )}
       >

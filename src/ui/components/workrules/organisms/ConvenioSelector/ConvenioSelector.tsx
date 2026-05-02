@@ -171,15 +171,17 @@ export function ConvenioSelector({
             aria-expanded={open}
             aria-label="Seleccionar convenio colectivo"
             className={cn(
-              'w-full justify-between',
+              'w-full justify-between px-3 py-2 md:px-4 md:py-3',
               !selectedConvenio && 'text-muted-foreground'
             )}
           >
-            {selectedConvenio ? selectedConvenio.nombre : placeholder}
+            <span className="truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
+              {selectedConvenio ? selectedConvenio.nombre : placeholder}
+            </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0" align="start">
+        <PopoverContent className="w-[90vw] max-w-[400px] p-0" align="start">
           <Command shouldFilter={false}>
             <CommandInput
               placeholder="Buscar convenio..."

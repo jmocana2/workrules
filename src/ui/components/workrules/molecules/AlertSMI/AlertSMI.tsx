@@ -92,14 +92,14 @@ export function AlertSMI({
           </p>
 
           <div className="flex flex-col gap-(--spacing1) text-(length:--typographyFontSize2)">
-            <div className="flex justify-between items-baseline">
+            <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-baseline">
               <span className="text-(--app-alert-warning-fg)">Bruto mensual:</span>
               <span className="font-(--typographyFontWeightMedium) text-(--app-alert-warning-fg) text-(length:--typographyFontSize3)">
                 {formatCurrency(adjustedAmount)}
               </span>
             </div>
 
-            <div className="flex justify-between items-baseline">
+            <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-baseline">
               <span className="text-(--app-alert-warning-fg)">Bruto anual:</span>
               <span className="font-(--typographyFontWeightMedium) text-(--app-alert-warning-fg) text-(length:--typographyFontSize3)">
                 {formatCurrency(annualAmount)}
@@ -118,7 +118,7 @@ export function AlertSMI({
               variant="outline"
               size="sm"
               onClick={onViewDetails}
-              className="border-(--app-alert-warning-border) text-(--app-alert-warning-fg) hover:bg-(--app-alert-warning-hover) hover:text-(--app-alert-warning-fg)"
+              className="w-full sm:w-auto border-(--app-alert-warning-border) text-(--app-alert-warning-fg) hover:bg-(--app-alert-warning-hover) hover:text-(--app-alert-warning-fg)"
             >
               Ver desglose completo
             </Button>

@@ -1,9 +1,11 @@
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 export interface LogoProps {
   variant?: 'full' | 'icon' | 'text';
   size?: 'sm' | 'md' | 'lg';
   theme?: 'light' | 'dark' | 'auto';
+  animate?: boolean;
   className?: string;
 }
 
@@ -15,8 +17,18 @@ export function Logo({
   variant = 'full',
   size = 'md',
   theme = 'auto',
+  animate = true,
   className,
 }: LogoProps) {
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    if (animate && !hasAnimated) {
+      // Trigger animacion tras un delay
+      const timer = setTimeout(() => setHasAnimated(true), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [animate, hasAnimated]);
   // Size mappings
   const sizeClasses = {
     sm: 'h-6',
@@ -77,14 +89,19 @@ export function Logo({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Checkmark */}
+      {/* Checkmark con animacion */}
       <path
         d="M11 16L14 19L21 12"
         className="stroke-primary"
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-      />
+        style={{
+          strokeDasharray: animate ? 30 : 'none',
+          strokeDashoffset: hasAnimated ? 0 : 30,
+          transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          opacity: !animate || hasAnimated ? 1 : 0,
+        }}      />
     </svg>
   );
 

@@ -2,11 +2,10 @@ import { cn } from '@/lib/utils';
 import type { ConversationSummary } from '@core/types';
 import { Button } from '@ui/components/shadcn/button';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
-import { Separator } from '@ui/components/shadcn/separator';
 import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
 import { ThemeToggle } from '@ui/components/workrules/atoms/ThemeToggle';
 import { ConvenioUploader } from '@ui/components/workrules/organisms/ConvenioUploader';
-import { CrownIcon, MessageSquareIcon, PlusIcon } from 'lucide-react';
+import { CrownIcon, MessageSquareIcon, PlusIcon, XIcon } from 'lucide-react';
 
 export interface SidebarProps {
   currentConversationId?: string;
@@ -16,6 +15,9 @@ export interface SidebarProps {
   onSelectConversation: (id: string) => void;
   onOpenSettings: () => void;
   onConvenioUploaded?: (convenioId: string) => void;
+  isCollapsed?: boolean;
+  onClose?: () => void;
+  inDrawer?: boolean;
   className?: string;
 }
 
@@ -26,20 +28,80 @@ export function Sidebar({
   onNewConversation,
   onSelectConversation,
   onConvenioUploaded,
+  isCollapsed = false,
+  onClose,
+  inDrawer = false,
   className,
 }: SidebarProps) {
+  // Modo colapsado (tablet) - solo iconos
+  if (isCollapsed) {
+    return (
+      <aside
+        role="complementary"
+        aria-label="Barra lateral de navegación"
+        className={cn(
+          'flex h-full w-16 flex-col items-center bg-muted/50 py-4',
+          className
+        )}
+      >
+        <Logo variant="icon" size="sm" />
+
+        <div className="mt-4">
+          <Button variant="ghost" size="icon" onClick={onNewConversation} title="Nueva consulta">
+            <PlusIcon className="h-5 w-5" />
+          </Button>
+        </div>
+
+        {/* Iconos de conversaciones recientes */}
+        <div className="mt-4 flex flex-1 flex-col gap-2 overflow-y-auto">
+          {conversations.slice(0, 5).map((conv) => (
+            <Button
+              key={conv.id}
+              variant="ghost"
+              size="icon"
+              onClick={() => onSelectConversation(conv.id)}
+              className={cn(conv.id === currentConversationId && 'bg-muted')}
+              title={conv.title}
+            >
+              <MessageSquareIcon className="h-5 w-5" />
+            </Button>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-auto flex flex-col items-center gap-2">
+          {userPlan === 'premium' && <CrownIcon className="h-4 w-4 text-yellow-500" />}
+          <ThemeToggle size="sm" />
+        </div>
+      </aside>
+    );
+  }
+
+  // Modo expandido (normal)
   return (
     <aside
       role="complementary"
       aria-label="Barra lateral de navegación"
       className={cn(
-        'flex h-full w-64 flex-col border-r border-border bg-card',
+        'flex h-full w-64 flex-col',
+        inDrawer ? 'bg-card' : 'bg-muted/50',
         className
       )}
     >
       {/* Header con Logo */}
-      <header className="flex items-center justify-center border-b border-border p-4">
-        <Logo size="md" />
+      <header className="flex items-center justify-between p-4">
+        <Logo size="sm" />
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onClose}
+            className="h-8 w-8"
+            aria-label="Cerrar"
+          >
+            <XIcon className="h-4 w-4" />
+          </Button>
+        )}
       </header>
 
       {/* Botón Nueva Consulta */}
@@ -53,8 +115,6 @@ export function Sidebar({
           <span className="font-medium">Nueva consulta</span>
         </Button>
       </div>
-
-      <Separator className="bg-border" />
 
       {/* Lista de Conversaciones */}
       <ScrollArea className="flex-1 px-2">
@@ -120,8 +180,6 @@ export function Sidebar({
         )}
       </ScrollArea>
 
-      <Separator className="bg-border" />
-
       {/* Uploader de convenios (solo premium) */}
       {userPlan === 'premium' && (
         <div className="p-4">
@@ -132,9 +190,7 @@ export function Sidebar({
         </div>
       )}
 
-      {userPlan === 'premium' && <Separator className="bg-border" />}
-
-      {/* Footer con Plan Badge y Theme Toggle */}      <footer className="flex items-center justify-between border-t border-border p-4">
+      {/* Footer con Plan Badge y Theme Toggle */}      <footer className="flex items-center justify-between p-4">
         <div
           className={cn(
             'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium',

@@ -84,7 +84,7 @@ export function AlertConflict({
           <p className="text-sm">{conflict.explanation}</p>
 
           {/* Options buttons */}
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:flex-wrap">
             {options.map((option) => (
               <Button
                 key={option.value}
@@ -92,6 +92,7 @@ export function AlertConflict({
                 size="sm"
                 onClick={() => onSelectOption(option)}
                 className={cn(
+                  'w-full sm:w-auto',
                   'border-[var(--colorsSemanticWarning9)]',
                   'text-foreground',
                   'hover:bg-[var(--colorsSemanticWarning3)]',

@@ -13,6 +13,7 @@
  */
 
 import { cn } from '@/lib/utils';
+import { useBreakpoint } from '@core/hooks';
 import { CHAT_TEXTS } from '@constants/texts';
 import { MOCK_CONVENIOS, MOCK_CONVERSATIONS } from '@mocks/data/convenios';
 import {
@@ -32,17 +33,21 @@ import {
   SourcesContent,
   SourcesTrigger,
 } from '@ui/components/ai-elements/sources';
+import { Button } from '@ui/components/shadcn/button';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Separator } from '@ui/components/shadcn/separator';
+import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
 import { AlertConflict } from '@ui/components/workrules/molecules/AlertConflict/AlertConflict';
 import { AlertInvalidData } from '@ui/components/workrules/molecules/AlertInvalidData/AlertInvalidData';
 import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
 import { DataRequestCard } from '@ui/components/workrules/molecules/DataRequestCard/DataRequestCard';
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
+import { MobileDrawer } from '@ui/components/workrules/organisms/MobileDrawer/MobileDrawer';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { VariablesPanel } from '@ui/components/workrules/organisms/VariablesPanel/VariablesPanel';
 import { useConvenios } from '@ui/hooks';
-import { Loader2Icon } from 'lucide-react';
+import { Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
+import { useState } from 'react';
 import type {
   AlertConflictPayload,
   AlertInvalidDataPayload,
@@ -60,6 +65,13 @@ export function ChatPage({
   mockUserPlan = 'premium',
   className,
 }: ChatPageProps) {
+  // Detectar viewport
+  const { isMobile, isTablet } = useBreakpoint();
+
+  // Estado para mobile drawers
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isVariablesPanelOpen, setIsVariablesPanelOpen] = useState(false);
+
   // Usar convenios reales de Supabase (o mocks en Storybook)
   const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
   const { data: realConvenios = [], isLoading: loadingConvenios } = useConvenios();
@@ -145,38 +157,119 @@ export function ChatPage({
       )}
     >
       {/* Sidebar - Izquierda */}
-      <Sidebar
-        currentConversationId={currentConversationId ?? undefined}
-        conversations={conversations}
-        userPlan={mockUserPlan}
-        onNewConversation={handleNewConversation}
-        onSelectConversation={handleSelectConversation}
-        onOpenSettings={handleOpenSettings}
-      />
+      {isMobile || isTablet ? (
+        <>
+          {/* Sidebar colapsada visible en tablet */}
+          {isTablet && (
+            <Sidebar
+              currentConversationId={currentConversationId ?? undefined}
+              conversations={conversations}
+              userPlan={mockUserPlan}
+              onNewConversation={handleNewConversation}
+              onSelectConversation={handleSelectConversation}
+              onOpenSettings={handleOpenSettings}
+              isCollapsed={true}
+            />
+          )}
+          {/* Drawer para expandir */}
+          <MobileDrawer
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+            side="left"
+          >
+            <Sidebar
+              currentConversationId={currentConversationId ?? undefined}
+              conversations={conversations}
+              userPlan={mockUserPlan}
+              onNewConversation={handleNewConversation}
+              onSelectConversation={handleSelectConversation}
+              onOpenSettings={handleOpenSettings}
+              onClose={() => setIsSidebarOpen(false)}
+              inDrawer={true}
+            />
+          </MobileDrawer>
+        </>
+      ) : (
+        <Sidebar
+          currentConversationId={currentConversationId ?? undefined}
+          conversations={conversations}
+          userPlan={mockUserPlan}
+          onNewConversation={handleNewConversation}
+          onSelectConversation={handleSelectConversation}
+          onOpenSettings={handleOpenSettings}
+        />
+      )}
 
       {/* Área de Chat - Centro */}
       <main className="flex flex-1 flex-col overflow-hidden">
-        {/* Header sticky con selector de convenio */}
-        <header className="sticky top-0 z-10 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-          <div className="flex h-16 items-center gap-4 px-6">
-            <ConvenioSelector
-              selectedConvenio={selectedConvenio}
-              convenios={convenios}
-              isLoading={loadingConvenios}
-              onSelect={selectConvenio}
-              onClear={clearConvenio}
-              placeholder={CHAT_TEXTS.convenioSelector.placeholder}
-              className="flex-1"
-            />
-          </div>
-        </header>
+        {/* Header sticky */}
+        {selectedConvenio ? (
+          <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+            <div className="flex h-16 items-center gap-2 px-3 py-3 md:gap-4 md:px-6">
+              {/* Hamburger menu - Mobile y Tablet */}
+              {(isMobile || isTablet) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSidebarOpen(true)}
+                  aria-label="Abrir menú"
+                >
+                  <MenuIcon className="h-5 w-5" />
+                </Button>
+              )}
+
+              <ConvenioSelector
+                selectedConvenio={selectedConvenio}
+                convenios={convenios}
+                isLoading={loadingConvenios}
+                onSelect={selectConvenio}
+                onClear={clearConvenio}
+                placeholder={CHAT_TEXTS.convenioSelector.placeholder}
+                className="flex-1"
+              />
+
+              {/* Botón Variables Panel - Mobile y Tablet */}
+              {(isMobile || isTablet) && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsVariablesPanelOpen(true)}
+                  aria-label="Ver variables"
+                >
+                  <SlidersIcon className="h-5 w-5" />
+                </Button>
+              )}
+            </div>
+          </header>
+        ) : (
+          (isMobile || isTablet) && (
+            <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+              <div className="flex h-16 items-center justify-between gap-2 px-3 md:gap-4 md:px-6">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSidebarOpen(true)}
+                  aria-label="Abrir menú"
+                >
+                  <MenuIcon className="h-5 w-5" />
+                </Button>
+                <Logo variant="full" size="sm" />
+                <div className="w-10" /> {/* Spacer para centrar el logo */}
+              </div>
+            </header>
+          )
+        )}
 
         {/* Área de mensajes */}
-        <ScrollArea className="flex-1 overflow-hidden px-6 py-4">
+        <ScrollArea className={cn(
+          "flex-1 overflow-hidden py-4",
+          "px-4 md:px-6",
+          isMobile && "pb-32" // Espacio para input fixed en mobile
+        )}>
           <div className="mx-auto max-w-3xl space-y-6">
             {messages.length === 0 ? (
               // Estado vacío
-              <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="flex flex-col items-center justify-center py-12 md:py-20 text-center">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                   <svg
                     className="h-8 w-8 text-muted-foreground"
@@ -196,9 +289,24 @@ export function ChatPage({
                 <h2 className="mb-2 text-lg font-semibold text-foreground">
                   {emptyState.title}
                 </h2>
-                <p className="max-w-md text-sm text-muted-foreground">
+                <p className="mb-6 max-w-md text-sm text-muted-foreground">
                   {emptyState.description}
                 </p>
+
+                {/* Selector de convenios si no hay ninguno seleccionado */}
+                {!selectedConvenio && (
+                  <div className="w-full max-w-md px-4">
+                    <ConvenioSelector
+                      selectedConvenio={selectedConvenio}
+                      convenios={convenios}
+                      isLoading={loadingConvenios}
+                      onSelect={selectConvenio}
+                      onClear={clearConvenio}
+                      placeholder={CHAT_TEXTS.convenioSelector.placeholder}
+                      className="w-full"
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               // Lista de mensajes
@@ -319,10 +427,15 @@ export function ChatPage({
           </div>
         </ScrollArea>
 
-        <Separator />
+        {!isMobile && <Separator />}
 
-        {/* Input de chat */}
-        <div className="bg-card px-6 py-4">          <div className="mx-auto max-w-3xl">
+        {/* Input de chat - Fixed en mobile, estático en desktop */}
+        <div className={cn(
+          "bg-card",
+          isMobile && "fixed bottom-0 left-0 right-0 z-20 border-t border-border",
+          isMobile ? "px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3" : "px-6 py-4"
+        )}>
+          <div className="mx-auto max-w-3xl">
             <PromptInput
               onSubmit={handlePromptSubmit}
               className="w-full"
@@ -352,12 +465,43 @@ export function ChatPage({
       </main>
 
       {/* VariablesPanel - Derecha */}
-      <VariablesPanel
-        perfilJson={perfilJson}
-        onVariableClick={handleVariableClick}
-        isCollapsed={isVariablesPanelCollapsed}
-        onToggleCollapse={toggleVariablesPanel}
-      />
+      {isMobile || isTablet ? (
+        <>
+          {/* Panel colapsado visible en tablet */}
+          {isTablet && (
+            <VariablesPanel
+              perfilJson={perfilJson}
+              onVariableClick={handleVariableClick}
+              isCollapsed={true}
+              onToggleCollapse={() => setIsVariablesPanelOpen(true)}
+              isMobile={false}
+            />
+          )}
+          {/* Drawer para expandir */}
+          <MobileDrawer
+            isOpen={isVariablesPanelOpen}
+            onClose={() => setIsVariablesPanelOpen(false)}
+            side="right"
+          >
+            <VariablesPanel
+              perfilJson={perfilJson}
+              onVariableClick={handleVariableClick}
+              isCollapsed={false}
+              onToggleCollapse={() => setIsVariablesPanelOpen(false)}
+              isMobile={true}
+              inDrawer={true}
+            />
+          </MobileDrawer>
+        </>
+      ) : (
+        <VariablesPanel
+          perfilJson={perfilJson}
+          onVariableClick={handleVariableClick}
+          isCollapsed={isVariablesPanelCollapsed}
+          onToggleCollapse={toggleVariablesPanel}
+          isMobile={false}
+        />
+      )}
     </div>
   );
 }

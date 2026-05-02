@@ -162,12 +162,12 @@ export function DataRequestCard({
           </div>
         ))}
 
-        <div className="flex gap-3 pt-4">
-          <Button onClick={handleSubmit}>
+        <div className="flex flex-col gap-2 pt-4 md:flex-row md:gap-3">
+          <Button onClick={handleSubmit} className="w-full md:w-auto">
             Calcular
           </Button>
           {onSkip && (
-            <Button variant="outline" onClick={onSkip}>
+            <Button variant="outline" onClick={onSkip} className="w-full md:w-auto">
               No lo se - ver todos los rangos
             </Button>
           )}

@@ -174,3 +174,25 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
+
+/* Logo checkmark animation */
+@keyframes draw-check {
+  0% {
+    stroke-dashoffset: 30;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.animate-draw-check {
+  stroke-dashoffset: 30;
+  opacity: 0;
+  animation: draw-check 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.3s;
+}

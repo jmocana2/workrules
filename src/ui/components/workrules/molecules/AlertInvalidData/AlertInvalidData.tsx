@@ -69,14 +69,14 @@ export function AlertInvalidData({
               <div className="space-y-2">
                 <p className="font-medium">Quizás te refieres a:</p>
                 {onSelectSuggestion ? (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                     {suggestions.map((suggestion, index) => (
                       <Button
                         key={index}
                         variant="outline"
                         size="sm"
                         onClick={() => onSelectSuggestion(suggestion)}
-                        className="justify-start border-destructive/30 hover:border-destructive hover:bg-destructive/10 text-foreground"
+                        className="w-full sm:w-auto justify-start border-destructive/30 hover:border-destructive hover:bg-destructive/10 text-foreground"
                       >
                         {suggestion}
                       </Button>
