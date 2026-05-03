@@ -32,7 +32,7 @@ export function VariablesPanel({
   className,
 }: VariablesPanelProps) {
   const panelShellClass = cn(
-    'flex h-full flex-col',
+    'flex h-full max-h-screen flex-col overflow-auto',
     inDrawer ? 'bg-card' : 'bg-muted/50'
   );
   const headerClass = 'flex items-center justify-between px-4 py-3';
@@ -140,7 +140,7 @@ export function VariablesPanel({
               const descripcion = perfilJson.descripciones?.[variable];
 
               return (
-                <div key={variable} className="space-y-2 rounded-md border border-border/80 bg-background/60 p-3">
+                <div key={variable} className="max-h-96 space-y-2 overflow-y-auto rounded-md border border-border/80 bg-background/60 p-3">
                   {/* Variable name */}
                   <div className="flex items-center gap-2">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
@@ -179,12 +179,12 @@ export function VariablesPanel({
                           key={`${variable}-${valor}-${index}`}
                           variant="secondary"
                           className={cn(
-                            'cursor-pointer border border-border/70 bg-muted/70 text-xs text-foreground',
+                            'max-w-full cursor-pointer border border-border/70 bg-muted/70 px-2 text-left text-xs text-foreground',
                             'hover:bg-[var(--colorsAccentAccent4)] hover:text-[var(--colorsAccentAccent12)]',
                             'transition-colors duration-150'                          )}
                           onClick={() => onVariableClick(variable, valor)}
                         >
-                          {valor}
+                          <span className="block truncate">{valor}</span>
                         </Badge>
                       ))}                    </div>
                   )}
