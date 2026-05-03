@@ -13,8 +13,8 @@
  */
 
 import { cn } from '@/lib/utils';
-import { useBreakpoint } from '@core/hooks';
 import { CHAT_TEXTS } from '@constants/texts';
+import { useBreakpoint } from '@core/hooks';
 import { MOCK_CONVENIOS, MOCK_CONVERSATIONS } from '@mocks/data/convenios';
 import {
   Message,
@@ -213,7 +213,7 @@ export function ChatPage({
         {/* Header sticky */}
         {selectedConvenio ? (
           <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-            <div className="flex h-16 items-center gap-2 px-3 py-3 md:gap-4 md:px-6">
+            <div className="flex h-16 gap-2 px-3 py-3 md:gap-4 md:px-6">
               {/* Hamburger menu - Mobile y Tablet */}
               {(isMobile || isTablet) && (
                 <Button
