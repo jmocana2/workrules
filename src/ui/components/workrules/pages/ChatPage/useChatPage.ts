@@ -360,6 +360,7 @@ export function useChatPage(
   const mockSendMessage = mockChat.sendMessage;
   const realClearMessages = realChat.clearMessages;
   const realSendMessage = realChat.sendMessage;
+  const realSetMessages = realChat.setMessages;
 
   // Limpiar convenio
   const clearConvenio = useCallback(() => {
@@ -432,9 +433,12 @@ export function useChatPage(
         return;
       }
 
+      let currentSessionId = sessionId;
+
       // Si es el primer mensaje y no hay sesión, crearla con el texto del usuario como título
       if (
-        !shouldUseMocks && !sessionId && user?.id && state.selectedConvenio.id
+        !shouldUseMocks && !currentSessionId && user?.id &&
+        state.selectedConvenio.id
       ) {
         const newSessionId = await createChatSession(
           user.id,
@@ -442,13 +446,13 @@ export function useChatPage(
           text,
         );
         if (newSessionId) {
-          // Establecer el sessionId y esperar al siguiente tick para que el hook lo recoja
+          // Establecer el sessionId inmediatamente
+          currentSessionId = newSessionId;
           setSessionId(newSessionId);
-          // Pequeño delay para asegurar que el ref en useChatStream se actualice
-          await new Promise((resolve) => setTimeout(resolve, 0));
+          console.log("[useChatPage] Created new session:", newSessionId);
         } else {
           console.error("[useChatPage] Failed to create chat session");
-          // Consider: return early or show user feedback
+          return; // No continuar si no se pudo crear la sesión
         }
       }
 
@@ -462,7 +466,12 @@ export function useChatPage(
       if (useMocks) {
         await mockSendMessage({ text });
       } else {
-        await realSendMessage(text);
+        // Pasar el sessionId directamente para asegurar que se use en este mensaje
+        console.log(
+          "[useChatPage] Sending message with sessionId:",
+          currentSessionId,
+        );
+        await realSendMessage(text, currentSessionId || undefined);
       }
       setLocalInput("");
     },
@@ -509,12 +518,11 @@ export function useChatPage(
 
   // Seleccionar conversación del historial
   const handleSelectConversation = useCallback(
-    (id: string) => {
+    async (id: string) => {
       setState((prev) => ({ ...prev, currentConversationId: id }));
 
-      // En producción, aquí se cargarían los mensajes de la conversación desde el backend
-      // Por ahora solo funciona con mocks
-      if (useMocks) {
+      // En modo mock, usar mensajes mock
+      if (shouldUseMocks) {
         const historicMessages: ChatMessage[] = MOCK_CHAT_MESSAGES.map(
           (msg) => ({
             ...msg,
@@ -523,10 +531,84 @@ export function useChatPage(
           }),
         );
         mockSetMessages(historicMessages);
+        return;
       }
-      // TODO: Implementar carga de conversación desde backend en modo real
+
+      // En modo real, cargar la conversación desde el backend
+      try {
+        const { loadChatMessages, supabase } = await import("@/lib/supabase");
+
+        // Cargar la sesión de chat para obtener el convenio_id
+        const { data: sessionData, error: sessionError } = await supabase
+          .from("chat_sessions")
+          .select("convenio_id")
+          .eq("id", id)
+          .single();
+
+        if (sessionError || !sessionData) {
+          console.error("[useChatPage] Session not found:", sessionError);
+          return;
+        }
+
+        // Cargar mensajes de la conversación
+        const messages = await loadChatMessages(id);
+
+        if (!messages) {
+          console.error("[useChatPage] Failed to load chat messages");
+          return;
+        }
+
+        // Convertir mensajes de la BD al formato de ChatStreamMessage
+        const loadedMessages = messages.map((msg) => ({
+          id: msg.id,
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+          createdAt: new Date(msg.created_at),
+          citations: msg.metadata?.citations || [],
+        }));
+
+        // Establecer los mensajes usando realChat
+        realSetMessages(loadedMessages);
+
+        // Establecer el sessionId para continuar la conversación
+        setSessionId(id);
+
+        // Cargar el convenio correspondiente desde Supabase
+        const { data: convenioData, error: convenioError } = await supabase
+          .from("convenios")
+          .select(
+            "id, nombre, ambito, codigo_regcon, fecha_vigencia, url_pdf, estado, visibilidad, owner_id, created_at, updated_at",
+          )
+          .eq("id", sessionData.convenio_id)
+          .single();
+
+        if (convenioError) {
+          console.error("[useChatPage] Error loading convenio:", convenioError);
+          return;
+        }
+
+        if (convenioData) {
+          const convenio = {
+            id: convenioData.id,
+            nombre: convenioData.nombre,
+            ambito: convenioData.ambito ?? "",
+            codigo_regcon: convenioData.codigo_regcon ?? "",
+            fecha_vigencia: convenioData.fecha_vigencia?.toString() ?? "",
+            url_pdf: convenioData.url_pdf ?? "",
+            estado: convenioData.estado,
+            visibilidad: convenioData.visibilidad,
+            owner_id: convenioData.owner_id,
+            created_at: convenioData.created_at,
+            updated_at: convenioData.updated_at,
+          };
+          setState((prev) => ({ ...prev, selectedConvenio: convenio }));
+          setSelectedConvenioId(convenio.id);
+        }
+      } catch (err) {
+        console.error("[useChatPage] Error loading conversation:", err);
+      }
     },
-    [useMocks, mockSetMessages],
+    [shouldUseMocks, mockSetMessages, realSetMessages],
   );
 
   // Abrir configuración

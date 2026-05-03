@@ -71,3 +71,30 @@ export async function createChatSession(
     return null;
   }
 }
+
+/**
+ * Carga los mensajes de una conversación desde la base de datos
+ *
+ * @param sessionId - ID de la sesión de chat
+ * @returns Array de mensajes ordenados cronológicamente
+ */
+export async function loadChatMessages(sessionId: string) {
+  try {
+    const { data, error } = await supabase
+      .from("chat_messages")
+      .select("id, role, content, metadata, created_at")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: true});
+
+    if (error) {
+      console.error("[supabase] Error loading chat messages:", error);
+      return null;
+    }
+
+    console.log("[supabase] Loaded", data?.length || 0, "messages for session:", sessionId);
+    return data;
+  } catch (err) {
+    console.error("[supabase] Unexpected error loading chat messages:", err);
+    return null;
+  }
+}

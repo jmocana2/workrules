@@ -47,7 +47,7 @@ export function Sidebar({
         <Logo variant="icon" size="sm" />
 
         <div className="mt-4">
-          <Button variant="ghost" size="icon" onClick={onNewConversation} title="Nueva consulta">
+          <Button variant="ghost" size="icon" onClick={onNewConversation} title="Nueva consulta" className="cursor-pointer">
             <PlusIcon className="h-5 w-5" />
           </Button>
         </div>
@@ -60,7 +60,7 @@ export function Sidebar({
               variant="ghost"
               size="icon"
               onClick={() => onSelectConversation(conv.id)}
-              className={cn(conv.id === currentConversationId && 'bg-muted')}
+              className={cn('cursor-pointer', conv.id === currentConversationId && 'bg-muted')}
               title={conv.title}
             >
               <MessageSquareIcon className="h-5 w-5" />
@@ -108,7 +108,7 @@ export function Sidebar({
       <div className="p-4">
         <Button
           onClick={onNewConversation}
-          className="w-full justify-start gap-2"
+          className="w-full cursor-pointer justify-start gap-2"
           size="sm"
         >
           <PlusIcon className="h-4 w-4" />
@@ -117,68 +117,70 @@ export function Sidebar({
       </div>
 
       {/* Lista de Conversaciones */}
-      <ScrollArea className="flex-1 px-2">
-        {conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <MessageSquareIcon
-              className="mb-3 h-12 w-12 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <p className="text-sm text-foreground">
-              No hay conversaciones
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Inicia una nueva consulta
-            </p>
-          </div>
-        ) : (
-          <nav className="space-y-1 py-2" role="navigation" aria-label="Conversaciones">
-            {conversations.map((conversation) => {
-              const isActive = currentConversationId === conversation.id;
+      <div className="flex-1 overflow-hidden px-2">
+        <ScrollArea className="h-full">
+          {conversations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <MessageSquareIcon
+                className="mb-3 h-12 w-12 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <p className="text-sm text-foreground">
+                No hay conversaciones
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Inicia una nueva consulta
+              </p>
+            </div>
+          ) : (
+            <nav className="space-y-1 py-2" role="navigation" aria-label="Conversaciones">
+              {conversations.map((conversation) => {
+                const isActive = currentConversationId === conversation.id;
 
-              return (
-                <button
-                  key={conversation.id}
-                  onClick={() => onSelectConversation(conversation.id)}
-                  className={cn(
-                    'w-full rounded-md px-3 py-2.5 text-left transition-colors duration-150',
-                    'hover:bg-muted',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    isActive && 'border-l-2 border-primary bg-muted'
-                  )}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <div className="mb-1 flex items-start justify-between gap-2">
-                    <h3
-                      className={cn(
-                        'flex-1 truncate text-sm font-medium',
-                        isActive ? 'font-semibold text-foreground' : 'text-foreground'
-                      )}
-                    >
-                      {conversation.title}
-                    </h3>
-                    <MessageSquareIcon
-                      className={cn(
-                        'h-4 w-4 shrink-0',
-                        isActive ? 'text-primary' : 'text-muted-foreground'
-                      )}
-                      aria-hidden="true"
-                    />
-                  </div>
+                return (
+                  <button
+                    key={conversation.id}
+                    onClick={() => onSelectConversation(conversation.id)}
+                    className={cn(
+                      'w-full cursor-pointer rounded-md px-3 py-2.5 text-left transition-colors duration-150',
+                      'hover:bg-muted',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      isActive && 'border-l-2 border-primary bg-muted'
+                    )}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <div className="mb-1 flex items-start justify-between gap-2">
+                      <h3
+                        className={cn(
+                          'flex-1 truncate text-sm font-medium',
+                          isActive ? 'font-semibold text-foreground' : 'text-foreground'
+                        )}
+                      >
+                        {conversation.title}
+                      </h3>
+                      <MessageSquareIcon
+                        className={cn(
+                          'h-4 w-4 shrink-0',
+                          isActive ? 'text-primary' : 'text-muted-foreground'
+                        )}
+                        aria-hidden="true"
+                      />
+                    </div>
 
-                  <p className="truncate text-xs text-muted-foreground">
-                    {conversation.convenioNombre}
-                  </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {conversation.convenioNombre}
+                    </p>
 
-                  <p className="mt-1 truncate text-xs text-muted-foreground">
-                    {conversation.preview}
-                  </p>
-                </button>
-              );
-            })}
-          </nav>
-        )}
-      </ScrollArea>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {conversation.preview}
+                    </p>
+                  </button>
+                );
+              })}
+            </nav>
+          )}
+        </ScrollArea>
+      </div>
 
       {/* Uploader de convenios (solo premium) */}
       {userPlan === 'premium' && (

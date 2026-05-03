@@ -149,6 +149,14 @@ export function ChatPage({
     await handleSubmitFromText(message.text);
   };
 
+  // Handler para seleccionar conversación y cerrar drawer en móvil
+  const handleSelectConversationAndClosDrawer = async (id: string) => {
+    await handleSelectConversation(id);
+    if (isMobile || isTablet) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -166,7 +174,7 @@ export function ChatPage({
               conversations={conversations}
               userPlan={mockUserPlan}
               onNewConversation={handleNewConversation}
-              onSelectConversation={handleSelectConversation}
+              onSelectConversation={handleSelectConversationAndClosDrawer}
               onOpenSettings={handleOpenSettings}
               isCollapsed={true}
             />
@@ -182,7 +190,7 @@ export function ChatPage({
               conversations={conversations}
               userPlan={mockUserPlan}
               onNewConversation={handleNewConversation}
-              onSelectConversation={handleSelectConversation}
+              onSelectConversation={handleSelectConversationAndClosDrawer}
               onOpenSettings={handleOpenSettings}
               onClose={() => setIsSidebarOpen(false)}
               inDrawer={true}
