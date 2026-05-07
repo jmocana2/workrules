@@ -1,4 +1,6 @@
 import { cn } from '@/lib/utils';
+import { Upload, Search, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 export type UploadStatus = 'uploading' | 'validating' | 'processing' | 'ready' | 'error';
 
@@ -26,34 +28,34 @@ export interface UploadProgressProps {
 
 interface StatusConfig {
   label: string;
-  icon: string;
+  icon: LucideIcon;
   color: string;
 }
 
 const STATUS_CONFIG: Record<UploadStatus, StatusConfig> = {
   uploading: {
     label: 'Subiendo...',
-    icon: '📤',
+    icon: Upload,
     color: 'var(--colorsAccentAccent9)',
   },
   validating: {
     label: 'Validando estructura...',
-    icon: '🔍',
-    color: 'var(--colorsSemanticInfo9)',
+    icon: Search,
+    color: 'var(--colorsAccentAccent9)',
   },
   processing: {
     label: 'Procesando convenio...',
-    icon: '⏳',
-    color: 'var(--colorsSemanticWarning9)',
+    icon: Loader2,
+    color: 'var(--colorsAccentAccent9)',
   },
   ready: {
     label: 'Listo para consultar',
-    icon: '✅',
+    icon: CheckCircle2,
     color: 'var(--colorsSemanticSuccess9)',
   },
   error: {
     label: 'Error',
-    icon: '❌',
+    icon: XCircle,
     color: 'var(--colorsSemanticError9)',
   },
 };
@@ -68,12 +70,15 @@ export function UploadProgress({
   estimatedTimeLeft = 0,
 }: UploadProgressProps) {
   const config = STATUS_CONFIG[status];
+  const Icon = config.icon;
   const clampedProgress = Math.min(100, Math.max(0, progress));
   const clampedProcessingProgress = Math.min(100, Math.max(0, processingProgress));
   const showCancelButton = onCancel && status !== 'ready' && status !== 'error';
   const showProgressBar = status === 'uploading' || status === 'processing';
   const showProcessingMessage = status === 'processing';
   const currentProgress = status === 'processing' ? clampedProcessingProgress : clampedProgress;
+  const shouldSpin = status === 'processing';
+  const shouldPulse = status === 'validating';
 
   return (
     <div
@@ -85,9 +90,15 @@ export function UploadProgress({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-xl" aria-hidden="true">
-            {config.icon}
-          </span>
+          <Icon
+            className={cn(
+              'w-5 h-5',
+              shouldSpin && 'animate-spin',
+              shouldPulse && 'animate-pulse'
+            )}
+            style={{ color: config.color }}
+            aria-hidden="true"
+          />
           <span
             className="text-sm font-medium text-(--app-upload-filename) truncate max-w-37.5"
             title={fileName}
@@ -145,13 +156,10 @@ export function UploadProgress({
       {/* Processing Message */}
       {showProcessingMessage && (
         <div className="text-xs mt-2 space-y-1">
-          <p style={{ color: 'var(--app-upload-processing-hint)' }}>
+          <p className="text-(--colorsNeutralNeutral1)">
             Tiempo estimado restante: {formatTimeLeft(estimatedTimeLeft)}
           </p>
-          <p
-            className="text-[10px]"
-            style={{ color: 'var(--colorsNeutralNeutral9)' }}
-          >
+          <p className="text-[12px] text-(--colorsNeutralNeutral1)">
             Extrayendo texto, generando embeddings y analizando estructura...
           </p>
         </div>

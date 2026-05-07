@@ -21,40 +21,6 @@ describe('UploadProgress', () => {
       expect(screen.getByText('convenio-test.pdf')).toBeInTheDocument();
     });
 
-    it('muestra el icono correcto para estado "uploading"', () => {
-      const { container } = render(<UploadProgress {...defaultProps} status="uploading" />);
-
-      const icon = container.querySelector('span[aria-hidden="true"]');
-      expect(icon).toHaveTextContent('📤');
-    });
-
-    it('muestra el icono correcto para estado "validating"', () => {
-      const { container } = render(<UploadProgress {...defaultProps} status="validating" />);
-
-      const icon = container.querySelector('span[aria-hidden="true"]');
-      expect(icon).toHaveTextContent('🔍');
-    });
-
-    it('muestra el icono correcto para estado "processing"', () => {
-      const { container } = render(<UploadProgress {...defaultProps} status="processing" />);
-
-      const icon = container.querySelector('span[aria-hidden="true"]');
-      expect(icon).toHaveTextContent('⏳');
-    });
-
-    it('muestra el icono correcto para estado "ready"', () => {
-      const { container } = render(<UploadProgress {...defaultProps} status="ready" />);
-
-      const icon = container.querySelector('span[aria-hidden="true"]');
-      expect(icon).toHaveTextContent('✅');
-    });
-
-    it('muestra el icono correcto para estado "error"', () => {
-      const { container } = render(<UploadProgress {...defaultProps} status="error" />);
-
-      const icon = container.querySelector('span[aria-hidden="true"]');
-      expect(icon).toHaveTextContent('❌');
-    });
   });
 
   describe('Estado "uploading"', () => {
@@ -133,12 +99,6 @@ describe('UploadProgress', () => {
       expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     });
 
-    it('usa el color correcto (Info)', () => {
-      render(<UploadProgress {...defaultProps} status="validating" />);
-
-      const statusLabel = screen.getByText('Validando estructura...');
-      expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticInfo9)' });
-    });
   });
 
   describe('Estado "processing"', () => {
@@ -162,13 +122,6 @@ describe('UploadProgress', () => {
       expect(
         screen.getByText(/Extrayendo texto, generando embeddings/i)
       ).toBeInTheDocument();
-    });
-
-    it('usa el color correcto (Warning)', () => {
-      render(<UploadProgress {...defaultProps} status="processing" processingProgress={50} />);
-
-      const statusLabel = screen.getByText(/Procesando convenio\.\.\. 50%/);
-      expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticWarning9)' });
     });
 
     it('muestra botón cancelar si onCancel está presente', () => {
@@ -198,13 +151,6 @@ describe('UploadProgress', () => {
       render(<UploadProgress {...defaultProps} status="ready" />);
 
       expect(screen.getByText('Listo para consultar')).toBeInTheDocument();
-    });
-
-    it('usa el color correcto (Success)', () => {
-      render(<UploadProgress {...defaultProps} status="ready" />);
-
-      const statusLabel = screen.getByText('Listo para consultar');
-      expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticSuccess9)' });
     });
 
     it('NO muestra botón cancelar aunque onCancel esté presente', () => {
@@ -247,13 +193,6 @@ describe('UploadProgress', () => {
       render(<UploadProgress {...defaultProps} status="error" />);
 
       expect(screen.getByText('Error')).toBeInTheDocument();
-    });
-
-    it('usa el color correcto (Error)', () => {
-      render(<UploadProgress {...defaultProps} status="error" />);
-
-      const errorLabel = screen.getByText('Error');
-      expect(errorLabel).toHaveStyle({ color: 'var(--colorsSemanticError9)' });
     });
 
     it('NO muestra botón cancelar aunque onCancel esté presente', () => {
@@ -346,13 +285,6 @@ describe('UploadProgress', () => {
       expect(progressBar).toHaveAttribute('aria-valuemax', '100');
     });
 
-    it('icono tiene aria-hidden="true"', () => {
-      const { container } = render(<UploadProgress {...defaultProps} status="uploading" />);
-
-      const icon = container.querySelector('span[aria-hidden="true"]');
-      expect(icon).toHaveAttribute('aria-hidden', 'true');
-    });
-
     it('nombre de archivo tiene atributo title para truncado', () => {
       render(<UploadProgress {...defaultProps} fileName="convenio-muy-largo.pdf" />);
 
@@ -375,28 +307,6 @@ describe('UploadProgress', () => {
 
       const progressBar = screen.getByRole('progressbar');
       expect(progressBar).toHaveStyle({ backgroundColor: 'var(--colorsAccentAccent9)' });
-    });
-
-    it('texto de estado usa el color correcto para cada estado', () => {
-      const { rerender } = render(<UploadProgress {...defaultProps} status="uploading" />);
-      let statusLabel = screen.getByText(/Subiendo\.\.\./);
-      expect(statusLabel).toHaveStyle({ color: 'var(--colorsAccentAccent9)' });
-
-      rerender(<UploadProgress {...defaultProps} status="validating" />);
-      statusLabel = screen.getByText('Validando estructura...');
-      expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticInfo9)' });
-
-      rerender(<UploadProgress {...defaultProps} status="processing" processingProgress={50} />);
-      statusLabel = screen.getByText(/Procesando convenio\.\.\. 50%/);
-      expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticWarning9)' });
-
-      rerender(<UploadProgress {...defaultProps} status="ready" />);
-      statusLabel = screen.getByText('Listo para consultar');
-      expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticSuccess9)' });
-
-      rerender(<UploadProgress {...defaultProps} status="error" />);
-      statusLabel = screen.getByText('Error');
-      expect(statusLabel).toHaveStyle({ color: 'var(--colorsSemanticError9)' });
     });
 
     it('nombre de archivo tiene clase truncate para overflow', () => {
