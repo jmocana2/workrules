@@ -17,6 +17,94 @@
     },
     {
       "parameters": {
+        "jsCode": "// ============================================\n// NODO: Check Duplicate Convenio\n// FUNCION: Verificar si ya existe un convenio con el mismo codigo_regcon\n// NOTA: Solo aplica para flujo BOE/manual que trae codigo_regcon\n//       El flujo de upload de usuario NO trae codigo_regcon\n// ============================================\n\nconst body = $input.first().json.body;\nconst codigoRegcon = body.codigo_regcon;\n\n// Si no hay codigo_regcon, es un upload de usuario -> continuar sin verificar\n// Preservamos la estructura original del body para compatibilidad\nif (!codigoRegcon) {\n  return [{\n    json: {\n      check_result: 'skip',\n      body: body  // Preservar estructura para nodos siguientes\n    }\n  }];\n}\n\n// Si hay codigo_regcon, consultar Supabase\nconst supabaseUrl = $credentials.supabaseApi.url;\nconst supabaseKey = $credentials.supabaseApi.serviceRoleKey;\n\nconst response = await fetch(\n  `${supabaseUrl}/rest/v1/convenios?codigo_regcon=eq.${codigoRegcon}&select=id,nombre,estado,codigo_regcon`,\n  {\n    method: 'GET',\n    headers: {\n      'apikey': supabaseKey,\n      'Authorization': `Bearer ${supabaseKey}`,\n      'Content-Type': 'application/json'\n    }\n  }\n);\n\nconst existingConvenios = await response.json();\n\nif (existingConvenios.length > 0) {\n  return [{\n    json: {\n      check_result: 'duplicate',\n      existing_convenio: existingConvenios[0],\n      body: body\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    check_result: 'new',\n    body: body  // Preservar estructura para nodos siguientes\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [8500, 800],
+      "id": "check-duplicate-convenio-001",
+      "name": "Check Duplicate Convenio",
+      "credentials": {
+        "supabaseApi": {
+          "id": "zTfHTKIsATQcLHo2",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "check-new-or-skip",
+                    "leftValue": "={{ $json.check_result }}",
+                    "rightValue": "duplicate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "continuar"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "check-duplicate",
+                    "leftValue": "={{ $json.check_result }}",
+                    "rightValue": "duplicate",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "duplicado"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [8550, 800],
+      "id": "convenio-exists-check-001",
+      "name": "Convenio Exists?"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Respond Duplicate Convenio\n// FUNCION: Responder que el convenio ya existe\n// ============================================\n\nconst data = $input.first().json;\nconst existingConvenio = data.existing_convenio;\nconst body = data.body;\n\nreturn [{\n  json: {\n    status: 'duplicate',\n    message: 'El convenio ya existe en el sistema',\n    existing_convenio: {\n      id: existingConvenio.id,\n      nombre: existingConvenio.nombre,\n      estado: existingConvenio.estado,\n      codigo_regcon: existingConvenio.codigo_regcon\n    },\n    requested: {\n      nombre: body.nombre,\n      codigo_regcon: body.codigo_regcon\n    },\n    action_required: 'none'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [8550, 950],
+      "id": "respond-duplicate-001",
+      "name": "Respond Duplicate"
+    },
+    {
+      "parameters": {
         "method": "PUT",
         "url": "=http://host.docker.internal:54321/storage/v1/object/convenios-pdf/{{ $('Webhook').first().json.body.codigo_regcon }}.pdf",
         "authentication": "predefinedCredentialType",
@@ -652,7 +740,36 @@
       "main": [
         [
           {
+            "node": "Check Duplicate Convenio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Convenio": {
+      "main": [
+        [
+          {
+            "node": "Convenio Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convenio Exists?": {
+      "main": [
+        [
+          {
             "node": "HTTP PDF Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Duplicate",
             "type": "main",
             "index": 0
           }

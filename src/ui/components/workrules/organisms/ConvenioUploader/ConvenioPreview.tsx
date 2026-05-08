@@ -1,3 +1,5 @@
+import { FileText } from 'lucide-react';
+
 interface ConvenioPreviewData {
   nombre: string;
   ambito?: string;
@@ -22,7 +24,7 @@ export function ConvenioPreview({
     <div className="p-4 rounded-lg bg-[var(--app-preview-bg)] border border-[var(--app-preview-border)]">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-lg">📋</span>
+        <FileText className="w-5 h-5 text-[var(--app-preview-header-text)]" />
         <span className="text-sm font-medium text-[var(--app-preview-header-text)]">
           Preview del convenio
         </span>

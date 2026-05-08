@@ -63,6 +63,7 @@ CREATE TABLE convenios (
     ambito VARCHAR(200),
     fecha_vigencia DATE,
     url_pdf TEXT,
+    pdf_hash VARCHAR(64), -- SHA-256 hash for duplicate detection
     markdown_completo TEXT,
     version VARCHAR(50) DEFAULT '1.0',
     estado VARCHAR(50) DEFAULT 'activo' CHECK (estado IN ('activo', 'derogado', 'pendiente', 'archivado', 'procesando', 'error')),
@@ -80,6 +81,9 @@ CREATE INDEX idx_convenios_fecha_vigencia ON convenios(fecha_vigencia);
 CREATE INDEX idx_convenios_ambito ON convenios(ambito);
 CREATE INDEX idx_convenios_owner ON convenios(owner_id);
 CREATE INDEX idx_convenios_visibilidad ON convenios(visibilidad);
+CREATE INDEX idx_convenios_pdf_hash ON convenios(pdf_hash) WHERE pdf_hash IS NOT NULL;
+-- Unique index: same user can't upload same PDF twice (different users CAN have same PDF)
+CREATE UNIQUE INDEX idx_convenios_pdf_hash_owner ON convenios(pdf_hash, owner_id) WHERE pdf_hash IS NOT NULL AND owner_id IS NOT NULL;
 
 -- Comentarios
 COMMENT ON TABLE convenios IS 'Tabla principal de convenios colectivos';
@@ -90,6 +94,7 @@ COMMENT ON COLUMN convenios.markdown_completo IS 'Markdown completo del convenio
 COMMENT ON COLUMN convenios.visibilidad IS 'Visibilidad del convenio: publico (todos) o privado (solo owner)';
 COMMENT ON COLUMN convenios.owner_id IS 'Usuario que subió el convenio (NULL para convenios públicos del sistema)';
 COMMENT ON COLUMN convenios.error_message IS 'Mensaje de error si el procesamiento falló (solo si estado = error)';
+COMMENT ON COLUMN convenios.pdf_hash IS 'SHA-256 hash del archivo PDF para detectar duplicados. Evita que un usuario suba el mismo archivo dos veces.';
 
 -- -----------------------------------------------------------------------------
 -- Tabla: convenio_chunks

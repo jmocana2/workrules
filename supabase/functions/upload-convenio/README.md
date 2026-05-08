@@ -30,7 +30,8 @@ POST /functions/v1/upload-convenio
 {
   "file_url": "https://storage.supabase.co/.../convenio.pdf",
   "nombre_archivo": "convenio-hosteleria-madrid.pdf",
-  "visibilidad": "privado" | "publico"  // opcional, default: "privado"
+  "visibilidad": "privado" | "publico",  // opcional, default: "privado"
+  "pdf_hash": "a1b2c3d4..."  // opcional, SHA-256 del archivo (64 chars hex)
 }
 ```
 
@@ -39,6 +40,7 @@ POST /functions/v1/upload-convenio
 - `file_url`: String no vacío (URL del archivo en Supabase Storage)
 - `nombre_archivo`: String no vacío (nombre original del archivo)
 - `visibilidad`: "publico" o "privado" (opcional, default: "privado")
+- `pdf_hash`: SHA-256 hash del PDF (opcional, 64 caracteres hexadecimales)
 
 ## Response
 
@@ -49,6 +51,22 @@ POST /functions/v1/upload-convenio
   "convenio_id": "uuid-del-convenio",
   "status": "processing",
   "message": "Convenio en cola de procesamiento"
+}
+```
+
+### Duplicate (200)
+
+Si el usuario ya tiene un convenio con el mismo PDF (mismo hash):
+
+```json
+{
+  "convenio_id": "uuid-del-convenio-existente",
+  "status": "duplicate",
+  "message": "Ya tienes un convenio con este PDF",
+  "existing_convenio": {
+    "id": "uuid-del-convenio-existente",
+    "nombre": "Convenio de Hosteleria de Madrid"
+  }
 }
 ```
 

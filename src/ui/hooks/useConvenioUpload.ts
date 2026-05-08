@@ -1,5 +1,18 @@
 import { supabase } from "@/lib/supabase";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
+
+/**
+ * Calcula el hash SHA-256 de un archivo
+ * @param file - Archivo a hashear
+ * @returns Hash SHA-256 en formato hexadecimal (64 caracteres)
+ */
+async function calculateFileHash(file: File): Promise<string> {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 // TODO: Implementar sistema de progreso real basado en eventos
 // ============================================================
@@ -41,7 +54,13 @@ type UploadState =
   | { status: "uploading"; progress: number; fileName: string }
   | { status: "validating"; fileName: string }
   | { status: "preview"; fileName: string; previewData: ConvenioPreviewData }
-  | { status: "processing"; fileName: string; convenioId: string; progress: number; estimatedTimeLeft: number }
+  | {
+    status: "processing";
+    fileName: string;
+    convenioId: string;
+    progress: number;
+    estimatedTimeLeft: number;
+  }
   | { status: "ready"; fileName: string; convenioId: string }
   | { status: "error"; fileName: string; error: string };
 
@@ -64,6 +83,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
     pollingIntervalMs = 10000,
   } = options;
 
+  const queryClient = useQueryClient();
   const [state, setState] = useState<UploadState>({ status: "idle" });
   const [visibility, setVisibility] = useState<"publico" | "privado">(
     "privado",
@@ -72,6 +92,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
   const progressRef = useRef<NodeJS.Timeout | null>(null);
   const completionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const fileHashRef = useRef<string | null>(null);
 
   const reset = useCallback(() => {
     if (pollingRef.current) {
@@ -90,6 +111,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    fileHashRef.current = null;
     setState({ status: "idle" });
   }, []);
 
@@ -107,7 +129,14 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
     abortControllerRef.current = controller;
 
     try {
-      // 1. Subir a Storage
+      // 1. Calcular hash del archivo para detección de duplicados
+      // Mostrar estado "validating" mientras se calcula el hash (1-2s para archivos grandes)
+      // Mejora UX vs mostrar "Subiendo 0%" durante el cálculo
+      setState({ status: "validating", fileName });
+      const fileHash = await calculateFileHash(file);
+      fileHashRef.current = fileHash;
+
+      // 2. Subir a Storage
       setState({ status: "uploading", progress: 0, fileName });
 
       const { data: user } = await supabase.auth.getUser();
@@ -218,11 +247,20 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
               file_url: fileUrl,
               nombre_archivo: fileName,
               visibilidad: visibility,
+              pdf_hash: fileHashRef.current,
             },
           },
         );
 
         if (error) throw error;
+
+        // Verificar si es duplicado (status 409)
+        if (data?.status === "duplicate") {
+          const existingName = data.existing_convenio?.nombre || "desconocido";
+          throw new Error(
+            `Ya tienes un convenio con este PDF: "${existingName}". No es necesario subirlo de nuevo.`,
+          );
+        }
 
         const convenio_id = data?.convenio_id;
         if (!convenio_id) {
@@ -248,7 +286,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
           fileName,
           convenioId: convenio_id,
           progress: 0,
-          estimatedTimeLeft: ESTIMATED_TOTAL_TIME
+          estimatedTimeLeft: ESTIMATED_TOTAL_TIME,
         });
 
         // Simular progreso con curva logarítmica (más rápida al inicio, más lenta al final)
@@ -262,17 +300,17 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
           const normalizedTime = elapsedSeconds / ESTIMATED_TOTAL_TIME; // 0 a 1
           const estimatedProgress = Math.min(
             maxProgress,
-            maxProgress * (1 - Math.exp(-3 * normalizedTime))
+            maxProgress * (1 - Math.exp(-3 * normalizedTime)),
           );
           const timeLeft = Math.max(0, ESTIMATED_TOTAL_TIME - elapsedSeconds);
 
-          setState(prev =>
+          setState((prev) =>
             prev.status === "processing"
               ? {
-                  ...prev,
-                  progress: Math.round(estimatedProgress),
-                  estimatedTimeLeft: timeLeft
-                }
+                ...prev,
+                progress: Math.round(estimatedProgress),
+                estimatedTimeLeft: timeLeft,
+              }
               : prev
           );
         }, PROGRESS_UPDATE_INTERVAL);
@@ -298,6 +336,8 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
           setState(nextState);
 
           if (nextState.status === "ready") {
+            // Invalidar la caché de convenios para que se recargue la lista
+            queryClient.invalidateQueries({ queryKey: ["convenios"] });
             onSuccess?.(nextState.convenioId);
           }
 
@@ -344,12 +384,16 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
               fileName,
               convenioId: convenio_id,
               progress: 100,
-              estimatedTimeLeft: 0
+              estimatedTimeLeft: 0,
             });
 
             // Esperar 800ms para mostrar la barra completa, luego cambiar a "ready"
             completionTimeoutRef.current = setTimeout(() => {
-              stopPolling({ status: "ready", fileName, convenioId: convenio_id });
+              stopPolling({
+                status: "ready",
+                fileName,
+                convenioId: convenio_id,
+              });
               completionTimeoutRef.current = null;
             }, 800);
           } else if (convenio.estado === "error") {
@@ -366,7 +410,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
         onError?.(message);
       }
     },
-    [visibility, pollingIntervalMs, onSuccess, onError],
+    [visibility, pollingIntervalMs, onSuccess, onError, queryClient],
   );
 
   return {

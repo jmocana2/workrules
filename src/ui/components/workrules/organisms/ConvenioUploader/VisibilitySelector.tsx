@@ -15,7 +15,7 @@ export function VisibilitySelector({
 }: VisibilitySelectorProps) {
   return (
     <div className="space-y-2">
-      <span className="text-xs text-[var(--colorsNeutralNeutral9)]">
+      <span className="text-xs text-[var(--colorsNeutralNeutral11)]">
         Visibilidad:
       </span>
 
@@ -28,13 +28,14 @@ export function VisibilitySelector({
             checked={value === 'privado'}
             onChange={() => onChange('privado')}
             disabled={disabled}
+            aria-label="Privado"
             className="mt-1 accent-[var(--colorsAccentAccent9)]"
           />
           <div>
-            <span className="text-sm text-[var(--colorsNeutralNeutral6)]">
+            <span className="text-sm text-[var(--colorsNeutralNeutral12)]">
               Privado
             </span>
-            <p className="text-xs text-[var(--colorsNeutralNeutral9)]">
+            <p className="text-xs text-[var(--colorsNeutralNeutral11)]">
               Solo tu puedes consultarlo
             </p>
           </div>
@@ -48,15 +49,15 @@ export function VisibilitySelector({
             checked={value === 'publico'}
             onChange={() => onChange('publico')}
             disabled={disabled}
+            aria-label="Público"
             className="mt-1 accent-[var(--colorsAccentAccent9)]"
           />
           <div>
-            <span className="text-sm text-[var(--colorsNeutralNeutral6)]">
-              Publico
+            <span className="text-sm text-[var(--colorsNeutralNeutral12)]">
+              Público
             </span>
-            <p className="text-xs text-[var(--colorsNeutralNeutral9)]">
-              Disponible para la comunidad (tras revision)
-            </p>
+            <p className="text-xs text-[var(--colorsNeutralNeutral11)]">
+              Disponible para la comunidad (tras revisión)            </p>
           </div>
         </label>
       </div>

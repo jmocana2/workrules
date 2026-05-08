@@ -119,12 +119,6 @@ describe('ConvenioPreview', () => {
     expect(mockHandlers.onCancel).not.toHaveBeenCalled();
   });
 
-  it('muestra el emoji de documento en el header', () => {
-    render(<ConvenioPreview data={mockData} {...mockHandlers} />);
-
-    expect(screen.getByText('📋')).toBeInTheDocument();
-  });
-
   it('renderiza datos opcionales solo cuando existen', () => {
     const partialData = {
       nombre: 'Convenio Parcial',

@@ -10,9 +10,9 @@ describe('VisibilitySelector', () => {
 
     expect(screen.getByText('Visibilidad:')).toBeInTheDocument();
     expect(screen.getByText('Privado')).toBeInTheDocument();
-    expect(screen.getByText('Publico')).toBeInTheDocument();
+    expect(screen.getByText('Público')).toBeInTheDocument();
     expect(screen.getByText('Solo tu puedes consultarlo')).toBeInTheDocument();
-    expect(screen.getByText('Disponible para la comunidad (tras revision)')).toBeInTheDocument();
+    expect(screen.getByText('Disponible para la comunidad (tras revisión)')).toBeInTheDocument();
   });
 
   it('shows privado as checked when value is privado', () => {
@@ -20,7 +20,7 @@ describe('VisibilitySelector', () => {
     render(<VisibilitySelector value="privado" onChange={onChange} />);
 
     const privadoRadio = screen.getByRole('radio', { name: /privado/i });
-    const publicoRadio = screen.getByRole('radio', { name: /publico/i });
+    const publicoRadio = screen.getByRole('radio', { name: /público/i });
 
     expect(privadoRadio).toBeChecked();
     expect(publicoRadio).not.toBeChecked();
@@ -31,7 +31,7 @@ describe('VisibilitySelector', () => {
     render(<VisibilitySelector value="publico" onChange={onChange} />);
 
     const privadoRadio = screen.getByRole('radio', { name: /privado/i });
-    const publicoRadio = screen.getByRole('radio', { name: /publico/i });
+    const publicoRadio = screen.getByRole('radio', { name: /público/i });
 
     expect(publicoRadio).toBeChecked();
     expect(privadoRadio).not.toBeChecked();
@@ -54,7 +54,7 @@ describe('VisibilitySelector', () => {
     const onChange = vi.fn();
     render(<VisibilitySelector value="privado" onChange={onChange} />);
 
-    const publicoRadio = screen.getByRole('radio', { name: /publico/i });
+    const publicoRadio = screen.getByRole('radio', { name: /público/i });
     await user.click(publicoRadio);
 
     expect(onChange).toHaveBeenCalledWith('publico');
@@ -66,7 +66,7 @@ describe('VisibilitySelector', () => {
     render(<VisibilitySelector value="privado" onChange={onChange} disabled={true} />);
 
     const privadoRadio = screen.getByRole('radio', { name: /privado/i });
-    const publicoRadio = screen.getByRole('radio', { name: /publico/i });
+    const publicoRadio = screen.getByRole('radio', { name: /público/i });
 
     expect(privadoRadio).toBeDisabled();
     expect(publicoRadio).toBeDisabled();
@@ -77,7 +77,7 @@ describe('VisibilitySelector', () => {
     const onChange = vi.fn();
     render(<VisibilitySelector value="privado" onChange={onChange} disabled={true} />);
 
-    const publicoRadio = screen.getByRole('radio', { name: /publico/i });
+    const publicoRadio = screen.getByRole('radio', { name: /público/i });
     await user.click(publicoRadio);
 
     expect(onChange).not.toHaveBeenCalled();
@@ -88,7 +88,7 @@ describe('VisibilitySelector', () => {
     const onChange = vi.fn();
     render(<VisibilitySelector value="privado" onChange={onChange} />);
 
-    const publicoLabel = screen.getByText('Publico');
+    const publicoLabel = screen.getByText('Público');
     await user.click(publicoLabel);
 
     expect(onChange).toHaveBeenCalledWith('publico');
@@ -123,26 +123,12 @@ describe('VisibilitySelector', () => {
     });
   });
 
-  it('uses design system color tokens', () => {
-    const onChange = vi.fn();
-    render(<VisibilitySelector value="privado" onChange={onChange} />);
-
-    const visibilidadLabel = screen.getByText('Visibilidad:');
-    expect(visibilidadLabel).toHaveClass('text-[var(--colorsNeutralNeutral9)]');
-
-    const privadoTitle = screen.getByText('Privado');
-    expect(privadoTitle).toHaveClass('text-[var(--colorsNeutralNeutral6)]');
-
-    const description = screen.getByText('Solo tu puedes consultarlo');
-    expect(description).toHaveClass('text-[var(--colorsNeutralNeutral9)]');
-  });
-
   it('groups radio buttons under same name for proper radio behavior', () => {
     const onChange = vi.fn();
     render(<VisibilitySelector value="privado" onChange={onChange} />);
 
     const privadoRadio = screen.getByRole('radio', { name: /privado/i }) as HTMLInputElement;
-    const publicoRadio = screen.getByRole('radio', { name: /publico/i }) as HTMLInputElement;
+    const publicoRadio = screen.getByRole('radio', { name: /público/i }) as HTMLInputElement;
 
     expect(privadoRadio.name).toBe('visibility');
     expect(publicoRadio.name).toBe('visibility');

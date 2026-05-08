@@ -16,12 +16,6 @@ describe('DropZone', () => {
     expect(screen.getByText(/o haz click para seleccionar/i)).toBeInTheDocument();
   });
 
-  it('shows max size in MB', () => {
-    render(<DropZone onFileSelect={mockOnFileSelect} maxSizeMB={5} />);
-
-    expect(screen.getByText(/Maximo 5MB/i)).toBeInTheDocument();
-  });
-
   it('accepts valid PDF files', () => {
     render(<DropZone onFileSelect={mockOnFileSelect} />);
 

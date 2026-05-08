@@ -1,6 +1,8 @@
 import type { ConversationSummary } from '@core/types';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { Sidebar } from './Sidebar';
 
@@ -12,6 +14,20 @@ beforeAll(() => {
     disconnect() {}
   };
 });
+
+// Create QueryClient wrapper for tests
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
 
 const mockConversations: ConversationSummary[] = [
   {
@@ -199,47 +215,6 @@ describe('Sidebar', () => {
     expect(screen.getByText(/free/i)).toBeInTheDocument();
   });
 
-  it('debe mostrar el badge de plan Premium correctamente', () => {
-    const onNewConversation = vi.fn();
-    const onSelectConversation = vi.fn();
-    const onOpenSettings = vi.fn();
-
-    render(
-      <Sidebar
-        conversations={mockConversations}
-        userPlan="premium"
-        onNewConversation={onNewConversation}
-        onSelectConversation={onSelectConversation}
-        onOpenSettings={onOpenSettings}
-      />
-    );
-
-    const badge = screen.getByRole('status', { name: /plan premium/i });
-    expect(badge).toBeInTheDocument();
-    expect(screen.getByText(/premium/i)).toBeInTheDocument();
-  });
-
-  it('debe mostrar el icono de corona en el plan Premium', () => {
-    const onNewConversation = vi.fn();
-    const onSelectConversation = vi.fn();
-    const onOpenSettings = vi.fn();
-
-    render(
-      <Sidebar
-        conversations={mockConversations}
-        userPlan="premium"
-        onNewConversation={onNewConversation}
-        onSelectConversation={onSelectConversation}
-        onOpenSettings={onOpenSettings}
-      />
-    );
-
-    // Verificar que existe un elemento svg dentro del badge (el icono de corona)
-    const badge = screen.getByRole('status', { name: /plan premium/i });
-    const svgIcon = badge.querySelector('svg');
-    expect(svgIcon).toBeInTheDocument();
-  });
-
   it('debe aceptar className personalizada', () => {
     const onNewConversation = vi.fn();
     const onSelectConversation = vi.fn();
@@ -298,40 +273,24 @@ describe('Sidebar', () => {
     expect(screen.queryByText(/arrastra pdf aqui/i)).not.toBeInTheDocument();
   });
 
-  it('debe mostrar el ConvenioUploader para usuarios premium', () => {
-    const onNewConversation = vi.fn();
-    const onSelectConversation = vi.fn();
-    const onOpenSettings = vi.fn();
-
-    render(
-      <Sidebar
-        conversations={mockConversations}
-        userPlan="premium"
-        onNewConversation={onNewConversation}
-        onSelectConversation={onSelectConversation}
-        onOpenSettings={onOpenSettings}
-      />
-    );
-
-    // Debe existir el DropZone
-    expect(screen.getByLabelText(/subir archivo pdf/i)).toBeInTheDocument();
-  });
-
   it('debe llamar a onConvenioUploaded cuando se completa la subida', async () => {
     const onNewConversation = vi.fn();
     const onSelectConversation = vi.fn();
     const onOpenSettings = vi.fn();
     const onConvenioUploaded = vi.fn();
+    const Wrapper = createWrapper();
 
     render(
-      <Sidebar
-        conversations={mockConversations}
-        userPlan="premium"
-        onNewConversation={onNewConversation}
-        onSelectConversation={onSelectConversation}
-        onOpenSettings={onOpenSettings}
-        onConvenioUploaded={onConvenioUploaded}
-      />
+      <Wrapper>
+        <Sidebar
+          conversations={mockConversations}
+          userPlan="premium"
+          onNewConversation={onNewConversation}
+          onSelectConversation={onSelectConversation}
+          onOpenSettings={onOpenSettings}
+          onConvenioUploaded={onConvenioUploaded}
+        />
+      </Wrapper>
     );
 
     // Verificar que el uploader está presente

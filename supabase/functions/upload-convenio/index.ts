@@ -12,12 +12,17 @@ interface UploadRequest {
   file_url: string;
   nombre_archivo: string;
   visibilidad: "publico" | "privado";
+  pdf_hash?: string;
 }
 
 interface UploadResponse {
   convenio_id: string;
-  status: "processing" | "error";
+  status: "processing" | "error" | "duplicate";
   message?: string;
+  existing_convenio?: {
+    id: string;
+    nombre: string;
+  };
 }
 
 interface ErrorResponse {
@@ -78,7 +83,7 @@ function validateRequest(
     return { valid: false, error: "Request body must be an object" };
   }
 
-  const { file_url, nombre_archivo, visibilidad } = body as Record<
+  const { file_url, nombre_archivo, visibilidad, pdf_hash } = body as Record<
     string,
     unknown
   >;
@@ -104,12 +109,23 @@ function validateRequest(
     };
   }
 
+  // Validar hash si viene (64 caracteres hexadecimales)
+  if (pdf_hash !== undefined && pdf_hash !== null) {
+    if (typeof pdf_hash !== "string" || !/^[a-f0-9]{64}$/i.test(pdf_hash)) {
+      return {
+        valid: false,
+        error: "pdf_hash must be a valid SHA-256 hash (64 hex characters)",
+      };
+    }
+  }
+
   return {
     valid: true,
     data: {
       file_url,
       nombre_archivo,
       visibilidad: (visibilidad as "publico" | "privado") || "privado",
+      pdf_hash: pdf_hash as string | undefined,
     },
   };
 }
@@ -132,6 +148,20 @@ async function triggerN8nWebhook(payload: {
     return;
   }
 
+  // Reemplazar localhost por host.docker.internal para que n8n pueda acceder desde Docker
+  let pdfUrl = payload.pdf_url;
+  try {
+    const parsedUrl = new URL(payload.pdf_url);
+    if (parsedUrl.hostname === "localhost") {
+      parsedUrl.hostname = "host.docker.internal";
+      pdfUrl = parsedUrl.toString();
+    }
+  } catch {
+    console.warn(
+      "[upload-convenio] Could not parse pdf_url for localhost replacement",
+    );
+  }
+
   try {
     // Timeout de 5 segundos para el webhook
     const controller = new AbortController();
@@ -140,7 +170,7 @@ async function triggerN8nWebhook(payload: {
     const response = await fetch(n8nWebhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, pdf_url: pdfUrl }),
       signal: controller.signal,
     });
 
@@ -172,16 +202,9 @@ async function triggerN8nWebhook(payload: {
 // Edge Function Handler
 // ============================================
 
-Deno.serve(async (req: Request) => {
+async function handleRequest(req: Request): Promise<Response> {
   // ========================================
-  // 1. CORS preflight
-  // ========================================
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  // ========================================
-  // 2. Solo POST permitido
+  // 1. Solo POST permitido
   // ========================================
   if (req.method !== "POST") {
     const errorResponse: ErrorResponse = { error: "Method not allowed" };
@@ -260,10 +283,42 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const { file_url, nombre_archivo, visibilidad } = validation.data!;
+    const { file_url, nombre_archivo, visibilidad, pdf_hash } = validation
+      .data!;
 
     // ========================================
-    // 7. Crear registro de convenio
+    // 7. Verificar duplicados por hash (si viene hash)
+    // ========================================
+    if (pdf_hash) {
+      const { data: existingConvenio } = await supabase
+        .from("convenios")
+        .select("id, nombre")
+        .eq("pdf_hash", pdf_hash)
+        .eq("owner_id", user.id)
+        .maybeSingle();
+
+      if (existingConvenio) {
+        console.log(
+          `[upload-convenio] Duplicate detected for user ${user.id}: ${existingConvenio.nombre}`,
+        );
+        const duplicateResponse: UploadResponse = {
+          convenio_id: existingConvenio.id,
+          status: "duplicate",
+          message: "Ya tienes un convenio con este PDF",
+          existing_convenio: {
+            id: existingConvenio.id,
+            nombre: existingConvenio.nombre,
+          },
+        };
+        return new Response(JSON.stringify(duplicateResponse), {
+          status: 200, // 200 para que el frontend lo maneje como respuesta válida
+          headers: jsonHeaders,
+        });
+      }
+    }
+
+    // ========================================
+    // 8. Crear registro de convenio
     // ========================================
     const nombreLimpio = cleanFileName(nombre_archivo);
 
@@ -272,6 +327,7 @@ Deno.serve(async (req: Request) => {
       .insert({
         nombre: nombreLimpio,
         url_pdf: file_url,
+        pdf_hash: pdf_hash || null,
         visibilidad,
         owner_id: user.id,
         estado: "pendiente",
@@ -312,24 +368,9 @@ Deno.serve(async (req: Request) => {
     // ========================================
     // 9. Disparar webhook a n8n
     // ========================================
-    // Reemplazar localhost por host.docker.internal para que n8n pueda acceder desde Docker
-    let pdfUrlForN8n = file_url;
-    try {
-      const parsedUrl = new URL(file_url);
-      if (parsedUrl.hostname === "localhost") {
-        parsedUrl.hostname = "host.docker.internal";
-        pdfUrlForN8n = parsedUrl.toString();
-      }
-    } catch {
-      // If URL parsing fails, use original URL
-      console.warn(
-        "[upload-convenio] Could not parse file_url for localhost replacement",
-      );
-    }
-
     await triggerN8nWebhook({
       convenio_id: convenioId,
-      pdf_url: pdfUrlForN8n,
+      pdf_url: file_url,
       nombre_archivo,
       visibilidad,
       owner_id: user.id,
@@ -359,6 +400,13 @@ Deno.serve(async (req: Request) => {
       headers: jsonHeaders,
     });
   }
+}
+
+Deno.serve((req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+  return handleRequest(req);
 });
 
 /* To invoke locally:

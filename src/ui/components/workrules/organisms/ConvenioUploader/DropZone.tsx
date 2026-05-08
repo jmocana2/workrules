@@ -124,7 +124,7 @@ export function DropZone({
         o haz click para seleccionar
       </p>
       <p className="text-xs text-[var(--app-dropzone-text-muted)] mt-2">
-        Maximo {maxSizeMB}MB
+        Máximo {maxSizeMB}MB
       </p>
 
       {/* Error */}

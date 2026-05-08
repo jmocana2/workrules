@@ -92,7 +92,7 @@ export function UploadProgress({
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Icon
             className={cn(
-              'w-5 h-5',
+              'w-5 h-5 flex-shrink-0',
               shouldSpin && 'animate-spin',
               shouldPulse && 'animate-pulse'
             )}
@@ -156,10 +156,10 @@ export function UploadProgress({
       {/* Processing Message */}
       {showProcessingMessage && (
         <div className="text-xs mt-2 space-y-1">
-          <p className="text-(--colorsNeutralNeutral1)">
+          <p className="text-(--colorsNeutralNeutral11)">
             Tiempo estimado restante: {formatTimeLeft(estimatedTimeLeft)}
           </p>
-          <p className="text-[12px] text-(--colorsNeutralNeutral1)">
+          <p className="text-[12px] text-(--colorsNeutralNeutral11)">
             Extrayendo texto, generando embeddings y analizando estructura...
           </p>
         </div>

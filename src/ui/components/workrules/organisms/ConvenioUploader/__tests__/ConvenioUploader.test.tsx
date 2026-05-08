@@ -110,7 +110,7 @@ describe('ConvenioUploader', () => {
       render(<ConvenioUploader isPremium={true} />);
       expect(screen.getByText(/visibilidad:/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/privado/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/publico/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/público/i)).toBeInTheDocument();
     });
   });
 

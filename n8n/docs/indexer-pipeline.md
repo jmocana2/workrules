@@ -1,27 +1,32 @@
-# Pipeline de Indexación RAG - Workrules Indexer
-
-## Descripción General
+# Pipeline de Indexación RAG - Workrules Indexer### Fase 1: Recepción y descarga### Fase 0: Verificación de Duplicados## Descripción General
 
 El workflow **Workrules Indexer** es el pipeline ETL principal del sistema RAG. Recibe un convenio colectivo via webhook, lo procesa (descarga PDF, extrae texto, genera chunks y embeddings) y lo almacena en Supabase listo para busqueda semantica.
 
 ## Arquitectura del Pipeline
 
 ```
-                                ┌─────────────────┐
-                                │  HTTP LlamaParse │
-                                │      PDF         │
-                                └────────┬─────────┘
-                                         │
-                                    ┌────▼────┐
-                                    │  Wait   │
-                                    │  (90s)  │
-                                    └────┬────┘
-                                         │
-                                ┌────────▼─────────┐
-┌─────────┐   ┌──────────────┐  │ Check LlamaParse │   ┌───────────────────┐
-│ Webhook │──►│ HTTP PDF     │──┤     Status        ├──►│ Is Processing     │
-│  POST   │   │ Request      │  └──────────────────┘   │ Complete?         │
-└─────────┘   └──────┬───────┘                          └─────┬───────┬────┘
+                                                        ┌─────────────────┐
+                                                        │  HTTP LlamaParse │
+                                                        │      PDF         │
+                                                        └────────┬─────────┘
+                                                                 │
+                                                            ┌────▼────┐
+                                                            │  Wait   │
+                                                            │  (90s)  │
+                                                            └────┬────┘
+                                                                 │
+                                                        ┌────────▼─────────┐
+┌─────────┐   ┌─────────────┐   ┌──────────┐   ┌──────────────┐  │ Check LlamaParse │   ┌───────────────────┐
+│ Webhook │──►│ Check       │──►│ Convenio │──►│ HTTP PDF     │──┤     Status        ├──►│ Is Processing     │
+│  POST   │   │ Duplicate   │   │ Exists?  │   │ Request      │  └──────────────────┘   │ Complete?         │
+└─────────┘   └─────────────┘   └────┬─────┘   └──────┬───────┘                          └─────┬───────┬────┘
+                                     │ [EXISTE]       │
+                                     ▼                │
+                              ┌──────────────┐        │
+                              │ Respond      │        │
+                              │ Duplicate    │        │
+                              │ (~200ms)     │        │
+                              └──────────────┘        │
                      │                                     OK │       │ FAIL
                      │                                        ▼       ▼
               ┌──────▼──────────┐                   ┌─────────────┐ ┌──────────┐
@@ -61,11 +66,23 @@ El workflow **Workrules Indexer** es el pipeline ETL principal del sistema RAG. 
 
 ## Fases del Pipeline
 
-### Fase 1: Recepción y descarga
+### Fase 0: Verificacion de Duplicados
 
 | Nodo | Tipo | Funcion |
 |---|---|---|
 | **Webhook** | Webhook (POST) | Recibe el payload con datos del convenio (`nombre`, `codigo_regcon`, `pdf_url`, etc.) |
+| **Check Duplicate Convenio** | HTTP Request | Consulta Supabase para verificar si ya existe un convenio con el mismo `codigo_regcon` |
+| **Check Duplicate** | HTTP Request | Consulta la tabla `convenios` en Supabase para verificar si ya existe un registro con el mismo `codigo_regcon` |
+Esta fase evita procesar PDFs duplicados, ahorrando:
+- ~2-3 minutos de procesamiento
+- Creditos de LlamaParse (~$0.003/pagina)
+- Tokens de Claude y OpenAI
+- Espacio en Storage
+
+### Fase 1: Recepcion y descarga
+
+| Nodo | Tipo | Funcion |
+|---|---|---|
 | **HTTP PDF Request** | HTTP Request | Descarga el PDF desde la URL proporcionada |
 
 El PDF descargado se envia en paralelo a dos ramas:

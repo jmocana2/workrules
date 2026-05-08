@@ -279,3 +279,107 @@ export const LongFileName: Story = {
     onCancel: fn(),
   },
 };
+
+/**
+ * Estado de procesamiento con mensaje de tiempo estimado
+ * Muestra el mensaje adicional que aparece durante el procesamiento
+ */
+export const ProcessingWithMessage: Story = {
+  args: {
+    status: 'processing',
+    fileName: 'convenio-hosteleria-madrid.pdf',
+    processingProgress: 0,
+    estimatedTimeLeft: 180, // 3 minutos
+    onCancel: fn(),
+  },
+};
+
+/**
+ * Procesamiento al 30% con tiempo estimado medio
+ */
+export const Processing30: Story = {
+  args: {
+    status: 'processing',
+    fileName: 'convenio-construccion-barcelona.pdf',
+    processingProgress: 30,
+    estimatedTimeLeft: 120, // 2 minutos
+    onCancel: fn(),
+  },
+};
+
+/**
+ * Procesamiento al 65% con tiempo estimado corto
+ */
+export const Processing65: Story = {
+  args: {
+    status: 'processing',
+    fileName: 'convenio-metal-estatal.pdf',
+    processingProgress: 65,
+    estimatedTimeLeft: 45, // 45 segundos
+    onCancel: fn(),
+  },
+};
+
+/**
+ * Procesamiento al 95% finalizando
+ */
+export const Processing95: Story = {
+  args: {
+    status: 'processing',
+    fileName: 'convenio-comercio-madrid.pdf',
+    processingProgress: 95,
+    estimatedTimeLeft: 5, // 5 segundos
+    onCancel: fn(),
+  },
+};
+
+/**
+ * Diferentes estados de procesamiento con mensajes
+ */
+export const ProcessingStates: Story = {
+  args: {
+    status: 'processing',
+    fileName: 'convenio-ejemplo.pdf',
+    processingProgress: 50,
+    estimatedTimeLeft: 90,
+  },
+  render: () => (
+    <div className="flex flex-col gap-4" style={{ width: '400px' }}>
+      <UploadProgress
+        status="processing"
+        fileName="convenio-inicio.pdf"
+        processingProgress={0}
+        estimatedTimeLeft={240}
+        onCancel={fn()}
+      />
+      <UploadProgress
+        status="processing"
+        fileName="convenio-progreso-bajo.pdf"
+        processingProgress={15}
+        estimatedTimeLeft={200}
+        onCancel={fn()}
+      />
+      <UploadProgress
+        status="processing"
+        fileName="convenio-mitad.pdf"
+        processingProgress={50}
+        estimatedTimeLeft={90}
+        onCancel={fn()}
+      />
+      <UploadProgress
+        status="processing"
+        fileName="convenio-casi-listo.pdf"
+        processingProgress={85}
+        estimatedTimeLeft={20}
+        onCancel={fn()}
+      />
+      <UploadProgress
+        status="processing"
+        fileName="convenio-finalizando.pdf"
+        processingProgress={98}
+        estimatedTimeLeft={2}
+        onCancel={fn()}
+      />
+    </div>
+  ),
+};

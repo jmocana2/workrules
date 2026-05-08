@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabase";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
+import { type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useConvenioUpload } from "./useConvenioUpload";
 
@@ -19,6 +21,20 @@ vi.mock("@/lib/supabase", () => ({
   },
 }));
 
+// Create QueryClient wrapper for tests
+function createWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
+
 describe("useConvenioUpload", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -26,7 +42,9 @@ describe("useConvenioUpload", () => {
   });
 
   it("should start in idle state", () => {
-    const { result } = renderHook(() => useConvenioUpload());
+    const { result } = renderHook(() => useConvenioUpload(), {
+      wrapper: createWrapper(),
+    });
     expect(result.current.state.status).toBe("idle");
   });
 
@@ -58,7 +76,9 @@ describe("useConvenioUpload", () => {
       createSignedUrl: mockCreateSignedUrl,
     });
 
-    const { result } = renderHook(() => useConvenioUpload());
+    const { result } = renderHook(() => useConvenioUpload(), {
+      wrapper: createWrapper(),
+    });
 
     const file = new File(["test"], "test.pdf", { type: "application/pdf" });
 
@@ -93,7 +113,9 @@ describe("useConvenioUpload", () => {
     vi.stubGlobal("fetch", mockFetch);
 
     const onError = vi.fn();
-    const { result } = renderHook(() => useConvenioUpload({ onError }));
+    const { result } = renderHook(() => useConvenioUpload({ onError }), {
+      wrapper: createWrapper(),
+    });
 
     const file = new File(["test"], "test.pdf", { type: "application/pdf" });
 
@@ -132,8 +154,11 @@ describe("useConvenioUpload", () => {
     });
 
     const onSuccess = vi.fn();
-    const { result } = renderHook(() =>
-      useConvenioUpload({ onSuccess, pollingIntervalMs: 50 })
+    const { result } = renderHook(
+      () => useConvenioUpload({ onSuccess, pollingIntervalMs: 50 }),
+      {
+        wrapper: createWrapper(),
+      }
     );
 
     await act(async () => {
@@ -196,8 +221,11 @@ describe("useConvenioUpload", () => {
     });
 
     const onError = vi.fn();
-    const { result } = renderHook(() =>
-      useConvenioUpload({ onError, pollingIntervalMs: 50 })
+    const { result } = renderHook(
+      () => useConvenioUpload({ onError, pollingIntervalMs: 50 }),
+      {
+        wrapper: createWrapper(),
+      }
     );
 
     await act(async () => {
@@ -220,7 +248,9 @@ describe("useConvenioUpload", () => {
   });
 
   it("should reset state and cleanup", async () => {
-    const { result } = renderHook(() => useConvenioUpload());
+    const { result } = renderHook(() => useConvenioUpload(), {
+      wrapper: createWrapper(),
+    });
 
     // Set some state
     await act(async () => {
@@ -238,7 +268,9 @@ describe("useConvenioUpload", () => {
   });
 
   it("should change visibility setting", () => {
-    const { result } = renderHook(() => useConvenioUpload());
+    const { result } = renderHook(() => useConvenioUpload(), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.visibility).toBe("privado");
 
