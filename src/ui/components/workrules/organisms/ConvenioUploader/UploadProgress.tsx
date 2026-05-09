@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
-import { Upload, Search, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { CheckCircle2, Loader2, Search, Upload, XCircle } from 'lucide-react';
 
 export type UploadStatus = 'uploading' | 'validating' | 'processing' | 'ready' | 'error';
 
@@ -64,8 +64,7 @@ export function UploadProgress({
   status,
   progress = 0,
   fileName,
-  errorMessage,
-  onCancel,
+  errorMessage,  
   processingProgress = 0,
   estimatedTimeLeft = 0,
 }: UploadProgressProps) {
@@ -73,7 +72,6 @@ export function UploadProgress({
   const Icon = config.icon;
   const clampedProgress = Math.min(100, Math.max(0, progress));
   const clampedProcessingProgress = Math.min(100, Math.max(0, processingProgress));
-  const showCancelButton = onCancel && status !== 'ready' && status !== 'error';
   const showProgressBar = status === 'uploading' || status === 'processing';
   const showProcessingMessage = status === 'processing';
   const currentProgress = status === 'processing' ? clampedProcessingProgress : clampedProgress;
@@ -105,19 +103,7 @@ export function UploadProgress({
           >
             {fileName}
           </span>
-        </div>
-        {showCancelButton && (
-          <button
-            onClick={onCancel}
-            className={cn(
-              'text-xs text-(--app-upload-cancel) hover:text-(--app-upload-cancel-hover)',
-              'transition-colors duration-200'
-            )}
-            type="button"
-          >
-            Cancelar
-          </button>
-        )}
+        </div>        
       </div>
 
       {/* Progress Bar */}

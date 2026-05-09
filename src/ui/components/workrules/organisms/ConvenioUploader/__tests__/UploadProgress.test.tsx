@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { UploadProgress, type UploadStatus } from '../UploadProgress';
 
@@ -48,13 +48,6 @@ describe('UploadProgress', () => {
       render(<UploadProgress {...defaultProps} status="uploading" progress={30} />);
 
       expect(screen.getByText(/Subiendo\.\.\./)).toBeInTheDocument();
-    });
-
-    it('muestra botón cancelar si onCancel está presente', () => {
-      const onCancel = vi.fn();
-      render(<UploadProgress {...defaultProps} status="uploading" onCancel={onCancel} />);
-
-      expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
     });
 
     it('no muestra botón cancelar si onCancel no está presente', () => {
@@ -122,13 +115,6 @@ describe('UploadProgress', () => {
       expect(
         screen.getByText(/Extrayendo texto, generando embeddings/i)
       ).toBeInTheDocument();
-    });
-
-    it('muestra botón cancelar si onCancel está presente', () => {
-      const onCancel = vi.fn();
-      render(<UploadProgress {...defaultProps} status="processing" onCancel={onCancel} />);
-
-      expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
     });
 
     it('SÍ muestra barra de progreso', () => {
@@ -217,16 +203,6 @@ describe('UploadProgress', () => {
   });
 
   describe('Interacciones', () => {
-    it('click en botón cancelar llama a onCancel', () => {
-      const onCancel = vi.fn();
-      render(<UploadProgress {...defaultProps} status="uploading" onCancel={onCancel} />);
-
-      const cancelButton = screen.getByRole('button', { name: /cancelar/i });
-      fireEvent.click(cancelButton);
-
-      expect(onCancel).toHaveBeenCalledTimes(1);
-    });
-
     it('botón cancelar no aparece en estado "ready"', () => {
       const onCancel = vi.fn();
       render(<UploadProgress {...defaultProps} status="ready" onCancel={onCancel} />);
@@ -239,27 +215,6 @@ describe('UploadProgress', () => {
       render(<UploadProgress {...defaultProps} status="error" onCancel={onCancel} />);
 
       expect(screen.queryByRole('button', { name: /cancelar/i })).not.toBeInTheDocument();
-    });
-
-    it('botón cancelar aparece en estado "uploading"', () => {
-      const onCancel = vi.fn();
-      render(<UploadProgress {...defaultProps} status="uploading" onCancel={onCancel} />);
-
-      expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
-    });
-
-    it('botón cancelar aparece en estado "validating"', () => {
-      const onCancel = vi.fn();
-      render(<UploadProgress {...defaultProps} status="validating" onCancel={onCancel} />);
-
-      expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
-    });
-
-    it('botón cancelar aparece en estado "processing"', () => {
-      const onCancel = vi.fn();
-      render(<UploadProgress {...defaultProps} status="processing" onCancel={onCancel} />);
-
-      expect(screen.getByRole('button', { name: /cancelar/i })).toBeInTheDocument();
     });
   });
 
@@ -292,13 +247,6 @@ describe('UploadProgress', () => {
       expect(fileNameElement).toBeInTheDocument();
     });
 
-    it('botón cancelar tiene type="button"', () => {
-      const onCancel = vi.fn();
-      render(<UploadProgress {...defaultProps} status="uploading" onCancel={onCancel} />);
-
-      const cancelButton = screen.getByRole('button', { name: /cancelar/i });
-      expect(cancelButton).toHaveAttribute('type', 'button');
-    });
   });
 
   describe('Estilos dinámicos', () => {
@@ -330,18 +278,6 @@ describe('UploadProgress', () => {
       render(<UploadProgress {...defaultProps} status="uploading" progress={45.7} />);
 
       expect(screen.getByText(/46%/)).toBeInTheDocument(); // Math.round(45.7) = 46
-    });
-
-    it('maneja múltiples clics en botón cancelar', () => {
-      const onCancel = vi.fn();
-      render(<UploadProgress {...defaultProps} status="uploading" onCancel={onCancel} />);
-
-      const cancelButton = screen.getByRole('button', { name: /cancelar/i });
-      fireEvent.click(cancelButton);
-      fireEvent.click(cancelButton);
-      fireEvent.click(cancelButton);
-
-      expect(onCancel).toHaveBeenCalledTimes(3);
     });
 
     it('muestra mensaje de procesamiento con tiempo estimado', () => {
