@@ -45,7 +45,8 @@ import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSel
 import { MobileDrawer } from '@ui/components/workrules/organisms/MobileDrawer/MobileDrawer';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { VariablesPanel } from '@ui/components/workrules/organisms/VariablesPanel/VariablesPanel';
-import { useConvenios } from '@ui/hooks';
+import { useConvenios, useUserConvenios } from '@ui/hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
 import { useState } from 'react';
 import type {
@@ -68,6 +69,8 @@ export function ChatPage({
   // Detectar viewport
   const { isMobile, isTablet } = useBreakpoint();
 
+  const queryClient = useQueryClient();
+
   // Estado para mobile drawers
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isVariablesPanelOpen, setIsVariablesPanelOpen] = useState(false);
@@ -75,6 +78,7 @@ export function ChatPage({
   // Usar convenios reales de Supabase (o mocks en Storybook)
   const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
   const { data: realConvenios = [], isLoading: loadingConvenios } = useConvenios();
+  const { data: userConvenios = [], isLoading: loadingUserConvenios } = useUserConvenios();
   const convenios = useMocks ? mockConvenios : realConvenios;
 
   const {
@@ -157,6 +161,23 @@ export function ChatPage({
     }
   };
 
+  const handleConvenioUploaded = (_convenioId: string) => {
+    queryClient.invalidateQueries({ queryKey: ['user-convenios'] });
+  };
+
+  // Handler para seleccionar convenio desde el ConvenioManager
+  const handleSelectConvenioFromManager = (convenioId: string) => {
+    // Buscar el convenio completo en los userConvenios
+    const convenio = userConvenios.find(c => c.id === convenioId);
+    if (convenio) {
+      selectConvenio(convenio);
+    }
+    // Cerrar drawer en mobile/tablet si está abierto
+    if (isMobile || isTablet) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -177,6 +198,10 @@ export function ChatPage({
               onSelectConversation={handleSelectConversationAndClosDrawer}
               onOpenSettings={handleOpenSettings}
               isCollapsed={true}
+              userConvenios={userConvenios}
+              isLoadingConvenios={loadingUserConvenios}
+              onSelectConvenioFromManager={handleSelectConvenioFromManager}
+              onConvenioUploaded={handleConvenioUploaded}
             />
           )}
           {/* Drawer para expandir */}
@@ -194,6 +219,10 @@ export function ChatPage({
               onOpenSettings={handleOpenSettings}
               onClose={() => setIsSidebarOpen(false)}
               inDrawer={true}
+              userConvenios={userConvenios}
+              isLoadingConvenios={loadingUserConvenios}
+              onSelectConvenioFromManager={handleSelectConvenioFromManager}
+              onConvenioUploaded={handleConvenioUploaded}
             />
           </MobileDrawer>
         </>
@@ -205,6 +234,10 @@ export function ChatPage({
           onNewConversation={handleNewConversation}
           onSelectConversation={handleSelectConversation}
           onOpenSettings={handleOpenSettings}
+          userConvenios={userConvenios}
+          isLoadingConvenios={loadingUserConvenios}
+          onSelectConvenioFromManager={handleSelectConvenioFromManager}
+          onConvenioUploaded={handleConvenioUploaded}
         />
       )}
 

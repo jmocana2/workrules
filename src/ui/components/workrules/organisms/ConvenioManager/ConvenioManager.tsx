@@ -2,12 +2,6 @@ import { cn } from '@/lib/utils';
 import { UserConvenio } from '@core/types';
 import { Badge } from '@ui/components/shadcn/badge';
 import { Button } from '@ui/components/shadcn/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@ui/components/shadcn/dropdown-menu';
 import { Separator } from '@ui/components/shadcn/separator';
 import { Skeleton } from '@ui/components/shadcn/skeleton';
 import {
@@ -18,20 +12,16 @@ import {
   GlobeIcon,
   LoaderIcon,
   LockIcon,
-  MoreVerticalIcon,
-  PencilIcon,
-  StarIcon,
-  TrashIcon,
   UploadIcon,
 } from 'lucide-react';
+import { useState } from 'react';
+import { openPdfFileSelector } from '../ConvenioUploader/utils/fileSelection';
 
 export interface ConvenioManagerProps {
   userConvenios: UserConvenio[];
   isLoading?: boolean;
-  onUpload: () => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-  onToggleFavorite: (id: string) => void;
+  onUpload: (file: File) => void;
+  onSelectConvenio: (convenioId: string) => void;
   className?: string;
 }
 
@@ -62,12 +52,20 @@ export function ConvenioManager({
   userConvenios,
   isLoading = false,
   onUpload,
-  onEdit,
-  onDelete,
-  onToggleFavorite,
+  onSelectConvenio,
   className,
 }: ConvenioManagerProps) {
-  if (isLoading) {
+  const [fileError, setFileError] = useState<string | null>(null);
+
+  const handleUploadClick = () => {
+    setFileError(null);
+    openPdfFileSelector(
+      (file) => { onUpload(file); },
+      (error) => { setFileError(error); },
+    );
+  };
+  if (isLoading) {    
+
     return (
       <div className={cn('flex flex-col rounded-lg border border-border bg-background p-6', className)}>
         {/* Header skeleton */}
@@ -106,7 +104,7 @@ export function ConvenioManager({
           Mis convenios
         </h2>
         <Button
-          onClick={onUpload}
+          onClick={handleUploadClick}
           className="inline-flex items-center gap-2"
           size="sm"
         >
@@ -114,6 +112,12 @@ export function ConvenioManager({
           Subir convenio
         </Button>
       </div>
+
+      {fileError && (
+        <div role="alert" className="mt-2 px-3 py-2 rounded-md border border-(--colorsSemanticError9) bg-(--colorsSemanticErrorAlpha3)">
+          <p className="text-sm text-(--colorsSemanticError11)">{fileError}</p>
+        </div>
+      )}
 
       <Separator className="mb-4" />
 
@@ -140,103 +144,67 @@ export function ConvenioManager({
               const statusClassName = statusConfig[convenio.status].className;
               const isProcessing = convenio.status === 'processing';
 
+              const canSelect = convenio.status === 'ready';
+
               return (
                 <li
                   key={convenio.id}
-                  className="rounded-(--radius3) border border-border bg-card p-3 transition-colors hover:bg-muted"
+                  data-testid={`convenio-item-${convenio.id}`}
+                  onClick={() => canSelect && onSelectConvenio(convenio.id)}
+                  className={cn(
+                    'rounded-(--radius3) border border-border bg-card p-3 transition-colors',
+                    canSelect && 'cursor-pointer hover:bg-muted hover:border-primary',
+                    !canSelect && 'opacity-60'
+                  )}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    {/* Left section: icon + info */}
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {/* Privacy icon */}
-                      <div className="mt-1 shrink-0">
-                        {convenio.isPrivate ? (
-                          <LockIcon className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <GlobeIcon className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {/* Privacy icon */}
+                    <div className="mt-1 shrink-0">
+                      {convenio.isPrivate ? (
+                        <LockIcon className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <GlobeIcon className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
 
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        {/* Name + favorite */}
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="truncate text-(length:--typographyFontSize3) font-(--typographyFontWeightMedium) text-foreground">
-                            {convenio.nombre}
-                          </h3>
-                          {convenio.isFavorite && (
-                            <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0" />
-                          )}
-                        </div>
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      {/* Name */}
+                      <h3 className="truncate text-(length:--typographyFontSize3) font-(--typographyFontWeightMedium) text-foreground mb-1">
+                        {convenio.nombre}
+                      </h3>
 
-                        {/* Sector */}
+                      {/* Sector */}
+                      {convenio.sector && (
                         <p className="mb-2 text-(length:--typographyFontSize1) text-muted-foreground">
                           {convenio.sector}
                         </p>
+                      )}
 
-                        {/* Status badge */}
-                        <Badge
-                          variant="secondary"
-                          className={cn(
-                            'inline-flex items-center gap-1.5',
-                            statusClassName
-                          )}
-                        >
-                          <StatusIcon
-                            className={cn(
-                              'h-3.5 w-3.5',
-                              isProcessing && 'animate-spin'
-                            )}
-                          />
-                          {statusLabel}
-                        </Badge>
-
-                        {/* Error message */}
-                        {convenio.status === 'error' && convenio.errorMessage && (
-                          <p className="mt-2 text-(length:--typographyFontSize1) text-destructive">
-                            {convenio.errorMessage}
-                          </p>
+                      {/* Status badge */}
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          'inline-flex items-center gap-1.5',
+                          statusClassName
                         )}
-                      </div>
-                    </div>
+                      >
+                        <StatusIcon
+                          className={cn(
+                            'h-3.5 w-3.5',
+                            isProcessing && 'animate-spin'
+                          )}
+                        />
+                        {statusLabel}
+                      </Badge>
 
-                    {/* Right section: dropdown menu */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 shrink-0 p-0"
-                        >
-                          <MoreVerticalIcon className="h-4 w-4" />
-                          <span className="sr-only">Abrir menú</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => onToggleFavorite(convenio.id)}
-                        >
-                          <StarIcon className="h-4 w-4 mr-2" />
-                          {convenio.isFavorite
-                            ? 'Quitar de favoritos'
-                            : 'Marcar como favorito'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onEdit(convenio.id)}
-                          disabled={convenio.status !== 'ready'}
-                        >
-                          <PencilIcon className="h-4 w-4 mr-2" />
-                          Editar nombre
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onDelete(convenio.id)}
-                          className="text-destructive"
-                        >
-                          <TrashIcon className="h-4 w-4 mr-2" />
-                          Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      {/* Error message */}
+                      {convenio.status === 'error' && convenio.errorMessage && (
+                        <p className="mt-2 text-(length:--typographyFontSize1) text-destructive">
+                          {convenio.errorMessage}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </li>
               );

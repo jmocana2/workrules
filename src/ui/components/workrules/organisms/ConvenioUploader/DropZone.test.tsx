@@ -57,7 +57,7 @@ describe('DropZone', () => {
     });
 
     expect(mockOnFileSelect).not.toHaveBeenCalled();
-    expect(screen.getByText(/El archivo excede el limite/i)).toBeInTheDocument();
+    expect(screen.getByText(/El archivo excede el límite/i)).toBeInTheDocument();
   });
 
   it('does not accept files when disabled', () => {

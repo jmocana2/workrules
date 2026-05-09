@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { useCallback, useId, useState } from 'react';
+import { validatePdfFile } from './utils/fileSelection';
 
 interface DropZoneProps {
   onFileSelect: (file: File) => void;
@@ -17,18 +18,7 @@ export function DropZone({
   const errorId = useId();
 
   const validateFile = useCallback((file: File): string | null => {
-    // Validar tipo MIME
-    if (file.type !== 'application/pdf') {
-      return 'Solo se permiten archivos PDF';
-    }
-
-    // Validar tamaño
-    const maxBytes = maxSizeMB * 1024 * 1024;
-    if (file.size > maxBytes) {
-      return `El archivo excede el limite de ${maxSizeMB}MB`;
-    }
-
-    return null;
+    return validatePdfFile(file, maxSizeMB);
   }, [maxSizeMB]);
 
   const handleFile = useCallback((file: File) => {

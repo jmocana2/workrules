@@ -1,4 +1,5 @@
 export { ConvenioUploader, default } from './ConvenioUploader';
+export type { ConvenioUploaderRef } from './ConvenioUploader';
 export { DropZone } from './DropZone';
 export { UploadProgress } from './UploadProgress';
 export type { UploadProgressProps, UploadStatus } from './UploadProgress';

@@ -55,6 +55,11 @@ vi.mock('@ui/hooks', () => ({
     isLoading: false,
     error: null,
   })),
+  useUserConvenios: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  })),
   useChatStream: vi.fn(),
 }));
 

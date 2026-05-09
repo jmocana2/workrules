@@ -85,10 +85,8 @@ const meta: Meta<typeof ConvenioManager> = {
     ),
   ],
   args: {
-    onUpload: fn(),
-    onEdit: fn(),
-    onDelete: fn(),
-    onToggleFavorite: fn(),
+    onUpload: fn((file: File) => console.log('Upload:', file.name)),
+    onSelectConvenio: fn((id: string) => console.log('Select convenio:', id)),
   },
 };
 

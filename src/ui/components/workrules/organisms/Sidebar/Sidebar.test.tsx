@@ -299,4 +299,99 @@ describe('Sidebar', () => {
     // Nota: El test completo del flujo de upload está en ConvenioUploader.test.tsx
     // Aquí solo verificamos que el callback se pasa correctamente
   });
+
+  it('no debe mostrar el botón de gestión de convenios para usuarios free', () => {
+    const onNewConversation = vi.fn();
+    const onSelectConversation = vi.fn();
+    const onOpenSettings = vi.fn();
+
+    render(
+      <Sidebar
+        conversations={mockConversations}
+        userPlan="free"
+        onNewConversation={onNewConversation}
+        onSelectConversation={onSelectConversation}
+        onOpenSettings={onOpenSettings}
+      />
+    );
+
+    const manageButton = screen.queryByRole('button', { name: /gestionar convenios/i });
+    expect(manageButton).not.toBeInTheDocument();
+  });
+
+  it('debe mostrar el botón de gestión de convenios para premium incluso sin callbacks', () => {
+    const onNewConversation = vi.fn();
+    const onSelectConversation = vi.fn();
+    const onOpenSettings = vi.fn();
+    const Wrapper = createWrapper();
+
+    render(
+      <Wrapper>
+        <Sidebar
+          conversations={mockConversations}
+          userPlan="premium"
+          onNewConversation={onNewConversation}
+          onSelectConversation={onSelectConversation}
+          onOpenSettings={onOpenSettings}
+        />
+      </Wrapper>
+    );
+
+    const manageButton = screen.getByRole('button', { name: /gestionar convenios/i });
+    expect(manageButton).toBeInTheDocument();
+  });
+
+  it('debe mostrar el botón de gestión de convenios para usuarios premium con callbacks', () => {
+    const onNewConversation = vi.fn();
+    const onSelectConversation = vi.fn();
+    const onOpenSettings = vi.fn();
+    const onSelectConvenioFromManager = vi.fn();
+    const Wrapper = createWrapper();
+
+    render(
+      <Wrapper>
+        <Sidebar
+          conversations={mockConversations}
+          userPlan="premium"
+          onNewConversation={onNewConversation}
+          onSelectConversation={onSelectConversation}
+          onOpenSettings={onOpenSettings}
+          onSelectConvenioFromManager={onSelectConvenioFromManager}
+          userConvenios={[]}
+        />
+      </Wrapper>
+    );
+
+    const manageButton = screen.getByRole('button', { name: /gestionar convenios/i });
+    expect(manageButton).toBeInTheDocument();
+  });
+
+  it('debe abrir el ConvenioManager al hacer clic en el botón de gestión', async () => {
+    const user = userEvent.setup();
+    const onNewConversation = vi.fn();
+    const onSelectConversation = vi.fn();
+    const onOpenSettings = vi.fn();
+    const onSelectConvenioFromManager = vi.fn();
+    const Wrapper = createWrapper();
+
+    render(
+      <Wrapper>
+        <Sidebar
+          conversations={mockConversations}
+          userPlan="premium"
+          onNewConversation={onNewConversation}
+          onSelectConversation={onSelectConversation}
+          onOpenSettings={onOpenSettings}
+          onSelectConvenioFromManager={onSelectConvenioFromManager}
+          userConvenios={[]}
+        />
+      </Wrapper>
+    );
+
+    const manageButton = screen.getByRole('button', { name: /gestionar convenios/i });
+    await user.click(manageButton);
+
+    // Verificar que se abre el popover con el título del ConvenioManager
+    expect(screen.getByText('Mis convenios')).toBeInTheDocument();
+  });
 });

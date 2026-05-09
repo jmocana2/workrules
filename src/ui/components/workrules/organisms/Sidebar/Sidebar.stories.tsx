@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 import { Sidebar } from './Sidebar';
-import type { ConversationSummary } from '@core/types';
+import type { ConversationSummary, UserConvenio } from '@core/types';
 
 const mockConversations: ConversationSummary[] = [
   {
@@ -43,6 +43,52 @@ const mockConversations: ConversationSummary[] = [
     convenioNombre: 'Convenio Comercio',
     lastMessageAt: '2024-01-11T11:00:00Z',
     preview: '¿Cuántas horas semanales establece el convenio?',
+  },
+];
+
+const mockUserConvenios: UserConvenio[] = [
+  {
+    id: '1',
+    nombre: 'Hosteleria Madrid - Personalizado',
+    sector: 'Hosteleria',
+    ambito: 'provincial',
+    vigente: true,
+    userId: 'user-1',
+    isPrivate: true,
+    status: 'ready',
+    isFavorite: true,
+    uploadedAt: '2026-03-10T10:00:00Z',
+    codigo_regcon: 'BOE-A-2026-00001',
+    created_at: '2026-03-10T10:00:00Z',
+    updated_at: '2026-03-10T10:00:00Z',
+  },
+  {
+    id: '2',
+    nombre: 'Convenio Empresa ABC',
+    sector: 'Comercio',
+    ambito: 'empresa',
+    vigente: true,
+    userId: 'user-1',
+    isPrivate: true,
+    status: 'processing',
+    uploadedAt: '2026-03-14T09:30:00Z',
+    codigo_regcon: 'BOE-A-2026-00002',
+    created_at: '2026-03-14T09:30:00Z',
+    updated_at: '2026-03-14T09:30:00Z',
+  },
+  {
+    id: '3',
+    nombre: 'Metalurgia Provincial',
+    sector: 'Industria',
+    ambito: 'provincial',
+    vigente: true,
+    userId: 'user-1',
+    isPrivate: false,
+    status: 'ready',
+    uploadedAt: '2026-03-14T11:00:00Z',
+    codigo_regcon: 'BOE-A-2026-00003',
+    created_at: '2026-03-14T11:00:00Z',
+    updated_at: '2026-03-14T11:00:00Z',
   },
 ];
 
@@ -94,6 +140,8 @@ const meta = {
     onSelectConversation: fn(),
     onOpenSettings: fn(),
     onConvenioUploaded: fn(),
+    onUploadConvenio: fn(),
+    onSelectConvenioFromManager: fn(),
   },
   decorators: [
     (Story: () => React.JSX.Element) => (
@@ -144,6 +192,24 @@ export const Premium: Story = {
     conversations: mockConversations,
     currentConversationId: '1',
     userPlan: 'premium',
+    userConvenios: mockUserConvenios,
+    isLoadingConvenios: false,
+  },
+};
+
+/**
+ * Sidebar con plan Premium y botón de gestión de convenios
+ *
+ * Muestra el botón de gestión de convenios al lado del badge "Premium".
+ * Al hacer clic, se abre un popover con el ConvenioManager.
+ */
+export const PremiumWithConvenioManager: Story = {
+  args: {
+    conversations: mockConversations,
+    currentConversationId: '1',
+    userPlan: 'premium',
+    userConvenios: mockUserConvenios,
+    isLoadingConvenios: false,
   },
 };
 

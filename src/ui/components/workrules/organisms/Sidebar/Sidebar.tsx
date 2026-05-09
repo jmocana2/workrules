@@ -1,11 +1,18 @@
 import { cn } from '@/lib/utils';
-import type { ConversationSummary } from '@core/types';
+import type { ConversationSummary, UserConvenio } from '@core/types';
 import { Button } from '@ui/components/shadcn/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@ui/components/shadcn/popover';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
 import { ThemeToggle } from '@ui/components/workrules/atoms/ThemeToggle';
-import { ConvenioUploader } from '@ui/components/workrules/organisms/ConvenioUploader';
-import { CrownIcon, MessageSquareIcon, PlusIcon, XIcon } from 'lucide-react';
+import { ConvenioManager } from '@ui/components/workrules/organisms/ConvenioManager';
+import { ConvenioUploader, type ConvenioUploaderRef } from '@ui/components/workrules/organisms/ConvenioUploader';
+import { CrownIcon, FileTextIcon, MessageSquareIcon, PlusIcon, XIcon } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 export interface SidebarProps {
   currentConversationId?: string;
@@ -19,6 +26,11 @@ export interface SidebarProps {
   onClose?: () => void;
   inDrawer?: boolean;
   className?: string;
+  // ConvenioManager props
+  userConvenios?: UserConvenio[];
+  isLoadingConvenios?: boolean;
+  onUploadConvenio?: (file: File) => void | Promise<void>;
+  onSelectConvenioFromManager?: (convenioId: string) => void;
 }
 
 export function Sidebar({
@@ -32,7 +44,44 @@ export function Sidebar({
   onClose,
   inDrawer = false,
   className,
+  userConvenios = [],
+  isLoadingConvenios = false,
+  onUploadConvenio,
+  onSelectConvenioFromManager,
 }: SidebarProps) {
+  const [isConvenioManagerOpen, setIsConvenioManagerOpen] = useState(false);
+  const convenioUploaderRef = useRef<ConvenioUploaderRef>(null);
+
+  // Handler para subir convenio desde ConvenioManager
+  const handleUploadConvenioFromManager = async (file: File) => {
+    setIsConvenioManagerOpen(false);
+
+    try {
+      if (onUploadConvenio) {
+        await onUploadConvenio(file);
+        return;
+      }
+
+      if (convenioUploaderRef.current) {
+        await convenioUploaderRef.current.handleFileSelect(file);
+      }
+    } catch {
+      // Los errores se muestran en el componente que los origina
+    }
+  };
+
+  // Handler para seleccionar convenio desde el ConvenioManager
+  const handleSelectConvenioFromManager = (convenioId: string) => {
+    // Cerrar el popover
+    setIsConvenioManagerOpen(false);
+
+    // Llamar al callback del padre si existe
+    if (onSelectConvenioFromManager) {
+      onSelectConvenioFromManager(convenioId);
+    } else {
+      console.log('Select convenio from manager:', convenioId);
+    }
+  };
   // Modo colapsado (tablet) - solo iconos
   if (isCollapsed) {
     return (
@@ -71,6 +120,35 @@ export function Sidebar({
         {/* Footer */}
         <div className="mt-auto flex flex-col items-center gap-2">
           {userPlan === 'premium' && <CrownIcon className="h-4 w-4 text-yellow-500" />}
+          {userPlan === 'premium' && (
+            <Popover open={isConvenioManagerOpen} onOpenChange={setIsConvenioManagerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label="Gestionar convenios"
+                  title="Ver mis documentos"
+                >
+                  <FileTextIcon className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                side="top"
+                sideOffset={17}
+                alignOffset={17}
+                className="ml-[17px] w-[362px] max-w-[362px] p-0"
+              >
+                <ConvenioManager
+                  userConvenios={userConvenios}
+                  isLoading={isLoadingConvenios}
+                  onUpload={handleUploadConvenioFromManager}
+                  onSelectConvenio={handleSelectConvenioFromManager}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
           <ThemeToggle size="sm" />
         </div>
       </aside>
@@ -186,25 +264,60 @@ export function Sidebar({
       {userPlan === 'premium' && (
         <div className="p-4">
           <ConvenioUploader
+            ref={convenioUploaderRef}
             isPremium={true}
             onConvenioReady={onConvenioUploaded}
           />
         </div>
       )}
 
-      {/* Footer con Plan Badge y Theme Toggle */}      <footer className="flex items-center justify-between p-4">
-        <div
-          className={cn(
-            'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium',
-            userPlan === 'premium'
-              ? 'bg-(--colorsSemanticWarning4) text-(--colorsSemanticWarning12)'
-              : 'bg-muted text-foreground'
+      {/* Footer con Plan Badge y Theme Toggle */}
+      <footer className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-2">
+          <div
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium',
+              userPlan === 'premium'
+                ? 'bg-(--colorsSemanticWarning4) text-(--colorsSemanticWarning12)'
+                : 'bg-muted text-foreground'
+            )}
+            role="status"
+            aria-label={`Plan ${userPlan === 'premium' ? 'Premium' : 'Free'}`}
+          >
+            {userPlan === 'premium' && <CrownIcon className="h-3.5 w-3.5" aria-hidden="true" />}
+            <span className="font-semibold capitalize">{userPlan}</span>
+          </div>
+
+          {/* Botón de gestión de convenios (solo premium) */}
+          {userPlan === 'premium' && (
+            <Popover open={isConvenioManagerOpen} onOpenChange={setIsConvenioManagerOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label="Gestionar convenios"
+                  title="Ver mis documentos"
+                >
+                  <FileTextIcon className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="end"
+                side="top"
+                sideOffset={17}
+                alignOffset={17}
+                className="ml-[17px] w-[362px] max-w-[362px] p-0"
+              >
+                <ConvenioManager
+                  userConvenios={userConvenios}
+                  isLoading={isLoadingConvenios}
+                  onUpload={handleUploadConvenioFromManager}
+                  onSelectConvenio={handleSelectConvenioFromManager}
+                />
+              </PopoverContent>
+            </Popover>
           )}
-          role="status"
-          aria-label={`Plan ${userPlan === 'premium' ? 'Premium' : 'Free'}`}
-        >
-          {userPlan === 'premium' && <CrownIcon className="h-3.5 w-3.5" aria-hidden="true" />}
-          <span className="font-semibold capitalize">{userPlan}</span>
         </div>
 
         <div className="flex items-center gap-1">

@@ -1,5 +1,5 @@
 import { useConvenioUpload } from '@/ui/hooks/useConvenioUpload';
-import { useEffect, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { ConvenioPreview } from './ConvenioPreview';
 import { DropZone } from './DropZone';
 import { UploadProgress } from './UploadProgress';
@@ -10,10 +10,12 @@ interface ConvenioUploaderProps {
   onConvenioReady?: (convenioId: string) => void;
 }
 
-export function ConvenioUploader({
-  isPremium = false,
-  onConvenioReady
-}: ConvenioUploaderProps) {
+export interface ConvenioUploaderRef {
+  handleFileSelect: (file: File) => Promise<void>;
+}
+
+export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploaderProps>(
+  function ConvenioUploader({ isPremium = false, onConvenioReady }, ref) {
   const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
@@ -52,10 +54,7 @@ export function ConvenioUploader({
     };
   }, []);
 
-  // No renderizar si no es premium
-  if (!isPremium) return null;
-
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = useCallback(async (file: File) => {
     setUploadErrorMessage(null);
     setIsUploading(true);
 
@@ -76,7 +75,7 @@ export function ConvenioUploader({
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [uploadFile]);
 
   const handleConfirm = () => {
     if (pendingUpload) {
@@ -89,6 +88,13 @@ export function ConvenioUploader({
     reset();
     setPendingUpload(null);
   };
+
+  // Exponer handleFileSelect a través del ref para que el padre pueda llamarlo
+  useImperativeHandle(ref, () => ({
+    handleFileSelect,
+  }), [handleFileSelect]);
+  // No renderizar si no es premium
+  if (!isPremium) return null;
 
   return (
     <div className="space-y-3">
@@ -151,6 +157,6 @@ export function ConvenioUploader({
       )}
     </div>
   );
-}
+});
 
 export default ConvenioUploader;
