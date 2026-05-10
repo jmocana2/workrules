@@ -491,7 +491,7 @@ export function ChatPage({
                 disabled={!selectedConvenio}
                 value={input}
                 onChange={handleInputChange}
-                className="min-h-[60px] resize-none"
+                className="min-h-[60px] resize-none text-[var(--tokensColorsText)] placeholder:text-[var(--colorsNeutralNeutral9)]"
               />
               <PromptInputFooter>
                 <div className="flex-1" />

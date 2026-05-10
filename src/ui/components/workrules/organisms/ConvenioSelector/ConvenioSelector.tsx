@@ -181,7 +181,7 @@ export function ConvenioSelector({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[90vw] max-w-[400px] p-0" align="start">
+        <PopoverContent className="w-[90vw] max-w-[400px] p-0 bg-[var(--panelSolid)]" align="start">
           <Command shouldFilter={false}>
             <CommandInput
               placeholder="Buscar convenio..."
@@ -197,7 +197,7 @@ export function ConvenioSelector({
                     value={convenio.id}
                     onSelect={() => handleSelect(convenio)}
                     data-checked={selectedConvenio?.id === convenio.id}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 cursor-pointer"
                   >
                     <Check
                       className={cn(
