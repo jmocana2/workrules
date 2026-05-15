@@ -27,13 +27,18 @@ REGLAS ESTRICTAS:
 6. Responde UNICAMENTE con el JSON. Sin texto antes ni despues. Sin bloques de codigo markdown.
 7. El JSON debe ser valido y parseable directamente.
 8. IMPORTANTE: Extrae TODAS las categorias profesionales que aparezcan en las tablas salariales, no solo las principales.
-9. SINONIMOS OBLIGATORIOS: Para cada categoria profesional, DEBES incluir:
+9. VALORES POSIBLES OBLIGATORIO: El JSON DEBE incluir el campo "valores_posibles". Este campo es un objeto cuyas claves son EXACTAMENTE las mismas que aparecen en "variables_criticas" (mismo nombre, mismo formato snake_case). Para cada variable critica debes incluir su array de valores posibles:
+   - Si la variable es categorica (tipo_contrato, turno_trabajo, etc.): incluye los valores del convenio o defaults sectoriales si no aparecen explicitamente.
+   - Si la variable es numerica continua (edad, antiguedad): incluye un array con el rango como strings, ej: ["0-5 anos", "6-10 anos", "11-20 anos", "mas de 20 anos"].
+   - Todas las claves de "variables_criticas" DEBEN aparecer como clave en "valores_posibles". Sin excepciones.
+   - Usa snake_case sin tildes para TODAS las claves de "valores_posibles".
+10. SINONIMOS OBLIGATORIOS: Para cada categoria profesional, DEBES incluir:
    - Variaciones de genero del nombre principal (masculino/femenino)
    - TODOS los sinonimos que el convenio liste entre parentesis
    - Variaciones de genero de terminos cortos (1-2 palabras) en los sinonimos
    - Sé conservador: NO generes todas las combinaciones posibles, solo las mas relevantes
    - Ejemplo: "Gobernanta" → ["Gobernante"]; "Auxiliar (o Ayudante, Mozo/a)" → ["Ayudante", "Mozo", "Moza"]
-10. MANEJO DE SALTOS DE PÁGINA Y ENCABEZADOS DUPLICADOS:
+11. MANEJO DE SALTOS DE PÁGINA Y ENCABEZADOS DUPLICADOS:
    - Los convenios procesados pueden tener saltos de página que crean secciones duplicadas o fragmentadas
    - Ignora completamente encabezados de páginas (ej: "BOCM", "B.O.C.M.", "BOLETÍN OFICIAL", "Pág. XX", "SÁBADO", fechas de publicación)
    - Si encuentras MÚLTIPLES secciones con el MISMO NIVEL (ej: dos secciones "NIVEL III" separadas), combínalas en una sola
@@ -49,7 +54,9 @@ function buildUserPrompt(markdown) {
 
 1. **Datos basicos**: nombre del convenio, ambito (estatal/autonomico/provincial/empresa), vigencia, codigo REGCON si aparece.
 
-2. **Variables criticas**: lista de variables que un usuario necesitaria para un calculo salarial preciso. Solo incluye variables que REALMENTE afecten al salario segun este convenio.
+2. **Variables criticas y valores posibles**: lista de variables que un usuario necesitaria para un calculo salarial preciso. Solo incluye variables que REALMENTE afecten al salario segun este convenio.
+   - Usa exclusivamente snake_case sin tildes para los nombres de variable (ej: "tipo_contrato", no "Tipo de Contrato").
+   - Junto a "variables_criticas" genera SIEMPRE el campo "valores_posibles": un objeto con exactamente las mismas claves que "variables_criticas", cada una con su array de valores. Si el convenio no los explicita, usa defaults sectoriales razonables.
 
 3. **Categorias profesionales**: Extrae TODAS las categorias/puestos que aparezcan en las tablas salariales y clasificacion profesional del convenio. NO solo las principales, TODAS. Para cada una incluye:
    - nombre: nombre exacto tal como aparece en el convenio
@@ -122,6 +129,14 @@ FORMATO DE SALIDA - JSON con esta estructura:
   "vigencia": { "inicio": "YYYY", "fin": "YYYY", "prorroga_automatica": true|false },
   "codigo_convenio": "string",
   "variables_criticas": ["string"],
+  "valores_posibles": {
+    "categoria_profesional": ["valor1", "valor2"],
+    "tipo_establecimiento": ["hotel 5 estrellas", "restaurante"],
+    "tipo_contrato": ["indefinido", "temporal", "fijo discontinuo", "formacion", "practicas"],
+    "turno_trabajo": ["manana", "tarde", "noche", "rotativo", "partido"],
+    "antiguedad_empresa": ["0-5 anos", "6-10 anos", "11-20 anos", "mas de 20 anos"],
+    "jornada_laboral": ["completa", "parcial"]
+  },
   "categorias_profesionales": [
     {
       "nombre": "string (nombre exacto del convenio)",
@@ -150,6 +165,18 @@ FORMATO DE SALIDA - JSON con esta estructura:
   "variables_especificas": { "nombre_variable": ["valor1", "valor2"] },
   "notas_extraccion": ["string"]
 }
+
+EJEMPLO DE VALORES POSIBLES:
+Si "variables_criticas" es ["categoria_profesional", "tipo_establecimiento", "tipo_contrato", "turno_trabajo", "antiguedad_empresa"],
+entonces "valores_posibles" DEBE ser:
+{
+  "categoria_profesional": ["Cocinero/a", "Camarero/a", "Recepcionista", ...],
+  "tipo_establecimiento": ["hotel 5 estrellas", "restaurante", "cafeteria", "bar", ...],
+  "tipo_contrato": ["indefinido", "temporal", "fijo discontinuo", "formacion", "practicas"],
+  "turno_trabajo": ["manana", "tarde", "noche", "rotativo", "partido"],
+  "antiguedad_empresa": ["0-5 anos", "6-10 anos", "11-20 anos", "mas de 20 anos"]
+}
+Observa que CADA elemento de "variables_criticas" aparece exactamente como clave en "valores_posibles".
 
 EJEMPLOS CONCRETOS DE CATEGORIAS PROFESIONALES:
 
