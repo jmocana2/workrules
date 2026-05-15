@@ -96,7 +96,7 @@ export const ConvenioChip = ({
           {ambitoIndicator}
         </span>
       )}
-      <span className="max-w-50 truncate text-xs leading-none">
+      <span className="max-w-50 truncate text-xs leading-none" title={nombre}>
         {nombre}
       </span>
     </>

@@ -38,9 +38,17 @@ export interface QuotaStatus {
 /** Datos basicos de convenio */
 export interface Convenio {
   id: string;
+  /** Nombre del PDF subido por el usuario (fallback mientras el indexado termina). */
   nombre: string;
+  /** Titulo oficial extraido del PDF por el indexer. */
+  nombre_oficial?: string | null;
+  /** Etiqueta corta para mostrar en UI (ej: "Oficinas y Despachos"). */
+  nombre_corto?: string | null;
   codigo_regcon: string;
+  /** Tipo de ambito: estatal | autonomico | provincial | empresa. */
   ambito: string;
+  /** Localizacion legible (ej: "Comunidad de Madrid", "Estatal"). */
+  ambito_territorial?: string | null;
   fecha_vigencia: string;
   estado: string;
   url_pdf?: string | null;

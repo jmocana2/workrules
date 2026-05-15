@@ -116,6 +116,35 @@ function getAmbitoLabel(ambito: Convenio['ambito']): string {
   }
 }
 
+/**
+ * Devuelve el nombre legible del convenio para mostrar en el selector.
+ * Prioriza la etiqueta corta extraída por el indexer; cae al nombre oficial
+ * y, en último término, al nombre del PDF mientras el indexado no ha terminado.
+ */
+function getDisplayName(convenio: Convenio): string {
+  const corto = convenio.nombre_corto?.trim();
+  const oficial = convenio.nombre_oficial?.trim();
+  const territorial = convenio.ambito_territorial?.trim();
+  const base = corto || oficial;
+
+  if (base && territorial) return `${base} — ${territorial}`;
+  if (base) return base;
+  return convenio.nombre;
+}
+
+/**
+ * Nombre completo del convenio para usar como tooltip (atributo title).
+ * Siempre incluye el nombre oficial cuando existe, sin recortar.
+ */
+function getFullName(convenio: Convenio): string {
+  const oficial = convenio.nombre_oficial?.trim();
+  const territorial = convenio.ambito_territorial?.trim();
+
+  if (oficial && territorial) return `${oficial} — ${territorial}`;
+  if (oficial) return oficial;
+  return convenio.nombre;
+}
+
 export function ConvenioSelector({
   selectedConvenio,
   convenios,
@@ -138,7 +167,15 @@ export function ConvenioSelector({
   // Filtrar convenios según la búsqueda fuzzy
   const filteredConvenios = searchQuery
     ? convenios.filter((convenio) => {
-        const searchableText = `${convenio.nombre} ${convenio.ambito}`;
+        const searchableText = [
+          convenio.nombre,
+          convenio.nombre_oficial,
+          convenio.nombre_corto,
+          convenio.ambito,
+          convenio.ambito_territorial,
+        ]
+          .filter(Boolean)
+          .join(' ');
         return fuzzyMatch(searchableText, searchQuery);
       })
     : convenios;
@@ -175,8 +212,11 @@ export function ConvenioSelector({
               !selectedConvenio && 'text-muted-foreground'
             )}
           >
-            <span className="truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
-              {selectedConvenio ? selectedConvenio.nombre : placeholder}
+            <span
+              className="truncate max-w-[120px] sm:max-w-[200px] md:max-w-none"
+              title={selectedConvenio ? getFullName(selectedConvenio) : undefined}
+            >
+              {selectedConvenio ? getDisplayName(selectedConvenio) : placeholder}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -208,8 +248,11 @@ export function ConvenioSelector({
                       )}
                     />
                     <div className="flex flex-1 items-center justify-between gap-2">
-                      <span className="flex-1 truncate text-sm">
-                        {convenio.nombre}
+                      <span
+                        className="flex-1 truncate text-sm min-w-0"
+                        title={getFullName(convenio)}
+                      >
+                        {getDisplayName(convenio)}
                       </span>
                       <Badge
                         variant="secondary"
@@ -232,7 +275,7 @@ export function ConvenioSelector({
       {selectedConvenio && (
         <div className="flex items-center">
           <ConvenioChip
-            nombre={selectedConvenio.nombre}
+            nombre={getDisplayName(selectedConvenio)}
             ambito={selectedConvenio.ambito as 'estatal' | 'provincial' | 'empresa' | undefined}
             removable
             onRemove={handleClear}

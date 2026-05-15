@@ -577,7 +577,7 @@ export function useChatPage(
         const { data: convenioData, error: convenioError } = await supabase
           .from("convenios")
           .select(
-            "id, nombre, ambito, codigo_regcon, fecha_vigencia, url_pdf, estado, visibilidad, owner_id, created_at, updated_at",
+            "id, nombre, nombre_oficial, nombre_corto, ambito, ambito_territorial, codigo_regcon, fecha_vigencia, url_pdf, estado, visibilidad, owner_id, created_at, updated_at",
           )
           .eq("id", sessionData.convenio_id)
           .single();
@@ -591,7 +591,10 @@ export function useChatPage(
           const convenio = {
             id: convenioData.id,
             nombre: convenioData.nombre,
+            nombre_oficial: convenioData.nombre_oficial ?? null,
+            nombre_corto: convenioData.nombre_corto ?? null,
             ambito: convenioData.ambito ?? "",
+            ambito_territorial: convenioData.ambito_territorial ?? null,
             codigo_regcon: convenioData.codigo_regcon ?? "",
             fecha_vigencia: convenioData.fecha_vigencia?.toString() ?? "",
             url_pdf: convenioData.url_pdf ?? "",

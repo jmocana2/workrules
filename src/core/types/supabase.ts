@@ -11,9 +11,17 @@
 
 export interface Convenio {
   id: string;
+  /** Nombre del PDF subido por el usuario (fallback mientras el indexado termina). */
   nombre: string;
+  /** Título oficial del convenio extraído del PDF por el indexer. */
+  nombre_oficial?: string | null;
+  /** Etiqueta corta para mostrar en UI (ej: "Oficinas y Despachos"). */
+  nombre_corto?: string | null;
   codigo_regcon?: string | null;
+  /** Tipo de ámbito: estatal | autonomico | provincial | empresa. */
   ambito?: string | null;
+  /** Localización legible (ej: "Comunidad de Madrid", "Estatal"). */
+  ambito_territorial?: string | null;
   fecha_vigencia?: string | null;
   url_pdf?: string | null;
   markdown_completo?: string | null;

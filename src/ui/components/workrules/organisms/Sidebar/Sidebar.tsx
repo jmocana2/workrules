@@ -245,7 +245,10 @@ export function Sidebar({
                       />
                     </div>
 
-                    <p className="truncate text-xs text-muted-foreground">
+                    <p
+                      className="truncate text-xs text-muted-foreground"
+                      title={conversation.convenioNombre}
+                    >
                       {conversation.convenioNombre}
                     </p>
 
