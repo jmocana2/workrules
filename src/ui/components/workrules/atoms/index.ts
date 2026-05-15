@@ -11,3 +11,6 @@ export type { StarRatingProps } from "./StarRating/StarRating";
 
 export { default as ThemeToggle } from "./ThemeToggle/ThemeToggle";
 export type { ThemeToggleProps } from "./ThemeToggle/ThemeToggle";
+
+export { Title } from "./Title/Title";
+export type { TitleProps } from "./Title/Title";

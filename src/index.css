@@ -73,6 +73,10 @@
   --app-preview-header-text: #1c2024;
   --app-preview-label-text: #1c2024;
   --app-preview-value-text: #1c2024;
+
+  /* UserMessage bubble */
+  --app-user-message-bg: var(--colorsNeutralNeutral3, #f0f0f3);
+  --app-user-message-fg: var(--colorsNeutralNeutral12, #1c2024);
 }
 
 .dark {
@@ -142,6 +146,10 @@
   --app-preview-header-text: var(--colorsNeutralNeutral12, #edeef0);
   --app-preview-label-text: var(--colorsNeutralNeutral9, #696e77);
   --app-preview-value-text: var(--colorsNeutralNeutral12, #edeef0);
+
+  /* UserMessage bubble */
+  --app-user-message-bg: var(--colorsNeutralNeutral3, #212225);
+  --app-user-message-fg: var(--colorsNeutralNeutral12, #edeef0);
 }
 
 /* Tailwind aliases → Style Dictionary tokens */
@@ -195,4 +203,11 @@ body {
   opacity: 0;
   animation: draw-check 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   animation-delay: 0.3s;
+}
+
+/* UserMessage bubble — sobreescribe el bg-secondary del MessageContent base */
+.user-message-bubble {
+  background-color: var(--app-user-message-bg) !important;
+  color: var(--app-user-message-fg) !important;
+  border-radius: var(--radius5, 0.75rem) !important;
 }

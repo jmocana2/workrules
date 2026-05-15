@@ -18,3 +18,6 @@ export type {
 
 export { ConvenioListItem } from './ConvenioListItem/ConvenioListItem';
 export type { ConvenioListItemProps } from './ConvenioListItem/ConvenioListItem';
+
+export { UserMessage } from './UserMessage/UserMessage';
+export type { UserMessageProps } from './UserMessage/UserMessage';

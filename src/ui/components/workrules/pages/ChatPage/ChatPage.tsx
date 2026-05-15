@@ -41,6 +41,7 @@ import { AlertConflict } from '@ui/components/workrules/molecules/AlertConflict/
 import { AlertInvalidData } from '@ui/components/workrules/molecules/AlertInvalidData/AlertInvalidData';
 import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
 import { DataRequestCard } from '@ui/components/workrules/molecules/DataRequestCard/DataRequestCard';
+import { UserMessage } from '@ui/components/workrules/molecules/UserMessage/UserMessage';
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { MobileDrawer } from '@ui/components/workrules/organisms/MobileDrawer/MobileDrawer';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
@@ -352,34 +353,31 @@ export function ChatPage({
             ) : (
               // Lista de mensajes
               <>
-                {messages.map((message) => (
-                  <Message key={message.id} from={message.role}>
-                    <MessageContent>
-                      {message.role === 'user' ? (
-                        <p className="whitespace-pre-wrap text-sm">{message.content}</p>
-                      ) : (
-                        <>
-                          <MessageResponse>{message.content}</MessageResponse>
-                          {/* Citaciones del mensaje individual */}
-                          {message.citations && message.citations.length > 0 && (
-                            <Sources>
-                              <SourcesTrigger count={message.citations.length} />
-                              <SourcesContent>
-                                {message.citations.map((citation, idx) => (
-                                  <Source
-                                    key={idx}
-                                    href={citation.url}
-                                    title={citation.source}
-                                  />
-                                ))}
-                              </SourcesContent>
-                            </Sources>
-                          )}
-                        </>
-                      )}
-                    </MessageContent>
-                  </Message>
-                ))}
+                {messages.map((message) =>
+                  message.role === 'user' ? (
+                    <UserMessage key={message.id} content={message.content} />
+                  ) : (
+                    <Message key={message.id} from={message.role}>
+                      <MessageContent>
+                        <MessageResponse>{message.content}</MessageResponse>
+                        {message.citations && message.citations.length > 0 && (
+                          <Sources>
+                            <SourcesTrigger count={message.citations.length} />
+                            <SourcesContent>
+                              {message.citations.map((citation, idx) => (
+                                <Source
+                                  key={idx}
+                                  href={citation.url}
+                                  title={citation.source}
+                                />
+                              ))}
+                            </SourcesContent>
+                          </Sources>
+                        )}
+                      </MessageContent>
+                    </Message>
+                  )
+                )}
 
                 {/* Citaciones globales (parseadas del último mensaje) */}
                 {citations.length > 0 && (

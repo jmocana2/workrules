@@ -4,6 +4,7 @@ import type { UIMessage } from "ai";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
 
 import { cn } from "@/lib/utils";
+import { Title } from "@ui/components/workrules/atoms/Title/Title";
 import { Button } from "@/ui/components/shadcn/button";
 import {
   ButtonGroup,
@@ -29,7 +30,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Streamdown } from "streamdown";
+import { type ExtraProps, Streamdown } from "streamdown";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
@@ -322,14 +323,26 @@ export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
 const streamdownPlugins = { cjk, code, math, mermaid };
 
+type HeadingComponentProps = HTMLAttributes<HTMLHeadingElement> & ExtraProps;
+
+const messageComponents = {
+  h1: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h1" {...props} />,
+  h2: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h2" {...props} />,
+  h3: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h3" {...props} />,
+  h4: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h4" {...props} />,
+  h5: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h5" {...props} />,
+  h6: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h6" {...props} />,
+};
+
 export const MessageResponse = memo(
-  ({ className, ...props }: MessageResponseProps) => (
+  ({ className, components, ...props }: MessageResponseProps) => (
     <Streamdown
       className={cn(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
         className
       )}
       plugins={streamdownPlugins}
+      components={{ ...messageComponents, ...components }}
       {...props}
     />
   ),
