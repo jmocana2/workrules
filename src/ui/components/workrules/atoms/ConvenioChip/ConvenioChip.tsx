@@ -17,7 +17,7 @@ export interface ConvenioChipProps {
   /** Nombre del convenio colectivo */
   nombre: string;
   /** Ámbito del convenio colectivo */
-  ambito?: 'estatal' | 'provincial' | 'empresa';
+  ambito?: 'estatal' | 'autonomico' | 'provincial' | 'empresa';
   /** Si es true, muestra un botón de eliminar con icono X */
   removable?: boolean;
   /** Callback cuando se hace clic en el botón de eliminar */
@@ -37,6 +37,8 @@ const getAmbitoIndicator = (ambito?: ConvenioChipProps['ambito']): string => {
   switch (ambito) {
     case 'estatal':
       return '[E]';
+    case 'autonomico':
+      return '[A]';
     case 'provincial':
       return '[P]';
     case 'empresa':
@@ -54,6 +56,8 @@ const getAmbitoClasses = (ambito?: ConvenioChipProps['ambito']): string => {
   switch (ambito) {
     case 'estatal':
       return 'border-[var(--colorsAccentAccent9)] text-[var(--colorsAccentAccent12)] bg-[var(--colorsAccentAccent2)] hover:bg-[var(--colorsAccentAccent3)]';
+    case 'autonomico':
+      return 'border-[var(--colorsSemanticWarning9)] text-[var(--colorsSemanticWarning12)] bg-[var(--colorsSemanticWarning1)] hover:bg-[var(--colorsSemanticWarning2)]';
     case 'provincial':
       return 'border-[var(--colorsSemanticSuccess9)] text-[var(--colorsSemanticSuccess12)] bg-[var(--colorsSemanticSuccess1)] hover:bg-[var(--colorsSemanticSuccess2)]';
     case 'empresa':

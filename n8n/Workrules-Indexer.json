@@ -670,6 +670,10 @@
             {
               "fieldId": "ambito_territorial",
               "fieldValue": "={{ $('Validate Perfil JSON').first().json.perfil_data?.ambito_territorial || null }}"
+            },
+            {
+              "fieldId": "ambito",
+              "fieldValue": "={{ $('Validate Perfil JSON').first().json.perfil_data?.ambito || null }}"
             }
           ]
         }

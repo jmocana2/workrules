@@ -7,7 +7,7 @@ import { ChevronRight, Info } from 'lucide-react';
 export interface ConvenioListItemProps {
   id: string;
   nombre: string;
-  ambito: 'estatal' | 'provincial' | 'empresa';
+  ambito: 'estatal' | 'autonomico' | 'provincial' | 'empresa';
   sector?: string;
   fechaActualizacion?: string;
   isSelected?: boolean;

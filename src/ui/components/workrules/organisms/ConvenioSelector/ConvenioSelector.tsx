@@ -91,6 +91,8 @@ function getAmbitoBadgeClasses(ambito: Convenio['ambito']): string {
   switch (ambito) {
     case 'estatal':
       return 'bg-[var(--colorsAccentAccent2)] text-[var(--colorsAccentAccent12)] border border-[var(--colorsAccentAccent9)]';
+    case 'autonomico':
+      return 'bg-[var(--colorsSemanticWarning1)] text-[var(--colorsSemanticWarning12)] border border-[var(--colorsSemanticWarning9)]';
     case 'provincial':
       return 'bg-[var(--colorsSemanticSuccess1)] text-[var(--colorsSemanticSuccess12)] border border-[var(--colorsSemanticSuccess9)]';
     case 'empresa':
@@ -107,6 +109,8 @@ function getAmbitoLabel(ambito: Convenio['ambito']): string {
   switch (ambito) {
     case 'estatal':
       return 'Estatal';
+    case 'autonomico':
+      return 'Autonómico';
     case 'provincial':
       return 'Provincial';
     case 'empresa':
@@ -276,7 +280,7 @@ export function ConvenioSelector({
         <div className="flex items-center">
           <ConvenioChip
             nombre={getDisplayName(selectedConvenio)}
-            ambito={selectedConvenio.ambito as 'estatal' | 'provincial' | 'empresa' | undefined}
+            ambito={selectedConvenio.ambito as 'estatal' | 'autonomico' | 'provincial' | 'empresa' | undefined}
             removable
             onRemove={handleClear}
           />
