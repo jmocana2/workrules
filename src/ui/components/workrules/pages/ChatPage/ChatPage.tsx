@@ -46,7 +46,7 @@ import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSel
 import { MobileDrawer } from '@ui/components/workrules/organisms/MobileDrawer/MobileDrawer';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { VariablesPanel } from '@ui/components/workrules/organisms/VariablesPanel/VariablesPanel';
-import { useConvenios, useUserConvenios } from '@ui/hooks';
+import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
 import { useState } from 'react';
@@ -81,6 +81,10 @@ export function ChatPage({
   const { data: realConvenios = [], isLoading: loadingConvenios } = useConvenios();
   const { data: userConvenios = [], isLoading: loadingUserConvenios } = useUserConvenios();
   const convenios = useMocks ? mockConvenios : realConvenios;
+
+  // Plan del usuario (real desde user_profiles, o mock en Storybook)
+  const { plan: realUserPlan } = useUserPlan();
+  const userPlan = useMocks ? mockUserPlan : (realUserPlan === 'enterprise' ? 'premium' : realUserPlan);
 
   const {
     // Estado
@@ -194,7 +198,7 @@ export function ChatPage({
             <Sidebar
               currentConversationId={currentConversationId ?? undefined}
               conversations={conversations}
-              userPlan={mockUserPlan}
+              userPlan={userPlan}
               onNewConversation={handleNewConversation}
               onSelectConversation={handleSelectConversationAndClosDrawer}
               onOpenSettings={handleOpenSettings}
@@ -214,7 +218,7 @@ export function ChatPage({
             <Sidebar
               currentConversationId={currentConversationId ?? undefined}
               conversations={conversations}
-              userPlan={mockUserPlan}
+              userPlan={userPlan}
               onNewConversation={handleNewConversation}
               onSelectConversation={handleSelectConversationAndClosDrawer}
               onOpenSettings={handleOpenSettings}
@@ -231,7 +235,7 @@ export function ChatPage({
         <Sidebar
           currentConversationId={currentConversationId ?? undefined}
           conversations={conversations}
-          userPlan={mockUserPlan}
+          userPlan={userPlan}
           onNewConversation={handleNewConversation}
           onSelectConversation={handleSelectConversation}
           onOpenSettings={handleOpenSettings}

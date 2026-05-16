@@ -30,11 +30,14 @@ export function useConvenios(searchTerm?: string) {
       // - Privados del usuario: owner_id=user.id (RLS se encarga de esto)
       // La política RLS ya filtra automáticamente, solo mostramos activos para públicos
       if (user) {
-        // Si hay usuario autenticado, RLS permite ver públicos activos + privados propios
-        // Solo filtramos que los públicos sean activos (los privados pueden estar en cualquier estado)
-        query = query.or(
-          `and(visibilidad.eq.publico,estado.eq.activo),owner_id.eq.${user.id}`,
-        );
+        // Si hay usuario autenticado, RLS permite ver públicos activos + privados propios.
+        // Excluimos los rechazados/error para que no aparezcan en el selector de chat
+        // (siguen en BD para auditoría y para el panel de gestión del owner).
+        query = query
+          .or(
+            `and(visibilidad.eq.publico,estado.eq.activo),owner_id.eq.${user.id}`,
+          )
+          .not("estado", "in", "(rechazado,error)");
       } else {
         // Si no hay usuario, solo públicos activos
         query = query.eq("estado", "activo").eq("visibilidad", "publico");

@@ -198,6 +198,107 @@ async function triggerN8nWebhook(payload: {
   }
 }
 
+/**
+ * Comprobaciones de Capa 4 (premium + rate limit anti-ráfaga).
+ * Devuelve una Response si hay que cortar; null si el usuario puede continuar.
+ */
+async function checkUploadGating(
+  supabase: ReturnType<typeof createAuthenticatedClient>,
+  userId: string,
+): Promise<Response | null> {
+  const { data: profile, error: profileError } = await supabase
+    .from("user_profiles")
+    .select("subscription_tier")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (profileError) {
+    console.error("[upload-convenio] Error reading user_profile:", profileError);
+    return new Response(
+      JSON.stringify({
+        error: "Error verificando suscripción",
+        details: profileError.message,
+      } satisfies ErrorResponse),
+      { status: 500, headers: jsonHeaders },
+    );
+  }
+
+  const tier = profile?.subscription_tier ?? "free";
+  if (tier !== "premium" && tier !== "enterprise") {
+    return new Response(
+      JSON.stringify({
+        error: "La subida de convenios requiere suscripción premium",
+      } satisfies ErrorResponse),
+      { status: 403, headers: jsonHeaders },
+    );
+  }
+
+  const RATE_LIMIT_WINDOW_MINUTES = 5;
+  const RATE_LIMIT_MAX_UPLOADS = 5;
+
+  const { data: recentCount, error: rateError } = await supabase.rpc(
+    "count_recent_uploads",
+    { p_user_id: userId, p_window_minutes: RATE_LIMIT_WINDOW_MINUTES },
+  );
+
+  if (rateError) {
+    // Falla abierta: no bloqueamos por un error de conteo, solo logueamos.
+    console.error("[upload-convenio] Error checking rate limit:", rateError);
+    return null;
+  }
+
+  if (typeof recentCount === "number" && recentCount >= RATE_LIMIT_MAX_UPLOADS) {
+    return new Response(
+      JSON.stringify({
+        error: `Has alcanzado el límite de ${RATE_LIMIT_MAX_UPLOADS} subidas en ${RATE_LIMIT_WINDOW_MINUTES} minutos. Inténtalo de nuevo en unos minutos.`,
+      } satisfies ErrorResponse),
+      { status: 429, headers: jsonHeaders },
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Si el usuario ya subió un PDF con el mismo hash, devuelve la Response de duplicado.
+ * Null si no hay duplicado (o no se proporcionó hash).
+ */
+async function checkDuplicateByHash(
+  supabase: ReturnType<typeof createAuthenticatedClient>,
+  userId: string,
+  pdfHash: string | undefined,
+): Promise<Response | null> {
+  if (!pdfHash) return null;
+
+  const { data: existingConvenio } = await supabase
+    .from("convenios")
+    .select("id, nombre")
+    .eq("pdf_hash", pdfHash)
+    .eq("owner_id", userId)
+    .maybeSingle();
+
+  if (!existingConvenio) return null;
+
+  console.log(
+    `[upload-convenio] Duplicate detected for user ${userId}: ${existingConvenio.nombre}`,
+  );
+
+  const duplicateResponse: UploadResponse = {
+    convenio_id: existingConvenio.id,
+    status: "duplicate",
+    message: "Ya tienes un convenio con este PDF",
+    existing_convenio: {
+      id: existingConvenio.id,
+      nombre: existingConvenio.nombre,
+    },
+  };
+
+  return new Response(JSON.stringify(duplicateResponse), {
+    status: 200,
+    headers: jsonHeaders,
+  });
+}
+
 // ============================================
 // Edge Function Handler
 // ============================================
@@ -244,18 +345,10 @@ async function handleRequest(req: Request): Promise<Response> {
     }
 
     // ========================================
-    // 5. Verificar que es usuario premium
+    // 5. Gating Capa 4 (premium + rate limit anti-ráfaga)
     // ========================================
-    // TODO: Implementar verificación real cuando se implemente el sistema de suscripciones
-    // Por ahora, permitimos a todos los usuarios autenticados
-    // const isPremium = await checkPremiumStatus(user.id);
-    // if (!isPremium) {
-    //   const errorResponse: ErrorResponse = { error: 'Requiere suscripción premium' };
-    //   return new Response(JSON.stringify(errorResponse), {
-    //     status: 403,
-    //     headers: jsonHeaders,
-    //   });
-    // }
+    const gatingResponse = await checkUploadGating(supabase, user.id);
+    if (gatingResponse) return gatingResponse;
 
     // ========================================
     // 6. Parsear y validar request body
@@ -289,33 +382,12 @@ async function handleRequest(req: Request): Promise<Response> {
     // ========================================
     // 7. Verificar duplicados por hash (si viene hash)
     // ========================================
-    if (pdf_hash) {
-      const { data: existingConvenio } = await supabase
-        .from("convenios")
-        .select("id, nombre")
-        .eq("pdf_hash", pdf_hash)
-        .eq("owner_id", user.id)
-        .maybeSingle();
-
-      if (existingConvenio) {
-        console.log(
-          `[upload-convenio] Duplicate detected for user ${user.id}: ${existingConvenio.nombre}`,
-        );
-        const duplicateResponse: UploadResponse = {
-          convenio_id: existingConvenio.id,
-          status: "duplicate",
-          message: "Ya tienes un convenio con este PDF",
-          existing_convenio: {
-            id: existingConvenio.id,
-            nombre: existingConvenio.nombre,
-          },
-        };
-        return new Response(JSON.stringify(duplicateResponse), {
-          status: 200, // 200 para que el frontend lo maneje como respuesta válida
-          headers: jsonHeaders,
-        });
-      }
-    }
+    const duplicateResponse = await checkDuplicateByHash(
+      supabase,
+      user.id,
+      pdf_hash,
+    );
+    if (duplicateResponse) return duplicateResponse;
 
     // ========================================
     // 8. Crear registro de convenio

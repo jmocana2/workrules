@@ -400,6 +400,10 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
             const message = convenio.error_message ||
               "Error procesando convenio";
             stopPolling({ status: "error", fileName, error: message }, message);
+          } else if (convenio.estado === "rechazado") {
+            const message = convenio.error_message ||
+              "El documento ha sido rechazado por el validador automático.";
+            stopPolling({ status: "error", fileName, error: message }, message);
           }
         }, pollingIntervalMs);
       } catch (error) {

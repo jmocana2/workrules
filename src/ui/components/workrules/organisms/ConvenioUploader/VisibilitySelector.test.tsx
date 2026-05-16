@@ -12,7 +12,9 @@ describe('VisibilitySelector', () => {
     expect(screen.getByText('Privado')).toBeInTheDocument();
     expect(screen.getByText('Público')).toBeInTheDocument();
     expect(screen.getByText('Solo tu puedes consultarlo')).toBeInTheDocument();
-    expect(screen.getByText('Disponible para la comunidad (tras revisión)')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Disponible para la comunidad\. Solo se aceptan convenios colectivos/i)
+    ).toBeInTheDocument();
   });
 
   it('shows privado as checked when value is privado', () => {

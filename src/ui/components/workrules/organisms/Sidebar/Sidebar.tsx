@@ -282,7 +282,7 @@ export function Sidebar({
               'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium',
               userPlan === 'premium'
                 ? 'bg-(--colorsSemanticWarning4) text-(--colorsSemanticWarning12)'
-                : 'bg-muted text-foreground'
+                : 'bg-(--colorsNeutralNeutral5) text-(--colorsNeutralNeutral12)'
             )}
             role="status"
             aria-label={`Plan ${userPlan === 'premium' ? 'Premium' : 'Free'}`}

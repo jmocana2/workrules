@@ -57,10 +57,17 @@ export function VisibilitySelector({
               Público
             </span>
             <p className="text-xs text-[var(--colorsNeutralNeutral11)]">
-              Disponible para la comunidad (tras revisión)            </p>
+              Disponible para la comunidad. Solo se aceptan convenios colectivos, boletines oficiales o acuerdos sectoriales.
+            </p>
           </div>
         </label>
       </div>
+
+      {value === 'publico' && (
+        <p className="text-xs text-[var(--colorsNeutralNeutral11)] mt-2 p-2 rounded-md bg-[var(--colorsNeutralNeutral3)]">
+          Los PDFs que no sean convenios, boletines oficiales o acuerdos de mesa negociadora serán rechazados automáticamente.
+        </p>
+      )}
     </div>
   );
 }

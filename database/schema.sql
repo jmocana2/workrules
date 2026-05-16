@@ -66,9 +66,10 @@ CREATE TABLE convenios (
     pdf_hash VARCHAR(64), -- SHA-256 hash for duplicate detection
     markdown_completo TEXT,
     version VARCHAR(50) DEFAULT '1.0',
-    estado VARCHAR(50) DEFAULT 'activo' CHECK (estado IN ('activo', 'derogado', 'pendiente', 'archivado', 'procesando', 'error')),
+    estado VARCHAR(50) DEFAULT 'activo' CHECK (estado IN ('activo', 'derogado', 'pendiente', 'archivado', 'procesando', 'error', 'rechazado')),
     visibilidad VARCHAR(10) DEFAULT 'publico' CHECK (visibilidad IN ('publico', 'privado')),
     owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    clasificacion JSONB,
     error_message TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -84,6 +85,7 @@ CREATE INDEX idx_convenios_visibilidad ON convenios(visibilidad);
 CREATE INDEX idx_convenios_pdf_hash ON convenios(pdf_hash) WHERE pdf_hash IS NOT NULL;
 -- Unique index: same user can't upload same PDF twice (different users CAN have same PDF)
 CREATE UNIQUE INDEX idx_convenios_pdf_hash_owner ON convenios(pdf_hash, owner_id) WHERE pdf_hash IS NOT NULL AND owner_id IS NOT NULL;
+CREATE INDEX idx_convenios_clasificacion_categoria ON convenios ((clasificacion->>'categoria'));
 
 -- Comentarios
 COMMENT ON TABLE convenios IS 'Tabla principal de convenios colectivos';
@@ -95,6 +97,7 @@ COMMENT ON COLUMN convenios.visibilidad IS 'Visibilidad del convenio: publico (t
 COMMENT ON COLUMN convenios.owner_id IS 'Usuario que subió el convenio (NULL para convenios públicos del sistema)';
 COMMENT ON COLUMN convenios.error_message IS 'Mensaje de error si el procesamiento falló (solo si estado = error)';
 COMMENT ON COLUMN convenios.pdf_hash IS 'SHA-256 hash del archivo PDF para detectar duplicados. Evita que un usuario suba el mismo archivo dos veces.';
+COMMENT ON COLUMN convenios.clasificacion IS 'Resultado del clasificador automático de tipo de documento. Estructura: { categoria, confianza, indicios, heuristic_score, modelo }.';
 
 -- -----------------------------------------------------------------------------
 -- Tabla: convenio_chunks
@@ -421,6 +424,33 @@ END;
 $$;
 
 COMMENT ON FUNCTION reset_monthly_query_counters IS 'Resetea contadores mensuales de usuarios cuya fecha de reset ha llegado';
+
+-- -----------------------------------------------------------------------------
+-- Función anti-ráfaga para subidas (Capa 4 de validación de PDFs)
+-- -----------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION count_recent_uploads(
+    p_user_id UUID,
+    p_window_minutes INTEGER DEFAULT 5
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_count INTEGER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM convenios
+    WHERE owner_id = p_user_id
+      AND created_at >= CURRENT_TIMESTAMP - (p_window_minutes || ' minutes')::INTERVAL;
+
+    RETURN COALESCE(v_count, 0);
+END;
+$$;
+
+COMMENT ON FUNCTION count_recent_uploads IS 'Devuelve el número de convenios subidos por un usuario en los últimos N minutos. Anti-spam Capa 4.';
 
 -- -----------------------------------------------------------------------------
 -- Función para limpiar caché expirado

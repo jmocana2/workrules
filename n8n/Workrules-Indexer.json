@@ -436,6 +436,140 @@
     },
     {
       "parameters": {
+        "jsCode": "// ============================================\n// NODO: Heuristic Score (Capa 3 de validación)\n// FUNCIÓN: Scoring rápido por keywords. Si score muy bajo y visibilidad=publico,\n//          podemos rechazar sin gastar Claude.\n// ============================================\n\nconst upstream = $('Extract and clean md1').first().json;\nconst markdown = (upstream.markdown_completo || '').toLowerCase();\nconst webhookBody = $('Webhook').first().json.body || {};\nconst visibilidad = webhookBody.visibilidad || 'privado';\n\nconst KEYWORDS = [\n  'convenio', 'colectivo', 'salario', 'jornada', 'categoría profesional',\n  'categoria profesional', 'vacaciones', 'artículo', 'articulo',\n  'boe', 'código convenio', 'codigo convenio', 'regcon',\n  'antigüedad', 'antiguedad', 'horas extraordinarias', 'pagas extra',\n  'mesa negociadora', 'acuerdo', 'condiciones de trabajo', 'trabajador'\n];\n\nlet score = 0;\nconst hits = [];\nfor (const kw of KEYWORDS) {\n  if (markdown.includes(kw)) {\n    score += 1;\n    hits.push(kw);\n  }\n}\n\n// Si el documento es manifiestamente no laboral y se quiere público, rechazo temprano.\nconst HEURISTIC_REJECT_THRESHOLD = 2;\nconst earlyReject = visibilidad === 'publico' && score < HEURISTIC_REJECT_THRESHOLD;\n\nreturn [{\n  json: {\n    markdown_completo: upstream.markdown_completo,\n    convenio_id: upstream.convenio_id,\n    nombre: upstream.nombre,\n    visibilidad,\n    heuristic_score: score,\n    heuristic_hits: hits,\n    heuristic_early_reject: earlyReject\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [15520, 1632],
+      "id": "f1a2c3d4-1111-4aaa-9000-000000000001",
+      "name": "Heuristic Score",
+      "notes": "Capa 3: keyword scoring rápido antes de gastar Claude"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Prepare Classifier Request (Capa 2)\n// FUNCIÓN: Construye payload Anthropic para Claude Haiku 4.5\n// ============================================\n\nconst upstream = $('Heuristic Score').first().json;\n\n// Truncar a ~12000 caracteres (~3000 tokens) para abaratar la llamada.\nconst MAX_CHARS = 12000;\nconst snippet = (upstream.markdown_completo || '').slice(0, MAX_CHARS);\n\nconst SYSTEM_PROMPT = `Eres un clasificador estricto de documentos laborales españoles.\nDado el texto inicial de un documento, debes determinar a qué categoría pertenece.\nCategorías permitidas:\n- convenio_colectivo\n- boletin_oficial (BOE/BOCM/DOG... con contenido laboral)\n- acuerdo_empresa\n- acta_mesa_negociadora\n- contrato_individual\n- nomina\n- otro_laboral (manual interno, política RR.HH., reglamento)\n- no_laboral\n\nResponde ÚNICAMENTE con un JSON válido, sin texto antes ni después, con esta forma exacta:\n{ \"categoria\": \"...\", \"confianza\": 0.0, \"indicios\": [\"...\"] }\nDonde \"confianza\" es un número entre 0 y 1.`;\n\nconst userPrompt = `Texto del documento (primeros ${snippet.length} caracteres):\\n\\n${snippet}`;\n\nconst payload = {\n  model: 'claude-haiku-4-5-20251001',\n  max_tokens: 256,\n  temperature: 0,\n  system: SYSTEM_PROMPT,\n  messages: [{ role: 'user', content: userPrompt }]\n};\n\nreturn [{\n  json: {\n    payload,\n    convenio_id: upstream.convenio_id,\n    nombre: upstream.nombre,\n    visibilidad: upstream.visibilidad,\n    markdown_completo: upstream.markdown_completo,\n    heuristic_score: upstream.heuristic_score,\n    heuristic_hits: upstream.heuristic_hits,\n    heuristic_early_reject: upstream.heuristic_early_reject\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [15600, 1632],
+      "id": "f1a2c3d4-1111-4aaa-9000-000000000002",
+      "name": "Prepare Classifier Request",
+      "notes": "Capa 2: prepara payload para Claude Haiku"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "anthropicApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [15680, 1632],
+      "id": "f1a2c3d4-1111-4aaa-9000-000000000003",
+      "name": "HTTP Claude Classifier",
+      "credentials": {
+        "anthropicApi": {
+          "id": "2BE4F8N8ueXrNFnm",
+          "name": "Anthropic account"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "Capa 2: llamada a Claude Haiku para clasificar tipo de documento"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Parse Classification (Capa 2)\n// FUNCIÓN: Parsea la respuesta de Claude, junta con la heurística y decide\n//          si el documento es aceptable según la visibilidad solicitada.\n// ============================================\n\nconst http = $input.first().json;\nconst prep = $('Prepare Classifier Request').first().json;\n\n// Categorías admisibles para visibilidad pública\nconst PUBLIC_OK = new Set([\n  'convenio_colectivo',\n  'boletin_oficial',\n  'acuerdo_empresa',\n  'acta_mesa_negociadora'\n]);\nconst MIN_CONFIDENCE_PUBLIC = 0.7;\nconst MIN_CONFIDENCE_PRIVATE = 0.5;\n\nlet classification = { categoria: 'desconocido', confianza: 0, indicios: [] };\nlet classifierError = null;\n\nif (http && http.error) {\n  classifierError = http.error.message || 'Error desconocido en clasificador';\n} else {\n  try {\n    const responseText = http?.content?.[0]?.text || '';\n    // Limpieza por si Claude devuelve fences\n    let cleaned = responseText.trim();\n    if (cleaned.startsWith('```json')) cleaned = cleaned.slice(7);\n    else if (cleaned.startsWith('```')) cleaned = cleaned.slice(3);\n    if (cleaned.endsWith('```')) cleaned = cleaned.slice(0, -3);\n    classification = JSON.parse(cleaned.trim());\n  } catch (e) {\n    classifierError = 'No se pudo parsear la respuesta del clasificador: ' + e.message;\n  }\n}\n\n// Decisión final\nconst { categoria, confianza } = classification;\nconst visibilidad = prep.visibilidad || 'privado';\n\nlet accepted = false;\nlet rejectReason = null;\n\nif (prep.heuristic_early_reject) {\n  rejectReason = `El documento no parece laboral (heuristic_score=${prep.heuristic_score}) y se ha solicitado visibilidad pública.`;\n} else if (classifierError) {\n  // Fail-open en privado, fail-closed en público\n  if (visibilidad === 'publico') {\n    rejectReason = 'No se pudo clasificar el documento y se ha solicitado visibilidad pública: ' + classifierError;\n  } else {\n    accepted = true;\n  }\n} else if (visibilidad === 'publico') {\n  if (PUBLIC_OK.has(categoria) && confianza >= MIN_CONFIDENCE_PUBLIC) {\n    accepted = true;\n  } else {\n    rejectReason = `Para visibilidad pública solo se admiten convenios, boletines oficiales o acuerdos sectoriales. Detectado: ${categoria} (confianza ${confianza}).`;\n  }\n} else {\n  // privado: aceptar todo salvo no_laboral con confianza alta\n  if (categoria === 'no_laboral' && confianza >= MIN_CONFIDENCE_PRIVATE) {\n    rejectReason = 'El documento no parece laboral. Si crees que es un error, vuelve a intentarlo con otro PDF.';\n  } else {\n    accepted = true;\n  }\n}\n\nconst clasificacion = {\n  categoria: classification.categoria || null,\n  confianza: classification.confianza ?? null,\n  indicios: classification.indicios || [],\n  heuristic_score: prep.heuristic_score,\n  heuristic_hits: prep.heuristic_hits,\n  modelo: 'claude-haiku-4-5-20251001',\n  classifier_error: classifierError\n};\n\nreturn [{\n  json: {\n    convenio_id: prep.convenio_id,\n    nombre: prep.nombre,\n    visibilidad,\n    markdown_completo: prep.markdown_completo,\n    accepted,\n    reject_reason: rejectReason,\n    clasificacion\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [15760, 1632],
+      "id": "f1a2c3d4-1111-4aaa-9000-000000000004",
+      "name": "Parse Classification",
+      "notes": "Capa 2: decide aceptar/rechazar según categoría, confianza y visibilidad"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "accepted-check",
+              "leftValue": "={{ $json.accepted }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [15840, 1632],
+      "id": "f1a2c3d4-1111-4aaa-9000-000000000005",
+      "name": "Is Document Acceptable?"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=http://host.docker.internal:54321/rest/v1/convenios?id=eq.{{ $json.convenio_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ estado: 'rechazado', error_message: $json.reject_reason, clasificacion: $json.clasificacion }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [15920, 1856],
+      "id": "f1a2c3d4-1111-4aaa-9000-000000000006",
+      "name": "Mark Rechazado",
+      "credentials": {
+        "supabaseApi": {
+          "id": "zTfHTKIsATQcLHo2",
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Capa 2: marca el convenio como rechazado y guarda la clasificación"
+    },
+    {
+      "parameters": {
         "method": "PATCH",
         "url": "=http://host.docker.internal:54321/rest/v1/convenios?id=eq.{{ $('Webhook').first().json.body.convenio_id }}",
         "authentication": "predefinedCredentialType",
@@ -454,19 +588,13 @@
           ]
         },
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "markdown_completo",
-              "value": "={{ $('Extract and clean md1').first().json.markdown_completo }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ markdown_completo: $('Extract and clean md1').first().json.markdown_completo, clasificacion: $('Parse Classification').first().json.clasificacion }) }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [15680, 1632],
+      "position": [16000, 1632],
       "id": "4c958bab-cc5a-410a-9fae-facc71767d3c",
       "name": "Save md in supabase1",
       "retryOnFail": false,
@@ -845,7 +973,69 @@
       "main": [
         [
           {
+            "node": "Heuristic Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Heuristic Score": {
+      "main": [
+        [
+          {
+            "node": "Prepare Classifier Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Classifier Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Claude Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Claude Classifier": {
+      "main": [
+        [
+          {
+            "node": "Parse Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Classification": {
+      "main": [
+        [
+          {
+            "node": "Is Document Acceptable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Document Acceptable?": {
+      "main": [
+        [
+          {
             "node": "Save md in supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Rechazado",
             "type": "main",
             "index": 0
           }

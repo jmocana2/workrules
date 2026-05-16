@@ -17,6 +17,7 @@ export function useUserConvenios() {
         .select("*")
         .eq("owner_id", userId)
         .eq("visibilidad", "privado")
+        .not("estado", "in", "(rechazado,error)")
         .order("created_at", { ascending: false });
 
       if (error) throw error;

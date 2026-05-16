@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { useCallback, useId, useState } from 'react';
-import { validatePdfFile } from './utils/fileSelection';
+import { validatePdfFileAsync } from './utils/fileSelection';
 
 interface DropZoneProps {
   onFileSelect: (file: File) => void;
@@ -11,25 +11,21 @@ interface DropZoneProps {
 export function DropZone({
   onFileSelect,
   disabled = false,
-  maxSizeMB = 10
+  maxSizeMB = 25
 }: DropZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const errorId = useId();
 
-  const validateFile = useCallback((file: File): string | null => {
-    return validatePdfFile(file, maxSizeMB);
-  }, [maxSizeMB]);
-
-  const handleFile = useCallback((file: File) => {
-    const validationError = validateFile(file);
+  const handleFile = useCallback(async (file: File) => {
+    const validationError = await validatePdfFileAsync(file, maxSizeMB);
     if (validationError) {
       setError(validationError);
       return;
     }
     setError(null);
     onFileSelect(file);
-  }, [validateFile, onFileSelect]);
+  }, [maxSizeMB, onFileSelect]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();

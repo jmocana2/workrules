@@ -9,3 +9,4 @@ export { useUserConvenios } from './useUserConvenios';
 export { useConvenio } from './useConvenio';
 export { useChatSessions, useDeleteChatSession } from './useChatSessions';
 export { useConvenioVariables } from './useConvenioVariables';
+export { useUserPlan } from './useUserPlan';
