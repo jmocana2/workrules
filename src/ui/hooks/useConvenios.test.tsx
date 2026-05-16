@@ -104,6 +104,7 @@ describe('useConvenios', () => {
     (supabase.from as any).mockReturnValue({
       select: vi.fn().mockReturnThis(),
       or: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
       ilike: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
     });

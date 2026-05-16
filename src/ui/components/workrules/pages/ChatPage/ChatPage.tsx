@@ -58,6 +58,11 @@ import type {
 } from './ChatPage.types';
 import { useChatPage } from './useChatPage';
 
+/** El Sidebar solo distingue free vs premium; enterprise hereda los privilegios de premium. */
+function normalizeUserPlan(plan: 'free' | 'premium' | 'enterprise'): 'free' | 'premium' {
+  return plan === 'free' ? 'free' : 'premium';
+}
+
 export function ChatPage({
   initialConvenioId,
   initialMessages,
@@ -84,7 +89,7 @@ export function ChatPage({
 
   // Plan del usuario (real desde user_profiles, o mock en Storybook)
   const { plan: realUserPlan } = useUserPlan();
-  const userPlan = useMocks ? mockUserPlan : (realUserPlan === 'enterprise' ? 'premium' : realUserPlan);
+  const userPlan = useMocks ? mockUserPlan : normalizeUserPlan(realUserPlan);
 
   const {
     // Estado

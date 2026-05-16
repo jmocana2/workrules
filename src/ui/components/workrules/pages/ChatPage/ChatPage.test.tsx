@@ -60,6 +60,11 @@ vi.mock('@ui/hooks', () => ({
     isLoading: false,
     error: null,
   })),
+  useUserPlan: vi.fn(() => ({
+    plan: 'free',
+    isLoading: false,
+    isPremium: false,
+  })),
   useChatStream: vi.fn(),
 }));
 
