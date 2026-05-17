@@ -277,7 +277,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
         //   - 100%: Todo completado
 
         // Iniciar progreso estimado
-        const ESTIMATED_TOTAL_TIME = 150; // 2.5 minutos en segundos (basado en tiempo real ~2m 21s)
+        const ESTIMATED_TOTAL_TIME = 60; // 1 minuto (tras optimizaciones del indexer, tiempo real ~55s)
         const PROGRESS_UPDATE_INTERVAL = 1000; // Actualizar cada 1 segundo
         let elapsedSeconds = 0;
 

@@ -171,7 +171,7 @@ describe("useConvenioUpload", () => {
     expect(result.current.state.status).toBe("processing");
     if (result.current.state.status === "processing") {
       expect(result.current.state.progress).toBe(0);
-      expect(result.current.state.estimatedTimeLeft).toBe(150);
+      expect(result.current.state.estimatedTimeLeft).toBe(60);
     }
 
     // Advance timers to trigger polling
