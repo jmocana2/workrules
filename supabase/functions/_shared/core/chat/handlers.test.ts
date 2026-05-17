@@ -392,6 +392,7 @@ Deno.test('mapResultToHttpResponse - stream type returns error (should not be ma
   const result: ChatUseCaseResult = {
     type: 'stream',
     stream: new ReadableStream(),
+    citations: [],
     cleanup: async () => {},
   };
 

@@ -112,7 +112,7 @@ Deno.serve(async (req: Request) => {
       return handleStreamResponse(
         result.stream,
         result.cleanup,
-        [], // Citations se agregan en el cleanup si es necesario
+        result.citations,
         sseHeaders
       );
     }

@@ -77,6 +77,10 @@
   /* UserMessage bubble */
   --app-user-message-bg: var(--colorsNeutralNeutral3, #f0f0f3);
   --app-user-message-fg: var(--colorsNeutralNeutral12, #1c2024);
+
+  /* Streamdown table header */
+  --app-table-header-bg: #5f6670;
+  --app-table-header-fg: #ffffff;
 }
 
 .dark {
@@ -150,6 +154,10 @@
   /* UserMessage bubble */
   --app-user-message-bg: var(--colorsNeutralNeutral3, #212225);
   --app-user-message-fg: var(--colorsNeutralNeutral12, #edeef0);
+
+  /* Streamdown table header */
+  --app-table-header-bg: var(--colorsNeutralNeutral6, #445066);
+  --app-table-header-fg: var(--colorsNeutralNeutral12, #edeef0);
 }
 
 /* Tailwind aliases → Style Dictionary tokens */
@@ -210,4 +218,47 @@ body {
   background-color: var(--app-user-message-bg) !important;
   color: var(--app-user-message-fg) !important;
   border-radius: var(--radius5, 0.75rem) !important;
+}
+
+/* Streamdown tables */
+[data-streamdown="table-wrapper"] {
+  border-radius: 0.5rem;
+  border: none;
+  overflow: hidden;
+  margin-block: 0.75rem;
+}
+
+[data-streamdown="table"] {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+[data-streamdown="table-header"] tr {
+  background-color: var(--app-table-header-bg);
+}
+
+[data-streamdown="table-header-cell"] {
+  padding: 0.5rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--app-table-header-fg);
+  white-space: nowrap;
+}
+
+[data-streamdown="table-body"] tr:nth-child(even) {
+  background-color: var(--app-muted);
+}
+
+[data-streamdown="table-body"] tr:nth-child(odd) {
+  background-color: var(--app-background);
+}
+
+[data-streamdown="table-cell"] {
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--app-border);
+}
+
+[data-streamdown="table-body"] tr:first-child [data-streamdown="table-cell"] {
+  border-top: none;
 }

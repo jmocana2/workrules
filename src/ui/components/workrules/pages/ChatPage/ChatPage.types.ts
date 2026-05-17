@@ -19,6 +19,8 @@ export interface Citation {
   url: string;
   text?: string;
   articleNumber?: string;
+  url_pdf?: string | null;
+  pagina?: number | null;
 }
 
 /**

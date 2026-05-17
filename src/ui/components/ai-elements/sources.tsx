@@ -35,7 +35,7 @@ export const SourcesTrigger = ({
   >
     {children ?? (
       <>
-        <p className="font-medium">Used {count} {count === 1 ? "source" : "sources"}</p>
+        <p className="font-medium">{count === 1 ? "1 fuente" : `${count} fuentes`}</p>
         <ChevronDownIcon className="h-4 w-4" />
       </>
     )}
@@ -60,17 +60,23 @@ export const SourcesContent = ({
 
 export type SourceProps = Omit<ComponentProps<"a">, "href"> & {
   href?: string;
+  pagina?: number;
 };
 
-export const Source = ({ href, title, children, className, ...props }: SourceProps) => {
+export const Source = ({ href, title, pagina, children, className, ...props }: SourceProps) => {
+  const hrefWithPage = href && pagina ? `${href}#page=${pagina}` : href;
+
   const content = children ?? (
     <>
       <BookIcon className="h-4 w-4 shrink-0" />
       <span className="block font-medium">{title}</span>
+      {pagina && (
+        <span className="text-muted-foreground">p. {pagina}</span>
+      )}
     </>
   );
 
-  if (!href) {
+  if (!hrefWithPage) {
     return (
       <span className={cn("flex items-center gap-2 text-muted-foreground", className)}>
         {content}
@@ -82,7 +88,7 @@ export const Source = ({ href, title, children, className, ...props }: SourcePro
     <a
       aria-label={title ? `Abrir PDF oficial - ${title}` : "Abrir PDF oficial"}
       className={cn("flex items-center gap-2", className)}
-      href={href}
+      href={hrefWithPage}
       rel="noopener noreferrer"
       target="_blank"
       {...props}

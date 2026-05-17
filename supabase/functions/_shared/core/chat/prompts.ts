@@ -127,9 +127,9 @@ const SYSTEM_PROMPT_ASK_QUESTION =
 
 [Respuesta directa a la pregunta]
 
-**Referencia:** Art. [numero del contexto] del Convenio de {{convenio_name}}
-
 [Matices o condiciones adicionales si los hay]
+
+IMPORTANTE: NO incluyas una seccion de "Referencias:" ni "Referencia:" al final de tu respuesta. Las referencias a los articulos se muestran automaticamente en la interfaz a partir de los metadatos del contexto.
 
 ## EJEMPLO
 
@@ -140,11 +140,9 @@ Las personas trabajadoras disfrutaran de 30 dias naturales de vacaciones...
 Pregunta: "Cuantos dias de vacaciones tengo?"
 
 Respuesta correcta:
-Segun el convenio, corresponden **30 dias naturales** de vacaciones anuales.
+Segun el convenio (Art. 18), corresponden **30 dias naturales** de vacaciones anuales.
 
-**Referencia:** Art. 18 del Convenio de {{convenio_name}}
-
-IMPORTANTE: El articulo citado (Art. 18) viene del contexto [1], NO de conocimiento previo.`;
+IMPORTANTE: El articulo citado (Art. 18) viene del contexto [1], NO de conocimiento previo. Puedes mencionarlo inline en la frase pero NO crees una seccion separada de referencias al final.`;
 
 // ============================================
 // TEMPLATE: CALCULATE-SALARY

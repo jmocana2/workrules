@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { CHAT_TEXTS } from '@constants/texts';
 import { useBreakpoint } from '@core/hooks';
 import { MOCK_CONVENIOS, MOCK_CONVERSATIONS } from '@mocks/data/convenios';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Message,
   MessageContent,
@@ -47,7 +48,6 @@ import { MobileDrawer } from '@ui/components/workrules/organisms/MobileDrawer/Mo
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { VariablesPanel } from '@ui/components/workrules/organisms/VariablesPanel/VariablesPanel';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
-import { useQueryClient } from '@tanstack/react-query';
 import { Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
 import { useState } from 'react';
 import type {
@@ -101,7 +101,6 @@ export function ChatPage({
     messages,
     input,
     isLoading,
-    citations,
 
     // Estado de alertas
     alertState,
@@ -255,7 +254,7 @@ export function ChatPage({
       <main className="flex flex-1 flex-col overflow-hidden">
         {/* Header sticky */}
         {selectedConvenio ? (
-          <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+          <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
             <div className="flex h-16 gap-2 px-3 py-3 md:gap-4 md:px-6">
               {/* Hamburger menu - Mobile y Tablet */}
               {(isMobile || isTablet) && (
@@ -294,7 +293,7 @@ export function ChatPage({
           </header>
         ) : (
           (isMobile || isTablet) && (
-            <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+            <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
               <div className="flex h-16 items-center justify-between gap-2 px-3 md:gap-4 md:px-6">
                 <Button
                   variant="ghost"
@@ -376,8 +375,9 @@ export function ChatPage({
                               {message.citations.map((citation, idx) => (
                                 <Source
                                   key={idx}
-                                  href={citation.url}
+                                  href={citation.url_pdf ?? citation.url}
                                   title={citation.source}
+                                  pagina={citation.pagina ?? undefined}
                                 />
                               ))}
                             </SourcesContent>
@@ -388,21 +388,7 @@ export function ChatPage({
                   )
                 )}
 
-                {/* Citaciones globales (parseadas del último mensaje) */}
-                {citations.length > 0 && (
-                  <Sources>
-                    <SourcesTrigger count={citations.length} />
-                    <SourcesContent>
-                      {citations.map((citation, idx) => (
-                        <Source
-                          key={idx}
-                          href={citation.url}
-                          title={citation.source}
-                        />
-                      ))}
-                    </SourcesContent>
-                  </Sources>
-                )}
+
               </>
             )}
 
@@ -481,7 +467,7 @@ export function ChatPage({
         <div className={cn(
           "bg-card",
           isMobile && "fixed bottom-0 left-0 right-0 z-20 border-t border-border",
-          isMobile ? "px-4 pb-[env(safe-area-inset-bottom,16px)] pt-3" : "px-6 py-4"
+          isMobile ? "px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3" : "px-6 py-4"
         )}>
           <div className="mx-auto max-w-3xl">
             <PromptInput
@@ -498,7 +484,7 @@ export function ChatPage({
                 disabled={!selectedConvenio}
                 value={input}
                 onChange={handleInputChange}
-                className="min-h-[60px] resize-none text-[var(--tokensColorsText)] placeholder:text-[var(--colorsNeutralNeutral9)]"
+                className="min-h-15 resize-none text-[var(--tokensColorsText)] placeholder:text-[var(--colorsNeutralNeutral9)]"
               />
               <PromptInputFooter>
                 <div className="flex-1" />

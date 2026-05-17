@@ -107,6 +107,7 @@ export interface AskQuestionError {
 export interface AskQuestionStreamResult {
   type: "stream";
   stream: ReadableStream<Uint8Array>;
+  citations: ChatCitation[];
   /** Funcion a llamar al finalizar el stream para guardar en cache */
   cleanup: (fullResponse: string) => Promise<void>;
 }
@@ -392,6 +393,7 @@ export async function askQuestion(
       return {
         type: "stream",
         stream,
+        citations: buildCitations(chunks, convenio.url_pdf ?? null),
         cleanup: async (fullResponse: string) => {
           // Fire and forget para cache (no bloquear ni fallar por esto)
           deps.saveToSemanticCache(

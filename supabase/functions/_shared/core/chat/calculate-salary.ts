@@ -326,6 +326,7 @@ export async function calculateSalary(
       return {
         type: "stream",
         stream,
+        citations: buildCitations(chunks, convenio.url_pdf ?? null),
         cleanup: async (fullResponse: string) => {
           // Fire and forget para cache
           deps

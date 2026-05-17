@@ -244,7 +244,7 @@ export function useChatStream(
 
             onCitation: (citation: SSECitationEvent) => {
               const newCitation = {
-                source: citation.articulo,
+                source: citation.articulo || citation.seccion || "Convenio",
                 url: citation.url,
                 section: citation.seccion,
                 url_pdf: citation.url_pdf,
