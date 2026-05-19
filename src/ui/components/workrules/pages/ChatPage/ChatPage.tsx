@@ -48,7 +48,7 @@ import { MobileDrawer } from '@ui/components/workrules/organisms/MobileDrawer/Mo
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { VariablesPanel } from '@ui/components/workrules/organisms/VariablesPanel/VariablesPanel';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
-import { Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
+import { ExternalLinkIcon, Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
 import { useState } from 'react';
 import type {
   AlertConflictPayload,
@@ -380,6 +380,25 @@ export function ChatPage({
                                   pagina={citation.pagina ?? undefined}
                                 />
                               ))}
+                              {(() => {
+                                const pdfHref =
+                                  selectedConvenio?.url_pdf ||
+                                  message.citations.find((c) => c.url_pdf)?.url_pdf ||
+                                  message.citations.find((c) => c.url)?.url;
+                                if (!pdfHref) return null;
+                                return (
+                                  <a
+                                    href={pdfHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="Abrir PDF original en una pestaña nueva"
+                                    className="mt-1 flex items-center gap-2 text-primary hover:underline"
+                                  >
+                                    <ExternalLinkIcon className="h-4 w-4 shrink-0" />
+                                    <span className="font-medium">Abrir PDF original</span>
+                                  </a>
+                                );
+                              })()}
                             </SourcesContent>
                           </Sources>
                         )}
