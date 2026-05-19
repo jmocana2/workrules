@@ -14,40 +14,39 @@ async function calculateFileHash(file: File): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// TODO: Implementar sistema de progreso real basado en eventos
-// ============================================================
-// PROBLEMA ACTUAL: El progreso es estimado (curva logarítmica de ~2.5 min)
-// Si n8n tarda más o menos, el progreso no será preciso.
-//
-// SOLUCIÓN PROPUESTA:
-// 1. Modificar n8n para enviar eventos de progreso a través de webhooks
-// 2. Crear edge function "webhook-progress" que reciba eventos de n8n:
-//    POST /functions/v1/webhook-progress
-//    { convenio_id, stage, progress, message }
-//
-// 3. Guardar progreso en tabla temporal "convenio_processing_status":
-//    CREATE TABLE convenio_processing_status (
-//      convenio_id UUID PRIMARY KEY,
-//      stage TEXT, -- 'parsing', 'chunking', 'embedding', 'profile'
-//      progress INT, -- 0-100
-//      message TEXT,
-//      updated_at TIMESTAMP
-//    );
-//
-// 4. El polling consulta esta tabla además del estado del convenio
-// 5. n8n envía eventos en cada etapa:
-//    - 20%: LlamaParse completado
-//    - 40%: Markdown limpiado y guardado
-//    - 60%: Chunks generados e insertados
-//    - 80%: Claude perfil extraído
-//    - 90%: Embeddings generados
-//    - 100%: Todo completado (estado = "activo")
-//
-// BENEFICIOS:
-// - Progreso preciso en tiempo real
-// - Usuario sabe exactamente en qué etapa está
-// - Mejor UX si hay errores en etapas intermedias
-// ============================================================
+// Progreso real basado en eventos: n8n envía POST a /functions/v1/webhook-progress
+// que escribe en la tabla convenio_processing_status. El hook lee esa tabla en cada poll.
+// Etapas (stage, progress): parsing 20 → saving_markdown 40 → chunking 60 → profile 80 → completed 100.
+
+const STAGE_LABELS: Record<string, string> = {
+  queued: "Preparando el convenio…",
+  downloading: "Recibiendo el documento…",
+  parsing: "Leyendo el contenido del PDF…",
+  classifying: "Comprobando que es un convenio…",
+  saving_markdown: "Guardando el contenido…",
+  chunking: "Organizando la información…",
+  embedding: "Analizando el texto…",
+  profile: "Extrayendo los datos del convenio…",
+  completed: "¡Listo!",
+  failed: "Algo ha ido mal",
+};
+
+// Techo al que el drift puede aproximarse mientras esperamos el siguiente
+// evento real de n8n. Cuando llega ese evento, el progreso salta al valor real
+// y empieza a derivar hacia el techo de la siguiente etapa.
+const STAGE_CEILING: Record<string, number> = {
+  queued: 15,
+  downloading: 18,
+  parsing: 35,
+  classifying: 38,
+  saving_markdown: 55,
+  chunking: 75,
+  embedding: 78,
+  profile: 95,
+  completed: 100,
+};
+const DRIFT_INTERVAL_MS = 500;
+const DRIFT_STEP = 0.3;
 
 type UploadState =
   | { status: "idle" }
@@ -59,9 +58,10 @@ type UploadState =
     fileName: string;
     convenioId: string;
     progress: number;
-    estimatedTimeLeft: number;
+    stage: string;
+    stageLabel: string;
   }
-  | { status: "ready"; fileName: string; convenioId: string }
+  | { status: "ready"; fileName: string; convenioId: string; partial?: boolean }
   | { status: "error"; fileName: string; error: string };
 
 interface ConvenioPreviewData {
@@ -89,31 +89,48 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
     "privado",
   );
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
-  const progressRef = useRef<NodeJS.Timeout | null>(null);
   const completionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const driftRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const fileHashRef = useRef<string | null>(null);
+
+  const stopDrift = useCallback(() => {
+    if (driftRef.current) {
+      clearInterval(driftRef.current);
+      driftRef.current = null;
+    }
+  }, []);
+
+  const startDrift = useCallback(() => {
+    stopDrift();
+    driftRef.current = setInterval(() => {
+      setState((prev) => {
+        if (prev.status !== "processing") return prev;
+        const ceiling = STAGE_CEILING[prev.stage] ?? 95;
+        if (prev.progress >= ceiling) return prev;
+        const next = Math.min(ceiling, prev.progress + DRIFT_STEP);
+        return { ...prev, progress: next };
+      });
+    }, DRIFT_INTERVAL_MS);
+  }, [stopDrift]);
 
   const reset = useCallback(() => {
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
       pollingRef.current = null;
     }
-    if (progressRef.current) {
-      clearInterval(progressRef.current);
-      progressRef.current = null;
-    }
     if (completionTimeoutRef.current) {
       clearTimeout(completionTimeoutRef.current);
       completionTimeoutRef.current = null;
     }
+    stopDrift();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
     fileHashRef.current = null;
     setState({ status: "idle" });
-  }, []);
+  }, [stopDrift]);
 
   useEffect(() => {
     return () => {
@@ -267,55 +284,21 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
           throw new Error("Respuesta inválida del servidor: falta convenio_id");
         }
 
-        // TODO: Implementar progreso real basado en webhooks de n8n
-        // Actualmente usa estimación basada en tiempo (~2.5 min promedio)
-        // Mejora futura: n8n podría enviar eventos de progreso:
-        //   - 20%: LlamaParse completado
-        //   - 50%: Chunks generados
-        //   - 70%: Claude perfil extraído
-        //   - 90%: Embeddings generados
-        //   - 100%: Todo completado
-
-        // Iniciar progreso estimado
-        const ESTIMATED_TOTAL_TIME = 60; // 1 minuto (tras optimizaciones del indexer, tiempo real ~55s)
-        const PROGRESS_UPDATE_INTERVAL = 1000; // Actualizar cada 1 segundo
-        let elapsedSeconds = 0;
-
+        // Progreso real: leemos convenio_processing_status (alimentada por n8n).
+        // Si todavía no hay fila (n8n no ha emitido el primer evento), mostramos 0% queued.
         setState({
           status: "processing",
           fileName,
           convenioId: convenio_id,
           progress: 0,
-          estimatedTimeLeft: ESTIMATED_TOTAL_TIME,
+          stage: "queued",
+          stageLabel: STAGE_LABELS.queued,
         });
+        // Drift: avanza poco a poco hacia el techo de la etapa actual entre eventos
+        // reales para dar sensación de continuidad cuando los hitos de n8n llegan
+        // espaciados (parsing 20 → saving_markdown 40 → chunking 60 → profile 80).
+        startDrift();
 
-        // Simular progreso con curva logarítmica (más rápida al inicio, más lenta al final)
-        // Llega al 90% alrededor de los 2 minutos
-        progressRef.current = setInterval(() => {
-          elapsedSeconds += 1;
-          const maxProgress = 90; // Nunca llegar a 100% hasta que termine realmente
-
-          // Curva logarítmica: progreso rápido al inicio, lento al final
-          // Llega a ~50% en 1 min, ~80% en 2 min, ~90% en 2.5 min
-          const normalizedTime = elapsedSeconds / ESTIMATED_TOTAL_TIME; // 0 a 1
-          const estimatedProgress = Math.min(
-            maxProgress,
-            maxProgress * (1 - Math.exp(-3 * normalizedTime)),
-          );
-          const timeLeft = Math.max(0, ESTIMATED_TOTAL_TIME - elapsedSeconds);
-
-          setState((prev) =>
-            prev.status === "processing"
-              ? {
-                ...prev,
-                progress: Math.round(estimatedProgress),
-                estimatedTimeLeft: timeLeft,
-              }
-              : prev
-          );
-        }, PROGRESS_UPDATE_INTERVAL);
-
-        // Iniciar polling para verificar estado
         let attempts = 0;
         const maxAttempts = Math.max(
           1,
@@ -327,16 +310,11 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
             clearInterval(pollingRef.current);
             pollingRef.current = null;
           }
-
-          if (progressRef.current) {
-            clearInterval(progressRef.current);
-            progressRef.current = null;
-          }
+          stopDrift();
 
           setState(nextState);
 
           if (nextState.status === "ready") {
-            // Invalidar la caché de convenios para que se recargue la lista
             queryClient.invalidateQueries({ queryKey: ["convenios"] });
             onSuccess?.(nextState.convenioId);
           }
@@ -344,6 +322,27 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
           if (errorMessage) {
             onError?.(errorMessage);
           }
+        };
+
+        const finalize = (partial: boolean) => {
+          stopDrift();
+          setState({
+            status: "processing",
+            fileName,
+            convenioId: convenio_id,
+            progress: 100,
+            stage: "completed",
+            stageLabel: STAGE_LABELS.completed,
+          });
+          completionTimeoutRef.current = setTimeout(() => {
+            stopPolling({
+              status: "ready",
+              fileName,
+              convenioId: convenio_id,
+              partial,
+            });
+            completionTimeoutRef.current = null;
+          }, 800);
         };
 
         pollingRef.current = setInterval(async () => {
@@ -359,51 +358,70 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
             return;
           }
 
-          const { data: convenio, error: pollError } = await supabase
-            .from("convenios")
-            .select("estado, error_message")
-            .eq("id", convenio_id)
-            .single();
+          // Consultamos estado final + progreso en paralelo.
+          const [convenioRes, progressRes] = await Promise.all([
+            supabase
+              .from("convenios")
+              .select("estado, error_message")
+              .eq("id", convenio_id)
+              .single(),
+            supabase
+              .from("convenio_processing_status")
+              .select("stage, progress, message")
+              .eq("convenio_id", convenio_id)
+              .maybeSingle(),
+          ]);
 
-          if (pollError) {
-            const message = pollError.message || "Error consultando estado";
+          if (convenioRes.error) {
+            const message = convenioRes.error.message || "Error consultando estado";
             stopPolling({ status: "error", fileName, error: message }, message);
             return;
           }
 
-          if (convenio.estado === "activo") {
-            // Detener el progreso simulado
-            if (progressRef.current) {
-              clearInterval(progressRef.current);
-              progressRef.current = null;
-            }
+          const estado = convenioRes.data.estado as string;
 
-            // Primero completar la barra al 100%
-            setState({
-              status: "processing",
-              fileName,
-              convenioId: convenio_id,
-              progress: 100,
-              estimatedTimeLeft: 0,
-            });
-
-            // Esperar 800ms para mostrar la barra completa, luego cambiar a "ready"
-            completionTimeoutRef.current = setTimeout(() => {
-              stopPolling({
-                status: "ready",
-                fileName,
-                convenioId: convenio_id,
-              });
-              completionTimeoutRef.current = null;
-            }, 800);
-          } else if (convenio.estado === "error") {
-            const message = convenio.error_message ||
+          if (estado === "activo") {
+            finalize(false);
+            return;
+          }
+          if (estado === "activo_sin_perfil") {
+            finalize(true);
+            return;
+          }
+          if (estado === "error") {
+            const message = convenioRes.data.error_message ||
               "Error procesando convenio";
             stopPolling({ status: "error", fileName, error: message }, message);
-          } else if (convenio.estado === "rechazado") {
-            const message = convenio.error_message ||
+            return;
+          }
+          if (estado === "rechazado") {
+            const message = convenioRes.data.error_message ||
               "El documento ha sido rechazado por el validador automático.";
             stopPolling({ status: "error", fileName, error: message }, message);
+            return;
+          }
+
+          // Aún procesando: aplicar el progreso real si está disponible.
+          // No retrocedemos el valor mostrado: si el drift ya pasó al hito real
+          // mientras esperábamos el evento, mantenemos el valor derivado.
+          const progressRow = progressRes.data;
+          if (progressRow) {
+            const stage = String(progressRow.stage);
+            const realProgress = Math.min(
+              95,
+              Number(progressRow.progress) || 0,
+            );
+            setState((prev) =>
+              prev.status === "processing"
+                ? {
+                  ...prev,
+                  progress: Math.max(prev.progress, realProgress),
+                  stage,
+                  stageLabel: progressRow.message ||
+                    STAGE_LABELS[stage] || stage,
+                }
+                : prev
+            );
           }
         }, pollingIntervalMs);
       } catch (error) {
@@ -414,7 +432,15 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
         onError?.(message);
       }
     },
-    [visibility, pollingIntervalMs, onSuccess, onError, queryClient],
+    [
+      visibility,
+      pollingIntervalMs,
+      onSuccess,
+      onError,
+      queryClient,
+      startDrift,
+      stopDrift,
+    ],
   );
 
   return {

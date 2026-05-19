@@ -124,8 +124,19 @@ export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploader
           errorMessage={state.status === 'error' ? state.error : undefined}
           onCancel={state.status !== 'ready' && state.status !== 'error' ? handleCancel : undefined}
           processingProgress={state.status === 'processing' ? state.progress : undefined}
-          estimatedTimeLeft={state.status === 'processing' ? state.estimatedTimeLeft : undefined}
+          stageLabel={state.status === 'processing' ? state.stageLabel : undefined}
         />
+      )}
+
+      {state.status === 'ready' && state.partial && (
+        <div
+          role="status"
+          className="px-3 py-2 rounded-md border border-(--colorsSemanticWarning9) bg-(--colorsSemanticWarningAlpha3)"
+        >
+          <p className="text-sm text-(--colorsSemanticWarning11)">
+            El convenio se ha indexado pero no se pudo extraer su perfil completo. Podrás consultarlo en el chat, pero la calculadora salarial no estará disponible para este convenio.
+          </p>
+        </div>
       )}
 
       {/* Estado preview: mostrar preview + visibilidad + botones */}

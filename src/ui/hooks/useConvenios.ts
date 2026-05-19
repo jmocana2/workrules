@@ -30,17 +30,16 @@ export function useConvenios(searchTerm?: string) {
       // - Privados del usuario: owner_id=user.id (RLS se encarga de esto)
       // La política RLS ya filtra automáticamente, solo mostramos activos para públicos
       if (user) {
-        // Si hay usuario autenticado, RLS permite ver públicos activos + privados propios.
-        // Excluimos los rechazados/error para que no aparezcan en el selector de chat
-        // (siguen en BD para auditoría y para el panel de gestión del owner).
+        // 'activo_sin_perfil' es chateable (chunks indexados) pero deshabilita calculadora salarial.
         query = query
           .or(
-            `and(visibilidad.eq.publico,estado.eq.activo),owner_id.eq.${user.id}`,
+            `and(visibilidad.eq.publico,estado.in.(activo,activo_sin_perfil)),owner_id.eq.${user.id}`,
           )
           .not("estado", "in", "(rechazado,error)");
       } else {
-        // Si no hay usuario, solo públicos activos
-        query = query.eq("estado", "activo").eq("visibilidad", "publico");
+        query = query
+          .in("estado", ["activo", "activo_sin_perfil"])
+          .eq("visibilidad", "publico");
       }
 
       // Aplicar filtro de búsqueda si existe

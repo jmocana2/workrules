@@ -56,6 +56,7 @@ describe('useConvenios', () => {
     (supabase.from as any).mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
     });
 
@@ -175,6 +176,7 @@ describe('useConvenios', () => {
     (supabase.from as any).mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
       ilike: mockIlike,
       order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
     });
@@ -194,6 +196,7 @@ describe('useConvenios', () => {
     (supabase.from as any).mockReturnValue({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
       order: vi.fn().mockResolvedValue({ data: null, error: null }),
     });
 

@@ -14,7 +14,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [256, 224],
+      "position": [512, 224],
       "id": "e725268e-a334-487d-9a9f-0ffbfb714e5f",
       "name": "Save to Logs",
       "credentials": {
@@ -38,7 +38,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [256, 48],
+      "position": [512, 48],
       "id": "60480389-32b9-4e54-afc6-0ab5695b92f2",
       "name": "Prepare Retry"
     },
@@ -68,13 +68,13 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [0, 144],
+      "position": [256, 144],
       "id": "99dab3c2-8a71-4dd8-9f75-db4c155cde4c",
       "name": "Should Retry?"
     },
     {
       "parameters": {
-        "jsCode": "// Obtener información del error\nconst error = $input.first();\nconst errorData = error.json;\n\n// Obtener datos del webhook para contexto\nlet webhookData = null;\ntry {\n  webhookData = $('Webhook').first().json.body;\n} catch (e) {\n  webhookData = { error: 'No se pudo obtener datos del webhook' };\n}\n\n// Clasificar el error\nlet errorType = 'UNKNOWN';\nlet shouldRetry = false;\nlet userMessage = 'Error desconocido procesando el convenio';\n\nconst errorMessage = errorData.message || JSON.stringify(errorData);\n\n// Usar else-if para asegurar clasificación mutualmente exclusiva\n// 1. PDF ya existe en Storage\nif (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {\n  errorType = 'DUPLICATE_PDF';\n  shouldRetry = false;\n  userMessage = 'El PDF ya existe en el almacenamiento. Se puede reutilizar el existente.';\n}\n// 2. Convenio ya existe (unique constraint codigo_regcon)\nelse if (errorMessage.includes('duplicate key') && errorMessage.includes('codigo_regcon')) {\n  errorType = 'DUPLICATE_CONVENIO';\n  shouldRetry = false;\n  userMessage = 'Ya existe un convenio con este código REGCON en la base de datos.';\n}\n// 3. Timeout de LlamaParse\nelse if (errorMessage.includes('timeout') && errorMessage.includes('PENDING')) {\n  errorType = 'LLAMAPARSE_TIMEOUT';\n  shouldRetry = true;\n  userMessage = 'El procesamiento del PDF está tardando más de lo esperado.';\n}\n// 4. Error de autenticación API\nelse if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {\n  errorType = 'AUTH_ERROR';\n  shouldRetry = false;\n  userMessage = 'Error de autenticación con las APIs externas.';\n}\n// 5. PDF no descargable\nelse if (errorMessage.includes('404') || errorMessage.includes('ENOTFOUND')) {\n  errorType = 'PDF_NOT_FOUND';\n  shouldRetry = false;\n  userMessage = 'No se pudo descargar el PDF desde la URL proporcionada.';\n}\n\nreturn {\n  json: {\n    workflow: 'ingesta-convenio',\n    error_type: errorType,\n    error_message: errorMessage,\n    user_message: userMessage,\n    should_retry: shouldRetry,\n    failed_node: errorData.node?.name || 'Unknown',\n    input_data: webhookData,\n    timestamp: new Date().toISOString()\n  }\n};"
+        "jsCode": "// Obtener información del error\nconst error = $input.first();\nconst errorData = error.json;\n\n// Obtener datos del webhook para contexto\nlet webhookData = null;\ntry {\n  webhookData = $('Webhook').first().json.body;\n} catch (e) {\n  webhookData = { error: 'No se pudo obtener datos del webhook' };\n}\n\n// Clasificar el error\nlet errorType = 'UNKNOWN';\nlet shouldRetry = false;\nlet userMessage = 'Error desconocido procesando el convenio. Inténtalo de nuevo en unos minutos.';\n\nconst errorMessage = errorData.message || JSON.stringify(errorData);\nconst failedNode = errorData.node?.name || 'Unknown';\n\n// Usar else-if para asegurar clasificación mutualmente exclusiva\nif (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {\n  errorType = 'DUPLICATE_PDF';\n  shouldRetry = false;\n  userMessage = 'El PDF ya existe en el almacenamiento. Se puede reutilizar el existente.';\n}\nelse if (errorMessage.includes('duplicate key') && errorMessage.includes('codigo_regcon')) {\n  errorType = 'DUPLICATE_CONVENIO';\n  shouldRetry = false;\n  userMessage = 'Ya existe un convenio con este código REGCON en la base de datos.';\n}\nelse if (errorMessage.includes('timeout') && errorMessage.includes('PENDING')) {\n  errorType = 'LLAMAPARSE_TIMEOUT';\n  shouldRetry = true;\n  userMessage = 'El procesamiento del PDF está tardando más de lo esperado. Por favor, inténtalo de nuevo.';\n}\nelse if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {\n  errorType = 'AUTH_ERROR';\n  shouldRetry = false;\n  userMessage = 'Error de autenticación con servicios externos. El equipo ha sido notificado.';\n}\nelse if (errorMessage.includes('404') || errorMessage.includes('ENOTFOUND')) {\n  errorType = 'PDF_NOT_FOUND';\n  shouldRetry = false;\n  userMessage = 'No se pudo descargar el PDF desde la URL proporcionada. Verifica que el archivo es accesible.';\n}\n\n// Intentar obtener convenio_id del payload del webhook para poder marcarlo como error\nconst convenioId = webhookData?.convenio_id || null;\n\nreturn {\n  json: {\n    workflow: 'ingesta-convenio',\n    error_type: errorType,\n    error_message: errorMessage,\n    user_message: userMessage,\n    should_retry: shouldRetry,\n    failed_node: failedNode,\n    input_data: webhookData,\n    convenio_id: convenioId,\n    timestamp: new Date().toISOString()\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -89,6 +89,68 @@
       "position": [-416, 144],
       "id": "7a0909da-8399-41a0-94ee-4b1282eeaf60",
       "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "has-convenio-id",
+              "leftValue": "={{ $json.convenio_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [0, 144],
+      "id": "a1b2c3d4-e5f6-4000-9000-aaaaaaaa0001",
+      "name": "Has Convenio Id?"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://{{ $env.SUPABASE_PROJECT_REF }}.supabase.co/rest/v1/convenios?id=eq.{{ $json.convenio_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ estado: 'error', error_message: $json.user_message }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [0, 320],
+      "id": "a1b2c3d4-e5f6-4000-9000-aaaaaaaa0002",
+      "name": "Mark Convenio Error",
+      "credentials": {
+        "supabaseApi": {
+          "id": "17i79gWGYg1gHxjw",
+          "name": "Supabase account"
+        }
+      },
+      "notes": "Doc 03 / Bloqueante MVP: marca el convenio como error para desbloquear el polling del frontend"
     }
   ],
   "pinData": {},
@@ -126,7 +188,7 @@
       "main": [
         [
           {
-            "node": "Should Retry?",
+            "node": "Has Convenio Id?",
             "type": "main",
             "index": 0
           }
@@ -143,6 +205,35 @@
           }
         ]
       ]
+    },
+    "Has Convenio Id?": {
+      "main": [
+        [
+          {
+            "node": "Mark Convenio Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Should Retry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Convenio Error": {
+      "main": [
+        [
+          {
+            "node": "Should Retry?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -150,7 +241,7 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "e6bddaa9-3544-49d9-b141-1e262f39500d",
+  "versionId": "f6bddaa9-3544-49d9-b141-1e262f39500e",
   "meta": {
     "instanceId": "1c6a2faf45e95944d162a539c0cff8415bcd053d25a87106e91c063a6ec7d027"
   },

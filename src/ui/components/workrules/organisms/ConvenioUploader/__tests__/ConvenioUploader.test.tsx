@@ -122,7 +122,8 @@ describe('ConvenioUploader', () => {
           fileName: 'convenio.pdf',
           convenioId: 'abc-123',
           progress: 0,
-          estimatedTimeLeft: 0,
+          stage: 'queued',
+          stageLabel: 'En cola…',
         },
         visibility: 'privado',
         setVisibility: mockSetVisibility,
@@ -135,8 +136,7 @@ describe('ConvenioUploader', () => {
     it('muestra el mensaje de procesamiento', () => {
       render(<ConvenioUploader isPremium={true} />);
       expect(screen.getByText(/procesando convenio/i)).toBeInTheDocument();
-      expect(screen.getByText(/tiempo estimado restante/i)).toBeInTheDocument();
-      expect(screen.getByText(/extrayendo texto.*generando embeddings/i)).toBeInTheDocument();
+      expect(screen.getByText(/en cola/i)).toBeInTheDocument();
     });
   });
 

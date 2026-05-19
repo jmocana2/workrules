@@ -24,6 +24,7 @@ export interface UploadProgressProps {
   onCancel?: () => void;
   processingProgress?: number;
   estimatedTimeLeft?: number;
+  stageLabel?: string;
 }
 
 interface StatusConfig {
@@ -66,7 +67,8 @@ export function UploadProgress({
   fileName,
   errorMessage,  
   processingProgress = 0,
-  estimatedTimeLeft = 0,
+  estimatedTimeLeft,
+  stageLabel,
 }: UploadProgressProps) {
   const config = STATUS_CONFIG[status];
   const Icon = config.icon;
@@ -142,12 +144,18 @@ export function UploadProgress({
       {/* Processing Message */}
       {showProcessingMessage && (
         <div className="text-xs mt-2 space-y-1">
-          <p className="text-(--colorsNeutralNeutral11)">
-            Tiempo estimado restante: {formatTimeLeft(estimatedTimeLeft)}
-          </p>
-          <p className="text-[12px] text-(--colorsNeutralNeutral11)">
-            Extrayendo texto, generando embeddings y analizando estructura...
-          </p>
+          {stageLabel ? (
+            <p className="text-(--colorsNeutralNeutral11)">{stageLabel}</p>
+          ) : (
+            <>
+              <p className="text-(--colorsNeutralNeutral11)">
+                Tiempo estimado restante: {formatTimeLeft(estimatedTimeLeft ?? 0)}
+              </p>
+              <p className="text-[12px] text-(--colorsNeutralNeutral11)">
+                Extrayendo texto, generando embeddings y analizando estructura...
+              </p>
+            </>
+          )}
         </div>
       )}
     </div>

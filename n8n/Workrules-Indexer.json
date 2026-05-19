@@ -10,8 +10,8 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [12688, 1392],
-      "id": "f449527f-f35d-4d16-8d81-ef6c23ffc986",
+      "position": [21744, 3072],
+      "id": "3fe3a2ef-66ea-45da-80dc-d8a603fb4ce2",
       "name": "Webhook",
       "webhookId": "01c36b3d-fb3a-4df1-8577-16f5b82c6e6f"
     },
@@ -21,8 +21,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [13056, 1392],
-      "id": "757e7f11-1b3f-4763-ab8d-690618ec2a36",
+      "position": [22112, 3072],
+      "id": "c077e663-9150-4971-8801-f0642bce5af7",
       "name": "Check Duplicate Convenio"
     },
     {
@@ -31,8 +31,8 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [13328, 1392],
-      "id": "e6a0d6a2-def9-41c1-b5dd-a2050df484d9",
+      "position": [22384, 3072],
+      "id": "44659e08-cc52-47e7-aff4-a2881871dcf6",
       "name": "Convenio Exists?"
     },
     {
@@ -41,8 +41,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [13376, 1808],
-      "id": "eeae2861-cfb0-46ad-b1b2-10c81c414c8a",
+      "position": [22432, 3488],
+      "id": "8b8bc1ee-3cdc-4bcc-a60d-d5b24afc516e",
       "name": "Respond Duplicate"
     },
     {
@@ -58,8 +58,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [13888, 1376],
-      "id": "7671fa0e-707d-4869-9692-448211d8054a",
+      "position": [22944, 3056],
+      "id": "1e288276-271c-4f40-bd7a-77d7cac28181",
       "name": "HTTP Supabase storage PDF",
       "credentials": {
         "supabaseApi": {
@@ -82,8 +82,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [13632, 1376],
-      "id": "1c211c1c-d2d0-4a3b-b91b-71a1250cd066",
+      "position": [22688, 3056],
+      "id": "1b4b8293-1a19-4843-9259-426552d6da9c",
       "name": "HTTP PDF Request"
     },
     {
@@ -92,8 +92,8 @@
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [14096, 1664],
-      "id": "0886af9c-a9f6-4bbc-8b16-e124ed840fe8",
+      "position": [23152, 3344],
+      "id": "6c31577e-7fec-40b7-8823-77d9eebf4953",
       "name": "Wait",
       "webhookId": "e7907ffd-20a4-42e8-9fdf-ec94c7eeb960"
     },
@@ -126,8 +126,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [13856, 1664],
-      "id": "221acb7f-d551-42b8-871d-308512f442aa",
+      "position": [22912, 3344],
+      "id": "2abe7c0e-8399-4c42-b0ad-775670c3f707",
       "name": "HTTP LlamaParse PDF",
       "credentials": {
         "httpHeaderAuth": {
@@ -151,8 +151,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [14336, 1664],
-      "id": "73ce5291-2a90-4dbc-9a86-fe1acd95b871",
+      "position": [23392, 3344],
+      "id": "2d90f43c-3416-4699-9d2f-ccd55cb7cd29",
       "name": "Check LlamaParse Status",
       "credentials": {
         "httpHeaderAuth": {
@@ -237,8 +237,8 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [14608, 1648],
-      "id": "29f4ec2f-451e-474c-b999-edef0b83aa5b",
+      "position": [23664, 3328],
+      "id": "2b6f72e4-7c0c-4d3f-833e-31954efb8a8b",
       "name": "Is Processing Complete?"
     },
     {
@@ -256,8 +256,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [14880, 1632],
-      "id": "771c2dd7-f680-4a30-b2cd-6405a15169a8",
+      "position": [23936, 3312],
+      "id": "087203be-39a8-4cce-a2ed-67692a0e6f75",
       "name": "Get Markdown Result",
       "credentials": {
         "httpHeaderAuth": {
@@ -272,8 +272,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [15136, 1632],
-      "id": "384013ae-79c2-4ce4-a604-74ee81f570d1",
+      "position": [24192, 3312],
+      "id": "ff14f38a-bdd3-4ad4-bc6a-2861e0c1e527",
       "name": "Clear Retry Counter"
     },
     {
@@ -282,8 +282,8 @@
       },
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [14864, 1920],
-      "id": "1bb20de6-5f4b-4b34-94db-2a0071d75c63",
+      "position": [23920, 3600],
+      "id": "0a7cf0d0-dfb2-4d61-be07-b4626951de1d",
       "name": "Stop and Error"
     },
     {
@@ -292,18 +292,18 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [14720, 1392],
-      "id": "82863bda-76b3-4c1b-9066-8a70f1d16858",
+      "position": [23776, 3072],
+      "id": "f3a63f23-4ac4-49b1-b0ed-bb43a0341d3c",
       "name": "Check Retry Limit"
     },
     {
       "parameters": {
-        "jsCode": "// ============================================\n// NODO: Chunk Markdown\n// WORKFLOW: Workrules Convenios - Indexer\n// TIPO: Code (JavaScript) v2\n// ============================================\n\n// ============================================\n// CONFIGURACIÓN\n// ============================================\nconst TARGET_TOKENS = 450; // Target ideal\nconst MAX_TOKENS = 600; // Límite duro\nconst MIN_TOKENS = 100; // Mínimo para chunk válido (contenido genérico)\nconst MIN_TOKENS_ARTICULO = 25; // Mínimo para artículos (pueden ser muy cortos pero son unidades semánticas)\nconst OVERLAP_CHARS = 200; // ~50 tokens de overlap\n\n// ============================================\n// FUNCIONES AUXILIARES\n// ============================================\n\nfunction estimateTokens(text) {\n  if (!text) return 0;\n  const words = text.split(/\\s+/).length;\n  const chars = text.length;\n  return Math.round((chars / 4 + words * 1.3) / 2);\n}\n\nfunction detectChunkType(content) {\n  if (/\\|.*\\|/.test(content) && /salario|retribuc|sueldo|euro|€/i.test(content))\n    return 'tabla_salarial';\n  if (/\\|.*\\|/.test(content)) return 'tabla';\n  if (/se entiende por|a los efectos|definición|concepto/i.test(content))\n    return 'definicion';\n  if (\n    /procedimiento|solicitud|plazo de|días (hábiles|naturales)/i.test(content)\n  )\n    return 'procedimiento';\n  if (/jornada|horario|descanso|vacaciones|permiso/i.test(content))\n    return 'jornada';\n  if (/falta (leve|grave|muy grave)|sanción|despido/i.test(content))\n    return 'sanciones';\n  return 'normativa';\n}\n\nfunction extractSeccion(content, previousSeccion) {\n  const match = content.match(/^##\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  return previousSeccion || null;\n}\n\n/**\n * Detecta si estamos en una sección de ANEXO (no tiene artículos numerados)\n * Los anexos incluyen: tablas salariales, disposiciones, categorías profesionales, etc.\n */\nfunction isAnexoSection(seccion) {\n  if (!seccion) return false;\n  const seccionLower = seccion.toLowerCase();\n  return (\n    seccionLower.includes('anexo') ||\n    seccionLower.includes('tabla') ||\n    seccionLower.includes('disposicion') ||\n    seccionLower.includes('clasificación profesional') ||\n    seccionLower.includes('clasificacion profesional') ||\n    seccionLower.includes('categorías profesionales') ||\n    seccionLower.includes('categorias profesionales') ||\n    seccionLower.includes('niveles retributivos') ||\n    seccionLower.includes('grupos profesionales')\n  );\n}\n\nfunction extractArticulo(content, previousArticulo, currentSeccion) {\n  // ============================================\n  // EXTRACCIÓN DE ARTÍCULOS DEL CONVENIO\n  // ============================================\n  // IMPORTANTE: Solo capturamos artículos QUE PERTENECEN AL CONVENIO,\n  // NO referencias a otras leyes (Estatuto de los Trabajadores, etc.)\n\n  // Patrón 1: Markdown heading ### Art. X o ### Artículo X (más confiable)\n  // Ejemplo: \"### Art. 18.- Vacaciones\"\n  const matchH3 = content.match(\n    /^###\\s+(Art(?:ículo|\\.)\\s*\\d+[º°]?[\\.\\-]?\\s*[^\\n]*)/im\n  );\n  if (matchH3) {\n    return normalizeArticulo(matchH3[1].trim());\n  }\n\n  // Patrón 2: Negrita markdown **Art. X** o **Artículo X**\n  // Ejemplo: \"**Art. 8.- Período de prueba**\"\n  const matchBold = content.match(\n    /^\\*{1,2}(Art(?:ículo|\\.)\\s*\\d+[º°]?[\\.\\-]?\\s*[^\\n*]*)\\*{0,2}/im\n  );\n  if (matchBold) {\n    const fullMatch = matchBold[1];\n    if (!isReferenciaExterna(fullMatch)) {\n      return normalizeArticulo(fullMatch.trim());\n    }\n  }\n\n  // Patrón 3: Artículo al INICIO de línea (encabezado sin markdown)\n  // Ejemplo: \"Art. 18.- Vacaciones\" o \"Artículo 18 - Vacaciones\"\n  // IMPORTANTE: Debe estar al inicio de línea (^) para evitar capturar referencias internas\n  const artStartMatch = content.match(\n    /^(Art(?:ículo|\\.)\\s*(\\d+)[º°]?[\\.\\-]?\\s*[–\\-:]?\\s*([A-ZÁÉÍÓÚÑ][^\\n]*))/im\n  );\n  if (artStartMatch) {\n    // Verificar que NO es una referencia a otra ley\n    const fullMatch = artStartMatch[1];\n    if (!isReferenciaExterna(fullMatch)) {\n      return normalizeArticulo(fullMatch.trim());\n    }\n  }\n\n  // Patrón 3: \"14.- Jornada\" o \"14.- **Jornada**\" (formato BOCM)\n  // Solo al inicio de línea para evitar falsos positivos\n  const bocmMatch = content.match(\n    /^(\\d+)\\.\\-\\s*\\*{0,2}[A-ZÁÉÍÓÚÑ][^\\n*]{2,50}\\*{0,2}/m\n  );\n  if (bocmMatch) {\n    const num = bocmMatch[1];\n    // Solo aceptar si el número es razonable (1-200) para artículos de convenio\n    if (parseInt(num) >= 1 && parseInt(num) <= 200) {\n      return `Art. ${num}`;\n    }\n  }\n\n  // Patrón 4: \"Artículo 14 - Descansos\" (con guión y espacio)\n  const articuloConGuion = content.match(\n    /^(Artículo\\s+(\\d+)\\s*[\\-–]\\s*([A-ZÁÉÍÓÚÑ][^\\n]*))/im\n  );\n  if (articuloConGuion) {\n    const num = articuloConGuion[2];\n    return `Art. ${num}`;\n  }\n\n  // Si estamos en una sección de ANEXO, NO heredar artículos anteriores\n  // Los anexos no tienen artículos numerados, usar null para que se use la sección\n  if (isAnexoSection(currentSeccion)) {\n    return null;\n  }\n\n  // Si no encuentra nada, heredar del anterior\n  return previousArticulo || null;\n}\n\n/**\n * Detecta si una referencia es a una ley externa (no al convenio actual)\n */\nfunction isReferenciaExterna(text) {\n  const patronesExternos = [\n    /estatuto\\s+de\\s+(los\\s+)?trabajadores/i,\n    /real\\s+decreto/i,\n    /ley\\s+\\d+\\/\\d+/i,\n    /código\\s+civil/i,\n    /ley\\s+orgánica/i,\n    /constitución/i,\n    /dicho\\s+real\\s+decreto/i,\n    /l\\.?o\\.?\\s+\\d+/i // LO 3/2007, etc.\n  ];\n\n  return patronesExternos.some(patron => patron.test(text));\n}\n\n/**\n * Normaliza el formato del artículo para consistencia\n * Entrada: \"Art. 18.- Vacaciones\" o \"Artículo 18 - Vacaciones\"\n * Salida: \"Art. 18\" (formato corto y consistente)\n */\nfunction normalizeArticulo(articulo) {\n  if (!articulo) return null;\n\n  // Extraer solo el número del artículo\n  const numMatch = articulo.match(/Art(?:ículo|\\.)\\s*(\\d+)/i);\n  if (numMatch) {\n    return `Art. ${numMatch[1]}`;\n  }\n\n  // Si no podemos normalizar, devolver limpio\n  return articulo.replace(/\\*+/g, '').trim();\n}\n\nfunction hasTable(content) {\n  const tablePattern = /\\|[^\\n]+\\|[\\s\\S]*?\\|[^\\n]+\\|/;\n  return tablePattern.test(content);\n}\n\nfunction isNewArticle(content) {\n  // Detecta si el contenido empieza con un nuevo artículo\n  // Patrones: \"### Art. X\", \"### Artículo X\", \"Art. X.-\", \"X.- Título\", \"**Art. X\"\n  return (\n    /^###\\s+Art/im.test(content) ||\n    /^##\\s+Art/im.test(content) ||\n    /^\\*{1,2}Art(?:ículo|\\.)\\s*\\d+/im.test(content) ||\n    /^Art(?:ículo|\\.)\\s*\\d+/im.test(content) ||\n    /^\\d+\\.\\-\\s*\\*{0,2}[A-ZÁÉÍÓÚÑ]/m.test(content)\n  );\n}\n\n/**\n * Divide el contenido en artículos individuales.\n * Busca patrones como \"**Art. X.-\", \"Art. X.-\", \"## Art. X\" etc.\n * y divide el texto en esos puntos.\n */\nfunction splitByArticles(text) {\n  const lines = text.split('\\n');\n  const parts = [];\n  let currentPart = '';\n\n  for (const line of lines) {\n    const startsNewArticle =\n      currentPart.trim() && isNewArticle(line.trimStart());\n\n    if (startsNewArticle) {\n      parts.push(currentPart.trim());\n      currentPart = line;\n      continue;\n    }\n\n    currentPart = currentPart ? `${currentPart}\\n${line}` : line;\n  }\n\n  if (currentPart.trim()) {\n    parts.push(currentPart.trim());\n  }\n\n  // Si no encontró divisiones, devolver el texto original\n  if (parts.length <= 1) {\n    return [text];\n  }\n\n  return parts;\n}\n\nfunction splitByStructure(markdown) {\n  const sections = [];\n\n  // Primero, dividir por artículos (que es la unidad semántica más importante)\n  const articleParts = splitByArticles(markdown);\n\n  for (const part of articleParts) {\n    // Dentro de cada parte, verificar si tiene headings\n    const sectionRegex = /^(#{2,3}\\s+[^\\n]+)([\\s\\S]*?)(?=^#{2,3}\\s+|$)/gm;\n    let match;\n    let lastIndex = 0;\n    let foundSections = false;\n\n    while ((match = sectionRegex.exec(part)) !== null) {\n      foundSections = true;\n      if (match.index > lastIndex) {\n        const beforeText = part.substring(lastIndex, match.index).trim();\n        if (beforeText) sections.push({ type: 'text', content: beforeText });\n      }\n      sections.push({\n        type: 'section',\n        header: match[1],\n        content: match[0].trim()\n      });\n      lastIndex = match.index + match[0].length;\n    }\n\n    if (foundSections && lastIndex < part.length) {\n      const remaining = part.substring(lastIndex).trim();\n      if (remaining) sections.push({ type: 'text', content: remaining });\n    }\n\n    // Si no encontró headings, añadir la parte como texto\n    if (!foundSections && part.trim()) {\n      sections.push({ type: 'text', content: part.trim() });\n    }\n  }\n\n  if (sections.length === 0) {\n    return markdown\n      .split(/\\n\\n+/)\n      .filter(p => p.trim())\n      .map(p => ({ type: 'text', content: p.trim() }));\n  }\n  return sections;\n}\n\nfunction createChunkObject(\n  content,\n  number,\n  convenioId,\n  convenioNombre,\n  seccion,\n  articulo,\n  isTable = false\n) {\n  const tokens = estimateTokens(content);\n  const tipo = isTable ? 'tabla_salarial' : detectChunkType(content);\n  return {\n    contenido: content,\n    metadata: {\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      numero_chunk: number,\n      tokens: tokens,\n      seccion: seccion,\n      articulo: articulo,\n      tipo: tipo,\n      tiene_tabla: isTable,\n      total_chunks: 0\n    }\n  };\n}\n\nfunction getOverlap(text) {\n  if (!text || text.length < OVERLAP_CHARS) return '';\n  const endPortion = text.substring(text.length - OVERLAP_CHARS * 1.5);\n  const sentenceEnd = endPortion.lastIndexOf('. ');\n  if (sentenceEnd > 0) return endPortion.substring(sentenceEnd + 2);\n  const spaceIndex = endPortion.indexOf(' ');\n  if (spaceIndex > 0) return endPortion.substring(spaceIndex + 1);\n  return endPortion;\n}\n\n// ============================================\n// FUNCIÓN PRINCIPAL DE CHUNKING\n// ============================================\n\nfunction chunkMarkdown(markdown, convenioId, convenioNombre) {\n  const chunks = [];\n  let chunkNumber = 0;\n  let currentSeccion = null;\n  let currentArticulo = null;\n  // Track del artículo asociado al chunk que se está acumulando\n  let chunkArticulo = null;\n  let chunkSeccion = null;\n  const sections = splitByStructure(markdown);\n  let currentChunk = '';\n  let currentTokens = 0;\n\n  for (const section of sections) {\n    const sectionContent = section.content || section;\n    const sectionTokens = estimateTokens(sectionContent);\n\n    // Extraer sección y artículo de la sección ACTUAL\n    const tempSeccion = extractSeccion(sectionContent, currentSeccion);\n    if (tempSeccion) currentSeccion = tempSeccion;\n    // Pasar la sección actual para detectar si estamos en un ANEXO\n    const tempArticulo = extractArticulo(sectionContent, currentArticulo, currentSeccion);\n    // Si estamos en anexo, tempArticulo será null y NO heredamos el anterior\n    if (tempArticulo !== undefined) currentArticulo = tempArticulo;\n\n    if (hasTable(sectionContent)) {\n      // Guardar chunk anterior con SU artículo (no el actual)\n      if (currentChunk.trim()) {\n        const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n        const minTokensRequeridos = articuloDelChunk\n          ? MIN_TOKENS_ARTICULO\n          : MIN_TOKENS;\n        if (currentTokens >= minTokensRequeridos) {\n          chunks.push(\n            createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              chunkSeccion || currentSeccion,\n              articuloDelChunk\n            )\n          );\n        }\n        currentChunk = '';\n        currentTokens = 0;\n      }\n      // Tabla usa el artículo actual\n      if (sectionTokens <= MAX_TOKENS * 1.5) {\n        chunks.push(\n          createChunkObject(\n            sectionContent,\n            ++chunkNumber,\n            convenioId,\n            convenioNombre,\n            currentSeccion,\n            currentArticulo,\n            true\n          )\n        );\n      } else {\n        const lines = sectionContent.split('\\n');\n        let tableChunk = '';\n        let tableTokens = 0;\n        for (const line of lines) {\n          const lineTokens = estimateTokens(line);\n          if (tableTokens + lineTokens > MAX_TOKENS && tableChunk) {\n            chunks.push(\n              createChunkObject(\n                tableChunk.trim(),\n                ++chunkNumber,\n                convenioId,\n                convenioNombre,\n                currentSeccion,\n                currentArticulo,\n                true\n              )\n            );\n            tableChunk = line + '\\n';\n            tableTokens = lineTokens;\n          } else {\n            tableChunk += line + '\\n';\n            tableTokens += lineTokens;\n          }\n        }\n        if (tableChunk.trim())\n          chunks.push(\n            createChunkObject(\n              tableChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo,\n              true\n            )\n          );\n      }\n      chunkArticulo = null;\n      chunkSeccion = null;\n      continue;\n    }\n\n    // Si es un nuevo artículo y ya tenemos contenido, SIEMPRE cerrar el chunk anterior.\n    // Los artículos son unidades semánticas y deben mantenerse separados.\n    // Usamos MIN_TOKENS_ARTICULO (más bajo) si el chunk contiene un artículo identificado.\n    if (isNewArticle(sectionContent) && currentChunk.trim()) {\n      const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n      // Si el chunk tiene un artículo identificado, usar umbral más bajo\n      const minTokensRequeridos = articuloDelChunk\n        ? MIN_TOKENS_ARTICULO\n        : MIN_TOKENS;\n\n      if (currentTokens >= minTokensRequeridos) {\n        chunks.push(\n          createChunkObject(\n            currentChunk.trim(),\n            ++chunkNumber,\n            convenioId,\n            convenioNombre,\n            chunkSeccion || currentSeccion,\n            articuloDelChunk\n          )\n        );\n      }\n      // Siempre iniciar nuevo chunk con el artículo actual (no fusionar artículos distintos)\n      currentChunk = sectionContent;\n      currentTokens = sectionTokens;\n      chunkArticulo = currentArticulo;\n      chunkSeccion = currentSeccion;\n      continue;\n    }\n\n    if (currentTokens + sectionTokens <= TARGET_TOKENS) {\n      // Si es el inicio del chunk, guardar el artículo de esta sección\n      if (!currentChunk) {\n        chunkArticulo = currentArticulo;\n        chunkSeccion = currentSeccion;\n      }\n      currentChunk += (currentChunk ? '\\n\\n' : '') + sectionContent;\n      currentTokens += sectionTokens;\n      continue;\n    }\n\n    if (sectionTokens >= MIN_TOKENS && sectionTokens <= MAX_TOKENS) {\n      // Guardar chunk anterior con SU artículo\n      if (currentChunk.trim()) {\n        const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n        const minTokensRequeridos = articuloDelChunk\n          ? MIN_TOKENS_ARTICULO\n          : MIN_TOKENS;\n        if (currentTokens >= minTokensRequeridos) {\n          chunks.push(\n            createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              chunkSeccion || currentSeccion,\n              articuloDelChunk\n            )\n          );\n        }\n      }\n      // La sección actual va como chunk independiente con su propio artículo\n      chunks.push(\n        createChunkObject(\n          sectionContent,\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        )\n      );\n      currentChunk = '';\n      currentTokens = 0;\n      chunkArticulo = null;\n      chunkSeccion = null;\n      continue;\n    }\n\n    if (sectionTokens > MAX_TOKENS) {\n      // Guardar chunk anterior con SU artículo\n      if (currentChunk.trim()) {\n        const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n        const minTokensRequeridos = articuloDelChunk\n          ? MIN_TOKENS_ARTICULO\n          : MIN_TOKENS;\n        if (currentTokens >= minTokensRequeridos) {\n          chunks.push(\n            createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              chunkSeccion || currentSeccion,\n              articuloDelChunk\n            )\n          );\n        }\n        currentChunk = '';\n        currentTokens = 0;\n      }\n      // Iniciar nuevo chunk con el artículo de esta sección\n      chunkArticulo = currentArticulo;\n      chunkSeccion = currentSeccion;\n\n      const paragraphs = sectionContent.split(/\\n\\n+/);\n      for (const para of paragraphs) {\n        const paraTokens = estimateTokens(para);\n        if (currentTokens + paraTokens <= TARGET_TOKENS) {\n          currentChunk += (currentChunk ? '\\n\\n' : '') + para;\n          currentTokens += paraTokens;\n        } else {\n          if (currentChunk.trim()) {\n            const articuloDelChunk = extractArticulo(\n              currentChunk,\n              chunkArticulo,\n              chunkSeccion || currentSeccion\n            );\n            const minTokensRequeridos = articuloDelChunk\n              ? MIN_TOKENS_ARTICULO\n              : MIN_TOKENS;\n            if (currentTokens >= minTokensRequeridos) {\n              chunks.push(\n                createChunkObject(\n                  currentChunk.trim(),\n                  ++chunkNumber,\n                  convenioId,\n                  convenioNombre,\n                  chunkSeccion || currentSeccion,\n                  articuloDelChunk\n                )\n              );\n            }\n          }\n          const overlap = getOverlap(currentChunk);\n          currentChunk = overlap + (overlap ? '\\n\\n' : '') + para;\n          currentTokens = estimateTokens(currentChunk);\n          // Mantener el artículo para chunks que continúan\n        }\n      }\n    }\n  }\n\n  // Último chunk - usar umbral más bajo si contiene artículo\n  if (currentChunk.trim()) {\n    const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n    const minTokensRequeridos = articuloDelChunk\n      ? MIN_TOKENS_ARTICULO\n      : MIN_TOKENS;\n\n    if (currentTokens >= minTokensRequeridos) {\n      chunks.push(\n        createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          chunkSeccion || currentSeccion,\n          articuloDelChunk\n        )\n      );\n    }\n  }\n\n  const totalChunks = chunks.length;\n  chunks.forEach(c => (c.metadata.total_chunks = totalChunks));\n  return chunks;\n}\n\n// ============================================\n// EJECUCIÓN PRINCIPAL\n// ============================================\n\nconst inputData = $input.first().json;\nconst convenioData = Array.isArray(inputData) ? inputData[0] : inputData;\n\nif (!convenioData || !convenioData.id) {\n  throw new Error(\n    'No se pudo obtener el ID del convenio guardado. Data: ' +\n      JSON.stringify(inputData)\n  );\n}\n\nconst convenioId = convenioData.id;\nconst convenioNombre = convenioData.nombre;\nconst markdown = convenioData.markdown_completo || '';\n\nif (!markdown || markdown.length < 100) {\n  throw new Error(\n    'Markdown vacío o muy corto para procesar. Longitud: ' + markdown.length\n  );\n}\n\nconst chunks = chunkMarkdown(markdown, convenioId, convenioNombre);\n\nconst stats = {\n  total_chunks: chunks.length,\n  avg_tokens: chunks.length > 0\n    ? Math.round(chunks.reduce((sum, c) => sum + c.metadata.tokens, 0) / chunks.length)\n    : 0,\n  min_tokens: chunks.length > 0\n    ? Math.min(...chunks.map(c => c.metadata.tokens))\n    : 0,\n  max_tokens: chunks.length > 0\n    ? Math.max(...chunks.map(c => c.metadata.tokens))\n    : 0,\n  con_tablas: chunks.filter(c => c.metadata.tiene_tabla).length,\n  tipos: {}\n};\n\nchunks.forEach(c => {\n  stats.tipos[c.metadata.tipo] = (stats.tipos[c.metadata.tipo] || 0) + 1;\n});\n\nreturn chunks.map((chunk, index) => ({\n  json: {\n    contenido: chunk.contenido,\n    convenio_id: chunk.metadata.convenio_id,\n    metadata: chunk.metadata,\n    ...(index === 0 ? { chunking_stats: stats } : {})\n  }\n}));\n"
+        "jsCode": "// ============================================\n// NODO: Chunk Markdown\n// WORKFLOW: Workrules Convenios - Indexer\n// TIPO: Code (JavaScript) v2\n// ============================================\n\n// ============================================\n// CONFIGURACIÓN\n// ============================================\nconst TARGET_TOKENS = 450; // Target ideal\nconst MAX_TOKENS = 600; // Límite duro\nconst MIN_TOKENS = 100; // Mínimo para chunk válido (contenido genérico)\nconst MIN_TOKENS_ARTICULO = 25; // Mínimo para artículos (pueden ser muy cortos pero son unidades semánticas)\nconst OVERLAP_CHARS = 200; // ~50 tokens de overlap\n\n// ============================================\n// FUNCIONES AUXILIARES\n// ============================================\n\nfunction estimateTokens(text) {\n  if (!text) return 0;\n  const words = text.split(/\\s+/).length;\n  const chars = text.length;\n  return Math.round((chars / 4 + words * 1.3) / 2);\n}\n\nfunction detectChunkType(content) {\n  if (/\\|.*\\|/.test(content) && /salario|retribuc|sueldo|euro|€/i.test(content))\n    return 'tabla_salarial';\n  if (/\\|.*\\|/.test(content)) return 'tabla';\n  if (/se entiende por|a los efectos|definición|concepto/i.test(content))\n    return 'definicion';\n  if (\n    /procedimiento|solicitud|plazo de|días (hábiles|naturales)/i.test(content)\n  )\n    return 'procedimiento';\n  if (/jornada|horario|descanso|vacaciones|permiso/i.test(content))\n    return 'jornada';\n  if (/falta (leve|grave|muy grave)|sanción|despido/i.test(content))\n    return 'sanciones';\n  return 'normativa';\n}\n\nfunction extractSeccion(content, previousSeccion) {\n  const match = content.match(/^##\\s+(.+)$/m);\n  if (match) return match[1].trim();\n  return previousSeccion || null;\n}\n\n/**\n * Detecta si estamos en una sección de ANEXO (no tiene artículos numerados)\n * Los anexos incluyen: tablas salariales, disposiciones, categorías profesionales, etc.\n */\nfunction isAnexoSection(seccion) {\n  if (!seccion) return false;\n  const seccionLower = seccion.toLowerCase();\n  return (\n    seccionLower.includes('anexo') ||\n    seccionLower.includes('tabla') ||\n    seccionLower.includes('disposicion') ||\n    seccionLower.includes('clasificación profesional') ||\n    seccionLower.includes('clasificacion profesional') ||\n    seccionLower.includes('categorías profesionales') ||\n    seccionLower.includes('categorias profesionales') ||\n    seccionLower.includes('niveles retributivos') ||\n    seccionLower.includes('grupos profesionales')\n  );\n}\n\nfunction extractArticulo(content, previousArticulo, currentSeccion) {\n  // ============================================\n  // EXTRACCIÓN DE ARTÍCULOS DEL CONVENIO\n  // ============================================\n  // IMPORTANTE: Solo capturamos artículos QUE PERTENECEN AL CONVENIO,\n  // NO referencias a otras leyes (Estatuto de los Trabajadores, etc.)\n\n  // Patrón 1: Markdown heading ### Art. X o ### Artículo X (más confiable)\n  // Ejemplo: \"### Art. 18.- Vacaciones\"\n  const matchH3 = content.match(\n    /^###\\s+(Art(?:ículo|\\.)\\s*\\d+[º°]?[\\.\\-]?\\s*[^\\n]*)/im\n  );\n  if (matchH3) {\n    return normalizeArticulo(matchH3[1].trim());\n  }\n\n  // Patrón 2: Negrita markdown **Art. X** o **Artículo X**\n  // Ejemplo: \"**Art. 8.- Período de prueba**\"\n  const matchBold = content.match(\n    /^\\*{1,2}(Art(?:ículo|\\.)\\s*\\d+[º°]?[\\.\\-]?\\s*[^\\n*]*)\\*{0,2}/im\n  );\n  if (matchBold) {\n    const fullMatch = matchBold[1];\n    if (!isReferenciaExterna(fullMatch)) {\n      return normalizeArticulo(fullMatch.trim());\n    }\n  }\n\n  // Patrón 3: Artículo al INICIO de línea (encabezado sin markdown)\n  // Ejemplo: \"Art. 18.- Vacaciones\" o \"Artículo 18 - Vacaciones\"\n  // IMPORTANTE: Debe estar al inicio de línea (^) para evitar capturar referencias internas\n  const artStartMatch = content.match(\n    /^(Art(?:ículo|\\.)\\s*(\\d+)[º°]?[\\.\\-]?\\s*[–\\-:]?\\s*([A-ZÁÉÍÓÚÑ][^\\n]*))/im\n  );\n  if (artStartMatch) {\n    // Verificar que NO es una referencia a otra ley\n    const fullMatch = artStartMatch[1];\n    if (!isReferenciaExterna(fullMatch)) {\n      return normalizeArticulo(fullMatch.trim());\n    }\n  }\n\n  // Patrón 3: \"14.- Jornada\" o \"14.- **Jornada**\" (formato BOCM)\n  // Solo al inicio de línea para evitar falsos positivos\n  const bocmMatch = content.match(\n    /^(\\d+)\\.\\-\\s*\\*{0,2}[A-ZÁÉÍÓÚÑ][^\\n*]{2,50}\\*{0,2}/m\n  );\n  if (bocmMatch) {\n    const num = bocmMatch[1];\n    // Solo aceptar si el número es razonable (1-200) para artículos de convenio\n    if (parseInt(num) >= 1 && parseInt(num) <= 200) {\n      return `Art. ${num}`;\n    }\n  }\n\n  // Patrón 4: \"Artículo 14 - Descansos\" (con guión y espacio)\n  const articuloConGuion = content.match(\n    /^(Artículo\\s+(\\d+)\\s*[\\-–]\\s*([A-ZÁÉÍÓÚÑ][^\\n]*))/im\n  );\n  if (articuloConGuion) {\n    const num = articuloConGuion[2];\n    return `Art. ${num}`;\n  }\n\n  // Si estamos en una sección de ANEXO, NO heredar artículos anteriores\n  // Los anexos no tienen artículos numerados, usar null para que se use la sección\n  if (isAnexoSection(currentSeccion)) {\n    return null;\n  }\n\n  // Si no encuentra nada, heredar del anterior\n  return previousArticulo || null;\n}\n\n/**\n * Detecta si una referencia es a una ley externa (no al convenio actual)\n */\nfunction isReferenciaExterna(text) {\n  const patronesExternos = [\n    /estatuto\\s+de\\s+(los\\s+)?trabajadores/i,\n    /real\\s+decreto/i,\n    /ley\\s+\\d+\\/\\d+/i,\n    /código\\s+civil/i,\n    /ley\\s+orgánica/i,\n    /constitución/i,\n    /dicho\\s+real\\s+decreto/i,\n    /l\\.?o\\.?\\s+\\d+/i // LO 3/2007, etc.\n  ];\n\n  return patronesExternos.some(patron => patron.test(text));\n}\n\n/**\n * Normaliza el formato del artículo para consistencia\n * Entrada: \"Art. 18.- Vacaciones\" o \"Artículo 18 - Vacaciones\"\n * Salida: \"Art. 18\" (formato corto y consistente)\n */\nfunction normalizeArticulo(articulo) {\n  if (!articulo) return null;\n\n  // Extraer solo el número del artículo\n  const numMatch = articulo.match(/Art(?:ículo|\\.)\\s*(\\d+)/i);\n  if (numMatch) {\n    return `Art. ${numMatch[1]}`;\n  }\n\n  // Si no podemos normalizar, devolver limpio\n  return articulo.replace(/\\*+/g, '').trim();\n}\n\nfunction hasTable(content) {\n  const tablePattern = /\\|[^\\n]+\\|[\\s\\S]*?\\|[^\\n]+\\|/;\n  return tablePattern.test(content);\n}\n\nfunction isNewArticle(content) {\n  // Detecta si el contenido empieza con un nuevo artículo\n  // Patrones: \"### Art. X\", \"### Artículo X\", \"Art. X.-\", \"X.- Título\", \"**Art. X\"\n  return (\n    /^###\\s+Art/im.test(content) ||\n    /^##\\s+Art/im.test(content) ||\n    /^\\*{1,2}Art(?:ículo|\\.)\\s*\\d+/im.test(content) ||\n    /^Art(?:ículo|\\.)\\s*\\d+/im.test(content) ||\n    /^\\d+\\.\\-\\s*\\*{0,2}[A-ZÁÉÍÓÚÑ]/m.test(content)\n  );\n}\n\n/**\n * Divide el contenido en artículos individuales.\n * Busca patrones como \"**Art. X.-\", \"Art. X.-\", \"## Art. X\" etc.\n * y divide el texto en esos puntos.\n */\nfunction splitByArticles(text) {\n  const lines = text.split('\\n');\n  const parts = [];\n  let currentPart = '';\n\n  for (const line of lines) {\n    const startsNewArticle =\n      currentPart.trim() && isNewArticle(line.trimStart());\n\n    if (startsNewArticle) {\n      parts.push(currentPart.trim());\n      currentPart = line;\n      continue;\n    }\n\n    currentPart = currentPart ? `${currentPart}\\n${line}` : line;\n  }\n\n  if (currentPart.trim()) {\n    parts.push(currentPart.trim());\n  }\n\n  // Si no encontró divisiones, devolver el texto original\n  if (parts.length <= 1) {\n    return [text];\n  }\n\n  return parts;\n}\n\nfunction splitByStructure(markdown) {\n  const sections = [];\n\n  // Primero, dividir por artículos (que es la unidad semántica más importante)\n  const articleParts = splitByArticles(markdown);\n\n  for (const part of articleParts) {\n    // Dentro de cada parte, verificar si tiene headings\n    const sectionRegex = /^(#{2,3}\\s+[^\\n]+)([\\s\\S]*?)(?=^#{2,3}\\s+|$)/gm;\n    let match;\n    let lastIndex = 0;\n    let foundSections = false;\n\n    while ((match = sectionRegex.exec(part)) !== null) {\n      foundSections = true;\n      if (match.index > lastIndex) {\n        const beforeText = part.substring(lastIndex, match.index).trim();\n        if (beforeText) sections.push({ type: 'text', content: beforeText });\n      }\n      sections.push({\n        type: 'section',\n        header: match[1],\n        content: match[0].trim()\n      });\n      lastIndex = match.index + match[0].length;\n    }\n\n    if (foundSections && lastIndex < part.length) {\n      const remaining = part.substring(lastIndex).trim();\n      if (remaining) sections.push({ type: 'text', content: remaining });\n    }\n\n    // Si no encontró headings, añadir la parte como texto\n    if (!foundSections && part.trim()) {\n      sections.push({ type: 'text', content: part.trim() });\n    }\n  }\n\n  if (sections.length === 0) {\n    return markdown\n      .split(/\\n\\n+/)\n      .filter(p => p.trim())\n      .map(p => ({ type: 'text', content: p.trim() }));\n  }\n  return sections;\n}\n\nfunction createChunkObject(\n  content,\n  number,\n  convenioId,\n  convenioNombre,\n  seccion,\n  articulo,\n  isTable = false\n) {\n  const tokens = estimateTokens(content);\n  const tipo = isTable ? 'tabla_salarial' : detectChunkType(content);\n  return {\n    contenido: content,\n    metadata: {\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      numero_chunk: number,\n      tokens: tokens,\n      seccion: seccion,\n      articulo: articulo,\n      tipo: tipo,\n      tiene_tabla: isTable,\n      total_chunks: 0\n    }\n  };\n}\n\nfunction getOverlap(text) {\n  if (!text || text.length < OVERLAP_CHARS) return '';\n  const endPortion = text.substring(text.length - OVERLAP_CHARS * 1.5);\n  const sentenceEnd = endPortion.lastIndexOf('. ');\n  if (sentenceEnd > 0) return endPortion.substring(sentenceEnd + 2);\n  const spaceIndex = endPortion.indexOf(' ');\n  if (spaceIndex > 0) return endPortion.substring(spaceIndex + 1);\n  return endPortion;\n}\n\n// ============================================\n// FUNCIÓN PRINCIPAL DE CHUNKING\n// ============================================\n\nfunction chunkMarkdown(markdown, convenioId, convenioNombre) {\n  const chunks = [];\n  let chunkNumber = 0;\n  let currentSeccion = null;\n  let currentArticulo = null;\n  // Track del artículo asociado al chunk que se está acumulando\n  let chunkArticulo = null;\n  let chunkSeccion = null;\n  const sections = splitByStructure(markdown);\n  let currentChunk = '';\n  let currentTokens = 0;\n\n  for (const section of sections) {\n    const sectionContent = section.content || section;\n    const sectionTokens = estimateTokens(sectionContent);\n\n    // Extraer sección y artículo de la sección ACTUAL\n    const tempSeccion = extractSeccion(sectionContent, currentSeccion);\n    if (tempSeccion) currentSeccion = tempSeccion;\n    // Pasar la sección actual para detectar si estamos en un ANEXO\n    const tempArticulo = extractArticulo(sectionContent, currentArticulo, currentSeccion);\n    // Si estamos en anexo, tempArticulo será null y NO heredamos el anterior\n    if (tempArticulo !== undefined) currentArticulo = tempArticulo;\n\n    if (hasTable(sectionContent)) {\n      // Guardar chunk anterior con SU artículo (no el actual)\n      if (currentChunk.trim()) {\n        const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n        const minTokensRequeridos = articuloDelChunk\n          ? MIN_TOKENS_ARTICULO\n          : MIN_TOKENS;\n        if (currentTokens >= minTokensRequeridos) {\n          chunks.push(\n            createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              chunkSeccion || currentSeccion,\n              articuloDelChunk\n            )\n          );\n        }\n        currentChunk = '';\n        currentTokens = 0;\n      }\n      // Tabla usa el artículo actual\n      if (sectionTokens <= MAX_TOKENS * 1.5) {\n        chunks.push(\n          createChunkObject(\n            sectionContent,\n            ++chunkNumber,\n            convenioId,\n            convenioNombre,\n            currentSeccion,\n            currentArticulo,\n            true\n          )\n        );\n      } else {\n        const lines = sectionContent.split('\\n');\n        let tableChunk = '';\n        let tableTokens = 0;\n        for (const line of lines) {\n          const lineTokens = estimateTokens(line);\n          if (tableTokens + lineTokens > MAX_TOKENS && tableChunk) {\n            chunks.push(\n              createChunkObject(\n                tableChunk.trim(),\n                ++chunkNumber,\n                convenioId,\n                convenioNombre,\n                currentSeccion,\n                currentArticulo,\n                true\n              )\n            );\n            tableChunk = line + '\\n';\n            tableTokens = lineTokens;\n          } else {\n            tableChunk += line + '\\n';\n            tableTokens += lineTokens;\n          }\n        }\n        if (tableChunk.trim())\n          chunks.push(\n            createChunkObject(\n              tableChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              currentSeccion,\n              currentArticulo,\n              true\n            )\n          );\n      }\n      chunkArticulo = null;\n      chunkSeccion = null;\n      continue;\n    }\n\n    // Si es un nuevo artículo y ya tenemos contenido, SIEMPRE cerrar el chunk anterior.\n    // Los artículos son unidades semánticas y deben mantenerse separados.\n    // Usamos MIN_TOKENS_ARTICULO (más bajo) si el chunk contiene un artículo identificado.\n    if (isNewArticle(sectionContent) && currentChunk.trim()) {\n      const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n      // Si el chunk tiene un artículo identificado, usar umbral más bajo\n      const minTokensRequeridos = articuloDelChunk\n        ? MIN_TOKENS_ARTICULO\n        : MIN_TOKENS;\n\n      if (currentTokens >= minTokensRequeridos) {\n        chunks.push(\n          createChunkObject(\n            currentChunk.trim(),\n            ++chunkNumber,\n            convenioId,\n            convenioNombre,\n            chunkSeccion || currentSeccion,\n            articuloDelChunk\n          )\n        );\n      }\n      // Siempre iniciar nuevo chunk con el artículo actual (no fusionar artículos distintos)\n      currentChunk = sectionContent;\n      currentTokens = sectionTokens;\n      chunkArticulo = currentArticulo;\n      chunkSeccion = currentSeccion;\n      continue;\n    }\n\n    if (currentTokens + sectionTokens <= TARGET_TOKENS) {\n      // Si es el inicio del chunk, guardar el artículo de esta sección\n      if (!currentChunk) {\n        chunkArticulo = currentArticulo;\n        chunkSeccion = currentSeccion;\n      }\n      currentChunk += (currentChunk ? '\\n\\n' : '') + sectionContent;\n      currentTokens += sectionTokens;\n      continue;\n    }\n\n    if (sectionTokens >= MIN_TOKENS && sectionTokens <= MAX_TOKENS) {\n      // Guardar chunk anterior con SU artículo\n      if (currentChunk.trim()) {\n        const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n        const minTokensRequeridos = articuloDelChunk\n          ? MIN_TOKENS_ARTICULO\n          : MIN_TOKENS;\n        if (currentTokens >= minTokensRequeridos) {\n          chunks.push(\n            createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              chunkSeccion || currentSeccion,\n              articuloDelChunk\n            )\n          );\n        }\n      }\n      // La sección actual va como chunk independiente con su propio artículo\n      chunks.push(\n        createChunkObject(\n          sectionContent,\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          currentSeccion,\n          currentArticulo\n        )\n      );\n      currentChunk = '';\n      currentTokens = 0;\n      chunkArticulo = null;\n      chunkSeccion = null;\n      continue;\n    }\n\n    if (sectionTokens > MAX_TOKENS) {\n      // Guardar chunk anterior con SU artículo\n      if (currentChunk.trim()) {\n        const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n        const minTokensRequeridos = articuloDelChunk\n          ? MIN_TOKENS_ARTICULO\n          : MIN_TOKENS;\n        if (currentTokens >= minTokensRequeridos) {\n          chunks.push(\n            createChunkObject(\n              currentChunk.trim(),\n              ++chunkNumber,\n              convenioId,\n              convenioNombre,\n              chunkSeccion || currentSeccion,\n              articuloDelChunk\n            )\n          );\n        }\n        currentChunk = '';\n        currentTokens = 0;\n      }\n      // Iniciar nuevo chunk con el artículo de esta sección\n      chunkArticulo = currentArticulo;\n      chunkSeccion = currentSeccion;\n\n      const paragraphs = sectionContent.split(/\\n\\n+/);\n      for (const para of paragraphs) {\n        const paraTokens = estimateTokens(para);\n        if (currentTokens + paraTokens <= TARGET_TOKENS) {\n          currentChunk += (currentChunk ? '\\n\\n' : '') + para;\n          currentTokens += paraTokens;\n        } else {\n          if (currentChunk.trim()) {\n            const articuloDelChunk = extractArticulo(\n              currentChunk,\n              chunkArticulo,\n              chunkSeccion || currentSeccion\n            );\n            const minTokensRequeridos = articuloDelChunk\n              ? MIN_TOKENS_ARTICULO\n              : MIN_TOKENS;\n            if (currentTokens >= minTokensRequeridos) {\n              chunks.push(\n                createChunkObject(\n                  currentChunk.trim(),\n                  ++chunkNumber,\n                  convenioId,\n                  convenioNombre,\n                  chunkSeccion || currentSeccion,\n                  articuloDelChunk\n                )\n              );\n            }\n          }\n          const overlap = getOverlap(currentChunk);\n          currentChunk = overlap + (overlap ? '\\n\\n' : '') + para;\n          currentTokens = estimateTokens(currentChunk);\n          // Mantener el artículo para chunks que continúan\n        }\n      }\n    }\n  }\n\n  // Último chunk - usar umbral más bajo si contiene artículo\n  if (currentChunk.trim()) {\n    const articuloDelChunk = extractArticulo(currentChunk, chunkArticulo, chunkSeccion || currentSeccion);\n    const minTokensRequeridos = articuloDelChunk\n      ? MIN_TOKENS_ARTICULO\n      : MIN_TOKENS;\n\n    if (currentTokens >= minTokensRequeridos) {\n      chunks.push(\n        createChunkObject(\n          currentChunk.trim(),\n          ++chunkNumber,\n          convenioId,\n          convenioNombre,\n          chunkSeccion || currentSeccion,\n          articuloDelChunk\n        )\n      );\n    }\n  }\n\n  const totalChunks = chunks.length;\n  chunks.forEach(c => (c.metadata.total_chunks = totalChunks));\n  return chunks;\n}\n\n// ============================================\n// EJECUCIÓN PRINCIPAL\n// ============================================\n\n// Leemos directamente del nodo 'Save md in supabase1' (PATCH con Prefer: return=representation\n// devuelve un array con el row del convenio). No usamos $input porque el nodo previo\n// (Notify Progress Markdown) tiene continueOnFail y puede pasar un objeto de error.\nconst savedData = $('Save md in supabase1').first().json;\nconst convenioData = Array.isArray(savedData) ? savedData[0] : savedData;\n\nif (!convenioData || !convenioData.id) {\n  throw new Error(\n    'No se pudo obtener el ID del convenio guardado. Data: ' +\n      JSON.stringify(savedData)\n  );\n}\n\nconst convenioId = convenioData.id;\nconst convenioNombre = convenioData.nombre;\nconst markdown = convenioData.markdown_completo || '';\n\nif (!markdown || markdown.length < 100) {\n  throw new Error(\n    'Markdown vacío o muy corto para procesar. Longitud: ' + markdown.length\n  );\n}\n\nconst chunks = chunkMarkdown(markdown, convenioId, convenioNombre);\n\nconst stats = {\n  total_chunks: chunks.length,\n  avg_tokens: chunks.length > 0\n    ? Math.round(chunks.reduce((sum, c) => sum + c.metadata.tokens, 0) / chunks.length)\n    : 0,\n  min_tokens: chunks.length > 0\n    ? Math.min(...chunks.map(c => c.metadata.tokens))\n    : 0,\n  max_tokens: chunks.length > 0\n    ? Math.max(...chunks.map(c => c.metadata.tokens))\n    : 0,\n  con_tablas: chunks.filter(c => c.metadata.tiene_tabla).length,\n  tipos: {}\n};\n\nchunks.forEach(c => {\n  stats.tipos[c.metadata.tipo] = (stats.tipos[c.metadata.tipo] || 0) + 1;\n});\n\nreturn chunks.map((chunk, index) => ({\n  json: {\n    contenido: chunk.contenido,\n    convenio_id: chunk.metadata.convenio_id,\n    metadata: chunk.metadata,\n    ...(index === 0 ? { chunking_stats: stats } : {})\n  }\n}));\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [16032, 1632],
-      "id": "5d348e3c-02b1-45f4-bc93-b1e31f92b921",
+      "position": [25088, 3312],
+      "id": "78fa6a59-acae-4ada-91d3-1f8d3cb015bc",
       "name": "Chunk Markdown"
     },
     {
@@ -312,8 +312,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [16288, 1632],
-      "id": "8dc1007a-93de-4a8b-9fee-d24370877254",
+      "position": [25344, 3312],
+      "id": "2ad6e9db-b142-4522-bbf0-0debcf7c8c8c",
       "name": "Prepare Chunks for Insert"
     },
     {
@@ -322,8 +322,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [16528, 1632],
-      "id": "a29d8d77-e42b-454c-886c-ff43f95551ed",
+      "position": [25584, 3312],
+      "id": "6529fb1f-e9b4-41af-9ac5-34829d1f763d",
       "name": "Prepare Batch for OpenAI",
       "notes": "NUEVO I1.8: Prepara payload para OpenAI Embeddings API"
     },
@@ -355,8 +355,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [16768, 1632],
-      "id": "8e81d1d3-87ab-432d-86e1-5180e1e8153d",
+      "position": [25824, 3312],
+      "id": "54dd03f5-498b-4921-82a8-de711036eda7",
       "name": "HTTP Request OpenAI Embeddings",
       "credentials": {
         "openAiApi": {
@@ -372,8 +372,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [17008, 1632],
-      "id": "36b854fc-4da8-4106-ba14-ac4209a524b6",
+      "position": [26064, 3312],
+      "id": "f2f90783-8cb8-491e-a92a-40d25cf65275",
       "name": "Merge Embeddings with Chunks",
       "notes": "NUEVO I1.8: Combina embeddings con chunks y valida dimensiones"
     },
@@ -403,8 +403,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [17248, 1632],
-      "id": "1870de35-09a7-4803-841e-35cac3076e5c",
+      "position": [26304, 3312],
+      "id": "d3d1b206-c1dd-4eca-8af8-73157b12b982",
       "name": "Bulk Insert Chunks",
       "credentials": {
         "supabaseApi": {
@@ -419,19 +419,19 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [17488, 1632],
-      "id": "6f04f8e5-f131-4615-b1e8-f5d5b0c6e217",
+      "position": [26544, 3312],
+      "id": "995c1d0b-7f20-47bf-9bad-e650bc2f6b1a",
       "name": "Chunks Branch Complete",
       "notes": "Pasa datos al merge para que ambas ramas completen"
     },
     {
       "parameters": {
-        "jsCode": "// Obtener la respuesta de LlamaParse\nconst llamaParseResult = $input.first().json;\n\n// Extraer el markdown\nconst markdown = llamaParseResult.markdown || \n                 llamaParseResult.text;\n\n// Validar que tenemos contenido\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No se pudo extraer el markdown de LlamaParse. Respuesta vacía.');\n}\n\n// Limpiar y normalizar el markdown\nconst cleanMarkdown = markdown\n  .replace(/\\n{3,}/g, '\\n\\n')      // Normalizar múltiples saltos\n  .replace(/\\r\\n/g, '\\n')          // Normalizar line endings\n  .trim();\n\n// Obtener datos del webhook (están dentro de body)\nconst webhookData = $('Webhook').first().json.body;\n\n// Retornar datos estructurados\nreturn {\n  json: {\n    markdown_completo: cleanMarkdown,\n    longitud: cleanMarkdown.length,\n    convenio_id: webhookData.convenio_id,\n    nombre: webhookData.nombre_archivo,\n    // Campos opcionales (pueden no venir en el payload)\n    ambito: webhookData.ambito || null,\n    fecha_vigencia: webhookData.fecha_vigencia || null\n  }\n};"
+        "jsCode": "// Leer la respuesta de LlamaParse directamente del nodo upstream\n// (no usamos $input porque Notify Progress Parsing se interpone y\n// con continueOnFail podría enviar una respuesta-error).\nconst llamaParseResult = $('Get Markdown Result').first().json;\n\n// Extraer el markdown\nconst markdown = llamaParseResult.markdown || \n                 llamaParseResult.text;\n\n// Validar que tenemos contenido\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No se pudo extraer el markdown de LlamaParse. Respuesta vacía.');\n}\n\n// Limpiar y normalizar el markdown\nconst cleanMarkdown = markdown\n  .replace(/\\n{3,}/g, '\\n\\n')      // Normalizar múltiples saltos\n  .replace(/\\r\\n/g, '\\n')          // Normalizar line endings\n  .trim();\n\n// Obtener datos del webhook (están dentro de body)\nconst webhookData = $('Webhook').first().json.body;\n\n// Retornar datos estructurados\nreturn {\n  json: {\n    markdown_completo: cleanMarkdown,\n    longitud: cleanMarkdown.length,\n    convenio_id: webhookData.convenio_id,\n    nombre: webhookData.nombre_archivo,\n    // Campos opcionales (pueden no venir en el payload)\n    ambito: webhookData.ambito || null,\n    fecha_vigencia: webhookData.fecha_vigencia || null\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [15440, 1632],
-      "id": "a900ce8d-3516-49bf-b210-deaf0ddb9e25",
+      "position": [24496, 3312],
+      "id": "21a2b63a-1845-4692-8c62-8b0249fd836a",
       "name": "Extract and clean md1"
     },
     {
@@ -440,8 +440,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [15520, 1632],
-      "id": "f1a2c3d4-1111-4aaa-9000-000000000001",
+      "position": [24576, 3312],
+      "id": "2927f5d1-b9b7-4011-807a-2a38e7a66256",
       "name": "Heuristic Score",
       "notes": "Capa 3: keyword scoring rápido antes de gastar Claude"
     },
@@ -451,8 +451,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [15600, 1632],
-      "id": "f1a2c3d4-1111-4aaa-9000-000000000002",
+      "position": [24656, 3312],
+      "id": "2b801bca-de17-4eff-9141-e90f89f8205a",
       "name": "Prepare Classifier Request",
       "notes": "Capa 2: prepara payload para Claude Haiku"
     },
@@ -478,8 +478,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [15680, 1632],
-      "id": "f1a2c3d4-1111-4aaa-9000-000000000003",
+      "position": [24736, 3312],
+      "id": "3793df84-5478-4e83-af57-3184830ac21b",
       "name": "HTTP Claude Classifier",
       "credentials": {
         "anthropicApi": {
@@ -496,8 +496,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [15760, 1632],
-      "id": "f1a2c3d4-1111-4aaa-9000-000000000004",
+      "position": [24816, 3312],
+      "id": "9005a784-46af-4dad-a1a8-9047c9614cc9",
       "name": "Parse Classification",
       "notes": "Capa 2: decide aceptar/rechazar según categoría, confianza y visibilidad"
     },
@@ -527,8 +527,8 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [15840, 1632],
-      "id": "f1a2c3d4-1111-4aaa-9000-000000000005",
+      "position": [24896, 3312],
+      "id": "5fdc2891-e2d9-4b7c-9351-8d0a48cbcfc7",
       "name": "Is Document Acceptable?"
     },
     {
@@ -557,8 +557,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [15920, 1856],
-      "id": "f1a2c3d4-1111-4aaa-9000-000000000006",
+      "position": [24976, 3536],
+      "id": "2982d0fc-921a-4e5e-b590-0737687e8cc6",
       "name": "Mark Rechazado",
       "credentials": {
         "supabaseApi": {
@@ -594,8 +594,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [16000, 1632],
-      "id": "4c958bab-cc5a-410a-9fae-facc71767d3c",
+      "position": [25056, 3312],
+      "id": "1392c2bc-29e6-4ccd-8a23-70001f8f021b",
       "name": "Save md in supabase1",
       "retryOnFail": false,
       "notesInFlow": false,
@@ -612,8 +612,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [16032, 2208],
-      "id": "4943b8b9-17cb-4339-bd11-c04b815b95a3",
+      "position": [25088, 3888],
+      "id": "9e66ef60-0189-4135-abb1-9bb3f0e8bfa9",
       "name": "Prepare Claude Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara el payload para Claude API"
@@ -640,8 +640,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [16272, 2208],
-      "id": "56d4d192-9911-41b7-b8e5-32aab0d89a49",
+      "position": [25328, 3888],
+      "id": "96075012-efb2-45b2-8770-091de5c210cc",
       "name": "HTTP Claude API",
       "credentials": {
         "anthropicApi": {
@@ -658,8 +658,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [16272, 2496],
-      "id": "8a29b596-da54-4048-b318-8279ccfadbd6",
+      "position": [25328, 4176],
+      "id": "9212de00-dc87-47de-a4b9-fc4960f1cc18",
       "name": "Extract Perfil Claude",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Claude API"
@@ -670,8 +670,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [16512, 2496],
-      "id": "25d6f54e-9fe2-4ecc-8fc0-252984b92f60",
+      "position": [25568, 4176],
+      "id": "cea84430-7187-4059-bffc-4cf44bf9d0bf",
       "name": "Validate Perfil JSON",
       "notes": "NUEVO I1.9: Parsea, valida y normaliza el JSON del perfil"
     },
@@ -681,8 +681,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [16720, 2496],
-      "id": "b43bf382-f9be-4cb9-9a1a-7d2c1bf9ed8d",
+      "position": [25776, 4176],
+      "id": "cbdcb0ea-d4c6-4675-ade1-e25eb83b9523",
       "name": "Prepare Supabase Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara datos para upsert en Supabase"
@@ -697,8 +697,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [16944, 2256],
-      "id": "ac615c47-5cb1-432e-a913-deda9afa1cff",
+      "position": [26000, 3936],
+      "id": "07fb812f-ceae-4af1-b6f6-a0fcdd50db3d",
       "name": "HTTP Supabase Delete Perfil",
       "credentials": {
         "supabaseApi": {
@@ -731,8 +731,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [17184, 2256],
-      "id": "a03b6b73-d4cc-4471-9690-b3030332c802",
+      "position": [26240, 3936],
+      "id": "5dce2e33-4415-4a02-a218-80cf2461bb9c",
       "name": "HTTP Supabase Insert Perfil",
       "credentials": {
         "supabaseApi": {
@@ -749,8 +749,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [17424, 2256],
-      "id": "dfb449d2-63df-4390-99be-851d8fdacd4b",
+      "position": [26480, 3936],
+      "id": "8689d2a0-41c1-4b74-93f3-d7c7fdbc6e90",
       "name": "Upsert Perfil Supabase",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Supabase"
@@ -763,8 +763,8 @@
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
-      "position": [17680, 1952],
-      "id": "937968e7-8a66-45b7-a4fb-4533c1cc96c2",
+      "position": [26736, 3632],
+      "id": "52c7e2ea-9e01-477f-bddf-4564d7a6aea7",
       "name": "Wait Both Branches",
       "notes": "NUEVO I1.9: Espera a que ambas ramas (chunks + perfil) terminen antes de responder"
     },
@@ -785,31 +785,31 @@
           "fieldValues": [
             {
               "fieldId": "estado",
-              "fieldValue": "activo"
+              "fieldValue": "={{ $json.estado }}"
             },
             {
               "fieldId": "nombre_oficial",
-              "fieldValue": "={{ $('Validate Perfil JSON').first().json.perfil_data?.convenio || null }}"
+              "fieldValue": "={{ $json.nombre_oficial }}"
             },
             {
               "fieldId": "nombre_corto",
-              "fieldValue": "={{ $('Validate Perfil JSON').first().json.perfil_data?.nombre_corto || null }}"
+              "fieldValue": "={{ $json.nombre_corto }}"
             },
             {
               "fieldId": "ambito_territorial",
-              "fieldValue": "={{ $('Validate Perfil JSON').first().json.perfil_data?.ambito_territorial || null }}"
+              "fieldValue": "={{ $json.ambito_territorial }}"
             },
             {
               "fieldId": "ambito",
-              "fieldValue": "={{ $('Validate Perfil JSON').first().json.perfil_data?.ambito || null }}"
+              "fieldValue": "={{ $json.ambito }}"
             }
           ]
         }
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [18032, 1952],
-      "id": "c56abec6-2ba7-4892-ae9d-480820ec9612",
+      "position": [27088, 3632],
+      "id": "d185af80-f14c-48f4-82c5-3091849498ad",
       "name": "Update Convenio Status",
       "credentials": {
         "supabaseApi": {
@@ -817,7 +817,168 @@
           "name": "Supabase account"
         }
       },
-      "notes": "Actualiza el estado del convenio a activo cuando el procesamiento termina exitosamente"
+      "notes": "Actualiza el estado del convenio a activo (o activo_sin_perfil si el perfil Claude falló)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Webhook-Secret",
+              "value": "wp_secret_a7f3e9b2c8d4e5f6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ convenio_id: $('Webhook').first().json.body.convenio_id, stage: 'parsing', progress: 20, message: 'Leyendo el contenido del PDF…' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [24336, 3312],
+      "id": "3cfbdba6-8aa8-4f69-877f-17a49979ae61",
+      "name": "Notify Progress Parsing",
+      "continueOnFail": true,
+      "notes": "Doc TODO progreso: notifica al frontend que LlamaParse terminó (20%)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Webhook-Secret",
+              "value": "wp_secret_a7f3e9b2c8d4e5f6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ convenio_id: $('Webhook').first().json.body.convenio_id, stage: 'saving_markdown', progress: 40, message: 'Guardando el contenido…' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [25200, 3312],
+      "id": "7047edf4-b0cc-4ef2-aef6-d1f39619dfd0",
+      "name": "Notify Progress Markdown",
+      "continueOnFail": true,
+      "notes": "Doc TODO progreso: markdown guardado (40%)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Webhook-Secret",
+              "value": "wp_secret_a7f3e9b2c8d4e5f6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ convenio_id: $('Webhook').first().json.body.convenio_id, stage: 'chunking', progress: 60, message: 'Organizando la información…' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [26544, 3488],
+      "id": "9025db3a-22a4-4aed-be44-f358dfc79290",
+      "name": "Notify Progress Chunks",
+      "continueOnFail": true,
+      "notes": "Doc TODO progreso: chunks insertados (60%)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Webhook-Secret",
+              "value": "wp_secret_a7f3e9b2c8d4e5f6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ convenio_id: $('Webhook').first().json.body.convenio_id, stage: 'profile', progress: 80, message: ($json.operation === 'skipped' ? 'Casi listo…' : 'Extrayendo los datos del convenio…') }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [26736, 3936],
+      "id": "d1a179b7-13db-453b-8a95-bf0281893da6",
+      "name": "Notify Progress Profile",
+      "continueOnFail": true,
+      "notes": "Doc TODO progreso: perfil Claude procesado (80%)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Webhook-Secret",
+              "value": "wp_secret_a7f3e9b2c8d4e5f6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ convenio_id: $('Webhook').first().json.body.convenio_id, stage: 'completed', progress: 100, message: '¡Listo!' }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [27344, 3632],
+      "id": "7af0d2d1-60c4-4671-83c9-c2ee36de392c",
+      "name": "Notify Progress Completed",
+      "continueOnFail": true,
+      "notes": "Doc TODO progreso: convenio listo (100%)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// NODO: Determine Final Estado\n// FUNCIÓN: Decide si el convenio termina como 'activo' o 'activo_sin_perfil'\n//          según si el perfil Claude se generó correctamente.\n// ============================================\n\nlet operation = 'skipped';\nlet perfilData = null;\nlet validation = null;\n\ntry {\n  const upsert = $('Upsert Perfil Supabase').first().json;\n  operation = upsert.operation || 'skipped';\n  validation = upsert.validation || null;\n} catch (e) {\n  // Si Upsert Perfil Supabase falló en runtime, asumimos sin perfil\n  operation = 'skipped';\n}\n\ntry {\n  perfilData = $('Validate Perfil JSON').first().json.perfil_data || null;\n} catch (e) {\n  perfilData = null;\n}\n\nconst webhookBody = $('Webhook').first().json.body;\nconst convenioId = webhookBody.convenio_id;\n\n// Si NO se hizo upsert del perfil o el perfil no es válido, marcar como activo_sin_perfil.\n// El RAG (chunks) sigue funcionando pero el calculador salarial se debe deshabilitar.\nconst hasValidProfile = operation === 'upserted' && perfilData;\nconst estado = hasValidProfile ? 'activo' : 'activo_sin_perfil';\n\nreturn [{\n  json: {\n    convenio_id: convenioId,\n    estado,\n    nombre_oficial: perfilData?.convenio || null,\n    nombre_corto: perfilData?.nombre_corto || null,\n    ambito_territorial: perfilData?.ambito_territorial || null,\n    ambito: perfilData?.ambito || null,\n    has_valid_profile: hasValidProfile,\n    validation\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [26928, 3632],
+      "id": "465d3812-6d2e-42a5-a00c-810ff2364d59",
+      "name": "Determine Final Estado",
+      "notes": "Doc 03 / Perfil degradado: decide activo vs activo_sin_perfil"
     }
   ],
   "pinData": {},
@@ -962,6 +1123,17 @@
       "main": [
         [
           {
+            "node": "Notify Progress Parsing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Progress Parsing": {
+      "main": [
+        [
+          {
             "node": "Extract and clean md1",
             "type": "main",
             "index": 0
@@ -1046,6 +1218,17 @@
       "main": [
         [
           {
+            "node": "Notify Progress Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Progress Markdown": {
+      "main": [
+        [
+          {
             "node": "Chunk Markdown",
             "type": "main",
             "index": 0
@@ -1114,6 +1297,17 @@
       ]
     },
     "Bulk Insert Chunks": {
+      "main": [
+        [
+          {
+            "node": "Notify Progress Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Progress Chunks": {
       "main": [
         [
           {
@@ -1216,6 +1410,17 @@
       "main": [
         [
           {
+            "node": "Notify Progress Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Progress Profile": {
+      "main": [
+        [
+          {
             "node": "Wait Both Branches",
             "type": "main",
             "index": 1
@@ -1227,7 +1432,29 @@
       "main": [
         [
           {
+            "node": "Determine Final Estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Final Estado": {
+      "main": [
+        [
+          {
             "node": "Update Convenio Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Convenio Status": {
+      "main": [
+        [
+          {
+            "node": "Notify Progress Completed",
             "type": "main",
             "index": 0
           }
@@ -1240,7 +1467,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "753b49f1-d445-4e0d-b4db-7b9f04f4a80b",
+  "versionId": "d7d5db07-e773-4211-88cd-70ec775f438b",
   "meta": {
     "instanceId": "f72a9e83ddf781aec5a22208462a7d8c35ce6440f1e460ba7b8702ce4b52a0a2"
   },

@@ -137,20 +137,27 @@ describe("useConvenioUpload", () => {
       error: null,
     });
 
-    // Mock polling response - return active immediately
-    const mockEq = vi.fn().mockReturnValue({
-      single: vi.fn().mockResolvedValue({
-        data: { estado: "activo", error_message: null },
-        error: null,
-      }),
-    });
-
-    const mockSelect = vi.fn().mockReturnValue({
-      eq: mockEq,
-    });
-
-    (supabase.from as any).mockReturnValue({
-      select: mockSelect,
+    // Mock polling: convenios.estado=activo + sin fila en convenio_processing_status
+    (supabase.from as any).mockImplementation((table: string) => {
+      if (table === "convenio_processing_status") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+      }
+      return {
+        select: () => ({
+          eq: () => ({
+            single: vi.fn().mockResolvedValue({
+              data: { estado: "activo", error_message: null },
+              error: null,
+            }),
+          }),
+        }),
+      };
     });
 
     const onSuccess = vi.fn();
@@ -171,7 +178,7 @@ describe("useConvenioUpload", () => {
     expect(result.current.state.status).toBe("processing");
     if (result.current.state.status === "processing") {
       expect(result.current.state.progress).toBe(0);
-      expect(result.current.state.estimatedTimeLeft).toBe(60);
+      expect(result.current.state.stage).toBe("queued");
     }
 
     // Advance timers to trigger polling
@@ -205,19 +212,26 @@ describe("useConvenioUpload", () => {
       error: null,
     });
 
-    const mockEq = vi.fn().mockReturnValue({
-      single: vi.fn().mockResolvedValue({
-        data: { estado: "error", error_message: "Processing failed" },
-        error: null,
-      }),
-    });
-
-    const mockSelect = vi.fn().mockReturnValue({
-      eq: mockEq,
-    });
-
-    (supabase.from as any).mockReturnValue({
-      select: mockSelect,
+    (supabase.from as any).mockImplementation((table: string) => {
+      if (table === "convenio_processing_status") {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            }),
+          }),
+        };
+      }
+      return {
+        select: () => ({
+          eq: () => ({
+            single: vi.fn().mockResolvedValue({
+              data: { estado: "error", error_message: "Processing failed" },
+              error: null,
+            }),
+          }),
+        }),
+      };
     });
 
     const onError = vi.fn();
