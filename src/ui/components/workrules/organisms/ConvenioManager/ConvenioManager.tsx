@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils';
 import { UserConvenio } from '@core/types';
 import { Badge } from '@ui/components/shadcn/badge';
 import { Button } from '@ui/components/shadcn/button';
+import { Input } from '@ui/components/shadcn/input';
 import { Separator } from '@ui/components/shadcn/separator';
 import { Skeleton } from '@ui/components/shadcn/skeleton';
 import {
@@ -12,10 +13,36 @@ import {
   GlobeIcon,
   LoaderIcon,
   LockIcon,
+  SearchIcon,
   UploadIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 import { openPdfFileSelector } from '../ConvenioUploader/utils/fileSelection';
+
+function normalizeText(text: string): string {
+  return text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function fuzzyMatch(text: string, query: string): boolean {
+  const normalizedText = normalizeText(text);
+  const normalizedQuery = normalizeText(query);
+  let queryIndex = 0;
+  for (const char of normalizedText) {
+    if (char === normalizedQuery[queryIndex]) queryIndex++;
+    if (queryIndex === normalizedQuery.length) return true;
+  }
+  return false;
+}
+
+function getDisplayName(convenio: UserConvenio): string {
+  const corto = convenio.nombre_corto?.trim();
+  const oficial = convenio.nombre_oficial?.trim();
+  const territorial = convenio.ambito_territorial?.trim();
+  const base = corto || oficial;
+  if (base && territorial) return `${base} — ${territorial}`;
+  if (base) return base;
+  return convenio.nombre;
+}
 
 export interface ConvenioManagerProps {
   userConvenios: UserConvenio[];
@@ -56,6 +83,22 @@ export function ConvenioManager({
   className,
 }: ConvenioManagerProps) {
   const [fileError, setFileError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredConvenios = searchQuery
+    ? userConvenios.filter((convenio) => {
+        const searchableText = [
+          convenio.nombre,
+          convenio.nombre_oficial,
+          convenio.nombre_corto,
+          convenio.ambito_territorial,
+          convenio.sector,
+        ]
+          .filter(Boolean)
+          .join(' ');
+        return fuzzyMatch(searchableText, searchQuery);
+      })
+    : userConvenios;
 
   const handleUploadClick = () => {
     setFileError(null);
@@ -135,82 +178,103 @@ export function ConvenioManager({
           </p>
         </div>
       ) : (
-        /* List of convenios */
-        <div className="max-h-100 overflow-y-auto pr-4">
-          <ul className="space-y-3">
-            {userConvenios.map((convenio) => {
-              const StatusIcon = statusConfig[convenio.status].icon;
-              const statusLabel = statusConfig[convenio.status].label;
-              const statusClassName = statusConfig[convenio.status].className;
-              const isProcessing = convenio.status === 'processing';
+        <>
+          {/* Search */}
+          <div className="relative mb-3">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Buscar convenio..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
 
-              const canSelect = convenio.status === 'ready';
+          {/* List of convenios */}
+          <div className="max-h-96 overflow-y-auto pr-1">
+            {filteredConvenios.length === 0 ? (
+              <p className="py-8 text-center text-(length:--typographyFontSize2) text-muted-foreground">
+                No se encontraron convenios.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {filteredConvenios.map((convenio) => {
+                  const StatusIcon = statusConfig[convenio.status].icon;
+                  const statusLabel = statusConfig[convenio.status].label;
+                  const statusClassName = statusConfig[convenio.status].className;
+                  const isProcessing = convenio.status === 'processing';
+                  const canSelect = convenio.status === 'ready';
 
-              return (
-                <li
-                  key={convenio.id}
-                  data-testid={`convenio-item-${convenio.id}`}
-                  onClick={() => canSelect && onSelectConvenio(convenio.id)}
-                  className={cn(
-                    'rounded-(--radius3) border border-border bg-card p-3 transition-colors',
-                    canSelect && 'cursor-pointer hover:bg-muted hover:border-primary',
-                    !canSelect && 'opacity-60'
-                  )}
-                >
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    {/* Privacy icon */}
-                    <div className="mt-1 shrink-0">
-                      {convenio.isPrivate ? (
-                        <LockIcon className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <GlobeIcon className="h-4 w-4 text-muted-foreground" />
+                  return (
+                    <li
+                      key={convenio.id}
+                      data-testid={`convenio-item-${convenio.id}`}
+                      onClick={() => canSelect && onSelectConvenio(convenio.id)}
+                      className={cn(
+                        'rounded-(--radius3) border border-border bg-card p-3 transition-colors',
+                        canSelect && 'cursor-pointer hover:bg-muted hover:border-primary',
+                        !canSelect && 'opacity-60'
                       )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      {/* Name */}
-                      <h3 className="truncate text-(length:--typographyFontSize3) font-(--typographyFontWeightMedium) text-foreground mb-1">
-                        {convenio.nombre}
-                      </h3>
-
-                      {/* Sector */}
-                      {convenio.sector && (
-                        <p className="mb-2 text-(length:--typographyFontSize1) text-muted-foreground">
-                          {convenio.sector}
-                        </p>
-                      )}
-
-                      {/* Status badge */}
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          'inline-flex items-center gap-1.5',
-                          statusClassName
-                        )}
-                      >
-                        <StatusIcon
-                          className={cn(
-                            'h-3.5 w-3.5',
-                            isProcessing && 'animate-spin'
+                    >
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {/* Privacy icon */}
+                        <div className="mt-1 shrink-0">
+                          {convenio.isPrivate ? (
+                            <LockIcon className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <GlobeIcon className="h-4 w-4 text-muted-foreground" />
                           )}
-                        />
-                        {statusLabel}
-                      </Badge>
+                        </div>
 
-                      {/* Error message */}
-                      {convenio.status === 'error' && convenio.errorMessage && (
-                        <p className="mt-2 text-(length:--typographyFontSize1) text-destructive">
-                          {convenio.errorMessage}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          {/* Name */}
+                          <h3
+                            className="truncate text-(length:--typographyFontSize3) font-(--typographyFontWeightMedium) text-foreground mb-1"
+                            title={convenio.nombre_oficial?.trim() || convenio.nombre}
+                          >
+                            {getDisplayName(convenio)}
+                          </h3>
+
+                          {/* Sector */}
+                          {convenio.sector && (
+                            <p className="mb-2 text-(length:--typographyFontSize1) text-muted-foreground">
+                              {convenio.sector}
+                            </p>
+                          )}
+
+                          {/* Status badge */}
+                          <Badge
+                            variant="secondary"
+                            className={cn(
+                              'inline-flex items-center gap-1.5',
+                              statusClassName
+                            )}
+                          >
+                            <StatusIcon
+                              className={cn(
+                                'h-3.5 w-3.5',
+                                isProcessing && 'animate-spin'
+                              )}
+                            />
+                            {statusLabel}
+                          </Badge>
+
+                          {/* Error message */}
+                          {convenio.status === 'error' && convenio.errorMessage && (
+                            <p className="mt-2 text-(length:--typographyFontSize1) text-destructive">
+                              {convenio.errorMessage}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

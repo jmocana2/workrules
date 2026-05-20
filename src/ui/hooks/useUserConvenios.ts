@@ -25,7 +25,10 @@ export function useUserConvenios() {
       return (data ?? []).map((row) => ({
         id: row.id,
         nombre: row.nombre,
+        nombre_oficial: row.nombre_oficial ?? null,
+        nombre_corto: row.nombre_corto ?? null,
         ambito: row.ambito ?? "",
+        ambito_territorial: row.ambito_territorial ?? null,
         codigo_regcon: row.codigo_regcon ?? "",
         fecha_vigencia: row.fecha_vigencia?.toString() ?? "",
         url_pdf: row.url_pdf ?? "",

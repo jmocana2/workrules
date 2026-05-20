@@ -71,7 +71,8 @@ function MessageCitations({
   convenioUrl?: string | null;
 }) {
   const uniqueCitations = citations.filter(
-    (c, i, arr) => arr.findIndex((x) => x.source === c.source) === i,
+    (c, i, arr) =>
+      arr.findIndex((x) => x.source === c.source && x.pagina === c.pagina) === i,
   );
   const pdfHref =
     convenioUrl ||

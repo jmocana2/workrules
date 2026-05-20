@@ -140,9 +140,9 @@ export function VariablesPanel({
               const descripcion = perfilJson.descripciones?.[variable];
 
               return (
-                <div key={variable} className="max-h-96 space-y-2 overflow-y-auto rounded-md border border-border/80 bg-background/60 p-3">
-                  {/* Variable name */}
-                  <div className="flex items-center gap-2">
+                <div key={variable} className="rounded-md border border-border/80 bg-background/60">
+                  {/* Variable name - fixed, no scroll */}
+                  <div className="flex items-center gap-2 p-3 pb-2">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
                       {variable}
                     </h3>
@@ -167,27 +167,31 @@ export function VariablesPanel({
                     )}
                   </div>
 
-                  {/* Values badges */}
-                  {valores.length === 0 ? (
-                    <p className="text-xs italic text-muted-foreground">
-                      Sin valores definidos
-                    </p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {valores.map((valor, index) => (
-                        <Badge
-                          key={`${variable}-${valor}-${index}`}
-                          variant="secondary"
-                          className={cn(
-                            'max-w-full cursor-pointer border border-border/70 bg-muted/70 px-2 text-left text-xs text-foreground',
-                            'hover:bg-[var(--colorsAccentAccent4)] hover:text-[var(--colorsAccentAccent12)]',
-                            'transition-colors duration-150'                          )}
-                          onClick={() => onVariableClick(variable, valor)}
-                        >
-                          <span className="block truncate">{valor}</span>
-                        </Badge>
-                      ))}                    </div>
-                  )}
+                  {/* Values badges - scrollable */}
+                  <div className="max-h-40 overflow-y-auto px-3 pb-3">
+                    {valores.length === 0 ? (
+                      <p className="text-xs italic text-muted-foreground">
+                        Sin valores definidos
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {valores.map((valor, index) => (
+                          <Badge
+                            key={`${variable}-${valor}-${index}`}
+                            variant="secondary"
+                            className={cn(
+                              'max-w-full cursor-pointer border border-border/70 bg-muted/70 px-2 text-left text-xs text-foreground',
+                              'hover:bg-[var(--colorsAccentAccent4)] hover:text-[var(--colorsAccentAccent12)]',
+                              'transition-colors duration-150'
+                            )}
+                            onClick={() => onVariableClick(variable, valor)}
+                          >
+                            <span className="block truncate">{valor}</span>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
