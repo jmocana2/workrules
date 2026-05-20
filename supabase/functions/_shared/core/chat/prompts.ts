@@ -70,6 +70,17 @@ export interface CategoriaProfesional {
 export interface PerfilContexto {
   variables_criticas: string[];
   categorias_profesionales?: CategoriaProfesional[];
+  /**
+   * Lista canónica de áreas funcionales del convenio (ej: ["Area 1", "Area 2", ...]).
+   * Opcional: si está, se prioriza sobre `valores_posibles.area_funcional`.
+   */
+  areas_funcionales?: string[];
+  /**
+   * Enums canónicos del convenio extraídos por el indexer.
+   * Estructura real en BD: { area_funcional: [...], grupo_profesional: [...], ... }.
+   * Es la fuente de verdad para preguntas enumerativas.
+   */
+  valores_posibles?: Record<string, string[]>;
   /** Mapeo de tipos de establecimiento comunes a clases del convenio */
   mapeo_establecimientos?: Record<string, string>;
   jornada?: { horas_anuales?: number };
@@ -700,6 +711,54 @@ function selectRelevantCategories(
 }
 
 /**
+ * Etiquetas legibles para los enums conocidos del perfil.
+ * Si aparece un enum sin etiqueta definida, se usa la clave tal cual.
+ */
+const ENUM_LABELS: Record<string, string> = {
+  area_funcional: "Areas funcionales",
+  grupo_profesional: "Grupos profesionales",
+  nivel_profesional: "Niveles profesionales",
+  tipo_contrato: "Tipos de contrato",
+  jornada_laboral: "Tipos de jornada",
+  antiguedad_empresa: "Tramos de antiguedad",
+};
+
+/**
+ * Construye líneas "Enumerable (N): a, b, c" para cada lista en
+ * `perfil.valores_posibles` y para `perfil.areas_funcionales` si está presente.
+ * Estas listas son la fuente de verdad para preguntas enumerativas.
+ */
+function buildEnumLines(perfil: PerfilContexto): string[] {
+  const lines: string[] = [];
+
+  // areas_funcionales explícito tiene prioridad sobre valores_posibles.area_funcional
+  const areasExplicit = perfil.areas_funcionales;
+  const emitted = new Set<string>();
+
+  if (areasExplicit && areasExplicit.length > 0) {
+    lines.push(
+      `Areas funcionales del convenio (${areasExplicit.length}): ${
+        areasExplicit.join(", ")
+      }`,
+    );
+    emitted.add("area_funcional");
+  }
+
+  const valores = perfil.valores_posibles;
+  if (!valores) return lines;
+
+  for (const [key, values] of Object.entries(valores)) {
+    if (emitted.has(key)) continue;
+    if (!Array.isArray(values) || values.length === 0) continue;
+
+    const label = ENUM_LABELS[key] ?? key;
+    lines.push(`${label} (${values.length}): ${values.join(", ")}`);
+  }
+
+  return lines;
+}
+
+/**
  * Formatea Perfil JSON de forma compacta para contexto
  *
  * @param perfil - Perfil del convenio
@@ -718,6 +777,17 @@ export function formatPerfilForContext(
 
   if (perfil.variables_criticas?.length > 0) {
     lines.push(`Variables criticas: ${perfil.variables_criticas.join(", ")}`);
+  }
+
+  // Enums canónicos del convenio (perfil_data.valores_posibles).
+  // Esta es la fuente de verdad para preguntas enumerativas como
+  // "¿cuántas áreas hay?", "¿qué grupos profesionales existen?", etc.
+  // NO confundir con `categorias_profesionales[].area_funcional`, que indica
+  // a qué áreas aplica cada categoría (puede ser "Todas" o un área concreta)
+  // y NO es la lista canónica.
+  const enumLines = buildEnumLines(perfil);
+  if (enumLines.length > 0) {
+    lines.push(...enumLines);
   }
 
   const cats = perfil.categorias_profesionales;

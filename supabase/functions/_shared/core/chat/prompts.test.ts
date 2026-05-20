@@ -394,3 +394,76 @@ Deno.test("normalizePerfilContexto - propaga num_pagas al campo canonico", () =>
 
   assertEquals(result?.numero_pagas, 14);
 });
+
+// ============================================
+// Tests de áreas funcionales en el perfil (Solución D)
+// ============================================
+
+Deno.test("formatPerfilForContext - usa valores_posibles.area_funcional como fuente canonica", () => {
+  const perfil: PerfilContexto = {
+    variables_criticas: ["area_funcional"],
+    valores_posibles: {
+      area_funcional: ["Area 1", "Area 2", "Area 3", "Area 4", "Area 5", "Area 6"],
+    },
+    // Las categorías tienen area_funcional="Todas" o un área concreta, pero NO
+    // deben usarse para construir la lista canónica.
+    categorias_profesionales: [
+      { nombre: "Grupo A", area_funcional: "Todas" },
+      { nombre: "Grupo E Nivel 2", area_funcional: "Area 6" },
+    ],
+  };
+
+  const result = formatPerfilForContext(perfil);
+
+  assertStringIncludes(result, "Areas funcionales (6)");
+  assertStringIncludes(result, "Area 1, Area 2, Area 3, Area 4, Area 5, Area 6");
+  // No debe contener "Todas" como si fuera un área
+  assertEquals(result.includes("Areas funcionales (2)"), false);
+});
+
+Deno.test("formatPerfilForContext - emite todos los enums de valores_posibles", () => {
+  const perfil: PerfilContexto = {
+    variables_criticas: [],
+    valores_posibles: {
+      area_funcional: ["Area 1", "Area 2"],
+      grupo_profesional: ["Grupo A", "Grupo B", "Grupo C"],
+      tipo_contrato: ["indefinido", "temporal"],
+    },
+  };
+
+  const result = formatPerfilForContext(perfil);
+
+  assertStringIncludes(result, "Areas funcionales (2): Area 1, Area 2");
+  assertStringIncludes(
+    result,
+    "Grupos profesionales (3): Grupo A, Grupo B, Grupo C",
+  );
+  assertStringIncludes(result, "Tipos de contrato (2): indefinido, temporal");
+});
+
+Deno.test("formatPerfilForContext - areas_funcionales explicito tiene prioridad sobre valores_posibles", () => {
+  const perfil: PerfilContexto = {
+    variables_criticas: [],
+    areas_funcionales: ["Area X", "Area Y"],
+    valores_posibles: {
+      area_funcional: ["Area 1", "Area 2", "Area 3"], // debe ser ignorado
+    },
+  };
+
+  const result = formatPerfilForContext(perfil);
+
+  assertStringIncludes(result, "Areas funcionales del convenio (2): Area X, Area Y");
+  assertEquals(result.includes("Area 3"), false);
+});
+
+Deno.test("formatPerfilForContext - omite enums si no hay valores_posibles ni areas_funcionales", () => {
+  const perfil: PerfilContexto = {
+    variables_criticas: ["categoria"],
+    categorias_profesionales: [{ nombre: "Camarero" }],
+  };
+
+  const result = formatPerfilForContext(perfil);
+
+  assertEquals(result.includes("Areas funcionales"), false);
+  assertEquals(result.includes("Grupos profesionales"), false);
+});

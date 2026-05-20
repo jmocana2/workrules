@@ -63,6 +63,50 @@ function normalizeUserPlan(plan: 'free' | 'premium' | 'enterprise'): 'free' | 'p
   return plan === 'free' ? 'free' : 'premium';
 }
 
+function MessageCitations({
+  citations,
+  convenioUrl,
+}: {
+  citations: NonNullable<import('./ChatPage.types').Citation[]>;
+  convenioUrl?: string | null;
+}) {
+  const uniqueCitations = citations.filter(
+    (c, i, arr) => arr.findIndex((x) => x.source === c.source) === i,
+  );
+  const pdfHref =
+    convenioUrl ||
+    uniqueCitations.find((c) => c.url_pdf)?.url_pdf ||
+    uniqueCitations.find((c) => c.url)?.url;
+
+  return (
+    <Sources>
+      <SourcesTrigger count={uniqueCitations.length} />
+      <SourcesContent>
+        {uniqueCitations.map((citation, idx) => (
+          <Source
+            key={idx}
+            href={citation.url_pdf ?? citation.url}
+            title={citation.source}
+            pagina={citation.pagina ?? undefined}
+          />
+        ))}
+        {pdfHref && (
+          <a
+            href={pdfHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Abrir PDF original en una pestaña nueva"
+            className="mt-1 flex items-center gap-2 text-primary hover:underline"
+          >
+            <ExternalLinkIcon className="h-4 w-4 shrink-0" />
+            <span className="font-medium">Abrir PDF original</span>
+          </a>
+        )}
+      </SourcesContent>
+    </Sources>
+  );
+}
+
 export function ChatPage({
   initialConvenioId,
   initialMessages,
@@ -369,38 +413,10 @@ export function ChatPage({
                       <MessageContent>
                         <MessageResponse>{message.content}</MessageResponse>
                         {message.citations && message.citations.length > 0 && (
-                          <Sources>
-                            <SourcesTrigger count={message.citations.length} />
-                            <SourcesContent>
-                              {message.citations.map((citation, idx) => (
-                                <Source
-                                  key={idx}
-                                  href={citation.url_pdf ?? citation.url}
-                                  title={citation.source}
-                                  pagina={citation.pagina ?? undefined}
-                                />
-                              ))}
-                              {(() => {
-                                const pdfHref =
-                                  selectedConvenio?.url_pdf ||
-                                  message.citations.find((c) => c.url_pdf)?.url_pdf ||
-                                  message.citations.find((c) => c.url)?.url;
-                                if (!pdfHref) return null;
-                                return (
-                                  <a
-                                    href={pdfHref}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    aria-label="Abrir PDF original en una pestaña nueva"
-                                    className="mt-1 flex items-center gap-2 text-primary hover:underline"
-                                  >
-                                    <ExternalLinkIcon className="h-4 w-4 shrink-0" />
-                                    <span className="font-medium">Abrir PDF original</span>
-                                  </a>
-                                );
-                              })()}
-                            </SourcesContent>
-                          </Sources>
+                          <MessageCitations
+                            citations={message.citations}
+                            convenioUrl={selectedConvenio?.url_pdf}
+                          />
                         )}
                       </MessageContent>
                     </Message>

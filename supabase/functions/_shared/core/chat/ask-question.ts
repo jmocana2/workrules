@@ -20,6 +20,7 @@ import {
   checkUserQuota as defaultCheckUserQuota,
   type ChunkSearchResult,
   type Convenio,
+  getChunksByGroup as defaultGetChunksByGroup,
   getConvenioById as defaultGetConvenioById,
   getPerfilByConvenio as defaultGetPerfilByConvenio,
   incrementQueryCount as defaultIncrementQueryCount,
@@ -128,6 +129,8 @@ const DEFAULT_CHUNK_LIMIT = 8;
 const DEFAULT_CHUNK_THRESHOLD = 0.45;
 const CACHE_THRESHOLD = 0.95;
 const MODEL_NAME = "claude-sonnet-4-20250514";
+/** Tope total tras expandir con vecinos de la misma sección/artículo */
+const EXPANDED_CHUNK_CAP = 15;
 
 // ============================================
 // DEPENDENCIAS (para inyeccion en tests)
@@ -147,6 +150,11 @@ export interface AskQuestionDeps {
     convenioId: string,
     limit?: number,
     threshold?: number,
+  ) => Promise<ChunkSearchResult[]>;
+  getChunksByGroup: (
+    convenioId: string,
+    key: "articulo" | "seccion",
+    value: string,
   ) => Promise<ChunkSearchResult[]>;
   getPerfilByConvenio: (
     convenioId: string,
@@ -176,6 +184,7 @@ export const defaultDeps: AskQuestionDeps = {
   searchSemanticCache: defaultSearchSemanticCache,
   getConvenioById: defaultGetConvenioById,
   searchChunksByConvenio: defaultSearchChunksByConvenio,
+  getChunksByGroup: defaultGetChunksByGroup,
   getPerfilByConvenio: defaultGetPerfilByConvenio,
   createChatResponse: defaultCreateChatResponse,
   streamChatResponse: defaultStreamChatResponse,
@@ -224,6 +233,113 @@ function getChunkArticulo(
   }
 
   return articulo;
+}
+
+/**
+ * Expande el conjunto de chunks recuperados trayendo los vecinos del mismo
+ * `articulo` o `seccion`. Sirve para que respuestas enumerables (áreas, grupos,
+ * niveles, categorías) repartidas en chunks consecutivos lleguen completas al
+ * LLM, aunque la búsqueda vectorial solo haya puntuado alto al primero.
+ *
+ * Estrategia:
+ *   1. Para cada chunk recuperado, mira si tiene `articulo` o, en su defecto,
+ *      `seccion` en metadata.
+ *   2. Por cada grupo único (articulo o seccion), pide a la BD todos los chunks
+ *      de ese grupo en este convenio (función `getChunksByGroup`).
+ *   3. Fusiona los originales con los vecinos, deduplica por `chunk_id` y
+ *      mantiene la `similarity` original cuando existe (los vecinos añadidos
+ *      llevan similarity = 0 para que no afecten al ranking).
+ *   4. Limita el total a `EXPANDED_CHUNK_CAP` para no inflar el contexto.
+ *
+ * Si la consulta falla para algún grupo, se ignora silenciosamente y se
+ * devuelve lo que se haya podido reunir; nunca debe romper el flujo principal.
+ */
+type ChunkGroup = { key: "articulo" | "seccion"; value: string };
+
+function detectChunkGroups(base: ChunkSearchResult[]): Map<string, ChunkGroup> {
+  const groups = new Map<string, ChunkGroup>();
+  for (const chunk of base) {
+    const meta = chunk.metadata as Record<string, unknown>;
+    const articulo = typeof meta?.articulo === "string"
+      ? meta.articulo.trim()
+      : "";
+    const seccion = typeof meta?.seccion === "string"
+      ? meta.seccion.trim()
+      : "";
+
+    if (articulo) {
+      groups.set(`articulo:${articulo}`, { key: "articulo", value: articulo });
+    } else if (seccion) {
+      groups.set(`seccion:${seccion}`, { key: "seccion", value: seccion });
+    }
+  }
+  return groups;
+}
+
+async function fetchNeighborsForGroups(
+  groups: ChunkGroup[],
+  convenioId: string,
+  fetchGroup: AskQuestionDeps["getChunksByGroup"],
+): Promise<ChunkSearchResult[][]> {
+  return await Promise.all(
+    groups.map((g) =>
+      fetchGroup(convenioId, g.key, g.value).catch((err) => {
+        console.error(
+          `[ask-question] Error expanding chunks for ${g.key}=${g.value}:`,
+          err,
+        );
+        return [] as ChunkSearchResult[];
+      })
+    ),
+  );
+}
+
+function mergeChunks(
+  base: ChunkSearchResult[],
+  neighborResults: ChunkSearchResult[][],
+): ChunkSearchResult[] {
+  const byId = new Map<string, ChunkSearchResult>();
+  for (const c of base) byId.set(c.chunk_id, c);
+
+  for (const list of neighborResults) {
+    for (const neighbor of list) {
+      if (!byId.has(neighbor.chunk_id)) {
+        byId.set(neighbor.chunk_id, neighbor);
+      }
+    }
+  }
+
+  // Ordenar: similarity desc primero, luego numero_chunk asc para los vecinos
+  // (orden natural del documento).
+  return Array.from(byId.values()).sort((a, b) => {
+    if (a.similarity !== b.similarity) return b.similarity - a.similarity;
+    const ia = (a.metadata as Record<string, unknown>)?.numero_chunk as
+      | number
+      | undefined;
+    const ib = (b.metadata as Record<string, unknown>)?.numero_chunk as
+      | number
+      | undefined;
+    return (ia ?? 0) - (ib ?? 0);
+  });
+}
+
+async function expandChunksWithNeighbors(
+  base: ChunkSearchResult[],
+  convenioId: string,
+  fetchGroup: AskQuestionDeps["getChunksByGroup"],
+): Promise<ChunkSearchResult[]> {
+  if (base.length === 0) return base;
+
+  const groups = detectChunkGroups(base);
+  if (groups.size === 0) return base;
+
+  const neighborResults = await fetchNeighborsForGroups(
+    Array.from(groups.values()),
+    convenioId,
+    fetchGroup,
+  );
+
+  return mergeChunks(base, neighborResults).slice(0, EXPANDED_CHUNK_CAP);
 }
 
 /**
@@ -353,7 +469,7 @@ export async function askQuestion(
     // ========================================
     // 5. Buscar chunks y perfil en paralelo
     // ========================================
-    const [chunks, perfil] = await Promise.all([
+    const [rawChunks, perfil] = await Promise.all([
       deps.searchChunksByConvenio(
         embedding,
         input.convenioId,
@@ -362,6 +478,14 @@ export async function askQuestion(
       ),
       deps.getPerfilByConvenio(input.convenioId),
     ]);
+
+    // Expandir con vecinos del mismo artículo/sección para que respuestas
+    // enumerables (áreas, grupos, categorías) lleguen completas al LLM.
+    const chunks = await expandChunksWithNeighbors(
+      rawChunks,
+      input.convenioId,
+      deps.getChunksByGroup,
+    );
 
     // ========================================
     // 6. Construir prompts

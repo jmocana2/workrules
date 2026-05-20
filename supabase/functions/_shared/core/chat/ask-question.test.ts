@@ -80,6 +80,7 @@ interface MockCallTracker {
   searchSemanticCache: unknown[][];
   getConvenioById: unknown[][];
   searchChunksByConvenio: unknown[][];
+  getChunksByGroup: unknown[][];
   getPerfilByConvenio: unknown[][];
   createChatResponse: unknown[][];
   streamChatResponse: unknown[][];
@@ -94,6 +95,7 @@ interface MockOverrides {
   searchSemanticCache?: () => Promise<CacheHit | null>;
   getConvenioById?: () => Promise<Convenio | null>;
   searchChunksByConvenio?: () => Promise<ChunkSearchResult[]>;
+  getChunksByGroup?: () => Promise<ChunkSearchResult[]>;
   getPerfilByConvenio?: () => Promise<Record<string, unknown> | null>;
   createChatResponse?: () => Promise<string>;
   streamChatResponse?: () => Promise<ReadableStream<Uint8Array>>;
@@ -112,6 +114,7 @@ function createMockDeps(overrides: MockOverrides = {}): {
     searchSemanticCache: [],
     getConvenioById: [],
     searchChunksByConvenio: [],
+    getChunksByGroup: [],
     getPerfilByConvenio: [],
     createChatResponse: [],
     streamChatResponse: [],
@@ -149,6 +152,11 @@ function createMockDeps(overrides: MockOverrides = {}): {
       calls.searchChunksByConvenio.push(args);
       return overrides.searchChunksByConvenio?.() ??
         Promise.resolve(MOCK_CHUNKS);
+    },
+    getChunksByGroup: (...args) => {
+      calls.getChunksByGroup.push(args);
+      // Por defecto, no añadir vecinos (devolver lista vacía)
+      return overrides.getChunksByGroup?.() ?? Promise.resolve([]);
     },
     getPerfilByConvenio: (...args) => {
       calls.getPerfilByConvenio.push(args);
@@ -747,5 +755,131 @@ Deno.test("askQuestion - citations pagina es null si no esta en metadata", async
   assertEquals(result.type, "success");
   if (result.type === "success") {
     assertEquals(result.citations[0].pagina, null);
+  }
+});
+
+// ============================================
+// CHUNK EXPANSION TESTS (Solución A: vecinos por artículo/sección)
+// ============================================
+
+Deno.test("askQuestion - llama a getChunksByGroup por cada articulo unico recuperado", async () => {
+  const { deps, calls } = createMockDeps();
+
+  await askQuestion(DEFAULT_INPUT, deps);
+
+  // MOCK_CHUNKS tiene Art. 24 y Art. 15 → 2 grupos únicos
+  assertEquals(calls.getChunksByGroup.length, 2);
+  const articulosLlamados = calls.getChunksByGroup
+    .map((c) => c[2] as string)
+    .sort();
+  assertEquals(articulosLlamados, ["Art. 15", "Art. 24"]);
+});
+
+Deno.test("askQuestion - expande con chunks vecinos del mismo articulo", async () => {
+  // Simula el caso "áreas funcionales": un solo chunk recuperado pero el
+  // artículo tiene 3 chunks consecutivos en la BD.
+  const baseChunk: ChunkSearchResult = {
+    chunk_id: "chunk-area-1",
+    convenio_id: VALID_UUID,
+    contenido: "Area 1 y Area 2 ...",
+    metadata: { articulo: "Art. 15", seccion: "Areas de actividad", numero_chunk: 10 },
+    similarity: 0.88,
+  };
+  const neighbor2: ChunkSearchResult = {
+    chunk_id: "chunk-area-2",
+    convenio_id: VALID_UUID,
+    contenido: "Area 3 y Area 4 ...",
+    metadata: { articulo: "Art. 15", seccion: "Areas de actividad", numero_chunk: 11 },
+    similarity: 0,
+  };
+  const neighbor3: ChunkSearchResult = {
+    chunk_id: "chunk-area-3",
+    convenio_id: VALID_UUID,
+    contenido: "Area 5 y Area 6 ...",
+    metadata: { articulo: "Art. 15", seccion: "Areas de actividad", numero_chunk: 12 },
+    similarity: 0,
+  };
+
+  const { deps, calls } = createMockDeps({
+    searchChunksByConvenio: () => Promise.resolve([baseChunk]),
+    getChunksByGroup: () => Promise.resolve([baseChunk, neighbor2, neighbor3]),
+  });
+
+  const result = await askQuestion(DEFAULT_INPUT, deps);
+
+  assertEquals(result.type, "success");
+  if (result.type === "success") {
+    // chunksUsed refleja el conjunto expandido (1 original + 2 vecinos = 3)
+    assertEquals(result.metadata.chunksUsed, 3);
+    assertEquals(result.citations.length, 3);
+  }
+
+  // Verificar que se llamó a getChunksByGroup con articulo
+  assertEquals(calls.getChunksByGroup.length, 1);
+  assertEquals(calls.getChunksByGroup[0][1], "articulo");
+  assertEquals(calls.getChunksByGroup[0][2], "Art. 15");
+});
+
+Deno.test("askQuestion - usa seccion como fallback cuando el chunk no tiene articulo", async () => {
+  const sinArticulo: ChunkSearchResult = {
+    chunk_id: "chunk-anexo",
+    convenio_id: VALID_UUID,
+    contenido: "Tabla salarial ...",
+    metadata: { seccion: "Anexo I - Tablas Salariales" },
+    similarity: 0.8,
+  };
+
+  const { deps, calls } = createMockDeps({
+    searchChunksByConvenio: () => Promise.resolve([sinArticulo]),
+  });
+
+  await askQuestion(DEFAULT_INPUT, deps);
+
+  assertEquals(calls.getChunksByGroup.length, 1);
+  assertEquals(calls.getChunksByGroup[0][1], "seccion");
+  assertEquals(calls.getChunksByGroup[0][2], "Anexo I - Tablas Salariales");
+});
+
+Deno.test("askQuestion - no rompe si getChunksByGroup falla", async () => {
+  const { deps } = createMockDeps({
+    getChunksByGroup: () => Promise.reject(new Error("DB down")),
+  });
+
+  const result = await askQuestion(DEFAULT_INPUT, deps);
+
+  // Debe completar con éxito usando solo los chunks originales
+  assertEquals(result.type, "success");
+  if (result.type === "success") {
+    assertEquals(result.metadata.chunksUsed, MOCK_CHUNKS.length);
+  }
+});
+
+Deno.test("askQuestion - respeta tope EXPANDED_CHUNK_CAP al expandir", async () => {
+  const base: ChunkSearchResult = {
+    chunk_id: "base-1",
+    convenio_id: VALID_UUID,
+    contenido: "base",
+    metadata: { articulo: "Art. 99" },
+    similarity: 0.9,
+  };
+  // Devolvemos 30 vecinos; debe truncar a EXPANDED_CHUNK_CAP (15)
+  const muchosVecinos: ChunkSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
+    chunk_id: `vec-${i}`,
+    convenio_id: VALID_UUID,
+    contenido: `vecino ${i}`,
+    metadata: { articulo: "Art. 99", numero_chunk: i },
+    similarity: 0,
+  }));
+
+  const { deps } = createMockDeps({
+    searchChunksByConvenio: () => Promise.resolve([base]),
+    getChunksByGroup: () => Promise.resolve(muchosVecinos),
+  });
+
+  const result = await askQuestion(DEFAULT_INPUT, deps);
+
+  assertEquals(result.type, "success");
+  if (result.type === "success") {
+    assertEquals(result.metadata.chunksUsed, 15);
   }
 });

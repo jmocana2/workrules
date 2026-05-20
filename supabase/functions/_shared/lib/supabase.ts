@@ -306,6 +306,62 @@ export async function searchChunksByConvenio(
 }
 
 /**
+ * Trae los chunks de un convenio que pertenecen a un mismo artículo o sección.
+ * Se usa para expandir el contexto RAG cuando una respuesta enumerable (áreas,
+ * grupos, categorías) está repartida en varios chunks consecutivos: la búsqueda
+ * vectorial recupera los más similares y esta función completa los vecinos.
+ *
+ * Devuelve los chunks ordenados por `chunk_index` ascendente.
+ *
+ * @param convenioId UUID del convenio
+ * @param key        Tipo de agrupación: "articulo" | "seccion"
+ * @param value      Valor a buscar (ej: "Art. 15" o "Áreas de actividad")
+ */
+export async function getChunksByGroup(
+  convenioId: string,
+  key: "articulo" | "seccion",
+  value: string,
+  client?: SupabaseClient,
+): Promise<ChunkSearchResult[]> {
+  const uuidValidation = validateUUID(convenioId, "convenioId");
+  if (!uuidValidation.valid) {
+    throw new RepositoryError(uuidValidation.error!, "INVALID_INPUT");
+  }
+
+  const valueValidation = validateNonEmptyString(value, key);
+  if (!valueValidation.valid) {
+    throw new RepositoryError(valueValidation.error!, "INVALID_INPUT");
+  }
+
+  const supabase = getSupabaseClient(client);
+
+  const { data, error } = await supabase
+    .from("convenio_chunks")
+    .select(
+      getValidatedSelectClause("id, convenio_id, contenido, metadata, chunk_index"),
+    )
+    .eq("convenio_id", convenioId)
+    .eq(`metadata->>${key}`, value)
+    .order("chunk_index", { ascending: true });
+
+  if (error) {
+    throw new RepositoryError(
+      `Error fetching chunks by ${key}: ${error.message}`,
+      "DB_ERROR",
+      error,
+    );
+  }
+
+  return (data || []).map((row: Record<string, unknown>) => ({
+    chunk_id: row.id as string,
+    convenio_id: row.convenio_id as string,
+    contenido: row.contenido as string,
+    metadata: (row.metadata as Record<string, unknown>) || {},
+    similarity: 0,
+  }));
+}
+
+/**
  * Obtener perfil JSON de un convenio
  */
 export async function getPerfilByConvenio(
