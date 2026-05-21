@@ -10,14 +10,8 @@
  * - Estados especiales del protocolo (incomplete, invalid, smi_alert, conflicting)
  */
 
-import { createChatSession } from "@/lib/supabase";
+import { createChatSession, loadChatMessages, supabase } from "@/lib/supabase";
 import { useChat } from "@ai-sdk/react";
-import {
-  MOCK_CHAT_MESSAGES,
-  MOCK_CONVENIOS,
-  MOCK_CONVERSATIONS,
-  MOCK_PERFIL_HOSTELERIA,
-} from "@mocks/data/convenios";
 import { useChatSessions } from "@ui/hooks/useChatSessions";
 import { useChatStream } from "@ui/hooks/useChatStream";
 import { useConvenioVariables } from "@ui/hooks/useConvenioVariables";
@@ -64,9 +58,9 @@ export function useChatPage(
 ): UseChatPageReturn {
   const {
     initialConvenioId,
-    mockConvenios = MOCK_CONVENIOS,
+    mockConvenios,
     mockPerfil,
-    mockConversations = MOCK_CONVERSATIONS,
+    mockConversations,
     useMocks = USE_MOCK_API,
   } = options;
 
@@ -114,7 +108,7 @@ export function useChatPage(
     perfilJson: shouldUseMocks ? (mockPerfil || null) : null,
     isVariablesPanelCollapsed: false,
     isSidebarCollapsed: false,
-    conversations: shouldUseMocks ? mockConversations : [],
+    conversations: shouldUseMocks ? (mockConversations ?? []) : [],
     currentConversationId: null,
   });
 
@@ -326,16 +320,21 @@ export function useChatPage(
 
   // Cargar convenio inicial
   useEffect(() => {
-    if (initialConvenioId) {
-      const convenio = mockConvenios.find((c) => c.id === initialConvenioId);
-      if (convenio) {
-        setState((prev) => ({
-          ...prev,
-          selectedConvenio: convenio,
-          perfilJson: MOCK_PERFIL_HOSTELERIA,
-        }));
-      }
-    }
+    if (!initialConvenioId || !mockConvenios) return;
+    const convenio = mockConvenios.find((c) => c.id === initialConvenioId);
+    if (!convenio) return;
+    let cancelled = false;
+    import("@mocks/data/convenios").then(({ MOCK_PERFIL_HOSTELERIA }) => {
+      if (cancelled) return;
+      setState((prev) => ({
+        ...prev,
+        selectedConvenio: convenio,
+        perfilJson: MOCK_PERFIL_HOSTELERIA,
+      }));
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [initialConvenioId, mockConvenios]);
 
   // Auto-scroll
@@ -348,9 +347,11 @@ export function useChatPage(
     setState((prev) => ({ ...prev, selectedConvenio: convenio }));
     setSelectedConvenioId(convenio.id);
 
-    // En modo mock, usar perfil mock
+    // En modo mock, usar perfil mock (dynamic import para que no entre al bundle prod)
     if (useMocks) {
-      setState((prev) => ({ ...prev, perfilJson: MOCK_PERFIL_HOSTELERIA }));
+      import("@mocks/data/convenios").then(({ MOCK_PERFIL_HOSTELERIA }) => {
+        setState((prev) => ({ ...prev, perfilJson: MOCK_PERFIL_HOSTELERIA }));
+      });
     }
     // En modo real, el perfil se actualizará automáticamente vía useEffect
   }, [useMocks]);
@@ -521,8 +522,9 @@ export function useChatPage(
     async (id: string) => {
       setState((prev) => ({ ...prev, currentConversationId: id }));
 
-      // En modo mock, usar mensajes mock
+      // En modo mock, usar mensajes mock (dynamic import para que no entre al bundle prod)
       if (shouldUseMocks) {
+        const { MOCK_CHAT_MESSAGES } = await import("@mocks/data/convenios");
         const historicMessages: ChatMessage[] = MOCK_CHAT_MESSAGES.map(
           (msg) => ({
             ...msg,
@@ -536,8 +538,6 @@ export function useChatPage(
 
       // En modo real, cargar la conversación desde el backend
       try {
-        const { loadChatMessages, supabase } = await import("@/lib/supabase");
-
         // Cargar la sesión de chat para obtener el convenio_id
         const { data: sessionData, error: sessionError } = await supabase
           .from("chat_sessions")

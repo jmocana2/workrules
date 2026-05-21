@@ -4,7 +4,6 @@ import type { UIMessage } from "ai";
 import type { ComponentProps, HTMLAttributes, ReactElement } from "react";
 
 import { cn } from "@/lib/utils";
-import { Title } from "@ui/components/workrules/atoms/Title/Title";
 import { Button } from "@/ui/components/shadcn/button";
 import {
   ButtonGroup,
@@ -16,21 +15,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/ui/components/shadcn/tooltip";
-import { cjk } from "@streamdown/cjk";
-import { code } from "@streamdown/code";
-import { math } from "@streamdown/math";
-import { mermaid } from "@streamdown/mermaid";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import {
   createContext,
-  memo,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
-import { type ExtraProps, Streamdown } from "streamdown";
+
+// Note: MessageResponse lives in `./message-response` and is intentionally NOT re-exported
+// here, so it can be code-split via React.lazy() without pulling streamdown into this chunk.
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
   from: UIMessage["role"];
@@ -318,38 +314,6 @@ export const MessageBranchPage = ({
     </ButtonGroupText>
   );
 };
-
-export type MessageResponseProps = ComponentProps<typeof Streamdown>;
-
-const streamdownPlugins = { cjk, code, math, mermaid };
-
-type HeadingComponentProps = HTMLAttributes<HTMLHeadingElement> & ExtraProps;
-
-const messageComponents = {
-  h1: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h1" {...props} />,
-  h2: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h2" {...props} />,
-  h3: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h3" {...props} />,
-  h4: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h4" {...props} />,
-  h5: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h5" {...props} />,
-  h6: ({ node: _node, ...props }: HeadingComponentProps) => <Title as="h6" {...props} />,
-};
-
-export const MessageResponse = memo(
-  ({ className, components, ...props }: MessageResponseProps) => (
-    <Streamdown
-      className={cn(
-        "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-        className
-      )}
-      plugins={streamdownPlugins}
-      components={{ ...messageComponents, ...components }}
-      {...props}
-    />
-  ),
-  (prevProps, nextProps) => prevProps.children === nextProps.children
-);
-
-MessageResponse.displayName = "MessageResponse";
 
 export type MessageToolbarProps = ComponentProps<"div">;
 

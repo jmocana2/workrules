@@ -15,12 +15,10 @@
 import { cn } from '@/lib/utils';
 import { CHAT_TEXTS } from '@constants/texts';
 import { useBreakpoint } from '@core/hooks';
-import { MOCK_CONVENIOS, MOCK_CONVERSATIONS } from '@mocks/data/convenios';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Message,
   MessageContent,
-  MessageResponse,
 } from '@ui/components/ai-elements/message';
 import {
   PromptInput,
@@ -44,12 +42,26 @@ import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
 import { DataRequestCard } from '@ui/components/workrules/molecules/DataRequestCard/DataRequestCard';
 import { UserMessage } from '@ui/components/workrules/molecules/UserMessage/UserMessage';
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
-import { MobileDrawer } from '@ui/components/workrules/organisms/MobileDrawer/MobileDrawer';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
-import { VariablesPanel } from '@ui/components/workrules/organisms/VariablesPanel/VariablesPanel';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
 import { ExternalLinkIcon, Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
+
+const MessageResponse = lazy(() =>
+  import('@ui/components/ai-elements/message-response').then((m) => ({
+    default: m.MessageResponse,
+  }))
+);
+const VariablesPanel = lazy(() =>
+  import('@ui/components/workrules/organisms/VariablesPanel/VariablesPanel').then((m) => ({
+    default: m.VariablesPanel,
+  }))
+);
+const MobileDrawer = lazy(() =>
+  import('@ui/components/workrules/organisms/MobileDrawer/MobileDrawer').then((m) => ({
+    default: m.MobileDrawer,
+  }))
+);
 import type {
   AlertConflictPayload,
   AlertInvalidDataPayload,
@@ -111,9 +123,9 @@ function MessageCitations({
 export function ChatPage({
   initialConvenioId,
   initialMessages,
-  mockConvenios = MOCK_CONVENIOS,
+  mockConvenios,
   mockPerfil,
-  mockConversations = MOCK_CONVERSATIONS,
+  mockConversations,
   mockUserPlan = 'premium',
   className,
 }: ChatPageProps) {
@@ -130,7 +142,7 @@ export function ChatPage({
   const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
   const { data: realConvenios = [], isLoading: loadingConvenios } = useConvenios();
   const { data: userConvenios = [], isLoading: loadingUserConvenios } = useUserConvenios();
-  const convenios = useMocks ? mockConvenios : realConvenios;
+  const convenios = useMocks ? (mockConvenios ?? []) : realConvenios;
 
   // Plan del usuario (real desde user_profiles, o mock en Storybook)
   const { plan: realUserPlan } = useUserPlan();
@@ -259,6 +271,8 @@ export function ChatPage({
             />
           )}
           {/* Drawer para expandir */}
+          {/* TODO TFM.7-G: envolver con ErrorBoundary global (junto a Sentry) */}
+          <Suspense fallback={null}>
           <MobileDrawer
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
@@ -279,6 +293,7 @@ export function ChatPage({
               onConvenioUploaded={handleConvenioUploaded}
             />
           </MobileDrawer>
+          </Suspense>
         </>
       ) : (
         <Sidebar
@@ -412,7 +427,10 @@ export function ChatPage({
                   ) : (
                     <Message key={message.id} from={message.role}>
                       <MessageContent>
-                        <MessageResponse>{message.content}</MessageResponse>
+                        {/* TODO TFM.7-G: envolver con ErrorBoundary global (junto a Sentry) */}
+                        <Suspense fallback={<span className="text-sm opacity-60">{message.content}</span>}>
+                          <MessageResponse>{message.content}</MessageResponse>
+                        </Suspense>
                         {message.citations && message.citations.length > 0 && (
                           <MessageCitations
                             citations={message.citations}
@@ -535,6 +553,8 @@ export function ChatPage({
       </main>
 
       {/* VariablesPanel - Derecha */}
+      {/* TODO TFM.7-G: envolver con ErrorBoundary global (junto a Sentry) */}
+      <Suspense fallback={null}>
       {isMobile || isTablet ? (
         <>
           {/* Panel colapsado visible en tablet */}
@@ -572,6 +592,7 @@ export function ChatPage({
           isMobile={false}
         />
       )}
+      </Suspense>
     </div>
   );
 }

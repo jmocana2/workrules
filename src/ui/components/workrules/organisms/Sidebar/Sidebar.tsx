@@ -9,10 +9,20 @@ import {
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
 import { ThemeToggle } from '@ui/components/workrules/atoms/ThemeToggle';
-import { ConvenioManager } from '@ui/components/workrules/organisms/ConvenioManager';
-import { ConvenioUploader, type ConvenioUploaderRef } from '@ui/components/workrules/organisms/ConvenioUploader';
+import type { ConvenioUploaderRef } from '@ui/components/workrules/organisms/ConvenioUploader';
 import { CrownIcon, FileTextIcon, MessageSquareIcon, PlusIcon, XIcon } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
+
+const ConvenioManager = lazy(() =>
+  import('@ui/components/workrules/organisms/ConvenioManager').then((m) => ({
+    default: m.ConvenioManager,
+  }))
+);
+const ConvenioUploader = lazy(() =>
+  import('@ui/components/workrules/organisms/ConvenioUploader').then((m) => ({
+    default: m.ConvenioUploader,
+  }))
+);
 
 export interface SidebarProps {
   currentConversationId?: string;
@@ -140,12 +150,15 @@ export function Sidebar({
                 alignOffset={17}
                 className="ml-[17px] w-[362px] max-w-[362px] p-0"
               >
-                <ConvenioManager
-                  userConvenios={userConvenios}
-                  isLoading={isLoadingConvenios}
-                  onUpload={handleUploadConvenioFromManager}
-                  onSelectConvenio={handleSelectConvenioFromManager}
-                />
+                {/* TODO TFM.7-G: envolver con ErrorBoundary global (junto a Sentry) */}
+                <Suspense fallback={null}>
+                  <ConvenioManager
+                    userConvenios={userConvenios}
+                    isLoading={isLoadingConvenios}
+                    onUpload={handleUploadConvenioFromManager}
+                    onSelectConvenio={handleSelectConvenioFromManager}
+                  />
+                </Suspense>
               </PopoverContent>
             </Popover>
           )}
@@ -266,11 +279,14 @@ export function Sidebar({
       {/* Uploader de convenios (solo premium) */}
       {userPlan === 'premium' && (
         <div className="p-4">
-          <ConvenioUploader
-            ref={convenioUploaderRef}
-            isPremium={true}
-            onConvenioReady={onConvenioUploaded}
-          />
+          {/* TODO TFM.7-G: envolver con ErrorBoundary global (junto a Sentry) */}
+          <Suspense fallback={null}>
+            <ConvenioUploader
+              ref={convenioUploaderRef}
+              isPremium={true}
+              onConvenioReady={onConvenioUploaded}
+            />
+          </Suspense>
         </div>
       )}
 
@@ -312,12 +328,15 @@ export function Sidebar({
                 alignOffset={17}
                 className="ml-[17px] w-[362px] max-w-[362px] p-0"
               >
-                <ConvenioManager
-                  userConvenios={userConvenios}
-                  isLoading={isLoadingConvenios}
-                  onUpload={handleUploadConvenioFromManager}
-                  onSelectConvenio={handleSelectConvenioFromManager}
-                />
+                {/* TODO TFM.7-G: envolver con ErrorBoundary global (junto a Sentry) */}
+                <Suspense fallback={null}>
+                  <ConvenioManager
+                    userConvenios={userConvenios}
+                    isLoading={isLoadingConvenios}
+                    onUpload={handleUploadConvenioFromManager}
+                    onSelectConvenio={handleSelectConvenioFromManager}
+                  />
+                </Suspense>
               </PopoverContent>
             </Popover>
           )}

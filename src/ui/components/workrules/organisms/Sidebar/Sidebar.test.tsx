@@ -293,8 +293,8 @@ describe('Sidebar', () => {
       </Wrapper>
     );
 
-    // Verificar que el uploader está presente
-    expect(screen.getByLabelText(/subir archivo pdf/i)).toBeInTheDocument();
+    // Verificar que el uploader está presente (lazy → await)
+    expect(await screen.findByLabelText(/subir archivo pdf/i)).toBeInTheDocument();
 
     // Nota: El test completo del flujo de upload está en ConvenioUploader.test.tsx
     // Aquí solo verificamos que el callback se pasa correctamente
@@ -391,7 +391,7 @@ describe('Sidebar', () => {
     const manageButton = screen.getByRole('button', { name: /gestionar convenios/i });
     await user.click(manageButton);
 
-    // Verificar que se abre el popover con el título del ConvenioManager
-    expect(screen.getByText('Mis convenios')).toBeInTheDocument();
+    // Verificar que se abre el popover con el título del ConvenioManager (lazy → await)
+    expect(await screen.findByText('Mis convenios')).toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
 /// <reference types="vitest/config" />
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 
 // https://vite.dev/config/
@@ -14,7 +15,16 @@ const dirname = typeof __dirname !== "undefined"
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    visualizer({
+      filename: "dist/stats.html",
+      template: "treemap",
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(dirname, "./src"),
@@ -28,6 +38,25 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ["react", "react-dom", "react/jsx-runtime"],
+          radix: [
+            "@radix-ui/react-collapsible",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-scroll-area",
+            "@radix-ui/react-tooltip",
+            "@radix-ui/react-use-controllable-state",
+          ],
+          tanstack: ["@tanstack/react-query"],
+          supabase: ["@supabase/supabase-js"],
+          ai: ["ai", "@ai-sdk/react"],
+        },
+      },
+    },
   },
   test: {
     projects: [{
