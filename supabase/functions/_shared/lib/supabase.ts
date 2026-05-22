@@ -752,6 +752,43 @@ export async function incrementQueryCount(
 }
 
 /**
+ * Cuenta las preguntas de usuario enviadas al chat en los últimos N segundos.
+ * Anti-ráfaga: complementa la cuota diaria con un límite por ventana corta.
+ *
+ * @param userId - ID del usuario autenticado
+ * @param windowSeconds - Ventana en segundos (default 60)
+ * @param client - Cliente Supabase opcional (para tests)
+ * @returns Número de preguntas en la ventana
+ */
+export async function countRecentChatRequests(
+  userId: string,
+  windowSeconds = 60,
+  client?: SupabaseClient,
+): Promise<number> {
+  const userValidation = validateUUID(userId, "userId");
+  if (!userValidation.valid) {
+    throw new RepositoryError(userValidation.error!, "INVALID_INPUT");
+  }
+
+  const supabase = getSupabaseClient(client);
+
+  const { data, error } = await supabase.rpc("count_recent_chat_requests", {
+    p_user_id: userId,
+    p_window_seconds: windowSeconds,
+  });
+
+  if (error) {
+    throw new RepositoryError(
+      `Error counting recent chat requests: ${error.message}`,
+      "DB_ERROR",
+      error,
+    );
+  }
+
+  return typeof data === "number" ? data : 0;
+}
+
+/**
  * Verifica un token JWT de Supabase Auth y extrae el userId
  *
  * @param token - Token JWT del header Authorization

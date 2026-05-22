@@ -12,6 +12,11 @@ import {
   buildErrorResponse,
 } from '../_shared/core/chat/handlers.ts';
 import { corsHeaders } from '../_shared/lib/cors.ts';
+import { countRecentChatRequests } from '../_shared/lib/supabase.ts';
+
+// Anti-ráfaga: máximo de preguntas por ventana corta
+const RATE_LIMIT_WINDOW_SECONDS = 60;
+const RATE_LIMIT_MAX_REQUESTS = 10;
 
 // ============================================
 // Headers
@@ -66,6 +71,33 @@ Deno.serve(async (req: Request) => {
         status: response.status,
         headers: jsonHeaders,
       });
+    }
+
+    // ========================================
+    // 3.b Rate limit anti-ráfaga
+    // ========================================
+    try {
+      const recent = await countRecentChatRequests(
+        userId,
+        RATE_LIMIT_WINDOW_SECONDS,
+      );
+      if (recent >= RATE_LIMIT_MAX_REQUESTS) {
+        const response = buildErrorResponse(
+          429,
+          `Demasiadas preguntas en poco tiempo. Inténtalo de nuevo en unos segundos.`,
+          {
+            limit: RATE_LIMIT_MAX_REQUESTS,
+            window_seconds: RATE_LIMIT_WINDOW_SECONDS,
+          },
+        );
+        return new Response(JSON.stringify(response.body), {
+          status: response.status,
+          headers: jsonHeaders,
+        });
+      }
+    } catch (rateError) {
+      // Falla abierta: no bloqueamos por un error de conteo, solo logueamos.
+      console.error('[chat] Error checking rate limit:', rateError);
     }
 
     // ========================================

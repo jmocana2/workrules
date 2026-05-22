@@ -453,6 +453,36 @@ $$;
 COMMENT ON FUNCTION count_recent_uploads IS 'Devuelve el número de convenios subidos por un usuario en los últimos N minutos. Anti-spam Capa 4.';
 
 -- -----------------------------------------------------------------------------
+-- Función anti-ráfaga para preguntas de chat
+-- -----------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION count_recent_chat_requests(
+    p_user_id UUID,
+    p_window_seconds INTEGER DEFAULT 60
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_count INTEGER;
+BEGIN
+    SELECT COUNT(*)
+    INTO v_count
+    FROM chat_messages cm
+    JOIN chat_sessions cs ON cs.id = cm.session_id
+    WHERE cs.user_id = p_user_id
+      AND cm.role = 'user'
+      AND cm.created_at >= CURRENT_TIMESTAMP - (p_window_seconds || ' seconds')::INTERVAL;
+
+    RETURN COALESCE(v_count, 0);
+END;
+$$;
+
+COMMENT ON FUNCTION count_recent_chat_requests IS 'Devuelve el número de preguntas de usuario enviadas al chat en los últimos N segundos. Anti-ráfaga.';
+
+-- -----------------------------------------------------------------------------
 -- Función para limpiar caché expirado
 -- -----------------------------------------------------------------------------
 
