@@ -100,12 +100,18 @@ El PDF descargado se envia en paralelo a dos ramas:
 | **Get Markdown Result** | HTTP Request | Obtiene el markdown resultante |
 | **Stop and Error** | Stop and Error | Detiene el workflow si LlamaParse falla |
 
-### Fase 3: Limpieza y almacenamiento del markdown
+### Fase 3: Limpieza, clasificación y almacenamiento del markdown
 
 | Nodo | Tipo | Funcion |
 |---|---|---|
-| **Extract and clean md** | Code (JS) | Normaliza saltos de línea, limpia el markdown y estructura los datos |
-| **Save md in supabase** | HTTP Request | Inserta el convenio en la tabla `convenios` con el markdown completo |
+| **Extract and clean md1** | Code (JS) | Normaliza saltos de línea, limpia el markdown y estructura los datos. Lee la respuesta de LlamaParse directo del nodo upstream (no usa `$input` porque `Notify Progress Parsing` se interpone) |
+| **Heuristic Score** | Code (JS) | Capa 3 de validación: puntúa heurísticamente el markdown (presencia de tablas salariales, artículos, vocabulario laboral) para decidir si merece la pena llamar al clasificador Claude |
+| **Prepare Classifier Request** | Code (JS) | Capa 2: construye el payload para Claude Classifier (verifica si el documento es realmente un convenio colectivo, no un anexo, BOE genérico o documento no relacionado) |
+| **HTTP Claude Classifier** | HTTP Request | Llama al endpoint de Anthropic con el prompt del classifier |
+| **Parse Classification** | Code (JS) | Parsea la respuesta del clasificador y normaliza el veredicto (`aceptado` / `rechazado` + motivo) |
+| **Is Document Acceptable?** | IF | Bifurca: si es aceptable continúa el pipeline; si no, marca como rechazado |
+| **Mark Rechazado** | HTTP Request | Actualiza `convenios.estado = 'rechazado'` con motivo y termina la rama |
+| **Save md in supabase1** | HTTP Request | Inserta el convenio en la tabla `convenios` con el markdown completo |
 
 ### Fase 4: Chunking
 
@@ -130,13 +136,36 @@ Tipos de chunk detectados automaticamente: `normativa`, `tabla_salarial`, `tabla
 | **HTTP Request OpenAI Embeddings** | HTTP Request | Llama a `POST /v1/embeddings` con modelo `text-embedding-3-small` |
 | **Merge Embeddings with Chunks** | Code (JS) | Combina cada chunk con su vector embedding (1536 dimensiones). Valida dimensiones y calcula estadisticas de uso |
 
-### Fase 6: Almacenamiento y respuesta
+### Fase 6: Almacenamiento, perfil y respuesta
 
 | Nodo | Tipo | Funcion |
 |---|---|---|
 | **Bulk Insert Chunks** | HTTP Request | Inserta todos los chunks con embeddings en la tabla `convenio_chunks` via API REST de Supabase |
-| **Prepare Response** | Code (JS) | Construye el JSON de respuesta con estadisticas del procesamiento |
-| **Respond to Webhook** | Respond to Webhook | Envia la respuesta HTTP al cliente |
+| **Chunks Branch Complete** | Code (JS) | Marca la rama de chunks como completa para sincronizar con la rama de perfil en `Wait Both Branches` |
+| **Prepare Claude Request** | Code (JS) | Construye el prompt enriquecido (v2 - Perfil Enriquecido) para extraer el Perfil JSON del convenio con Claude Sonnet 4 |
+| **HTTP Claude API** | HTTP Request | Llamada a Anthropic para extracción de perfil |
+| **Extract Perfil Claude** | Code (JS) | Extrae el JSON del response de Claude |
+| **Validate Perfil JSON** | Code (JS) | Valida estructura del Perfil JSON contra el esquema esperado |
+| **Prepare Supabase Request** | Code (JS) | Construye el payload para upsert en `convenio_perfiles` |
+| **HTTP Supabase Delete Perfil** / **Insert Perfil** | HTTP Request | Upsert manual (delete + insert) del perfil |
+| **Upsert Perfil Supabase** | Code (JS) | Normaliza el resultado del upsert para la siguiente fase |
+| **Wait Both Branches** | Merge | Sincroniza la rama de chunks con la rama de perfil antes del estado final |
+| **Determine Final Estado** | Code (JS) | Decide el estado final del convenio (`activo` / `error_parcial`) según el resultado de ambas ramas |
+| **Update Convenio Status** | Supabase | Actualiza `convenios.estado` con el valor calculado |
+
+### Notificaciones de progreso (Notify Progress)
+
+A lo largo del pipeline, varios nodos HTTP llaman a la Edge Function `webhook-progress` para reportar avance real al frontend (en lugar de la curva estimada anterior). Contrato y detalles en `supabase/functions/webhook-progress/README.md`.
+
+| Nodo n8n | Posición en el pipeline | stage | progress |
+|---|---|---|---|
+| Notify Progress Parsing | tras Fase 2 (LlamaParse OK) | `parsing` | 20 |
+| Notify Progress Markdown | tras Fase 3 (Save md) | `saving_markdown` | 40 |
+| Notify Progress Chunks | tras Fase 4 (Bulk Insert) | `chunking` | 60 |
+| Notify Progress Profile | tras Fase 6 (perfil upserteado o saltado) | `profile` | 80 |
+| Notify Progress Completed | al final (estado final) | `completed` | 100 |
+
+Estos nodos son `fire-and-forget`: si la Edge Function falla, el pipeline continúa.
 
 ## Payload del Webhook
 
@@ -191,7 +220,33 @@ El workflow tiene configurado **Workrules-Errors** como error workflow. Cuando u
 
 ## Archivos de referencia
 
-La carpeta `n8n/nodes/` contiene copias de referencia (`ref_*.js`) del codigo JavaScript embebido en los nodos Code del workflow. Estos archivos facilitan la lectura del codigo fuera de n8n pero **no son ejecutados por el workflow** — el codigo real esta inline en el JSON.
+La carpeta `n8n/nodes/indexer/` contiene copias de referencia (`ref_*.js`) del codigo JavaScript embebido en los nodos Code del workflow. Estos archivos facilitan la lectura del codigo fuera de n8n pero **no son ejecutados por el workflow** — el codigo real esta inline en el JSON.
+
+**Mapeo nodo → fichero:**
+
+| Nodo del workflow | Fichero de referencia |
+|---|---|
+| Check Duplicate Convenio | `ref_check_duplicate_convenio.js` |
+| Respond Duplicate | `ref_respond_duplicate.js` |
+| Clear Retry Counter | `ref_clear_retry_counter.js` |
+| Check Retry Limit | `ref_check_retry_limit.js` |
+| Extract and clean md1 | `ref_extract_and_clean_md.js` |
+| Heuristic Score | `ref_heuristic_score.js` |
+| Prepare Classifier Request | `ref_prepare_classifier_request.js` |
+| Parse Classification | `ref_parse_classification.js` |
+| Chunk Markdown | `ref_chunk_markdown.js` |
+| Prepare Chunks for Insert | `ref_prepare_chunks_for_insert.js` |
+| Prepare Batch for OpenAI | `ref_prepare_batch_for_openai.js` |
+| Merge Embeddings with Chunks | `ref_merge_embeddings_with_chunks.js` |
+| Chunks Branch Complete | (inline, sin ref) |
+| Prepare Claude Request | `ref_prepare_claude_request.js` |
+| Extract Perfil Claude | `ref_extract_perfil_claude.js` |
+| Validate Perfil JSON | `ref_validate_perfil_json.js` |
+| Prepare Supabase Request | `ref_prepare_supabase_request.js` |
+| Upsert Perfil Supabase | `ref_upsert_perfil_supabase.js` |
+| Determine Final Estado | `ref_determine_final_estado.js` |
+
+Para los nodos del workflow de errores (`Workrules-Errors.json`), los ficheros de referencia están en `n8n/nodes/errors/` (`prepare_retry.js`, `process_error.js`).
 
 ## Tablas de Supabase utilizadas
 

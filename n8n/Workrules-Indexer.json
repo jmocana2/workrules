@@ -10,7 +10,10 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [21744, 3072],
+      "position": [
+        21744,
+        3072
+      ],
       "id": "3fe3a2ef-66ea-45da-80dc-d8a603fb4ce2",
       "name": "Webhook",
       "webhookId": "01c36b3d-fb3a-4df1-8577-16f5b82c6e6f"
@@ -21,7 +24,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [22112, 3072],
+      "position": [
+        22112,
+        3072
+      ],
       "id": "c077e663-9150-4971-8801-f0642bce5af7",
       "name": "Check Duplicate Convenio"
     },
@@ -31,7 +37,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [22384, 3072],
+      "position": [
+        22384,
+        3072
+      ],
       "id": "44659e08-cc52-47e7-aff4-a2881871dcf6",
       "name": "Convenio Exists?"
     },
@@ -41,7 +50,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [22432, 3488],
+      "position": [
+        22432,
+        3488
+      ],
       "id": "8b8bc1ee-3cdc-4bcc-a60d-d5b24afc516e",
       "name": "Respond Duplicate"
     },
@@ -58,7 +70,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [22944, 3056],
+      "position": [
+        22944,
+        3056
+      ],
       "id": "1e288276-271c-4f40-bd7a-77d7cac28181",
       "name": "HTTP Supabase storage PDF",
       "credentials": {
@@ -82,7 +97,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [22688, 3056],
+      "position": [
+        22688,
+        3056
+      ],
       "id": "1b4b8293-1a19-4843-9259-426552d6da9c",
       "name": "HTTP PDF Request"
     },
@@ -92,7 +110,10 @@
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [23152, 3344],
+      "position": [
+        23152,
+        3344
+      ],
       "id": "6c31577e-7fec-40b7-8823-77d9eebf4953",
       "name": "Wait",
       "webhookId": "e7907ffd-20a4-42e8-9fdf-ec94c7eeb960"
@@ -126,7 +147,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [22912, 3344],
+      "position": [
+        22912,
+        3344
+      ],
       "id": "2abe7c0e-8399-4c42-b0ad-775670c3f707",
       "name": "HTTP LlamaParse PDF",
       "credentials": {
@@ -151,7 +175,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [23392, 3344],
+      "position": [
+        23392,
+        3344
+      ],
       "id": "2d90f43c-3416-4699-9d2f-ccd55cb7cd29",
       "name": "Check LlamaParse Status",
       "credentials": {
@@ -237,7 +264,10 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [23664, 3328],
+      "position": [
+        23664,
+        3328
+      ],
       "id": "2b6f72e4-7c0c-4d3f-833e-31954efb8a8b",
       "name": "Is Processing Complete?"
     },
@@ -256,7 +286,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [23936, 3312],
+      "position": [
+        23936,
+        3312
+      ],
       "id": "087203be-39a8-4cce-a2ed-67692a0e6f75",
       "name": "Get Markdown Result",
       "credentials": {
@@ -272,7 +305,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [24192, 3312],
+      "position": [
+        24192,
+        3312
+      ],
       "id": "ff14f38a-bdd3-4ad4-bc6a-2861e0c1e527",
       "name": "Clear Retry Counter"
     },
@@ -282,7 +318,10 @@
       },
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [23920, 3600],
+      "position": [
+        23920,
+        3600
+      ],
       "id": "0a7cf0d0-dfb2-4d61-be07-b4626951de1d",
       "name": "Stop and Error"
     },
@@ -292,7 +331,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [23776, 3072],
+      "position": [
+        23776,
+        3072
+      ],
       "id": "f3a63f23-4ac4-49b1-b0ed-bb43a0341d3c",
       "name": "Check Retry Limit"
     },
@@ -302,7 +344,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [25088, 3312],
+      "position": [
+        25088,
+        3312
+      ],
       "id": "78fa6a59-acae-4ada-91d3-1f8d3cb015bc",
       "name": "Chunk Markdown"
     },
@@ -312,7 +357,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [25344, 3312],
+      "position": [
+        25344,
+        3312
+      ],
       "id": "2ad6e9db-b142-4522-bbf0-0debcf7c8c8c",
       "name": "Prepare Chunks for Insert"
     },
@@ -322,7 +370,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [25584, 3312],
+      "position": [
+        25584,
+        3312
+      ],
       "id": "6529fb1f-e9b4-41af-9ac5-34829d1f763d",
       "name": "Prepare Batch for OpenAI",
       "notes": "NUEVO I1.8: Prepara payload para OpenAI Embeddings API"
@@ -355,7 +406,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [25824, 3312],
+      "position": [
+        25824,
+        3312
+      ],
       "id": "54dd03f5-498b-4921-82a8-de711036eda7",
       "name": "HTTP Request OpenAI Embeddings",
       "credentials": {
@@ -372,7 +426,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [26064, 3312],
+      "position": [
+        26064,
+        3312
+      ],
       "id": "f2f90783-8cb8-491e-a92a-40d25cf65275",
       "name": "Merge Embeddings with Chunks",
       "notes": "NUEVO I1.8: Combina embeddings con chunks y valida dimensiones"
@@ -403,7 +460,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [26304, 3312],
+      "position": [
+        26304,
+        3312
+      ],
       "id": "d3d1b206-c1dd-4eca-8af8-73157b12b982",
       "name": "Bulk Insert Chunks",
       "credentials": {
@@ -419,7 +479,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [26544, 3312],
+      "position": [
+        26544,
+        3312
+      ],
       "id": "995c1d0b-7f20-47bf-9bad-e650bc2f6b1a",
       "name": "Chunks Branch Complete",
       "notes": "Pasa datos al merge para que ambas ramas completen"
@@ -430,7 +493,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [24496, 3312],
+      "position": [
+        24496,
+        3312
+      ],
       "id": "21a2b63a-1845-4692-8c62-8b0249fd836a",
       "name": "Extract and clean md1"
     },
@@ -440,7 +506,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [24576, 3312],
+      "position": [
+        24576,
+        3312
+      ],
       "id": "2927f5d1-b9b7-4011-807a-2a38e7a66256",
       "name": "Heuristic Score",
       "notes": "Capa 3: keyword scoring rápido antes de gastar Claude"
@@ -451,7 +520,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [24656, 3312],
+      "position": [
+        24656,
+        3312
+      ],
       "id": "2b801bca-de17-4eff-9141-e90f89f8205a",
       "name": "Prepare Classifier Request",
       "notes": "Capa 2: prepara payload para Claude Haiku"
@@ -478,7 +550,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [24736, 3312],
+      "position": [
+        24736,
+        3312
+      ],
       "id": "3793df84-5478-4e83-af57-3184830ac21b",
       "name": "HTTP Claude Classifier",
       "credentials": {
@@ -496,7 +571,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [24816, 3312],
+      "position": [
+        24816,
+        3312
+      ],
       "id": "9005a784-46af-4dad-a1a8-9047c9614cc9",
       "name": "Parse Classification",
       "notes": "Capa 2: decide aceptar/rechazar según categoría, confianza y visibilidad"
@@ -527,7 +605,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [24896, 3312],
+      "position": [
+        24896,
+        3312
+      ],
       "id": "5fdc2891-e2d9-4b7c-9351-8d0a48cbcfc7",
       "name": "Is Document Acceptable?"
     },
@@ -557,7 +638,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [24976, 3536],
+      "position": [
+        24976,
+        3536
+      ],
       "id": "2982d0fc-921a-4e5e-b590-0737687e8cc6",
       "name": "Mark Rechazado",
       "credentials": {
@@ -594,7 +678,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [25056, 3312],
+      "position": [
+        25056,
+        3312
+      ],
       "id": "1392c2bc-29e6-4ccd-8a23-70001f8f021b",
       "name": "Save md in supabase1",
       "retryOnFail": false,
@@ -612,7 +699,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [25088, 3888],
+      "position": [
+        25088,
+        3888
+      ],
       "id": "9e66ef60-0189-4135-abb1-9bb3f0e8bfa9",
       "name": "Prepare Claude Request",
       "continueOnFail": true,
@@ -640,7 +730,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [25328, 3888],
+      "position": [
+        25328,
+        3888
+      ],
       "id": "96075012-efb2-45b2-8770-091de5c210cc",
       "name": "HTTP Claude API",
       "credentials": {
@@ -658,7 +751,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [25328, 4176],
+      "position": [
+        25328,
+        4176
+      ],
       "id": "9212de00-dc87-47de-a4b9-fc4960f1cc18",
       "name": "Extract Perfil Claude",
       "continueOnFail": true,
@@ -670,7 +766,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [25568, 4176],
+      "position": [
+        25568,
+        4176
+      ],
       "id": "cea84430-7187-4059-bffc-4cf44bf9d0bf",
       "name": "Validate Perfil JSON",
       "notes": "NUEVO I1.9: Parsea, valida y normaliza el JSON del perfil"
@@ -681,7 +780,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [25776, 4176],
+      "position": [
+        25776,
+        4176
+      ],
       "id": "cbdcb0ea-d4c6-4675-ade1-e25eb83b9523",
       "name": "Prepare Supabase Request",
       "continueOnFail": true,
@@ -697,7 +799,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [26000, 3936],
+      "position": [
+        26000,
+        3936
+      ],
       "id": "07fb812f-ceae-4af1-b6f6-a0fcdd50db3d",
       "name": "HTTP Supabase Delete Perfil",
       "credentials": {
@@ -731,7 +836,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [26240, 3936],
+      "position": [
+        26240,
+        3936
+      ],
       "id": "5dce2e33-4415-4a02-a218-80cf2461bb9c",
       "name": "HTTP Supabase Insert Perfil",
       "credentials": {
@@ -749,7 +857,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [26480, 3936],
+      "position": [
+        26480,
+        3936
+      ],
       "id": "8689d2a0-41c1-4b74-93f3-d7c7fdbc6e90",
       "name": "Upsert Perfil Supabase",
       "continueOnFail": true,
@@ -763,7 +874,10 @@
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
-      "position": [26736, 3632],
+      "position": [
+        26736,
+        3632
+      ],
       "id": "52c7e2ea-9e01-477f-bddf-4564d7a6aea7",
       "name": "Wait Both Branches",
       "notes": "NUEVO I1.9: Espera a que ambas ramas (chunks + perfil) terminen antes de responder"
@@ -808,7 +922,10 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [27088, 3632],
+      "position": [
+        27088,
+        3632
+      ],
       "id": "d185af80-f14c-48f4-82c5-3091849498ad",
       "name": "Update Convenio Status",
       "credentials": {
@@ -843,7 +960,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [24336, 3312],
+      "position": [
+        24336,
+        3312
+      ],
       "id": "3cfbdba6-8aa8-4f69-877f-17a49979ae61",
       "name": "Notify Progress Parsing",
       "continueOnFail": true,
@@ -873,7 +993,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [25200, 3312],
+      "position": [
+        25200,
+        3312
+      ],
       "id": "7047edf4-b0cc-4ef2-aef6-d1f39619dfd0",
       "name": "Notify Progress Markdown",
       "continueOnFail": true,
@@ -903,7 +1026,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [26544, 3488],
+      "position": [
+        26544,
+        3488
+      ],
       "id": "9025db3a-22a4-4aed-be44-f358dfc79290",
       "name": "Notify Progress Chunks",
       "continueOnFail": true,
@@ -933,7 +1059,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [26736, 3936],
+      "position": [
+        26736,
+        3936
+      ],
       "id": "d1a179b7-13db-453b-8a95-bf0281893da6",
       "name": "Notify Progress Profile",
       "continueOnFail": true,
@@ -963,7 +1092,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [27344, 3632],
+      "position": [
+        27344,
+        3632
+      ],
       "id": "7af0d2d1-60c4-4671-83c9-c2ee36de392c",
       "name": "Notify Progress Completed",
       "continueOnFail": true,
@@ -971,11 +1103,14 @@
     },
     {
       "parameters": {
-        "jsCode": "// ============================================\n// NODO: Determine Final Estado\n// FUNCIÓN: Decide si el convenio termina como 'activo' o 'activo_sin_perfil'\n//          según si el perfil Claude se generó correctamente.\n// ============================================\n\nlet operation = 'skipped';\nlet perfilData = null;\nlet validation = null;\n\ntry {\n  const upsert = $('Upsert Perfil Supabase').first().json;\n  operation = upsert.operation || 'skipped';\n  validation = upsert.validation || null;\n} catch (e) {\n  // Si Upsert Perfil Supabase falló en runtime, asumimos sin perfil\n  operation = 'skipped';\n}\n\ntry {\n  perfilData = $('Validate Perfil JSON').first().json.perfil_data || null;\n} catch (e) {\n  perfilData = null;\n}\n\nconst webhookBody = $('Webhook').first().json.body;\nconst convenioId = webhookBody.convenio_id;\n\n// Si NO se hizo upsert del perfil o el perfil no es válido, marcar como activo_sin_perfil.\n// El RAG (chunks) sigue funcionando pero el calculador salarial se debe deshabilitar.\nconst hasValidProfile = operation === 'upserted' && perfilData;\nconst estado = hasValidProfile ? 'activo' : 'activo_sin_perfil';\n\nreturn [{\n  json: {\n    convenio_id: convenioId,\n    estado,\n    nombre_oficial: perfilData?.convenio || null,\n    nombre_corto: perfilData?.nombre_corto || null,\n    ambito_territorial: perfilData?.ambito_territorial || null,\n    ambito: perfilData?.ambito || null,\n    has_valid_profile: hasValidProfile,\n    validation\n  }\n}];"
+        "jsCode": "// ============================================\n// NODO: Determine Final Estado\n// FUNCIÓN: Decide si el convenio termina como 'activo' o 'activo_sin_perfil'\n//          según si el perfil Claude se generó correctamente.\n// ============================================\n\nlet operation = 'skipped';\nlet perfilData = null;\nlet validation = null;\n\ntry {\n  const upsert = $('Upsert Perfil Supabase').first().json;\n  operation = upsert.operation || 'skipped';\n  validation = upsert.validation || null;\n} catch {\n  // Si Upsert Perfil Supabase falló en runtime, asumimos sin perfil\n  operation = 'skipped';\n}\n\ntry {\n  perfilData = $('Validate Perfil JSON').first().json.perfil_data || null;\n} catch {\n  perfilData = null;\n}\n\nconst webhookBody = $('Webhook').first().json.body;\nconst convenioId = webhookBody.convenio_id;\n\n// Si NO se hizo upsert del perfil o el perfil no es válido, marcar como activo_sin_perfil.\n// El RAG (chunks) sigue funcionando pero el calculador salarial se debe deshabilitar.\nconst hasValidProfile = operation === 'upserted' && perfilData;\nconst estado = hasValidProfile ? 'activo' : 'activo_sin_perfil';\n\nreturn [{\n  json: {\n    convenio_id: convenioId,\n    estado,\n    nombre_oficial: perfilData?.convenio || null,\n    nombre_corto: perfilData?.nombre_corto || null,\n    ambito_territorial: perfilData?.ambito_territorial || null,\n    ambito: perfilData?.ambito || null,\n    has_valid_profile: hasValidProfile,\n    validation\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [26928, 3632],
+      "position": [
+        26928,
+        3632
+      ],
       "id": "465d3812-6d2e-42a5-a00c-810ff2364d59",
       "name": "Determine Final Estado",
       "notes": "Doc 03 / Perfil degradado: decide activo vs activo_sin_perfil"

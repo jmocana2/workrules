@@ -1,78 +1,5 @@
 # WorkRules - TODOs y Mejoras Futuras
 
-## 🚀 Alta Prioridad
-
-### 1. Sistema de Progreso Real para Upload de Convenios
-**Archivo**: `src/ui/hooks/useConvenioUpload.ts`
-**Estado**: Pendiente
-**Complejidad**: Media
-
-**Problema Actual**:
-El progreso durante el procesamiento de convenios es **estimado** usando una curva logarítmica de ~2.5 minutos. Si n8n tarda más o menos tiempo, el progreso no será preciso (ejemplo: puede saltar de 70% a 100%).
-
-**Solución Propuesta**:
-
-1. **Modificar workflow de n8n** para enviar eventos de progreso:
-   ```javascript
-   // Después de cada etapa importante, llamar webhook
-   POST /functions/v1/webhook-progress
-   {
-     "convenio_id": "uuid",
-     "stage": "parsing|chunking|embedding|profile|completed",
-     "progress": 20, // 0-100
-     "message": "LlamaParse completado"
-   }
-   ```
-
-2. **Crear Edge Function** `webhook-progress`:
-   - Recibe eventos de n8n
-   - Actualiza tabla `convenio_processing_status`
-   - Retorna 200 OK inmediatamente
-
-3. **Crear tabla en BD**:
-   ```sql
-   CREATE TABLE convenio_processing_status (
-     convenio_id UUID PRIMARY KEY REFERENCES convenios(id) ON DELETE CASCADE,
-     stage TEXT NOT NULL, -- 'parsing', 'chunking', 'embedding', 'profile', 'completed'
-     progress INT NOT NULL CHECK (progress BETWEEN 0 AND 100),
-     message TEXT,
-     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-   );
-   ```
-
-4. **Modificar polling en frontend**:
-   ```typescript
-   // En lugar de solo consultar convenios.estado
-   // También consultar convenio_processing_status
-   const { data } = await supabase
-     .from("convenio_processing_status")
-     .select("stage, progress, message")
-     .eq("convenio_id", convenioId)
-     .single();
-   ```
-
-5. **Etapas sugeridas** (n8n → webhook):
-   - **20%**: LlamaParse completado (después del nodo "Get MD Result")
-   - **40%**: Markdown guardado (después del nodo "Save md in supabase")
-   - **60%**: Chunks insertados (después del nodo "Bulk Insert Chunks")
-   - **80%**: Perfil extraído (después del nodo "Upsert Perfil Supabase")
-   - **90%**: Embeddings completados (antes del nodo "Update Convenio Status")
-   - **100%**: Todo listo (cuando estado = "activo")
-
-**Beneficios**:
-- ✅ Progreso preciso en tiempo real
-- ✅ Usuario sabe exactamente en qué etapa está el procesamiento
-- ✅ Mejor UX si hay errores en etapas intermedias
-- ✅ Mensajes informativos por etapa ("Extrayendo texto del PDF...", "Generando embeddings...")
-
-**Estimación**: 4-6 horas
-- 1h: Crear tabla y Edge Function
-- 2h: Modificar workflow n8n para enviar eventos
-- 1h: Modificar polling en frontend
-- 1-2h: Testing y ajustes
-
----
-
 ## 📋 Backlog
 
 ### 2. Optimizar Timeout del Webhook n8n
@@ -117,6 +44,11 @@ Si n8n falla (LlamaParse timeout, Claude API error, etc.):
 
 ## ✅ Completados
 
+### ~~Sistema de Progreso Real para Upload de Convenios~~
+**Fecha**: 2026-05 (TFM.6)
+**Implementado**: Edge Function `supabase/functions/webhook-progress/` + tabla `convenio_processing_status` + nodos `Notify Progress *` en `n8n/Workrules-Indexer.json` + polling en `src/ui/hooks/useConvenioUpload.ts`.
+**Stages emitidos**: `parsing` (20), `saving_markdown` (40), `chunking` (60), `profile` (80), `completed` (100). Contrato completo en `supabase/functions/webhook-progress/README.md`.
+
 ### ~~Fix: Race Condition en Actualización de Estado~~
 **Fecha**: 2026-04-21
 **Problema**: El estado cambiaba de "procesando" → "activo" → "procesando"
@@ -131,4 +63,4 @@ Si n8n falla (LlamaParse timeout, Claude API error, etc.):
 
 ---
 
-**Última actualización**: 2026-04-21
+**Última actualización**: 2026-05-23

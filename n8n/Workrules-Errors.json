@@ -14,7 +14,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [512, 224],
+      "position": [
+        512,
+        224
+      ],
       "id": "e725268e-a334-487d-9a9f-0ffbfb714e5f",
       "name": "Save to Logs",
       "credentials": {
@@ -38,7 +41,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [512, 48],
+      "position": [
+        512,
+        48
+      ],
       "id": "60480389-32b9-4e54-afc6-0ab5695b92f2",
       "name": "Prepare Retry"
     },
@@ -68,17 +74,23 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [256, 144],
+      "position": [
+        256,
+        144
+      ],
       "id": "99dab3c2-8a71-4dd8-9f75-db4c155cde4c",
       "name": "Should Retry?"
     },
     {
       "parameters": {
-        "jsCode": "// Obtener información del error\nconst error = $input.first();\nconst errorData = error.json;\n\n// Obtener datos del webhook para contexto\nlet webhookData = null;\ntry {\n  webhookData = $('Webhook').first().json.body;\n} catch (e) {\n  webhookData = { error: 'No se pudo obtener datos del webhook' };\n}\n\n// Clasificar el error\nlet errorType = 'UNKNOWN';\nlet shouldRetry = false;\nlet userMessage = 'Error desconocido procesando el convenio. Inténtalo de nuevo en unos minutos.';\n\nconst errorMessage = errorData.message || JSON.stringify(errorData);\nconst failedNode = errorData.node?.name || 'Unknown';\n\n// Usar else-if para asegurar clasificación mutualmente exclusiva\nif (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {\n  errorType = 'DUPLICATE_PDF';\n  shouldRetry = false;\n  userMessage = 'El PDF ya existe en el almacenamiento. Se puede reutilizar el existente.';\n}\nelse if (errorMessage.includes('duplicate key') && errorMessage.includes('codigo_regcon')) {\n  errorType = 'DUPLICATE_CONVENIO';\n  shouldRetry = false;\n  userMessage = 'Ya existe un convenio con este código REGCON en la base de datos.';\n}\nelse if (errorMessage.includes('timeout') && errorMessage.includes('PENDING')) {\n  errorType = 'LLAMAPARSE_TIMEOUT';\n  shouldRetry = true;\n  userMessage = 'El procesamiento del PDF está tardando más de lo esperado. Por favor, inténtalo de nuevo.';\n}\nelse if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {\n  errorType = 'AUTH_ERROR';\n  shouldRetry = false;\n  userMessage = 'Error de autenticación con servicios externos. El equipo ha sido notificado.';\n}\nelse if (errorMessage.includes('404') || errorMessage.includes('ENOTFOUND')) {\n  errorType = 'PDF_NOT_FOUND';\n  shouldRetry = false;\n  userMessage = 'No se pudo descargar el PDF desde la URL proporcionada. Verifica que el archivo es accesible.';\n}\n\n// Intentar obtener convenio_id del payload del webhook para poder marcarlo como error\nconst convenioId = webhookData?.convenio_id || null;\n\nreturn {\n  json: {\n    workflow: 'ingesta-convenio',\n    error_type: errorType,\n    error_message: errorMessage,\n    user_message: userMessage,\n    should_retry: shouldRetry,\n    failed_node: failedNode,\n    input_data: webhookData,\n    convenio_id: convenioId,\n    timestamp: new Date().toISOString()\n  }\n};"
+        "jsCode": "// Obtener información del error\nconst error = $input.first();\nconst errorData = error.json;\n\n// Obtener datos del webhook para contexto\nlet webhookData = null;\ntry {\n  webhookData = $('Webhook').first().json.body;\n} catch {\n  webhookData = { error: 'No se pudo obtener datos del webhook' };\n}\n\n// Clasificar el error\nlet errorType = 'UNKNOWN';\nlet shouldRetry = false;\nlet userMessage = 'Error desconocido procesando el convenio. Inténtalo de nuevo en unos minutos.';\n\nconst errorMessage = errorData.message || JSON.stringify(errorData);\nconst failedNode = errorData.node?.name || 'Unknown';\n\n// Usar else-if para asegurar clasificación mutualmente exclusiva\nif (errorMessage.includes('already exists') || errorMessage.includes('duplicate')) {\n  errorType = 'DUPLICATE_PDF';\n  userMessage = 'El PDF ya existe en el almacenamiento. Se puede reutilizar el existente.';\n}\nelse if (errorMessage.includes('duplicate key') && errorMessage.includes('codigo_regcon')) {\n  errorType = 'DUPLICATE_CONVENIO';\n  userMessage = 'Ya existe un convenio con este código REGCON en la base de datos.';\n}\nelse if (errorMessage.includes('timeout') && errorMessage.includes('PENDING')) {\n  errorType = 'LLAMAPARSE_TIMEOUT';\n  shouldRetry = true;\n  userMessage = 'El procesamiento del PDF está tardando más de lo esperado. Por favor, inténtalo de nuevo.';\n}\nelse if (errorMessage.includes('401') || errorMessage.includes('unauthorized')) {\n  errorType = 'AUTH_ERROR';\n  userMessage = 'Error de autenticación con servicios externos. El equipo ha sido notificado.';\n}\nelse if (errorMessage.includes('404') || errorMessage.includes('ENOTFOUND')) {\n  errorType = 'PDF_NOT_FOUND';\n  userMessage = 'No se pudo descargar el PDF desde la URL proporcionada. Verifica que el archivo es accesible.';\n}\n\n// Intentar obtener convenio_id del payload del webhook para poder marcarlo como error\nconst convenioId = webhookData?.convenio_id || null;\n\nreturn {\n  json: {\n    workflow: 'ingesta-convenio',\n    error_type: errorType,\n    error_message: errorMessage,\n    user_message: userMessage,\n    should_retry: shouldRetry,\n    failed_node: failedNode,\n    input_data: webhookData,\n    convenio_id: convenioId,\n    timestamp: new Date().toISOString()\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-208, 144],
+      "position": [
+        -208,
+        144
+      ],
       "id": "9260961a-dd3f-4880-bbac-2e39834417cf",
       "name": "Process Error"
     },
@@ -86,7 +98,10 @@
       "parameters": {},
       "type": "n8n-nodes-base.errorTrigger",
       "typeVersion": 1,
-      "position": [-416, 144],
+      "position": [
+        -416,
+        144
+      ],
       "id": "7a0909da-8399-41a0-94ee-4b1282eeaf60",
       "name": "Error Trigger"
     },
@@ -117,7 +132,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [0, 144],
+      "position": [
+        0,
+        144
+      ],
       "id": "a1b2c3d4-e5f6-4000-9000-aaaaaaaa0001",
       "name": "Has Convenio Id?"
     },
@@ -130,8 +148,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "return=minimal" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
           ]
         },
         "sendBody": true,
@@ -141,7 +165,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [0, 320],
+      "position": [
+        0,
+        320
+      ],
       "id": "a1b2c3d4-e5f6-4000-9000-aaaaaaaa0002",
       "name": "Mark Convenio Error",
       "credentials": {

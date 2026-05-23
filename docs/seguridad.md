@@ -100,7 +100,7 @@ Pendiente para la tarea de hosting (T11).
 - Helper TS `countRecentChatRequests` en `supabase/functions/_shared/lib/supabase.ts`.
 - Check en `supabase/functions/chat/index.ts` antes del parse del body. Devuelve `429` con `{limit, window_seconds}` si se excede. Falla abierta si la RPC falla (sólo log) para no romper el chat por un fallo de conteo.
 
-**Pendiente de aplicar en Supabase prod:** ejecutar `supabase/snippets/add-chat-rate-limit.sql` en el SQL editor del proyecto antes del deploy.
+**Aplicación en Supabase prod:** ejecutar `supabase/snippets/add-chat-rate-limit.sql` en el SQL editor del proyecto antes del primer deploy (la RPC ya está versionada en `database/schema.sql`; el snippet es el incremental para entornos sin reset).
 
 ### 3.4 Sanitización de inputs
 
@@ -181,7 +181,7 @@ Notas:
 
 - [x] `pnpm audit` analizado. Sin High/Critical de **runtime de producción**. Vulnerabilidades restantes son dev-only.
 - [x] RLS verificada tabla por tabla y documentada arriba.
-- [x] Rate limiting presente en `/upload-convenio`. **Pendiente:** anti-ráfaga en `/chat`.
+- [x] Rate limiting presente en `/upload-convenio` y `/chat` (anti-ráfaga implementado 2026-05-22).
 - [x] Lista de headers de seguridad lista para aplicar en hosting.
 - [x] Sin secretos hardcoded.
 

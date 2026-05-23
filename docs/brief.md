@@ -127,7 +127,7 @@ Toda respuesta del sistema debe incluir o enlazar al siguiente aviso legal:
 | Frontend | React 19 + Vite + shadcn/ui + Vercel AI SDK (Streaming) |
 | Backend | Supabase (PostgreSQL + pgvector + Edge Functions) |
 | Pipeline de Ingesta | n8n + LlamaParse (Conversión de tablas a Markdown/JSON) |
-| Cerebro IA | Anthropic Claude 3.5 Sonnet |
+| Cerebro IA | Anthropic Claude Sonnet 4 (`claude-sonnet-4-20250514`) |
 
 ---
 
