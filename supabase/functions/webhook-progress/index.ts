@@ -4,9 +4,7 @@
 // Escribe con SERVICE_ROLE para saltarse RLS (n8n no maneja JWT de usuario).
 
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/lib/cors.ts";
-
-const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
+import { buildCorsHeaders } from "../_shared/lib/cors.ts";
 
 const VALID_STAGES = new Set([
   "queued",
@@ -59,7 +57,7 @@ function validate(body: unknown): { ok: true; data: ProgressEvent } | { ok: fals
   };
 }
 
-async function handle(req: Request): Promise<Response> {
+async function handle(req: Request, jsonHeaders: Record<string, string>): Promise<Response> {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -141,8 +139,10 @@ async function handle(req: Request): Promise<Response> {
 }
 
 Deno.serve((req: Request) => {
+  const corsHeaders = buildCorsHeaders(req.headers.get("origin"));
+  const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
-  return handle(req);
+  return handle(req, jsonHeaders);
 });

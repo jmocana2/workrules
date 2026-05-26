@@ -11,7 +11,7 @@ import {
   handleStreamResponse,
   buildErrorResponse,
 } from '../_shared/core/chat/handlers.ts';
-import { corsHeaders } from '../_shared/lib/cors.ts';
+import { buildCorsHeaders } from '../_shared/lib/cors.ts';
 import { countRecentChatRequests } from '../_shared/lib/supabase.ts';
 
 // Anti-ráfaga: máximo de preguntas por ventana corta
@@ -19,26 +19,22 @@ const RATE_LIMIT_WINDOW_SECONDS = 60;
 const RATE_LIMIT_MAX_REQUESTS = 10;
 
 // ============================================
-// Headers
-// ============================================
-
-const jsonHeaders = {
-  ...corsHeaders,
-  'Content-Type': 'application/json',
-};
-
-const sseHeaders = {
-  ...corsHeaders,
-  'Content-Type': 'text/event-stream',
-  'Cache-Control': 'no-cache',
-  'Connection': 'keep-alive',
-};
-
-// ============================================
 // Edge Function Handler
 // ============================================
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = buildCorsHeaders(req.headers.get('origin'));
+  const jsonHeaders = {
+    ...corsHeaders,
+    'Content-Type': 'application/json',
+  };
+  const sseHeaders = {
+    ...corsHeaders,
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  };
+
   // ========================================
   // 1. CORS preflight
   // ========================================

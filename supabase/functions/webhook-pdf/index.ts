@@ -1,11 +1,11 @@
 // supabase/functions/webhook-pdf/index.ts
 
-import { corsHeaders } from "../_shared/lib/cors.ts";
+import { buildCorsHeaders } from "../_shared/lib/cors.ts";
 import { buildNotImplementedResponse } from "./handlers.ts";
 
-const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
-
 Deno.serve((_req: Request) => {
+  const corsHeaders = buildCorsHeaders(_req.headers.get("origin"));
+  const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
   if (_req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }

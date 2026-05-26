@@ -2,7 +2,7 @@
 // Edge Function: POST /upload-convenio - Subida de convenios colectivos (Premium)
 
 import { createClient } from "@supabase/supabase-js";
-import { corsHeaders } from "../_shared/lib/cors.ts";
+import { buildCorsHeaders } from "../_shared/lib/cors.ts";
 
 // ============================================
 // Types
@@ -29,15 +29,6 @@ interface ErrorResponse {
   error: string;
   details?: unknown;
 }
-
-// ============================================
-// Headers
-// ============================================
-
-const jsonHeaders = {
-  ...corsHeaders,
-  "Content-Type": "application/json",
-};
 
 // ============================================
 // Helper Functions
@@ -205,6 +196,7 @@ async function triggerN8nWebhook(payload: {
 async function checkUploadGating(
   supabase: ReturnType<typeof createAuthenticatedClient>,
   userId: string,
+  jsonHeaders: Record<string, string>,
 ): Promise<Response | null> {
   const { data: profile, error: profileError } = await supabase
     .from("user_profiles")
@@ -267,6 +259,7 @@ async function checkDuplicateByHash(
   supabase: ReturnType<typeof createAuthenticatedClient>,
   userId: string,
   pdfHash: string | undefined,
+  jsonHeaders: Record<string, string>,
 ): Promise<Response | null> {
   if (!pdfHash) return null;
 
@@ -303,7 +296,7 @@ async function checkDuplicateByHash(
 // Edge Function Handler
 // ============================================
 
-async function handleRequest(req: Request): Promise<Response> {
+async function handleRequest(req: Request, jsonHeaders: Record<string, string>): Promise<Response> {
   // ========================================
   // 1. Solo POST permitido
   // ========================================
@@ -347,7 +340,7 @@ async function handleRequest(req: Request): Promise<Response> {
     // ========================================
     // 5. Gating Capa 4 (premium + rate limit anti-ráfaga)
     // ========================================
-    const gatingResponse = await checkUploadGating(supabase, user.id);
+    const gatingResponse = await checkUploadGating(supabase, user.id, jsonHeaders);
     if (gatingResponse) return gatingResponse;
 
     // ========================================
@@ -386,6 +379,7 @@ async function handleRequest(req: Request): Promise<Response> {
       supabase,
       user.id,
       pdf_hash,
+      jsonHeaders,
     );
     if (duplicateResponse) return duplicateResponse;
 
@@ -475,10 +469,12 @@ async function handleRequest(req: Request): Promise<Response> {
 }
 
 Deno.serve((req: Request) => {
+  const corsHeaders = buildCorsHeaders(req.headers.get("origin"));
+  const jsonHeaders = { ...corsHeaders, "Content-Type": "application/json" };
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
-  return handleRequest(req);
+  return handleRequest(req, jsonHeaders);
 });
 
 /* To invoke locally:
