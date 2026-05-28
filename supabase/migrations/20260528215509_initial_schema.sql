@@ -362,7 +362,6 @@ CREATE OR REPLACE FUNCTION increment_query_count(p_user_id UUID)
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
 AS $$
 DECLARE
     v_limit INTEGER;
@@ -440,7 +439,6 @@ CREATE OR REPLACE FUNCTION count_recent_uploads(
 RETURNS INTEGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
 AS $$
 DECLARE
     v_count INTEGER;
@@ -805,7 +803,6 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
 AS $$
 BEGIN
     RETURN QUERY
@@ -845,7 +842,6 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
 AS $$
 BEGIN
     RETURN QUERY
@@ -880,7 +876,6 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
 AS $$
 BEGIN
     RETURN QUERY
