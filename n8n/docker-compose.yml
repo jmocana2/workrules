@@ -29,6 +29,20 @@ services:
       # Logs
       - N8N_LOG_LEVEL=info
 
+      # Permitir leer $env.* dentro de nodos Code/HTTP (necesario para SUPABASE_URL,
+      # WEBHOOK_PROGRESS_SECRET, etc.).
+      # SECURITY: con esto, CUALQUIER nodo del workflow puede leer TODAS las env vars
+      # del contenedor (incluidas N8N_BASIC_AUTH_PASSWORD y demás secretos). Solo es
+      # aceptable porque (a) los workflows los escribimos nosotros, (b) el acceso al
+      # editor está protegido por basic auth, y (c) no hay usuarios externos con
+      # permisos de edicion. Si en algun momento se da acceso al editor a terceros,
+      # hay que revisar este flag y considerar pasar los valores via credenciales
+      # (Header Auth) en lugar de $env.
+      - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+
+      # Variables consumidas por los workflows
+      - SUPABASE_URL=${SUPABASE_URL}
+
     volumes:
       # Persistir datos de n8n (workflows, credenciales, etc)
       - n8n_data:/home/node/.n8n

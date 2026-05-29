@@ -10,11 +10,8 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [
-        21744,
-        3072
-      ],
-      "id": "3fe3a2ef-66ea-45da-80dc-d8a603fb4ce2",
+      "position": [31904, 4672],
+      "id": "303a5589-d96c-4b9a-8b0b-479fc4ebd9cd",
       "name": "Webhook",
       "webhookId": "01c36b3d-fb3a-4df1-8577-16f5b82c6e6f"
     },
@@ -24,11 +21,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        22112,
-        3072
-      ],
-      "id": "c077e663-9150-4971-8801-f0642bce5af7",
+      "position": [32272, 4672],
+      "id": "75e8704f-d740-4f7c-8765-c85f73bd6276",
       "name": "Check Duplicate Convenio"
     },
     {
@@ -37,11 +31,8 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        22384,
-        3072
-      ],
-      "id": "44659e08-cc52-47e7-aff4-a2881871dcf6",
+      "position": [32544, 4672],
+      "id": "35fd6bfb-b376-4e4d-bb63-d5e50b76165b",
       "name": "Convenio Exists?"
     },
     {
@@ -50,17 +41,14 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        22432,
-        3488
-      ],
-      "id": "8b8bc1ee-3cdc-4bcc-a60d-d5b24afc516e",
+      "position": [32592, 5088],
+      "id": "8d597402-c04a-414c-9169-e5c8db9bd9f3",
       "name": "Respond Duplicate"
     },
     {
       "parameters": {
         "method": "PUT",
-        "url": "=http://host.docker.internal:54321/storage/v1/object/convenios-pdf/{{ $('Webhook').first().json.body.codigo_regcon }}.pdf",
+        "url": "={{ $env.SUPABASE_URL }}/storage/v1/object/convenios-pdf/{{ $('Webhook').first().json.body.codigo_regcon }}.pdf",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendBody": true,
@@ -70,11 +58,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        22944,
-        3056
-      ],
-      "id": "1e288276-271c-4f40-bd7a-77d7cac28181",
+      "position": [33104, 4656],
+      "id": "6b891320-a827-43f1-90b0-2749d6dbcccc",
       "name": "HTTP Supabase storage PDF",
       "credentials": {
         "supabaseApi": {
@@ -97,11 +82,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        22688,
-        3056
-      ],
-      "id": "1b4b8293-1a19-4843-9259-426552d6da9c",
+      "position": [32848, 4656],
+      "id": "e4af744e-e6ff-46e4-a545-c3e6ca390499",
       "name": "HTTP PDF Request"
     },
     {
@@ -110,11 +92,8 @@
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [
-        23152,
-        3344
-      ],
-      "id": "6c31577e-7fec-40b7-8823-77d9eebf4953",
+      "position": [33312, 4944],
+      "id": "363b56c4-6703-4279-a696-30d85122a94e",
       "name": "Wait",
       "webhookId": "e7907ffd-20a4-42e8-9fdf-ec94c7eeb960"
     },
@@ -147,11 +126,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        22912,
-        3344
-      ],
-      "id": "2abe7c0e-8399-4c42-b0ad-775670c3f707",
+      "position": [33072, 4944],
+      "id": "0bc40d48-917f-4b87-9e50-7230a24db579",
       "name": "HTTP LlamaParse PDF",
       "credentials": {
         "httpHeaderAuth": {
@@ -175,11 +151,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        23392,
-        3344
-      ],
-      "id": "2d90f43c-3416-4699-9d2f-ccd55cb7cd29",
+      "position": [33552, 4944],
+      "id": "6bb3856d-3897-4372-a74a-fcf44c67aadf",
       "name": "Check LlamaParse Status",
       "credentials": {
         "httpHeaderAuth": {
@@ -264,11 +237,8 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [
-        23664,
-        3328
-      ],
-      "id": "2b6f72e4-7c0c-4d3f-833e-31954efb8a8b",
+      "position": [33824, 4928],
+      "id": "fe9ac9ab-dbf4-4470-b283-2c30507ecc37",
       "name": "Is Processing Complete?"
     },
     {
@@ -286,11 +256,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        23936,
-        3312
-      ],
-      "id": "087203be-39a8-4cce-a2ed-67692a0e6f75",
+      "position": [34096, 4912],
+      "id": "13e1ac90-1282-4d1e-bdeb-57470474dee9",
       "name": "Get Markdown Result",
       "credentials": {
         "httpHeaderAuth": {
@@ -305,11 +272,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        24192,
-        3312
-      ],
-      "id": "ff14f38a-bdd3-4ad4-bc6a-2861e0c1e527",
+      "position": [34352, 4912],
+      "id": "cdd4435c-35b6-4300-859f-5eb4da2640ae",
       "name": "Clear Retry Counter"
     },
     {
@@ -318,11 +282,8 @@
       },
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [
-        23920,
-        3600
-      ],
-      "id": "0a7cf0d0-dfb2-4d61-be07-b4626951de1d",
+      "position": [34080, 5200],
+      "id": "9ed7bd63-21f5-4cef-9169-f688003699cd",
       "name": "Stop and Error"
     },
     {
@@ -331,11 +292,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        23776,
-        3072
-      ],
-      "id": "f3a63f23-4ac4-49b1-b0ed-bb43a0341d3c",
+      "position": [33936, 4672],
+      "id": "89904623-c02a-4be9-b9ca-314b5317bd9a",
       "name": "Check Retry Limit"
     },
     {
@@ -344,11 +302,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        25088,
-        3312
-      ],
-      "id": "78fa6a59-acae-4ada-91d3-1f8d3cb015bc",
+      "position": [34272, 5664],
+      "id": "b8b4ee0d-a214-4e88-9fa3-484fde1c558c",
       "name": "Chunk Markdown"
     },
     {
@@ -357,11 +312,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        25344,
-        3312
-      ],
-      "id": "2ad6e9db-b142-4522-bbf0-0debcf7c8c8c",
+      "position": [34576, 5664],
+      "id": "8aead26a-0061-4c34-b95a-fba5527fcd2c",
       "name": "Prepare Chunks for Insert"
     },
     {
@@ -370,11 +322,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        25584,
-        3312
-      ],
-      "id": "6529fb1f-e9b4-41af-9ac5-34829d1f763d",
+      "position": [34896, 5664],
+      "id": "bfc11ff5-2990-40e1-bbf4-6f4832afb64c",
       "name": "Prepare Batch for OpenAI",
       "notes": "NUEVO I1.8: Prepara payload para OpenAI Embeddings API"
     },
@@ -406,11 +355,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        25824,
-        3312
-      ],
-      "id": "54dd03f5-498b-4921-82a8-de711036eda7",
+      "position": [35200, 5664],
+      "id": "faaff55b-cdab-4b18-bae2-cde3e9b9cfe0",
       "name": "HTTP Request OpenAI Embeddings",
       "credentials": {
         "openAiApi": {
@@ -426,18 +372,15 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        26064,
-        3312
-      ],
-      "id": "f2f90783-8cb8-491e-a92a-40d25cf65275",
+      "position": [35536, 5664],
+      "id": "54238da6-359d-4b12-913c-26d52deb0a78",
       "name": "Merge Embeddings with Chunks",
       "notes": "NUEVO I1.8: Combina embeddings con chunks y valida dimensiones"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:54321/rest/v1/convenio_chunks",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/convenio_chunks",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
@@ -460,11 +403,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        26304,
-        3312
-      ],
-      "id": "d3d1b206-c1dd-4eca-8af8-73157b12b982",
+      "position": [35824, 5664],
+      "id": "4a37a44b-f0ec-4b41-a09e-5a1582fd02fd",
       "name": "Bulk Insert Chunks",
       "credentials": {
         "supabaseApi": {
@@ -479,11 +419,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        26544,
-        3312
-      ],
-      "id": "995c1d0b-7f20-47bf-9bad-e650bc2f6b1a",
+      "position": [36384, 5664],
+      "id": "d8eeaeb2-c9f7-46b0-90e7-ccedc0ab28c2",
       "name": "Chunks Branch Complete",
       "notes": "Pasa datos al merge para que ambas ramas completen"
     },
@@ -493,11 +430,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        24496,
-        3312
-      ],
-      "id": "21a2b63a-1845-4692-8c62-8b0249fd836a",
+      "position": [34544, 5328],
+      "id": "e98e2656-01e1-48a9-9996-d7f346c1c768",
       "name": "Extract and clean md1"
     },
     {
@@ -506,11 +440,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        24576,
-        3312
-      ],
-      "id": "2927f5d1-b9b7-4011-807a-2a38e7a66256",
+      "position": [32288, 5680],
+      "id": "e58f3fd2-ace1-40d3-ba7c-d577579f9b2f",
       "name": "Heuristic Score",
       "notes": "Capa 3: keyword scoring rápido antes de gastar Claude"
     },
@@ -520,11 +451,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        24656,
-        3312
-      ],
-      "id": "2b801bca-de17-4eff-9141-e90f89f8205a",
+      "position": [32608, 5680],
+      "id": "d7e9620b-cec7-40e0-8e06-b970451945b1",
       "name": "Prepare Classifier Request",
       "notes": "Capa 2: prepara payload para Claude Haiku"
     },
@@ -550,15 +478,12 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        24736,
-        3312
-      ],
-      "id": "3793df84-5478-4e83-af57-3184830ac21b",
+      "position": [32864, 5680],
+      "id": "60d85ccf-561e-40fc-8038-27364cfb791a",
       "name": "HTTP Claude Classifier",
       "credentials": {
         "anthropicApi": {
-          "id": "2BE4F8N8ueXrNFnm",
+          "id": "GebV1dLNy0TJmyya",
           "name": "Anthropic account"
         }
       },
@@ -571,11 +496,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        24816,
-        3312
-      ],
-      "id": "9005a784-46af-4dad-a1a8-9047c9614cc9",
+      "position": [33168, 5680],
+      "id": "2d08fa35-a99b-4fdb-90f2-1e0bb72f47bb",
       "name": "Parse Classification",
       "notes": "Capa 2: decide aceptar/rechazar según categoría, confianza y visibilidad"
     },
@@ -605,17 +527,14 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        24896,
-        3312
-      ],
-      "id": "5fdc2891-e2d9-4b7c-9351-8d0a48cbcfc7",
+      "position": [33472, 5680],
+      "id": "8f9a8d5d-56b7-48d2-a053-c2fba8422548",
       "name": "Is Document Acceptable?"
     },
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=http://host.docker.internal:54321/rest/v1/convenios?id=eq.{{ $json.convenio_id }}",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/convenios?id=eq.{{ $json.convenio_id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
@@ -638,11 +557,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        24976,
-        3536
-      ],
-      "id": "2982d0fc-921a-4e5e-b590-0737687e8cc6",
+      "position": [33440, 6048],
+      "id": "04c80619-1197-4391-be77-917e2a8421e5",
       "name": "Mark Rechazado",
       "credentials": {
         "supabaseApi": {
@@ -655,7 +571,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=http://host.docker.internal:54321/rest/v1/convenios?id=eq.{{ $('Webhook').first().json.body.convenio_id }}",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/convenios?id=eq.{{ $('Webhook').first().json.body.convenio_id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
@@ -678,11 +594,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        25056,
-        3312
-      ],
-      "id": "1392c2bc-29e6-4ccd-8a23-70001f8f021b",
+      "position": [33792, 5664],
+      "id": "d7f8e253-f212-4e1f-aae4-e1653050f53d",
       "name": "Save md in supabase1",
       "retryOnFail": false,
       "notesInFlow": false,
@@ -699,11 +612,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        25088,
-        3888
-      ],
-      "id": "9e66ef60-0189-4135-abb1-9bb3f0e8bfa9",
+      "position": [33824, 6080],
+      "id": "b98148b4-4967-4be0-8c2f-ee2021a81648",
       "name": "Prepare Claude Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara el payload para Claude API"
@@ -730,15 +640,12 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        25328,
-        3888
-      ],
-      "id": "96075012-efb2-45b2-8770-091de5c210cc",
+      "position": [34128, 6080],
+      "id": "a62d0047-ccd7-43ad-9ed6-0244151a22f3",
       "name": "HTTP Claude API",
       "credentials": {
         "anthropicApi": {
-          "id": "2BE4F8N8ueXrNFnm",
+          "id": "GebV1dLNy0TJmyya",
           "name": "Anthropic account"
         }
       },
@@ -751,11 +658,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        25328,
-        4176
-      ],
-      "id": "9212de00-dc87-47de-a4b9-fc4960f1cc18",
+      "position": [34416, 6080],
+      "id": "4594a9f8-879f-47b4-ab5e-b879f94d5b4a",
       "name": "Extract Perfil Claude",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Claude API"
@@ -766,11 +670,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        25568,
-        4176
-      ],
-      "id": "cea84430-7187-4059-bffc-4cf44bf9d0bf",
+      "position": [34752, 6080],
+      "id": "d99e00be-99d5-4fac-b44a-56a5e0cc88c5",
       "name": "Validate Perfil JSON",
       "notes": "NUEVO I1.9: Parsea, valida y normaliza el JSON del perfil"
     },
@@ -780,11 +681,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        25776,
-        4176
-      ],
-      "id": "cbdcb0ea-d4c6-4675-ade1-e25eb83b9523",
+      "position": [35072, 6080],
+      "id": "c803be18-842d-4df1-8612-4c0a405b671e",
       "name": "Prepare Supabase Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara datos para upsert en Supabase"
@@ -792,18 +690,15 @@
     {
       "parameters": {
         "method": "DELETE",
-        "url": "=http://host.docker.internal:54321/rest/v1/convenio_perfiles?convenio_id=eq.{{ $json.convenio_uuid }}",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/convenio_perfiles?convenio_id=eq.{{ $json.convenio_uuid }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        26000,
-        3936
-      ],
-      "id": "07fb812f-ceae-4af1-b6f6-a0fcdd50db3d",
+      "position": [35392, 6080],
+      "id": "6ef07f7d-1ffe-4bc6-affc-3539ee4d2a50",
       "name": "HTTP Supabase Delete Perfil",
       "credentials": {
         "supabaseApi": {
@@ -817,7 +712,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:54321/rest/v1/convenio_perfiles",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/convenio_perfiles",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
@@ -836,11 +731,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        26240,
-        3936
-      ],
-      "id": "5dce2e33-4415-4a02-a218-80cf2461bb9c",
+      "position": [35632, 6080],
+      "id": "cf6e1e95-da20-4fb6-bdc4-cf8307e7e334",
       "name": "HTTP Supabase Insert Perfil",
       "credentials": {
         "supabaseApi": {
@@ -857,11 +749,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        26480,
-        3936
-      ],
-      "id": "8689d2a0-41c1-4b74-93f3-d7c7fdbc6e90",
+      "position": [35872, 6080],
+      "id": "6fcbb6a5-61a8-45d9-a71e-41dcad452365",
       "name": "Upsert Perfil Supabase",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Supabase"
@@ -874,11 +763,8 @@
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
-      "position": [
-        26736,
-        3632
-      ],
-      "id": "52c7e2ea-9e01-477f-bddf-4564d7a6aea7",
+      "position": [36560, 5920],
+      "id": "a36dfbaf-78b4-43f9-9924-0d61cac97d02",
       "name": "Wait Both Branches",
       "notes": "NUEVO I1.9: Espera a que ambas ramas (chunks + perfil) terminen antes de responder"
     },
@@ -922,11 +808,8 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        27088,
-        3632
-      ],
-      "id": "d185af80-f14c-48f4-82c5-3091849498ad",
+      "position": [37088, 5920],
+      "id": "bcc81f01-b7d2-45ab-a25f-06b9cd928d17",
       "name": "Update Convenio Status",
       "credentials": {
         "supabaseApi": {
@@ -939,7 +822,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "url": "={{ $env.SUPABASE_URL }}/functions/v1/webhook-progress",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -960,11 +843,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        24336,
-        3312
-      ],
-      "id": "3cfbdba6-8aa8-4f69-877f-17a49979ae61",
+      "position": [34496, 4912],
+      "id": "5ef519f9-673b-4cf7-a810-96ba5fff7072",
       "name": "Notify Progress Parsing",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: notifica al frontend que LlamaParse terminó (20%)"
@@ -972,7 +852,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "url": "={{ $env.SUPABASE_URL }}/functions/v1/webhook-progress",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -993,11 +873,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        25200,
-        3312
-      ],
-      "id": "7047edf4-b0cc-4ef2-aef6-d1f39619dfd0",
+      "position": [34000, 5664],
+      "id": "02db4c31-7883-4be7-9e32-0e289bdf0708",
       "name": "Notify Progress Markdown",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: markdown guardado (40%)"
@@ -1005,7 +882,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "url": "={{ $env.SUPABASE_URL }}/functions/v1/webhook-progress",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1026,11 +903,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        26544,
-        3488
-      ],
-      "id": "9025db3a-22a4-4aed-be44-f358dfc79290",
+      "position": [36128, 5664],
+      "id": "75ac69e6-6599-4c21-917e-e684d475328d",
       "name": "Notify Progress Chunks",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: chunks insertados (60%)"
@@ -1038,7 +912,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "url": "={{ $env.SUPABASE_URL }}/functions/v1/webhook-progress",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1059,11 +933,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        26736,
-        3936
-      ],
-      "id": "d1a179b7-13db-453b-8a95-bf0281893da6",
+      "position": [36128, 6080],
+      "id": "8ab71395-69ef-4f7f-a65d-ffb71fce0c66",
       "name": "Notify Progress Profile",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: perfil Claude procesado (80%)"
@@ -1071,7 +942,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://host.docker.internal:54321/functions/v1/webhook-progress",
+        "url": "={{ $env.SUPABASE_URL }}/functions/v1/webhook-progress",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1092,11 +963,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        27344,
-        3632
-      ],
-      "id": "7af0d2d1-60c4-4671-83c9-c2ee36de392c",
+      "position": [37360, 5920],
+      "id": "f7dc7d12-8e08-4f8f-b88b-ee5eccdb8236",
       "name": "Notify Progress Completed",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: convenio listo (100%)"
@@ -1107,11 +975,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        26928,
-        3632
-      ],
-      "id": "465d3812-6d2e-42a5-a00c-810ff2364d59",
+      "position": [36848, 5920],
+      "id": "40b81f80-b67f-43b8-8b79-31c8da1698ac",
       "name": "Determine Final Estado",
       "notes": "Doc 03 / Perfil degradado: decide activo vs activo_sin_perfil"
     }
@@ -1602,7 +1467,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "d7d5db07-e773-4211-88cd-70ec775f438b",
+  "versionId": "6f38cc78-5788-4c5f-bb5a-f06061f065ee",
   "meta": {
     "instanceId": "f72a9e83ddf781aec5a22208462a7d8c35ce6440f1e460ba7b8702ce4b52a0a2"
   },

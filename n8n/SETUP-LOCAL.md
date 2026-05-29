@@ -19,27 +19,25 @@ Espera ~30 segundos y accede a: **http://localhost:5678**
 
 **IMPORTANTE**: En el primer acceso, configura tus credenciales de administrador.
 Si usas las credenciales por defecto del docker-compose, cámbialas inmediatamente por seguridad.
-## 2. Importar el Workflow
+## 2. Importar los Workflows
 
-1. En n8n, ve a **Workflows** > **Import from File**
-2. Selecciona `Workrules-Indexer.json`
-3. El workflow se importará con todas las conexiones
+En n8n, ve a **Workflows** > **Import from File** e importa, en este orden:
+
+1. `Workrules-Errors.json` — handler global de errores (Error Trigger).
+2. `Workrules-Indexer.json` — pipeline de ingesta (Webhook).
+
+Tras importar, los nodos aparecerán con las credenciales en rojo (esperado: los IDs internos cambian entre instancias). Se reasignan en el paso 3.
+
 ## 3. Configurar Credenciales
 
-En n8n, ve a **Settings** > **Credentials** y crea:
+En **Settings > Credentials** crea las siguientes 4 credenciales. **El nombre debe coincidir exactamente** con el que esperan los JSON, si no, al reasignar habrá que hacerlo nodo por nodo.
 
-### 3.1 Supabase API (para inserts en DB)
+### 3.1 Supabase account
 
-- **Name**: `Supabase Local`
-- **Type**: `Header Auth`
-- **Header Name**: `apikey`
-- **Header Value**: (tu anon key de `supabase status`)
-
-También necesitas crear otra credencial para el service role:
-- **Name**: `Supabase Service Role`
-- **Type**: `Header Auth`
-- **Header Name**: `Authorization`
-- **Header Value**: `Bearer <SERVICE_ROLE_KEY>`
+- **Name**: `Supabase account`
+- **Type**: `Supabase API` (tipo nativo, no Header Auth)
+- **Host**: `http://host.docker.internal:54321`
+- **Service Role Secret**: tu `service_role` key de `supabase status`
 
 ### 3.2 LlamaParse
 
@@ -48,40 +46,37 @@ También necesitas crear otra credencial para el service role:
 - **Header Name**: `Authorization`
 - **Header Value**: `Bearer <LLAMAPARSE_API_KEY>`
 
-### 3.3 OpenAI
+### 3.3 OpenAi account
 
-- **Name**: `OpenAI`
+- **Name**: `OpenAi account`
 - **Type**: `OpenAI API`
 - **API Key**: tu key de OpenAI
 
-### 3.4 Anthropic (Claude)
+### 3.4 Anthropic account
 
-- **Name**: `Anthropic`
+- **Name**: `Anthropic account`
 - **Type**: `Anthropic API`
 - **API Key**: tu key de Anthropic
 
-## 4. Configurar Variable de Entorno SUPABASE_URL
+Después abre cada workflow y, en los nodos que sigan en rojo, selecciona la credencial recién creada del desplegable.
 
-El workflow usa la variable de entorno `$env.SUPABASE_URL` para todas las conexiones a Supabase. Esto permite cambiar entre entorno local y produccion sin modificar el workflow.
+## 4. Variable de Entorno SUPABASE_URL
 
-La variable ya esta configurada en `.env` (copiado de `.env.example`):
+Los workflows usan `$env.SUPABASE_URL` para todas las conexiones a Supabase (REST, Storage, Edge Functions). El mismo JSON funciona en local y en producción: solo cambia el valor de la variable.
+
+Configurado en `.env` (copiado de `.env.example`):
 
 ```env
-# Para desarrollo local con Supabase local
+# Local
 SUPABASE_URL=http://host.docker.internal:54321
 
-# Para produccion, cambiar a:
+# Producción
 # SUPABASE_URL=https://tu-proyecto.supabase.co
 ```
 
-> **Nota**: Usa `host.docker.internal` en lugar de `localhost` porque n8n corre dentro de Docker.
+> **Nota**: Desde dentro del contenedor Docker, `host.docker.internal` apunta a tu host (donde corre Supabase local). `localhost` no funcionaría.
 
-Los nodos que usan esta variable son:
-- `HTTP Supabase storage PDF`
-- `Save md in supabase1`
-- `Bulk Insert Chunks`
-- `HTTP Supabase Delete Perfil`
-- `HTTP Supabase Insert Perfil`
+> **Importante**: `docker-compose.yml` incluye `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`. Sin esa línea, n8n bloquea el acceso a `$env.*` desde los nodos y todas las URLs del workflow se evalúan vacías.
 
 ## 5. Crear Bucket de Storage
 

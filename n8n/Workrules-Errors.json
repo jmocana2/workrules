@@ -4,7 +4,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://{{ $env.SUPABASE_PROJECT_REF }}.supabase.co/rest/v1/pipeline_logs",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/pipeline_logs",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendBody": true,
@@ -21,14 +21,6 @@
       "id": "e725268e-a334-487d-9a9f-0ffbfb714e5f",
       "name": "Save to Logs",
       "credentials": {
-        "httpHeaderAuth": {
-          "id": "GwkVJeVtr9euv3xH",
-          "name": "Header Auth account"
-        },
-        "httpCustomAuth": {
-          "id": "Fr22ZyvCCjtG4xDL",
-          "name": "Supabase Auth"
-        },
         "supabaseApi": {
           "id": "17i79gWGYg1gHxjw",
           "name": "Supabase account"
@@ -142,7 +134,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "=https://{{ $env.SUPABASE_PROJECT_REF }}.supabase.co/rest/v1/convenios?id=eq.{{ $json.convenio_id }}",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/convenios?id=eq.{{ $json.convenio_id }}",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
