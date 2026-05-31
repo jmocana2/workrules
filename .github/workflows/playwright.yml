@@ -29,12 +29,15 @@ jobs:
       with:
         path: ~/.cache/ms-playwright
         key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-chromium
-    - name: Install Playwright chromium
+    - name: Install Playwright chromium browser
       if: steps.playwright-cache.outputs.cache-hit != 'true'
-      run: pnpm exec playwright install --with-deps chromium
-    - name: Install Playwright system deps (cache hit)
-      if: steps.playwright-cache.outputs.cache-hit == 'true'
-      run: pnpm exec playwright install-deps chromium
+      timeout-minutes: 5
+      run: pnpm exec playwright install chromium
+    - name: Install Playwright system deps
+      timeout-minutes: 5
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: sudo -E pnpm exec playwright install-deps chromium
     - name: Build app
       run: pnpm build
       env:
