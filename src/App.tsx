@@ -81,7 +81,16 @@ function SimpleLogin() {
           >
             {loading ? "Iniciando sesion..." : "Iniciar sesion"}
           </button>
-        </form>     
+        </form>
+
+        {/* TEMP: Sentry smoke test — borrar tras validar */}
+        <button
+          type="button"
+          onClick={() => { throw new Error("This is your first error!"); }}
+          className="mt-4 w-full py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700"
+        >
+          Break the world
+        </button>
       </div>
     </div>
   );

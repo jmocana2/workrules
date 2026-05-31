@@ -31,6 +31,7 @@
   "devDependencies": {
     "@chromatic-com/storybook": "^5.0.1",
     "@playwright/test": "^1.58.2",
+    "@sentry/vite-plugin": "^5.3.0",
     "@storybook/addon-a11y": "^10.2.16",
     "@storybook/addon-docs": "^10.2.16",
     "@storybook/addon-onboarding": "^10.2.16",
@@ -95,6 +96,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
     "@rive-app/react-webgl2": "^4.27.0",
+    "@sentry/react": "^10.55.0",
     "@streamdown/cjk": "^1.0.2",
     "@streamdown/code": "^1.1.0",
     "@streamdown/math": "^1.0.2",
