@@ -19,6 +19,9 @@ import { useSupabase } from "@ui/hooks/useSupabase";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
+  AlertConflictPayload,
+  AlertInvalidDataPayload,
+  AlertSMIPayload,
   AlertState,
   ChatMessage,
   ChatPageState,
@@ -39,6 +42,49 @@ import {
 } from "./parseAlertEvent";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
+
+/**
+ * Decide si una variable critica del perfil es "identificadora": sin ella no
+ * se puede aplicar una tabla salarial concreta (categoria, nivel/tipo de
+ * establecimiento, zona/ambito territorial, grupo profesional).
+ * Las moduladoras (jornada, antigüedad, turno, horas extra, pluses) NO
+ * bloquean; se asume default y se aclara en la respuesta de Claude.
+ */
+function isIdentifyingVariable(name: string): boolean {
+  // Misma normalizacion que el backend: lowercase, sin acentos,
+  // separadores (`_`, `-`) y multiples espacios colapsados a un espacio.
+  const normalized = name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const identifyingKeywords = [
+    "categoria",
+    "puesto",
+    "nivel",
+    "tipo establecimiento",
+    "tipo de establecimiento",
+    "clase",
+    "zona",
+    "ambito",
+    "grupo",
+    "area",
+  ];
+
+  return identifyingKeywords.some((kw) => normalized.includes(kw));
+}
+
+/**
+ * Convierte "tipo_establecimiento" -> "Tipo establecimiento" para mostrarlo
+ * como label legible en DataRequestCard.
+ */
+function humanizeVariableLabel(name: string): string {
+  const cleaned = name.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
 
 /** Flag para usar mocks en desarrollo/Storybook */
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCKS === "true";
@@ -145,6 +191,13 @@ export function useChatPage(
   // Input controlado localmente
   const [localInput, setLocalInput] = useState("");
 
+  // Variables estructuradas activas (chips encima del textarea).
+  // Una sola por nombre: el reemplazo por grupo es automatico (set sobrescribe).
+  // Persisten entre turnos hasta que el usuario las elimine o cambie de convenio.
+  const [activeVariables, setActiveVariables] = useState<
+    Record<string, string>
+  >({});
+
   // ============================================================================
   // Hook de Chat Real (useChatStream) - cuando NO usamos mocks
   // ============================================================================
@@ -159,20 +212,38 @@ export function useChatPage(
             suggestions?: Record<string, string[]>;
           };
 
+          // Solo bloqueamos por variables IDENTIFICADORAS (sin ellas no hay
+          // tabla salarial aplicable). Las moduladoras (jornada, antigüedad,
+          // turno, horas extra, pluses) asumen default y se aclaran en la
+          // respuesta. Ver docs/analisis-calculo-salarios.md §2.
+          const identifying = (payload.missingVariables ?? []).filter(
+            isIdentifyingVariable,
+          );
+
+          // Si todas las que faltan son moduladoras, no mostramos card —
+          // dejamos que Claude responda con el supuesto explícito.
+          if (identifying.length === 0) break;
+
+          // Preferir nombre legible del convenio sobre el nombre técnico/PDF
+          const convenio = state.selectedConvenio;
+          const convenioLabel = convenio?.nombre_corto ||
+            convenio?.nombre_oficial ||
+            convenio?.nombre;
+
           // Construir DataRequestPayload desde el payload del backend
           const dataRequestPayload = parseDataRequestEvent(
             JSON.stringify({
               title: "Necesito más información",
-              convenioName: state.selectedConvenio?.nombre,
-              fields: payload.missingVariables?.map((v) => ({
+              convenioName: convenioLabel,
+              fields: identifying.map((v) => ({
                 name: v,
-                label: v,
+                label: humanizeVariableLabel(v),
                 type: "radio" as const,
                 options: payload.suggestions?.[v]?.map((s) => ({
                   value: s,
                   label: s,
                 })) || [],
-              })) || [],
+              })),
               maxAttempts: 3,
               currentAttempt: 1,
             }),
@@ -184,35 +255,79 @@ export function useChatPage(
           break;
         }
 
-        case "invalid":
+        case "invalid": {
           // Estado D - Datos invalidos
+          // Backend payload: { message, invalidVariables: [{name, reason, value}] }
+          // Tomamos la primera variable inválida (el componente muestra una a la vez).
+          const raw = specialState.payload as {
+            message?: string;
+            invalidVariables?: Array<{
+              name: string;
+              reason: string;
+              value: string | number;
+            }>;
+          };
+          const first = raw.invalidVariables?.[0];
+          if (!first) break;
+
+          const payload: AlertInvalidDataPayload = {
+            field: first.name,
+            value: first.value,
+            limit: first.reason,
+            legalReference: raw.message,
+          };
+
           setAlertState({
             type: "invalid_data",
-            payload: specialState.payload as unknown as AlertState["payload"],
+            payload,
             isVisible: true,
           });
           break;
+        }
 
-        case "smi_alert":
+        case "smi_alert": {
           // Estado E - Salario menor al SMI
+          // El backend ya envía el payload con la forma de AlertSMIPayload.
+          const payload = specialState.payload as unknown as AlertSMIPayload;
           setAlertState({
             type: "smi",
-            payload: specialState.payload as unknown as AlertState["payload"],
+            payload,
             isVisible: true,
           });
           break;
+        }
 
-        case "conflicting":
+        case "conflicting": {
           // Estado F - Datos contradictorios
+          // Backend payload: { message, conflictingVariables: [{variables: [a,b], reason}] }
+          const raw = specialState.payload as {
+            message?: string;
+            conflictingVariables?: Array<{
+              variables: string[];
+              reason: string;
+            }>;
+          };
+          const first = raw.conflictingVariables?.[0];
+          if (!first || first.variables.length < 2) break;
+
+          const [name1, name2] = first.variables;
+          const payload: AlertConflictPayload = {
+            field1: { name: name1, value: "" },
+            field2: { name: name2, value: "" },
+            explanation: first.reason || raw.message || "",
+            options: [],
+          };
+
           setAlertState({
             type: "conflict",
-            payload: specialState.payload as unknown as AlertState["payload"],
+            payload,
             isVisible: true,
           });
           break;
+        }
       }
     },
-    [state.selectedConvenio?.nombre],
+    [state.selectedConvenio],
   );
 
   const realChat = useChatStream({
@@ -346,6 +461,7 @@ export function useChatPage(
   const selectConvenio = useCallback((convenio: Convenio) => {
     setState((prev) => ({ ...prev, selectedConvenio: convenio }));
     setSelectedConvenioId(convenio.id);
+    setActiveVariables({});
 
     // En modo mock, usar perfil mock (dynamic import para que no entre al bundle prod)
     if (useMocks) {
@@ -378,41 +494,26 @@ export function useChatPage(
       realClearMessages();
     }
     setLocalInput("");
+    setActiveVariables({});
   }, [useMocks, mockSetMessages, realClearMessages]);
 
-  // Click en variable del panel
+  // Click en variable del panel: se convierte en chip estructurado encima
+  // del textarea. Reemplazo automatico por grupo (mismo `variable` → sobrescribe).
   const handleVariableClick = useCallback(
     (variable: string, value: string) => {
-      const textToInsert = `${variable}: ${value}`;
-      const textarea = inputRef.current;
-
-      if (textarea) {
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const currentValue = textarea.value;
-
-        const newValue = currentValue.substring(0, start) +
-          textToInsert +
-          currentValue.substring(end);
-
-        setLocalInput(newValue);
-
-        // Restaurar foco y posición del cursor
-        setTimeout(() => {
-          textarea.focus();
-          const newPosition = start + textToInsert.length;
-          textarea.setSelectionRange(newPosition, newPosition);
-        }, 0);
-      } else {
-        // Sin ref, simplemente añadir al final
-        const newValue = localInput
-          ? `${localInput} ${textToInsert}`
-          : textToInsert;
-        setLocalInput(newValue);
-      }
+      setActiveVariables((prev) => ({ ...prev, [variable]: value }));
     },
-    [localInput],
+    [],
   );
+
+  // Eliminar chip (X)
+  const handleVariableRemove = useCallback((variable: string) => {
+    setActiveVariables((prev) => {
+      const next = { ...prev };
+      delete next[variable];
+      return next;
+    });
+  }, []);
 
   // Manejar cambio de input
   const handleInputChange = useCallback(
@@ -472,7 +573,11 @@ export function useChatPage(
           "[useChatPage] Sending message with sessionId:",
           currentSessionId,
         );
-        await realSendMessage(text, currentSessionId || undefined);
+        await realSendMessage(
+          text,
+          currentSessionId || undefined,
+          activeVariables,
+        );
       }
       setLocalInput("");
     },
@@ -484,6 +589,7 @@ export function useChatPage(
       sessionId,
       user?.id,
       shouldUseMocks,
+      activeVariables,
     ],
   );
 
@@ -509,6 +615,7 @@ export function useChatPage(
     setSessionId(null); // Resetear session_id para crear una nueva sesión
     setAlertState(clearAlertState());
     setDataRequestState(clearDataRequestState());
+    setActiveVariables({});
     setState((prev) => ({
       ...prev,
       currentConversationId: null,
@@ -521,6 +628,7 @@ export function useChatPage(
   const handleSelectConversation = useCallback(
     async (id: string) => {
       setState((prev) => ({ ...prev, currentConversationId: id }));
+      setActiveVariables({});
 
       // En modo mock, usar mensajes mock (dynamic import para que no entre al bundle prod)
       if (shouldUseMocks) {
@@ -712,42 +820,49 @@ export function useChatPage(
         return;
       }
 
-      // Construir mensaje con los valores seleccionados
-      const entries = Object.entries(values);
-      const formattedValues = entries
-        .map(([key, value]) => {
-          // Buscar el campo por nombre
-          const field = dataRequestState.payload?.fields.find(
-            (f) => f.name === key,
-          );
-          const fieldLabel = field?.label || key;
+      // Convertir respuestas del card en chips estructurados.
+      // `stars` se queda como numero; el resto se manda tal cual.
+      const newChips: Record<string, string> = {};
+      for (const [key, value] of Object.entries(values)) {
+        const field = dataRequestState.payload?.fields.find(
+          (f) => f.name === key,
+        );
+        if (field?.type === "stars") {
+          newChips[key] = `${value} estrellas`;
+        } else {
+          newChips[key] = value;
+        }
+      }
+      const mergedVariables = { ...activeVariables, ...newChips };
+      setActiveVariables(mergedVariables);
 
-          // Si es un campo de opciones, buscar el label de la opcion
-          if (field?.type === "radio" && field.options) {
-            const option = field.options.find((o) => o.value === value);
-            return `${fieldLabel}: ${option?.label || value}`;
-          }
+      // Re-enviar la pregunta original del usuario (ultimo mensaje user)
+      // con las variables actualizadas. Asi el backend re-clasifica con los
+      // nuevos datos en vez de recibir "Mis datos son: ..." como mensaje.
+      const lastUserMessage = [...messages].reverse().find(
+        (m) => m.role === "user",
+      );
+      const text = lastUserMessage?.content || "";
+      if (!text) {
+        setDataRequestState(clearDataRequestState());
+        return;
+      }
 
-          // Si es estrellas, formatear como "X estrellas"
-          if (field?.type === "stars") {
-            return `${fieldLabel}: ${value} estrellas`;
-          }
-
-          return `${fieldLabel}: ${value}`;
-        })
-        .join(", ");
-
-      const text = `Mis datos son: ${formattedValues}`;
-
-      // Limpiar estado y enviar
       setDataRequestState(clearDataRequestState());
       if (useMocks) {
         await mockSendMessage({ text });
       } else {
-        await realSendMessage(text);
+        await realSendMessage(text, undefined, mergedVariables, true);
       }
     },
-    [dataRequestState.payload, useMocks, mockSendMessage, realSendMessage],
+    [
+      dataRequestState.payload,
+      useMocks,
+      mockSendMessage,
+      realSendMessage,
+      activeVariables,
+      messages,
+    ],
   );
 
   /**
@@ -856,6 +971,11 @@ export function useChatPage(
     // Handlers de data request
     handleDataRequestSubmit,
     handleDataRequestSkip,
+
+    // Variables estructuradas (chips)
+    activeVariables,
+    handleVariableRemove,
+    humanizeVariableLabel,
 
     // Util para testing/mocks
     setAlert,

@@ -86,7 +86,12 @@ export interface UseChatStreamReturn {
   /** Cambiar el input */
   setInput: (value: string) => void;
   /** Enviar mensaje */
-  sendMessage: (text: string, overrideSessionId?: string) => Promise<void>;
+  sendMessage: (
+    text: string,
+    overrideSessionId?: string,
+    variables?: Record<string, string | number>,
+    replayLastUser?: boolean,
+  ) => Promise<void>;
   /** Establecer mensajes (util para cargar historial) */
   setMessages: (messages: ChatStreamMessage[]) => void;
   /** Limpiar estado especial */
@@ -149,7 +154,12 @@ export function useChatStream(
    * @param overrideSessionId - SessionId opcional que sobrescribe el del estado (útil para el primer mensaje)
    */
   const sendMessage = useCallback(
-    async (text: string, overrideSessionId?: string) => {
+    async (
+      text: string,
+      overrideSessionId?: string,
+      variables?: Record<string, string | number>,
+      replayLastUser?: boolean,
+    ) => {
       const trimmedText = text.trim();
 
       if (!trimmedText) {
@@ -178,15 +188,18 @@ export function useChatStream(
       setCitations([]);
       setIsLoading(true);
 
-      // Agregar mensaje del usuario
-      const userMessage: ChatStreamMessage = {
-        id: generateId(),
-        role: "user",
-        content: trimmedText,
-        createdAt: new Date(),
-      };
+      // Agregar mensaje del usuario (omitido cuando se reenvía la última
+      // pregunta tras un DataRequestCard, para no duplicarla visualmente)
+      if (!replayLastUser) {
+        const userMessage: ChatStreamMessage = {
+          id: generateId(),
+          role: "user",
+          content: trimmedText,
+          createdAt: new Date(),
+        };
 
-      setMessages((prev) => [...prev, userMessage]);
+        setMessages((prev) => [...prev, userMessage]);
+      }
 
       // Crear mensaje del asistente (vacio inicialmente)
       const assistantMessage: ChatStreamMessage = {
@@ -220,6 +233,7 @@ export function useChatStream(
             convenioId,
             pregunta: trimmedText,
             sessionId: effectiveSessionId,
+            variables,
             stream: true,
             signal: abortControllerRef.current.signal,
             messages: historyMessages,

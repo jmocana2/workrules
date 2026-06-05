@@ -427,6 +427,78 @@ function buildMetadata(
 }
 
 /**
+ * Construye una respuesta SSE para estados especiales (incomplete/invalid/conflicting)
+ * cuando el cliente pidió streaming. Emite un único evento `status` con la
+ * clasificación + payload tal y como espera `useChatStream.onStatus`, y cierra
+ * con `done`. Así el front monta `DataRequestCard`/`AlertInvalidData`/`AlertConflict`
+ * sin necesidad de fallback a JSON no-stream.
+ */
+export function buildStatusStreamResponse(
+  result: ChatUseCaseResult,
+  headers: Record<string, string>,
+): Response | null {
+  let state: "incomplete" | "invalid" | "conflicting" | null = null;
+  let payload: Record<string, unknown> | null = null;
+  let assistantMessage = "";
+
+  if (result.type === "incomplete_data") {
+    state = "incomplete";
+    payload = {
+      missingVariables: result.missingVariables,
+      suggestions: result.suggestions,
+    };
+    assistantMessage = result.message;
+  } else if (result.type === "invalid_data") {
+    if (result.conflictingVariables && result.conflictingVariables.length > 0) {
+      state = "conflicting";
+      payload = {
+        message: result.message,
+        conflictingVariables: result.conflictingVariables,
+      };
+    } else {
+      state = "invalid";
+      payload = {
+        message: result.message,
+        invalidVariables: result.invalidVariables,
+      };
+    }
+    assistantMessage = result.message;
+  } else {
+    return null;
+  }
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const statusEvent = `data: ${
+        JSON.stringify({ type: "status", state, payload })
+      }\n\n`;
+      controller.enqueue(encoder.encode(statusEvent));
+
+      // Emit the human-readable message as text so it also appears in the
+      // assistant bubble (consistent with non-stream behaviour).
+      if (assistantMessage) {
+        const textEvent = `data: ${
+          JSON.stringify({ type: "text", content: assistantMessage })
+        }\n\n`;
+        controller.enqueue(encoder.encode(textEvent));
+      }
+
+      const doneEvent = `data: ${
+        JSON.stringify({
+          type: "done",
+          metadata: { response_length: assistantMessage.length },
+        })
+      }\n\n`;
+      controller.enqueue(encoder.encode(doneEvent));
+      controller.close();
+    },
+  });
+
+  return new Response(stream, { headers });
+}
+
+/**
  * Transforma ReadableStream de Anthropic en SSE events
  *
  * @param stream - Stream de respuesta de Anthropic

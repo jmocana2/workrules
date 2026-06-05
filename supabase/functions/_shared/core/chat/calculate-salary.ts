@@ -64,7 +64,11 @@ import type {
   ChatCitation,
   ExtractedVariables,
 } from "./types.ts";
-import { extractVariables, mergeVariables } from "./variable-extractor.ts";
+import {
+  extractVariables,
+  mergeVariables,
+  normalizeKnownVariables,
+} from "./variable-extractor.ts";
 
 // ============================================
 // TIPOS
@@ -257,9 +261,11 @@ export async function calculateSalary(
     // ayuden a encontrar categorías (ej: "camarera de pisos" → "auxiliar de limpieza")
     const extractedVars = extractVariables(expandedQuery, perfilContexto);
 
-    // Merge con variables conocidas de turnos anteriores
+    // Merge con variables conocidas de turnos anteriores.
+    // Las conocidas vienen del front con claves crudas del perfil
+    // (ej: "categoria_profesional"); las normalizamos a claves canonicas.
     const allVariables = mergeVariables(
-      input.variablesConocidas,
+      normalizeKnownVariables(input.variablesConocidas),
       extractedVars,
     );
 
@@ -312,6 +318,7 @@ export async function calculateSalary(
       input.pregunta,
       promptContext.variablesUsuario,
       input.messages,
+      classification.missingModulators,
     );
 
     // ========================================

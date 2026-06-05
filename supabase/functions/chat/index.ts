@@ -10,6 +10,7 @@ import {
   mapResultToHttpResponse,
   handleStreamResponse,
   buildErrorResponse,
+  buildStatusStreamResponse,
 } from '../_shared/core/chat/handlers.ts';
 import { buildCorsHeaders } from '../_shared/lib/cors.ts';
 import { countRecentChatRequests } from '../_shared/lib/supabase.ts';
@@ -21,6 +22,114 @@ const RATE_LIMIT_MAX_REQUESTS = 10;
 // ============================================
 // Edge Function Handler
 // ============================================
+
+function jsonResponse(
+  response: { status: number; body: unknown },
+  headers: Record<string, string>,
+): Response {
+  return new Response(JSON.stringify(response.body), {
+    status: response.status,
+    headers,
+  });
+}
+
+async function checkRateLimit(
+  userId: string,
+  jsonHeaders: Record<string, string>,
+): Promise<Response | null> {
+  try {
+    const recent = await countRecentChatRequests(
+      userId,
+      RATE_LIMIT_WINDOW_SECONDS,
+    );
+    if (recent >= RATE_LIMIT_MAX_REQUESTS) {
+      return jsonResponse(
+        buildErrorResponse(
+          429,
+          `Demasiadas preguntas en poco tiempo. Inténtalo de nuevo en unos segundos.`,
+          {
+            limit: RATE_LIMIT_MAX_REQUESTS,
+            window_seconds: RATE_LIMIT_WINDOW_SECONDS,
+          },
+        ),
+        jsonHeaders,
+      );
+    }
+  } catch (rateError) {
+    // Falla abierta: no bloqueamos por un error de conteo, solo logueamos.
+    console.error('[chat] Error checking rate limit:', rateError);
+  }
+  return null;
+}
+
+async function parseAndValidateRequest(
+  req: Request,
+  jsonHeaders: Record<string, string>,
+): Promise<{ request?: ChatRequest; errorResponse?: Response }> {
+  const { data, error: parseError } = await parseRequestBody(req);
+  if (parseError) {
+    return {
+      errorResponse: jsonResponse(buildErrorResponse(400, parseError), jsonHeaders),
+    };
+  }
+
+  const validation = validateChatRequest(data);
+  if (!validation.valid) {
+    return {
+      errorResponse: jsonResponse(
+        buildErrorResponse(400, validation.error!, {
+          ...(validation.fields && { required: validation.fields }),
+        }),
+        jsonHeaders,
+      ),
+    };
+  }
+
+  return { request: data as ChatRequest };
+}
+
+async function handleChatRequest(
+  req: Request,
+  jsonHeaders: Record<string, string>,
+  sseHeaders: Record<string, string>,
+): Promise<Response> {
+  const userId = await extractUserIdFromRequest(req);
+  if (!userId) {
+    return jsonResponse(
+      buildErrorResponse(401, 'Unauthorized', {
+        hint: 'Include a valid Supabase Auth JWT in the Authorization header',
+      }),
+      jsonHeaders,
+    );
+  }
+
+  const rateLimited = await checkRateLimit(userId, jsonHeaders);
+  if (rateLimited) return rateLimited;
+
+  const { request, errorResponse } = await parseAndValidateRequest(req, jsonHeaders);
+  if (errorResponse) return errorResponse;
+
+  const result = await classifyAndExecute(request!, userId);
+
+  if (result.type === 'stream') {
+    return handleStreamResponse(
+      result.stream,
+      result.cleanup,
+      result.citations,
+      sseHeaders,
+    );
+  }
+
+  if (
+    request!.stream &&
+    (result.type === 'incomplete_data' || result.type === 'invalid_data')
+  ) {
+    const statusResponse = buildStatusStreamResponse(result, sseHeaders);
+    if (statusResponse) return statusResponse;
+  }
+
+  return jsonResponse(mapResultToHttpResponse(result), jsonHeaders);
+}
 
 Deno.serve(async (req: Request) => {
   const corsHeaders = buildCorsHeaders(req.headers.get('origin'));
@@ -35,142 +144,26 @@ Deno.serve(async (req: Request) => {
     'Connection': 'keep-alive',
   };
 
-  // ========================================
-  // 1. CORS preflight
-  // ========================================
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  // ========================================
-  // 2. Solo POST permitido
-  // ========================================
   if (req.method !== 'POST') {
-    const response = buildErrorResponse(405, 'Method not allowed');
-    return new Response(JSON.stringify(response.body), {
-      status: response.status,
-      headers: jsonHeaders,
-    });
+    return jsonResponse(buildErrorResponse(405, 'Method not allowed'), jsonHeaders);
   }
 
   try {
-    // ========================================
-    // 3. Autenticacion
-    // ========================================
-    const userId = await extractUserIdFromRequest(req);
-
-    if (!userId) {
-      const response = buildErrorResponse(401, 'Unauthorized', {
-        hint: 'Include a valid Supabase Auth JWT in the Authorization header',
-      });
-      return new Response(JSON.stringify(response.body), {
-        status: response.status,
-        headers: jsonHeaders,
-      });
-    }
-
-    // ========================================
-    // 3.b Rate limit anti-ráfaga
-    // ========================================
-    try {
-      const recent = await countRecentChatRequests(
-        userId,
-        RATE_LIMIT_WINDOW_SECONDS,
-      );
-      if (recent >= RATE_LIMIT_MAX_REQUESTS) {
-        const response = buildErrorResponse(
-          429,
-          `Demasiadas preguntas en poco tiempo. Inténtalo de nuevo en unos segundos.`,
-          {
-            limit: RATE_LIMIT_MAX_REQUESTS,
-            window_seconds: RATE_LIMIT_WINDOW_SECONDS,
-          },
-        );
-        return new Response(JSON.stringify(response.body), {
-          status: response.status,
-          headers: jsonHeaders,
-        });
-      }
-    } catch (rateError) {
-      // Falla abierta: no bloqueamos por un error de conteo, solo logueamos.
-      console.error('[chat] Error checking rate limit:', rateError);
-    }
-
-    // ========================================
-    // 4. Parsear body
-    // ========================================
-    const { data, error: parseError } = await parseRequestBody(req);
-
-    if (parseError) {
-      const response = buildErrorResponse(400, parseError);
-      return new Response(JSON.stringify(response.body), {
-        status: response.status,
-        headers: jsonHeaders,
-      });
-    }
-
-    // ========================================
-    // 5. Validar request
-    // ========================================
-    const validation = validateChatRequest(data);
-
-    if (!validation.valid) {
-      const response = buildErrorResponse(400, validation.error!, {
-        ...(validation.fields && { required: validation.fields }),
-      });
-      return new Response(JSON.stringify(response.body), {
-        status: response.status,
-        headers: jsonHeaders,
-      });
-    }
-
-    const request = data as ChatRequest;
-
-    // ========================================
-    // 6. Ejecutar logica de negocio (RAG)
-    // ========================================
-    const result = await classifyAndExecute(request, userId);
-
-    // ========================================
-    // 7. Manejar streaming
-    // ========================================
-    if (result.type === 'stream') {
-      // Para streaming, necesitamos obtener las citations despues
-      // Por ahora enviamos array vacio y las citations en done event
-      return handleStreamResponse(
-        result.stream,
-        result.cleanup,
-        result.citations,
-        sseHeaders
-      );
-    }
-
-    // ========================================
-    // 8. Respuesta JSON normal
-    // ========================================
-    const response = mapResultToHttpResponse(result);
-
-    return new Response(JSON.stringify(response.body), {
-      status: response.status,
-      headers: jsonHeaders,
-    });
-
+    return await handleChatRequest(req, jsonHeaders, sseHeaders);
   } catch (error) {
-    // ========================================
-    // 9. Error handling global
-    // ========================================
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('[chat] Unhandled error:', error);
 
-    const response = buildErrorResponse(500, 'Internal server error', {
-      // Solo incluir detalles en desarrollo
-      ...(Deno.env.get('ENVIRONMENT') !== 'production' && { details: errorMessage }),
-    });
-
-    return new Response(JSON.stringify(response.body), {
-      status: response.status,
-      headers: jsonHeaders,
-    });
+    return jsonResponse(
+      buildErrorResponse(500, 'Internal server error', {
+        ...(Deno.env.get('ENVIRONMENT') !== 'production' && { details: errorMessage }),
+      }),
+      jsonHeaders,
+    );
   }
 });
 

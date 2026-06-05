@@ -259,6 +259,11 @@ export interface UseChatPageReturn {
   handleDataRequestSubmit: (values: Record<string, string>) => Promise<void>;
   handleDataRequestSkip: () => Promise<void>;
 
+  // Variables estructuradas (chips)
+  activeVariables: Record<string, string>;
+  handleVariableRemove: (variable: string) => void;
+  humanizeVariableLabel: (name: string) => string;
+
   // Util para testing/mocks
   setAlert: (alertState: AlertState) => void;
   setDataRequest: (state: DataRequestState) => void;

@@ -35,7 +35,7 @@ describe('DataRequestCard', () => {
       render(
         <DataRequestCard {...defaultProps} currentAttempt={2} maxAttempts={3} />
       );
-      expect(screen.getByText(/Pregunta 2 de 3/)).toBeInTheDocument();
+      expect(screen.getByText(/Intento 2 de 3/)).toBeInTheDocument();
     });
 
     it('renderiza todas las opciones de campo', () => {

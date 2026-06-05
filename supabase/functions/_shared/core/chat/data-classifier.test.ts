@@ -78,7 +78,7 @@ Deno.test('classifyDataState - falta categoria', () => {
   assertEquals(result.suggestions['categoria'], ['Camarero', 'Cocinero']);
 });
 
-Deno.test('classifyDataState - falta jornada', () => {
+Deno.test('classifyDataState - falta jornada (moduladora, no bloquea)', () => {
   const variables = {
     categoria: 'Camarero',
   };
@@ -88,8 +88,10 @@ Deno.test('classifyDataState - falta jornada', () => {
 
   const result = classifyDataState(variables, perfil);
 
-  assertEquals(result.state, 'incomplete');
-  assertEquals(result.missingVariables, ['jornada']);
+  // jornada es moduladora -> no bloquea, va a missingModulators
+  assertEquals(result.state, 'complete');
+  assertEquals(result.missingVariables, []);
+  assertEquals(result.missingModulators, ['jornada']);
 });
 
 Deno.test('classifyDataState - faltan multiples variables', () => {
@@ -100,8 +102,11 @@ Deno.test('classifyDataState - faltan multiples variables', () => {
 
   const result = classifyDataState(variables, perfil);
 
+  // categoria y nivel son identificadoras -> bloquean
+  // jornada es moduladora -> no bloquea
   assertEquals(result.state, 'incomplete');
-  assertEquals(result.missingVariables.length, 3);
+  assertEquals(result.missingVariables.length, 2);
+  assertEquals(result.missingModulators, ['jornada']);
 });
 
 Deno.test('classifyDataState - variable critica con acento', () => {

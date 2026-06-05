@@ -13,6 +13,10 @@ import type {
   DataState,
   ExtractedVariables,
 } from "./types.ts";
+import {
+  normalizeVariableName,
+  resolveVariableKey,
+} from "./variable-extractor.ts";
 
 // ============================================
 // LIMITES LEGALES
@@ -68,6 +72,7 @@ export function classifyDataState(
     state: "complete",
     extractedVariables: variables,
     missingVariables: [],
+    missingModulators: [],
     invalidVariables: [],
     conflictingVariables: [],
     suggestions: {},
@@ -228,6 +233,79 @@ function checkConflicts(
 /**
  * Verifica variables faltantes segun el perfil del convenio
  */
+/**
+ * Decide si una variable critica es "identificadora": sin ella no se puede
+ * aplicar una tabla salarial concreta (categoria, nivel/tipo establecimiento,
+ * zona/ambito, grupo, area). Las moduladoras (jornada, antiguedad, turno,
+ * horas extra, pluses) NO bloquean: Claude asume default.
+ *
+ * Debe coincidir con el helper del front (useChatPage.isIdentifyingVariable).
+ */
+export function isIdentifyingCritical(varCritica: string): boolean {
+  const normalized = normalizeVariableName(varCritica).replace(/_/g, " ");
+  const keywords = [
+    "categoria",
+    "puesto",
+    "nivel",
+    "tipo de establecimiento",
+    "tipo establecimiento",
+    "clase",
+    "zona",
+    "ambito",
+    "grupo",
+    "area",
+  ];
+  return keywords.some((kw) => normalized.includes(kw));
+}
+
+function collectSuggestionsForVariable(
+  varCritica: string,
+  key: string,
+  perfil: PerfilContexto,
+): string[] | undefined {
+  const normalizedCritica = normalizeVariableName(varCritica);
+
+  if (
+    (key === "categoria" || normalizedCritica.includes("categoria")) &&
+    perfil.categorias_profesionales
+  ) {
+    return perfil.categorias_profesionales.map((c) => c.nombre);
+  }
+
+  const valoresPosibles = perfil.valores_posibles;
+  if (!valoresPosibles) return undefined;
+
+  const opciones =
+    valoresPosibles[varCritica] ??
+    valoresPosibles[normalizedCritica] ??
+    valoresPosibles[normalizedCritica.replace(/_/g, " ")] ??
+    valoresPosibles[key];
+
+  return opciones && opciones.length > 0 ? opciones : undefined;
+}
+
+function registerMissingVariable(
+  varCritica: string,
+  key: string,
+  perfil: PerfilContexto,
+  result: DataClassificationResult,
+): void {
+  const isIdentifying = isIdentifyingCritical(varCritica);
+
+  if (isIdentifying) {
+    result.missingVariables.push(varCritica);
+  } else {
+    result.missingModulators ??= [];
+    result.missingModulators.push(varCritica);
+    return;
+  }
+
+  const suggestions = collectSuggestionsForVariable(varCritica, key, perfil);
+  if (suggestions) {
+    result.suggestions[varCritica] = suggestions;
+  }
+}
+
 function checkMissingVariables(
   variables: ExtractedVariables,
   perfil: PerfilContexto,
@@ -235,35 +313,10 @@ function checkMissingVariables(
 ): void {
   const variablesCriticas = perfil.variables_criticas || [];
 
-  // Mappeo de nombres de variables criticas a propiedades de ExtractedVariables
-  const mapping: Record<string, keyof ExtractedVariables> = {
-    categoria: "categoria",
-    "categoria profesional": "categoria",
-    categoría: "categoria",
-    "categoría profesional": "categoria",
-    jornada: "jornada",
-    "tipo de jornada": "jornada",
-    "nivel de establecimiento": "nivelEstablecimiento",
-    "nivel establecimiento": "nivelEstablecimiento",
-    "tipo de establecimiento": "nivelEstablecimiento",
-    antiguedad: "antiguedadAnos",
-    antigüedad: "antiguedadAnos",
-  };
-
   for (const varCritica of variablesCriticas) {
-    const varLower = varCritica.toLowerCase();
-    const propName = mapping[varLower];
-
-    if (propName && variables[propName] === undefined) {
-      result.missingVariables.push(varCritica);
-
-      // Anadir sugerencias si disponibles
-      if (varLower.includes("categoria") && perfil.categorias_profesionales) {
-        result.suggestions[varCritica] = perfil.categorias_profesionales.map(
-          (c) => c.nombre,
-        );
-      }
-    }
+    const key = resolveVariableKey(varCritica);
+    if (variables[key] !== undefined) continue;
+    registerMissingVariable(varCritica, key, perfil, result);
   }
 }
 

@@ -41,6 +41,7 @@ import { AlertInvalidData } from '@ui/components/workrules/molecules/AlertInvali
 import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
 import { DataRequestCard } from '@ui/components/workrules/molecules/DataRequestCard/DataRequestCard';
 import { UserMessage } from '@ui/components/workrules/molecules/UserMessage/UserMessage';
+import { VariableChips, type VariableChip } from '@ui/components/workrules/molecules/VariableChips/VariableChips';
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
@@ -189,6 +190,11 @@ export function ChatPage({
     // Handlers de data request
     handleDataRequestSubmit,
     handleDataRequestSkip,
+
+    // Variables estructuradas (chips)
+    activeVariables,
+    handleVariableRemove,
+    humanizeVariableLabel,
   } = useChatPage({
     initialConvenioId,
     initialMessages,
@@ -524,6 +530,14 @@ export function ChatPage({
           isMobile ? "px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3" : "px-6 py-4"
         )}>
           <div className="mx-auto max-w-3xl">
+            <VariableChips
+              chips={Object.entries(activeVariables).map(([name, value]): VariableChip => ({
+                name,
+                label: humanizeVariableLabel(name),
+                value,
+              }))}
+              onRemove={handleVariableRemove}
+            />
             <PromptInput
               onSubmit={handlePromptSubmit}
               className="w-full"

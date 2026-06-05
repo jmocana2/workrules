@@ -126,14 +126,18 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
         result.current.selectConvenio(MOCK_CONVENIO);
       });
 
-      // Simular evento de estado incomplete del backend
+      // Simular evento de estado incomplete del backend.
+      // Solo las variables IDENTIFICADORAS (categoria, zona, grupo, ...) generan
+      // un DataRequestCard. Las moduladoras (antiguedad, jornada, ...) se asumen
+      // por default y NO bloquean. Ver useChatPage.isIdentifyingVariable.
       act(() => {
         mockOnSpecialState?.({
           type: 'incomplete',
           payload: {
-            missingVariables: ['categoria', 'antiguedad'],
+            missingVariables: ['categoria', 'zona', 'antiguedad'],
             suggestions: {
               categoria: ['Camarero', 'Cocinero', 'Recepcionista'],
+              zona: ['Norte', 'Sur'],
               antiguedad: ['0-1 año', '1-3 años', '3+ años'],
             },
           },
@@ -146,6 +150,7 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
       expect(result.current.dataRequestState.payload?.title).toBe(
         'Necesito más información'
       );
+      // Solo categoria y zona (identificadoras); antiguedad queda filtrada.
       expect(result.current.dataRequestState.payload?.fields).toHaveLength(2);
 
       // Verificar que los campos tienen las opciones correctas
@@ -171,16 +176,20 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
         result.current.selectConvenio(MOCK_CONVENIO);
       });
 
-      // Simular evento de estado invalid del backend
+      // Simular evento de estado invalid del backend.
+      // Shape canonico: { message, invalidVariables: [{ name, reason, value }] }
       act(() => {
         mockOnSpecialState?.({
           type: 'invalid',
           payload: {
-            field: 'horas_extra',
-            value: 200,
-            limit: '80 horas/mes',
-            legalReference: 'Art. 35.2 Estatuto de los Trabajadores',
-            suggestions: ['40 horas', '60 horas', '80 horas'],
+            message: 'Art. 35.2 Estatuto de los Trabajadores',
+            invalidVariables: [
+              {
+                name: 'horas_extra',
+                reason: '80 horas/mes',
+                value: 200,
+              },
+            ],
           },
         });
       });
@@ -241,18 +250,19 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
         result.current.selectConvenio(MOCK_CONVENIO);
       });
 
-      // Simular evento de estado conflicting del backend
+      // Simular evento de estado conflicting del backend.
+      // Shape canonico: { message, conflictingVariables: [{ variables, reason }] }
       act(() => {
         mockOnSpecialState?.({
           type: 'conflicting',
           payload: {
-            field1: { name: 'jornada', value: 'completa' },
-            field2: { name: 'horas_semanales', value: '20' },
-            explanation:
-              'La jornada completa implica 40 horas semanales, pero indicaste 20 horas.',
-            options: [
-              { label: 'Jornada completa (40h)', value: 'full' },
-              { label: 'Media jornada (20h)', value: 'part' },
+            message: 'Datos contradictorios',
+            conflictingVariables: [
+              {
+                variables: ['jornada', 'horas_semanales'],
+                reason:
+                  'La jornada completa implica 40 horas semanales, pero indicaste 20 horas.',
+              },
             ],
           },
         });
@@ -313,8 +323,10 @@ describe('useChatPage - Mapeo de Estados del Protocolo', () => {
         mockOnSpecialState?.({
           type: 'invalid',
           payload: {
-            field: 'horas',
-            suggestions: ['40', '60'],
+            message: 'Valor invalido',
+            invalidVariables: [
+              { name: 'horas', reason: 'fuera de rango', value: 200 },
+            ],
           },
         });
       });

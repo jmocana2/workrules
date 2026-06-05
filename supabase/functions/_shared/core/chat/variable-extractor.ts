@@ -142,6 +142,118 @@ function extractNivelHotel(text: string): string | null {
 }
 
 /**
+ * Normaliza un nombre de variable: minusculas, sin acentos, espacios -> guion bajo.
+ * Convierte "Categoría Profesional" -> "categoria_profesional", "Antigüedad" -> "antiguedad".
+ */
+export function normalizeVariableName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim()
+    .replace(/\s+/g, "_");
+}
+
+/**
+ * Mapeo desde nombre normalizado de la variable critica a la clave canonica
+ * de ExtractedVariables. Si no esta aqui, se usa el nombre normalizado tal cual.
+ */
+const CANONICAL_VARIABLE_KEYS: Record<string, keyof ExtractedVariables> = {
+  categoria: "categoria",
+  categoria_profesional: "categoria",
+  jornada: "jornada",
+  tipo_de_jornada: "jornada",
+  nivel_de_establecimiento: "nivelEstablecimiento",
+  nivel_establecimiento: "nivelEstablecimiento",
+  tipo_de_establecimiento: "nivelEstablecimiento",
+  antiguedad: "antiguedadAnos",
+};
+
+/**
+ * Devuelve la clave en `ExtractedVariables` que debe usarse para una variable
+ * critica concreta. Para variables conocidas (categoria, jornada, etc.) usa la
+ * clave canonica; para el resto usa el propio nombre normalizado, lo que permite
+ * al extractor poblar variables arbitrarias del perfil (ej: "turno", "zona").
+ */
+export function resolveVariableKey(variableCritica: string): string {
+  const normalized = normalizeVariableName(variableCritica);
+  return (CANONICAL_VARIABLE_KEYS[normalized] as string | undefined) ??
+    normalized;
+}
+
+/**
+ * Busca, para cada variable critica del perfil, alguno de sus valores posibles
+ * dentro del mensaje. Si encuentra match, lo asigna a la clave resuelta
+ * (canonica si aplica, normalizada si no).
+ *
+ * Esto hace al extractor agnostico al sector: ya no depende de regex
+ * especificos por dominio (hostelería); usa la verdad declarada en el perfil.
+ */
+function extractFromValoresPosibles(
+  message: string,
+  perfil: PerfilContexto,
+  variables: ExtractedVariables,
+): void {
+  const valoresPosibles = perfil.valores_posibles;
+  const variablesCriticas = perfil.variables_criticas || [];
+  if (!valoresPosibles || variablesCriticas.length === 0) return;
+
+  const normalizedMessage = normalizeVariableName(message).replace(/_/g, " ");
+
+  for (const varCritica of variablesCriticas) {
+    const key = resolveVariableKey(varCritica);
+    if (variables[key] !== undefined) continue; // ya extraída por otro camino
+
+    // Buscar los `valores_posibles` indexados con varias normalizaciones del
+    // nombre, porque el indexer no siempre normaliza igual.
+    const normalizedCritica = normalizeVariableName(varCritica);
+    const candidates =
+      valoresPosibles[varCritica] ??
+      valoresPosibles[normalizedCritica] ??
+      valoresPosibles[normalizedCritica.replace(/_/g, " ")] ??
+      valoresPosibles[key];
+    if (!candidates || candidates.length === 0) continue;
+
+    // Ordenar por longitud descendente para preferir match mas especifico
+    const sorted = [...candidates].sort((a, b) => b.length - a.length);
+    for (const valor of sorted) {
+      const normalizedValor = normalizeVariableName(valor).replace(/_/g, " ");
+      // Salvaguardas contra matches espurios:
+      // - longitud minima de 4 caracteres (evita "a", "b", "c", "1")
+      // - match por palabra completa (word boundaries en el texto normalizado),
+      //   para que "primera" no haga match dentro de "primeramente".
+      if (normalizedValor.length < 4) continue;
+      if (matchesAsWord(normalizedMessage, normalizedValor)) {
+        variables[key] = valor;
+        break;
+      }
+    }
+  }
+}
+
+/**
+ * Comprueba si `needle` aparece en `haystack` rodeado de limites de palabra
+ * (inicio/fin de string o caracter no alfanumerico). Asume que ambos ya
+ * estan en la misma normalizacion (lowercase, sin acentos, separadores como
+ * espacios).
+ */
+function matchesAsWord(haystack: string, needle: string): boolean {
+  let from = 0;
+  while (from <= haystack.length - needle.length) {
+    const idx = haystack.indexOf(needle, from);
+    if (idx === -1) return false;
+    const before = idx === 0 ? "" : haystack[idx - 1];
+    const after = idx + needle.length >= haystack.length
+      ? ""
+      : haystack[idx + needle.length];
+    const isWordChar = (c: string) => /[a-z0-9]/.test(c);
+    if (!isWordChar(before) && !isWordChar(after)) return true;
+    from = idx + 1;
+  }
+  return false;
+}
+
+/**
  * Busca una categoria profesional conocida en el mensaje
  * Busca tanto en el nombre como en los sinónimos de la categoría
  */
@@ -236,6 +348,13 @@ export function extractVariables(
     if (categoria) variables.categoria = categoria;
   }
 
+  // Extraer variables genericas del perfil (agnostico al sector)
+  // Itera variables_criticas y busca cualquiera de sus valores_posibles
+  // en el mensaje. Cubre niveles/grupos/zonas/turnos de cualquier convenio.
+  if (perfil) {
+    extractFromValoresPosibles(message, perfil, variables);
+  }
+
   return variables;
 }
 
@@ -279,6 +398,22 @@ const SALARY_KEYWORDS = [
   "nocturnidad",
   "nomina",
   "nómina",
+];
+
+/**
+ * Patrones que indican continuacion de un flujo de calculo salarial.
+ * El front envia mensajes como "Mis datos son: ..." cuando el usuario
+ * responde a un DataRequestCard, y respuestas cortas tipo "Primera",
+ * "4 estrellas", "manana" cuando aclara una variable. Estos deben
+ * enrutarse a calculateSalary (no a askQuestion) para que el clasificador
+ * re-evalue las variables y, si faltan identificadoras, vuelva a mostrar
+ * el card en vez de soltar texto suelto.
+ */
+const SALARY_CONTINUATION_PATTERNS: RegExp[] = [
+  /^mis\s+datos\s+son\s*:/i,
+  /^mi\s+respuesta\s+es\s*:/i,
+  /^categoria\s+profesional\s*:/i,
+  /^tipo\s+(?:de\s+)?establecimiento\s*:/i,
 ];
 
 /** Patrones regex que indican consulta salarial */
@@ -330,6 +465,13 @@ function matchesSalaryPatterns(message: string): boolean {
  */
 export function isSalaryQuery(message: string): boolean {
   const lowerMessage = message.toLowerCase();
+
+  // Continuacion de flujo de calculo (respuesta a DataRequestCard, aclaracion).
+  // Comprobar ANTES que isInformativeQuestion, porque "Mis datos son: ..."
+  // no debe interpretarse como pregunta informativa.
+  for (const pattern of SALARY_CONTINUATION_PATTERNS) {
+    if (pattern.test(message)) return true;
+  }
 
   // Si es una pregunta informativa, no es consulta de salario
   if (isInformativeQuestion(lowerMessage)) {
@@ -390,4 +532,36 @@ export function mergeVariables(
     ...previous,
     ...current,
   };
+}
+
+/**
+ * Convierte las claves de las variables conocidas (vienen del front con el
+ * nombre crudo del perfil, ej: "categoria_profesional", "tipo_establecimiento")
+ * a la clave canonica usada por el clasificador (ej: "categoria",
+ * "nivelEstablecimiento"). Las claves desconocidas se mantienen tal cual.
+ */
+const CANONICAL_FIELDS = new Set<string>([
+  "categoria",
+  "jornada",
+  "horasSemanales",
+  "horasExtra",
+  "horasNocturnas",
+  "antiguedadAnos",
+  "nivelEstablecimiento",
+]);
+
+export function normalizeKnownVariables(
+  raw: Record<string, string | number | undefined> | undefined,
+): ExtractedVariables | undefined {
+  if (!raw) return undefined;
+  const result: ExtractedVariables = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (value === undefined) continue;
+    // Si la clave ya es un campo canonico (caso interno/test/legacy),
+    // se preserva tal cual. Si es un nombre crudo del perfil
+    // ("categoria_profesional"), se resuelve a su clave canonica.
+    const canonical = CANONICAL_FIELDS.has(key) ? key : resolveVariableKey(key);
+    result[canonical] = value;
+  }
+  return result;
 }

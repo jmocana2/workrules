@@ -21,3 +21,6 @@ export type { ConvenioListItemProps } from './ConvenioListItem/ConvenioListItem'
 
 export { UserMessage } from './UserMessage/UserMessage';
 export type { UserMessageProps } from './UserMessage/UserMessage';
+
+export { VariableChips } from './VariableChips/VariableChips';
+export type { VariableChip, VariableChipsProps } from './VariableChips/VariableChips';

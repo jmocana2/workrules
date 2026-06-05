@@ -187,6 +187,16 @@ const SYSTEM_PROMPT_CALCULATE_SALARY =
 
 9. **NUMERO DE PAGAS**: El perfil del convenio especifica el numero total de pagas anuales (ej: 14 pagas = 12 mensualidades + 2 pagas extra). DEBES usar este numero para calcular el salario anual total. NO asumas 12 pagas si el convenio indica otro numero. Formula: Salario anual = Salario base mensual × Numero de pagas del convenio.
 
+10. **SUPUESTOS OBLIGATORIOS AL INICIO**: Si el mensaje del usuario incluye una seccion "--- MODULADORAS NO PROPORCIONADAS ---", la PRIMERA linea de tu respuesta DEBE ser exactamente:
+
+    **Supuestos aplicados:** [lista breve de cada moduladora faltante con el valor por defecto que asumes]
+
+    Ejemplo: "**Supuestos aplicados:** jornada completa, antiguedad 0 anos, sin horas extra, turno ordinario sin recargo, contrato indefinido."
+
+    NO preguntes por estas moduladoras. NO omitas esta linea. Despues de ella, continua con el calculo normalmente.
+
+11. **TABLAS MARKDOWN OBLIGATORIAS**: Cuando presentes importes salariales por categoria, nivel, tipo de establecimiento o cualquier eje comparativo (mas de 2 valores), DEBES usar una tabla markdown con sintaxis de barras verticales (| columna | columna |). NO uses listas con guiones para mostrar importes comparables. La tabla resumen final del calculo es OBLIGATORIA aunque solo haya un concepto.
+
 ## FORMATO DE RESPUESTA
 
 **Calculo para [descripcion del caso]:**
@@ -413,6 +423,7 @@ export function buildUserMessage(
   userQuestion: string,
   variablesUsuario?: Record<string, string>,
   historyMessages?: ChatHistoryMessage[],
+  missingModulators?: string[],
 ): string {
   const parts: string[] = [];
 
@@ -450,6 +461,25 @@ export function buildUserMessage(
     for (const [key, value] of Object.entries(variablesUsuario)) {
       parts.push(`- ${key}: ${value}`);
     }
+  }
+
+  // 4.b Variables moduladoras no proporcionadas
+  // Le decimos a Claude que no las pregunte (ya no bloqueamos por ellas),
+  // pero que SI declare al inicio los supuestos por defecto que aplique.
+  if (missingModulators && missingModulators.length > 0) {
+    parts.push("\n--- MODULADORAS NO PROPORCIONADAS ---");
+    parts.push(
+      "El usuario NO ha indicado los siguientes datos moduladores: " +
+        missingModulators.join(", ") + ".",
+    );
+    parts.push(
+      "NO los pidas. Asume un valor por defecto razonable para cada uno " +
+        "(ej: jornada completa, antiguedad 0, 0 horas extra, 0 horas nocturnas, " +
+        "turno ordinario sin recargo) y comienza tu respuesta listando " +
+        "explicitamente los supuestos aplicados en una linea como: " +
+        "'Supuestos: jornada completa, antiguedad 0 anos...'. " +
+        "Despues procede con el calculo o explicacion solicitada.",
+    );
   }
 
   // 5. Pregunta del usuario

@@ -87,14 +87,14 @@ export function DataRequestCard({
             Convenio: <span className="font-medium">{convenioName}</span>
           </CardDescription>
         )}
-        {maxAttempts > 1 && (
+        {currentAttempt > 1 && (
           <CardDescription className="text-xs">
-            Pregunta {currentAttempt} de {maxAttempts}
+            Intento {currentAttempt} de {maxAttempts}
           </CardDescription>
         )}
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 max-h-[60vh] overflow-y-auto">
         {fields.map((field, index) => (
           <div key={field.name} className="space-y-3">
             <div className="flex items-center gap-2">

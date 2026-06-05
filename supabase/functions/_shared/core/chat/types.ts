@@ -97,7 +97,10 @@ export interface ConflictingVariables {
 export interface DataClassificationResult {
   state: DataState;
   extractedVariables: ExtractedVariables;
+  /** Variables identificadoras faltantes: bloquean el calculo */
   missingVariables: string[];
+  /** Variables moduladoras faltantes: NO bloquean; Claude asume default */
+  missingModulators?: string[];
   invalidVariables: InvalidVariable[];
   conflictingVariables: ConflictingVariables[];
   /** Variable -> opciones validas del perfil */
