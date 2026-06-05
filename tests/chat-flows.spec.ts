@@ -294,7 +294,8 @@ test.describe("Flujos E2E criticos de chat", () => {
     await expect(page.getByText(/Necesito m[aá]s informaci[oó]n/i)).toBeVisible({
       timeout: 10000,
     });
-    await expect(page.getByText(/categoria_profesional/i)).toBeVisible();
-    await expect(page.getByText(/tipo_establecimiento/i)).toBeVisible();
+    // El componente humaniza la etiqueta: snake_case -> "Snake case"
+    await expect(page.getByText(/Categoria profesional/i)).toBeVisible();
+    await expect(page.getByText(/Tipo establecimiento/i)).toBeVisible();
   });
 });
