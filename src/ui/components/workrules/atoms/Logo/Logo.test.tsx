@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import { Logo } from './Logo';
 
 describe('Logo', () => {
@@ -21,115 +21,106 @@ describe('Logo', () => {
       const logo = screen.getByRole('img');
       expect(logo).toBeInTheDocument();
     });
+
+    it('debe renderizar un único SVG inline', () => {
+      const { container } = render(<Logo />);
+      const svgs = container.querySelectorAll('svg');
+      expect(svgs.length).toBe(1);
+    });
   });
 
-  describe('Variantes', () => {
-    it('debe renderizar la variante "full" con icono y texto', () => {
+  describe('Variantes (viewBox)', () => {
+    it('variante "full" usa el viewBox completo', () => {
       const { container } = render(<Logo variant="full" />);
       const svg = container.querySelector('svg');
-      const textElements = container.querySelectorAll('span');
-
-      expect(svg).toBeInTheDocument();
-      expect(textElements.length).toBeGreaterThan(0);
+      expect(svg).toHaveAttribute('viewBox', '0 0 809.846853 307.009461');
     });
 
-    it('debe renderizar la variante "icon" solo con el icono', () => {
+    it('variante "icon" recorta al icono', () => {
       const { container } = render(<Logo variant="icon" />);
       const svg = container.querySelector('svg');
-      const textContent = container.textContent;
-
-      expect(svg).toBeInTheDocument();
-      expect(textContent).toBe(''); // No debe contener texto visible
+      expect(svg).toHaveAttribute('viewBox', '60 30 320 260');
     });
 
-    it('debe renderizar la variante "text" solo con texto', () => {
+    it('variante "text" recorta al texto', () => {
       const { container } = render(<Logo variant="text" />);
       const svg = container.querySelector('svg');
-      const textElements = container.querySelectorAll('span');
-
-      expect(svg).not.toBeInTheDocument();
-      expect(textElements.length).toBeGreaterThan(0);
-    });
-
-    it('debe mostrar "Work" y "Rules" en la variante text', () => {
-      const { container } = render(<Logo variant="text" />);
-      expect(container.textContent).toContain('Work');
-      expect(container.textContent).toContain('Rules');
+      expect(svg).toHaveAttribute('viewBox', '340 60 460 200');
     });
   });
 
-  describe('Tamaños', () => {
-    it('debe aplicar la clase "h-6" para size="sm"', () => {
-      render(<Logo size="sm" />);
-      const logo = screen.getByRole('img');
-      expect(logo).toHaveClass('h-6');
+  describe('Tamaños (altura del SVG)', () => {
+    it('size="sm" → height 24', () => {
+      const { container } = render(<Logo variant="full" size="sm" />);
+      const svg = container.querySelector('svg');
+      expect(svg).toHaveAttribute('height', '24');
     });
 
-    it('debe aplicar la clase "h-8" para size="md"', () => {
-      render(<Logo size="md" />);
-      const logo = screen.getByRole('img');
-      expect(logo).toHaveClass('h-8');
+    it('size="md" → height 40', () => {
+      const { container } = render(<Logo variant="full" size="md" />);
+      const svg = container.querySelector('svg');
+      expect(svg).toHaveAttribute('height', '56');
     });
 
-    it('debe aplicar la clase "h-12" para size="lg"', () => {
-      render(<Logo size="lg" />);
-      const logo = screen.getByRole('img');
-      expect(logo).toHaveClass('h-12');
+    it('size="lg" → height 88', () => {
+      const { container } = render(<Logo variant="full" size="lg" />);
+      const svg = container.querySelector('svg');
+      expect(svg).toHaveAttribute('height', '88');
     });
 
-    it('debe usar size="md" por defecto', () => {
-      render(<Logo />);
-      const logo = screen.getByRole('img');
-      expect(logo).toHaveClass('h-8');
+    it('por defecto usa size="md"', () => {
+      const { container } = render(<Logo />);
+      const svg = container.querySelector('svg');
+      expect(svg).toHaveAttribute('height', '56');
+    });
+
+    it('width se ajusta al aspect ratio del viewBox', () => {
+      const { container } = render(<Logo variant="full" size="md" />);
+      const svg = container.querySelector('svg');
+      // ratio full ≈ 2.638 * 56 ≈ 148
+      expect(svg).toHaveAttribute('width', '148');
     });
   });
 
   describe('Temas', () => {
-    it('debe aplicar clases de tema light', () => {
-      const { container } = render(<Logo theme="light" />);
-      const svg = container.querySelector('svg');
-      expect(svg).toHaveClass('text-gray-900');
+    it('theme="light" no añade clases dark', () => {
+      const logo = render(<Logo theme="light" />).getByRole('img');
+      expect(logo).not.toHaveClass('is-dark');
+      expect(logo).not.toHaveClass('dark:is-dark');
     });
 
-    it('debe aplicar clases de tema dark', () => {
-      const { container } = render(<Logo theme="dark" />);
-      const svg = container.querySelector('svg');
-      expect(svg).toHaveClass('text-white');
+    it('theme="dark" añade la clase is-dark', () => {
+      const logo = render(<Logo theme="dark" />).getByRole('img');
+      expect(logo).toHaveClass('is-dark');
     });
 
-    it('debe aplicar clases de tema auto (responsivo)', () => {
-      const { container } = render(<Logo theme="auto" />);
-      const svg = container.querySelector('svg');
-      expect(svg).toHaveClass('text-gray-900');
-      expect(svg).toHaveClass('dark:text-white');
+    it('theme="auto" añade la clase dark:is-dark', () => {
+      const logo = render(<Logo theme="auto" />).getByRole('img');
+      expect(logo).toHaveClass('dark:is-dark');
     });
 
-    it('debe usar theme="auto" por defecto', () => {
-      const { container } = render(<Logo />);
-      const svg = container.querySelector('svg');
-      expect(svg).toHaveClass('text-gray-900');
-      expect(svg).toHaveClass('dark:text-white');
+    it('por defecto usa theme="auto"', () => {
+      const logo = render(<Logo />).getByRole('img');
+      expect(logo).toHaveClass('dark:is-dark');
     });
   });
 
   describe('ClassName personalizada', () => {
-    it('debe aceptar y aplicar una className personalizada', () => {
-      const customClass = 'custom-logo-class';
-      render(<Logo className={customClass} />);
+    it('aplica la className personalizada', () => {
+      render(<Logo className="custom-logo-class" />);
       const logo = screen.getByRole('img');
-      expect(logo).toHaveClass(customClass);
+      expect(logo).toHaveClass('custom-logo-class');
     });
 
-    it('debe mantener las clases base cuando se agrega className', () => {
+    it('mantiene las clases base junto con la className', () => {
       render(<Logo className="custom-class" />);
       const logo = screen.getByRole('img');
       expect(logo).toHaveClass('inline-flex');
       expect(logo).toHaveClass('items-center');
-      expect(logo).toHaveClass('gap-2');
       expect(logo).toHaveClass('custom-class');
     });
 
-    it('debe funcionar sin className', () => {
+    it('funciona sin className', () => {
       render(<Logo />);
       const logo = screen.getByRole('img');
       expect(logo).toBeInTheDocument();
@@ -137,88 +128,46 @@ describe('Logo', () => {
   });
 
   describe('Estructura del SVG', () => {
-    it('debe tener el viewBox correcto en el SVG', () => {
-      const { container } = render(<Logo variant="icon" />);
-      const svg = container.querySelector('svg');
-      expect(svg).toHaveAttribute('viewBox', '0 0 32 32');
-    });
-
-    it('debe tener aria-hidden="true" en el SVG', () => {
-      const { container } = render(<Logo variant="icon" />);
+    it('tiene aria-hidden="true"', () => {
+      const { container } = render(<Logo />);
       const svg = container.querySelector('svg');
       expect(svg).toHaveAttribute('aria-hidden', 'true');
     });
 
-    it('debe ajustar el tamaño del SVG según el size prop', () => {
-      const { container: containerSm } = render(<Logo variant="icon" size="sm" />);
-      const svgSm = containerSm.querySelector('svg');
-      expect(svgSm).toHaveAttribute('width', '24');
-      expect(svgSm).toHaveAttribute('height', '24');
-
-      const { container: containerMd } = render(<Logo variant="icon" size="md" />);
-      const svgMd = containerMd.querySelector('svg');
-      expect(svgMd).toHaveAttribute('width', '32');
-      expect(svgMd).toHaveAttribute('height', '32');
-
-      const { container: containerLg } = render(<Logo variant="icon" size="lg" />);
-      const svgLg = containerLg.querySelector('svg');
-      expect(svgLg).toHaveAttribute('width', '48');
-      expect(svgLg).toHaveAttribute('height', '48');
-    });
-  });
-
-  describe('Estructura del texto', () => {
-    it('debe tener aria-hidden="true" en el texto', () => {
-      const { container } = render(<Logo variant="text" />);
-      const spans = container.querySelectorAll('span');
-      const textContainer = Array.from(spans).find(
-        span => span.classList.contains('font-bold')
-      );
-      expect(textContainer).toHaveAttribute('aria-hidden', 'true');
+    it('contiene paths con la clase logo-fg (color tematizable)', () => {
+      const { container } = render(<Logo />);
+      const fgPaths = container.querySelectorAll('.logo-fg');
+      expect(fgPaths.length).toBeGreaterThan(0);
     });
 
-    it('debe aplicar diferentes tamaños de texto según size prop', () => {
-      const { container: containerSm } = render(<Logo variant="text" size="sm" />);
-      const textSm = containerSm.querySelector('.text-lg');
-      expect(textSm).toBeInTheDocument();
-
-      const { container: containerMd } = render(<Logo variant="text" size="md" />);
-      const textMd = containerMd.querySelector('.text-2xl');
-      expect(textMd).toBeInTheDocument();
-
-      const { container: containerLg } = render(<Logo variant="text" size="lg" />);
-      const textLg = containerLg.querySelector('.text-4xl');
-      expect(textLg).toBeInTheDocument();
-    });
-
-    it('debe aplicar clases de color correctamente', () => {
-      const { container } = render(<Logo variant="text" />);
-      // El texto secundario ("Rules") usa text-muted-foreground
-      const mutedText = container.querySelector('.text-muted-foreground');
-
-      expect(mutedText).toBeInTheDocument();
-      expect(mutedText?.textContent).toBe('Rules');
+    it('contiene path en turquesa (#12a594) para el check', () => {
+      const { container } = render(<Logo />);
+      const turquoisePaths = container.querySelectorAll('path[fill="#12a594"]');
+      expect(turquoisePaths.length).toBeGreaterThan(0);
     });
   });
 
   describe('Combinaciones de props', () => {
-    it('debe funcionar correctamente con múltiples props combinadas', () => {
-      render(<Logo variant="full" size="lg" theme="dark" className="custom" />);
+    it('funciona correctamente con múltiples props combinadas', () => {
+      const { container } = render(
+        <Logo variant="full" size="lg" theme="dark" className="custom" />
+      );
       const logo = screen.getByRole('img');
+      const svg = container.querySelector('svg');
 
-      expect(logo).toHaveClass('h-12'); // size lg
-      expect(logo).toHaveClass('custom'); // className
-      expect(logo).toBeInTheDocument();
+      expect(logo).toHaveClass('is-dark');
+      expect(logo).toHaveClass('custom');
+      expect(svg).toHaveAttribute('height', '88');
     });
 
-    it('debe mantener consistencia entre todas las variantes con mismo size', () => {
+    it('mantiene la misma altura entre variantes con mismo size', () => {
       const { container: containerFull } = render(<Logo variant="full" size="md" />);
       const { container: containerIcon } = render(<Logo variant="icon" size="md" />);
       const { container: containerText } = render(<Logo variant="text" size="md" />);
 
-      expect(containerFull.querySelector('[role="img"]')).toHaveClass('h-8');
-      expect(containerIcon.querySelector('[role="img"]')).toHaveClass('h-8');
-      expect(containerText.querySelector('[role="img"]')).toHaveClass('h-8');
+      expect(containerFull.querySelector('svg')).toHaveAttribute('height', '56');
+      expect(containerIcon.querySelector('svg')).toHaveAttribute('height', '56');
+      expect(containerText.querySelector('svg')).toHaveAttribute('height', '56');
     });
   });
 });

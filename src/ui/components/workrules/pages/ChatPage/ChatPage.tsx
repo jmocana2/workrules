@@ -270,6 +270,7 @@ export function ChatPage({
               onSelectConversation={handleSelectConversationAndClosDrawer}
               onOpenSettings={handleOpenSettings}
               isCollapsed={true}
+              onExpand={() => setIsSidebarOpen(true)}
               userConvenios={userConvenios}
               isLoadingConvenios={loadingUserConvenios}
               onSelectConvenioFromManager={handleSelectConvenioFromManager}
@@ -358,7 +359,7 @@ export function ChatPage({
             </div>
           </header>
         ) : (
-          (isMobile || isTablet) && (
+          isMobile && (
             <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
               <div className="flex h-16 items-center justify-between gap-2 px-3 md:gap-4 md:px-6">
                 <Button
@@ -369,7 +370,7 @@ export function ChatPage({
                 >
                   <MenuIcon className="h-5 w-5" />
                 </Button>
-                <Logo variant="full" size="sm" />
+                <Logo variant="full" size="md" />
                 <div className="w-10" /> {/* Spacer para centrar el logo */}
               </div>
             </header>

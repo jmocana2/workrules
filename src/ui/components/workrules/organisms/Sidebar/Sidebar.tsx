@@ -10,7 +10,7 @@ import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
 import { ThemeToggle } from '@ui/components/workrules/atoms/ThemeToggle';
 import type { ConvenioUploaderRef } from '@ui/components/workrules/organisms/ConvenioUploader';
-import { CrownIcon, FileTextIcon, MessageSquareIcon, PlusIcon, XIcon } from 'lucide-react';
+import { CrownIcon, FileTextIcon, MenuIcon, MessageSquareIcon, PlusIcon, XIcon } from 'lucide-react';
 import { lazy, Suspense, useRef, useState } from 'react';
 
 const ConvenioManager = lazy(() =>
@@ -34,6 +34,7 @@ export interface SidebarProps {
   onConvenioUploaded?: (convenioId: string) => void;
   isCollapsed?: boolean;
   onClose?: () => void;
+  onExpand?: () => void;
   inDrawer?: boolean;
   className?: string;
   // ConvenioManager props
@@ -52,6 +53,7 @@ export function Sidebar({
   onConvenioUploaded,
   isCollapsed = false,
   onClose,
+  onExpand,
   inDrawer = false,
   className,
   userConvenios = [],
@@ -103,7 +105,18 @@ export function Sidebar({
           className
         )}
       >
-        <Logo variant="icon" size="sm" />
+        {onExpand && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onExpand}
+            title="Abrir menú"
+            aria-label="Abrir menú"
+            className="cursor-pointer"
+          >
+            <MenuIcon className="h-5 w-5" />
+          </Button>
+        )}
 
         <div className="mt-4">
           <Button variant="ghost" size="icon" onClick={onNewConversation} title="Nueva consulta" className="cursor-pointer">
@@ -181,7 +194,7 @@ export function Sidebar({
     >
       {/* Header con Logo */}
       <header className="flex items-center justify-between p-4">
-        <Logo size="sm" />
+        <Logo size="md" className="-ml-[15px]" />
         {onClose && (
           <Button
             variant="ghost"
