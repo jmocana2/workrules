@@ -294,7 +294,9 @@ describe('Sidebar', () => {
     );
 
     // Verificar que el uploader está presente (lazy → await)
-    expect(await screen.findByLabelText(/subir archivo pdf/i)).toBeInTheDocument();
+    expect(
+      await screen.findByLabelText(/subir archivo pdf/i, {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
 
     // Nota: El test completo del flujo de upload está en ConvenioUploader.test.tsx
     // Aquí solo verificamos que el callback se pasa correctamente

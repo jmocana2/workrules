@@ -21,6 +21,7 @@ export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploader
   const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
   const [pendingUpload, setPendingUpload] = useState<{
     fileUrl: string;
+    filePath: string;
     fileName: string;
   } | null>(null);
 
@@ -63,6 +64,7 @@ export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploader
       if (result) {
         setPendingUpload({
           fileUrl: result.fileUrl,
+          filePath: result.filePath,
           fileName: file.name
         });
       } else {
@@ -79,7 +81,7 @@ export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploader
 
   const handleConfirm = () => {
     if (pendingUpload) {
-      confirmUpload(pendingUpload.fileUrl, pendingUpload.fileName);
+      confirmUpload(pendingUpload.fileUrl, pendingUpload.filePath, pendingUpload.fileName);
       setPendingUpload(null);
     }
   };

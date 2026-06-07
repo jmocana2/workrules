@@ -225,6 +225,8 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
       });
 
       return { fileUrl: urlData.signedUrl, filePath };
+      // fileUrl (signed, 1h) viaja solo a n8n para que descargue el PDF una vez.
+      // filePath es lo que se persiste en convenios.url_pdf para firmar bajo demanda.
     } catch (error) {
       if (
         (error instanceof DOMException && error.name === "AbortError") ||
@@ -252,7 +254,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
   }, [onError]);
 
   const confirmUpload = useCallback(
-    async (fileUrl: string, fileName: string) => {
+    async (fileUrl: string, filePath: string, fileName: string) => {
       try {
         setState({ status: "validating", fileName });
 
@@ -262,6 +264,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
           {
             body: {
               file_url: fileUrl,
+              file_path: filePath,
               nombre_archivo: fileName,
               visibilidad: visibility,
               pdf_hash: fileHashRef.current,

@@ -32,6 +32,7 @@ import {
   SourcesContent,
   SourcesTrigger,
 } from '@ui/components/ai-elements/sources';
+import { BookIcon } from 'lucide-react';
 import { Button } from '@ui/components/shadcn/button';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Separator } from '@ui/components/shadcn/separator';
@@ -45,8 +46,21 @@ import { VariableChips, type VariableChip } from '@ui/components/workrules/molec
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
+import { supabase } from '@/lib/supabase';
 import { ExternalLinkIcon, Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
+
+async function openConvenioPdf(convenioId: string): Promise<void> {
+  try {
+    const { data, error } = await supabase.functions.invoke('sign-pdf', {
+      body: { convenio_id: convenioId },
+    });
+    if (error || !data?.url) return;
+    window.open(data.url, '_blank', 'noopener,noreferrer');
+  } catch (err) {
+    console.error('[openConvenioPdf] unexpected error', err);
+  }
+}
 
 const MessageResponse = lazy(() =>
   import('@ui/components/ai-elements/message-response').then((m) => ({
@@ -78,43 +92,58 @@ function normalizeUserPlan(plan: 'free' | 'premium' | 'enterprise'): 'free' | 'p
 
 function MessageCitations({
   citations,
-  convenioUrl,
+  convenioId,
 }: {
   citations: NonNullable<import('./ChatPage.types').Citation[]>;
-  convenioUrl?: string | null;
+  convenioId?: string | null;
 }) {
   const uniqueCitations = citations.filter(
     (c, i, arr) =>
       arr.findIndex((x) => x.source === c.source && x.pagina === c.pagina) === i,
   );
-  const pdfHref =
-    convenioUrl ||
-    uniqueCitations.find((c) => c.url_pdf)?.url_pdf ||
-    uniqueCitations.find((c) => c.url)?.url;
+
+  const handleOpen = () => {
+    if (convenioId) void openConvenioPdf(convenioId);
+  };
 
   return (
     <Sources>
       <SourcesTrigger count={uniqueCitations.length} />
       <SourcesContent>
-        {uniqueCitations.map((citation, idx) => (
-          <Source
-            key={idx}
-            href={citation.url_pdf ?? citation.url}
-            title={citation.source}
-            pagina={citation.pagina ?? undefined}
-          />
-        ))}
-        {pdfHref && (
-          <a
-            href={pdfHref}
-            target="_blank"
-            rel="noopener noreferrer"
+        {uniqueCitations.map((citation, idx) =>
+          convenioId ? (
+            <button
+              key={idx}
+              type="button"
+              onClick={handleOpen}
+              aria-label={`Abrir PDF oficial - ${citation.source}`}
+              className="flex items-center gap-2 text-left hover:underline"
+            >
+              <BookIcon className="h-4 w-4 shrink-0" />
+              <span className="block font-medium">{citation.source}</span>
+              {citation.pagina && (
+                <span className="text-muted-foreground">p. {citation.pagina}</span>
+              )}
+            </button>
+          ) : (
+            <Source
+              key={idx}
+              href={citation.url_pdf ?? citation.url}
+              title={citation.source}
+              pagina={citation.pagina ?? undefined}
+            />
+          ),
+        )}
+        {convenioId && (
+          <button
+            type="button"
+            onClick={handleOpen}
             aria-label="Abrir PDF original en una pestaña nueva"
             className="mt-1 flex items-center gap-2 text-primary hover:underline"
           >
             <ExternalLinkIcon className="h-4 w-4 shrink-0" />
             <span className="font-medium">Abrir PDF original</span>
-          </a>
+          </button>
         )}
       </SourcesContent>
     </Sources>
@@ -463,7 +492,7 @@ export function ChatPage({
                         {message.citations && message.citations.length > 0 && (
                           <MessageCitations
                             citations={message.citations}
-                            convenioUrl={selectedConvenio?.url_pdf}
+                            convenioId={selectedConvenio?.id}
                           />
                         )}
                       </MessageContent>

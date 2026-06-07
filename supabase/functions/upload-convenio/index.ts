@@ -10,6 +10,7 @@ import { buildCorsHeaders } from "../_shared/lib/cors.ts";
 
 interface UploadRequest {
   file_url: string;
+  file_path: string;
   nombre_archivo: string;
   visibilidad: "publico" | "privado";
   pdf_hash?: string;
@@ -74,13 +75,18 @@ function validateRequest(
     return { valid: false, error: "Request body must be an object" };
   }
 
-  const { file_url, nombre_archivo, visibilidad, pdf_hash } = body as Record<
-    string,
-    unknown
-  >;
+  const { file_url, file_path, nombre_archivo, visibilidad, pdf_hash } =
+    body as Record<string, unknown>;
 
   if (!file_url || typeof file_url !== "string") {
     return { valid: false, error: "file_url is required and must be a string" };
+  }
+
+  if (!file_path || typeof file_path !== "string") {
+    return {
+      valid: false,
+      error: "file_path is required and must be a string",
+    };
   }
 
   if (!nombre_archivo || typeof nombre_archivo !== "string") {
@@ -114,6 +120,7 @@ function validateRequest(
     valid: true,
     data: {
       file_url,
+      file_path,
       nombre_archivo,
       visibilidad: (visibilidad as "publico" | "privado") || "privado",
       pdf_hash: pdf_hash as string | undefined,
@@ -369,8 +376,21 @@ async function handleRequest(req: Request, jsonHeaders: Record<string, string>):
       });
     }
 
-    const { file_url, nombre_archivo, visibilidad, pdf_hash } = validation
-      .data!;
+    const { file_url, file_path, nombre_archivo, visibilidad, pdf_hash } =
+      validation.data!;
+
+    // Seguridad: el path debe estar dentro de la carpeta del usuario.
+    // La RLS de storage.objects ya garantiza esto en el upload, pero
+    // lo verificamos aquí también antes de persistir.
+    if (!file_path.startsWith(`${user.id}/`)) {
+      const errorResponse: ErrorResponse = {
+        error: "file_path no pertenece al usuario autenticado",
+      };
+      return new Response(JSON.stringify(errorResponse), {
+        status: 403,
+        headers: jsonHeaders,
+      });
+    }
 
     // ========================================
     // 7. Verificar duplicados por hash (si viene hash)
@@ -392,7 +412,7 @@ async function handleRequest(req: Request, jsonHeaders: Record<string, string>):
       .from("convenios")
       .insert({
         nombre: nombreLimpio,
-        url_pdf: file_url,
+        url_pdf: file_path,
         pdf_hash: pdf_hash || null,
         visibilidad,
         owner_id: user.id,

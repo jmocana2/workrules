@@ -400,6 +400,12 @@ verify_jwt = true
 import_map = "./functions/upload-convenio/deno.json"
 entrypoint = "./functions/upload-convenio/index.ts"
 
+[functions.sign-pdf]
+enabled = true
+verify_jwt = true
+import_map = "./functions/sign-pdf/deno.json"
+entrypoint = "./functions/sign-pdf/index.ts"
+
 [functions.webhook-pdf]
 enabled = true
 verify_jwt = true

@@ -171,6 +171,7 @@ describe("useConvenioUpload", () => {
     await act(async () => {
       await result.current.confirmUpload(
         "https://example.com/test.pdf",
+        "user-123/test.pdf",
         "test.pdf",
       );
     });
@@ -245,6 +246,7 @@ describe("useConvenioUpload", () => {
     await act(async () => {
       await result.current.confirmUpload(
         "https://example.com/test.pdf",
+        "user-123/test.pdf",
         "test.pdf",
       );
     });
