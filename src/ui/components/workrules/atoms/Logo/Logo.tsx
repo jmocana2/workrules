@@ -27,10 +27,10 @@ const VIEW_BOXES = {
   full: VB_FULL,
 } as const;
 
-const DARK_CLASSES = {
-  light: '',
+const THEME_CLASSES = {
+  light: 'is-light',
   dark: 'is-dark',
-  auto: 'dark:is-dark',
+  auto: '',
 } as const;
 
 /**
@@ -47,13 +47,13 @@ export function Logo({
   const height = HEIGHTS[size];
   const width = Math.round(height * RATIO[variant]);
 
-  const darkClass = DARK_CLASSES[theme];
+  const themeClass = THEME_CLASSES[theme];
 
   return (
     <div
       role="img"
       aria-label="WorkRules logo"
-      className={cn('inline-flex items-center', darkClass, className)}
+      className={cn('inline-flex items-center', themeClass, className)}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -61,7 +61,7 @@ export function Logo({
         width={width}
         height={height}
         preserveAspectRatio="xMidYMid meet"
-        className="flex-shrink-0 [&_.logo-fg]:fill-[#1e293b] [.is-dark_&_.logo-fg]:fill-white"
+        className="flex-shrink-0 [&_.logo-fg]:fill-[#1e293b] dark:[&_.logo-fg]:fill-white [.is-light_&_.logo-fg]:fill-[#1e293b] [.is-dark_&_.logo-fg]:fill-white"
         aria-hidden="true"
       >
         <g

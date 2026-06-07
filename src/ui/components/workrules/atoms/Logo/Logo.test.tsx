@@ -83,10 +83,10 @@ describe('Logo', () => {
   });
 
   describe('Temas', () => {
-    it('theme="light" no añade clases dark', () => {
+    it('theme="light" añade la clase is-light', () => {
       const logo = render(<Logo theme="light" />).getByRole('img');
+      expect(logo).toHaveClass('is-light');
       expect(logo).not.toHaveClass('is-dark');
-      expect(logo).not.toHaveClass('dark:is-dark');
     });
 
     it('theme="dark" añade la clase is-dark', () => {
@@ -94,14 +94,16 @@ describe('Logo', () => {
       expect(logo).toHaveClass('is-dark');
     });
 
-    it('theme="auto" añade la clase dark:is-dark', () => {
+    it('theme="auto" no añade clases de tema (reacciona a .dark del proyecto)', () => {
       const logo = render(<Logo theme="auto" />).getByRole('img');
-      expect(logo).toHaveClass('dark:is-dark');
+      expect(logo).not.toHaveClass('is-light');
+      expect(logo).not.toHaveClass('is-dark');
     });
 
     it('por defecto usa theme="auto"', () => {
       const logo = render(<Logo />).getByRole('img');
-      expect(logo).toHaveClass('dark:is-dark');
+      expect(logo).not.toHaveClass('is-light');
+      expect(logo).not.toHaveClass('is-dark');
     });
   });
 
