@@ -13,6 +13,10 @@ export interface ChatRequest {
   stream?: boolean;
   /** Historial de mensajes anteriores para contexto multi-turno */
   messages?: ChatHistoryMessage[];
+  /** Modo forzado por el usuario. Sobrescribe la heuristica de clasificacion.
+   *  - 'salary': fuerza calculateSalary
+   *  - undefined: comportamiento heuristico (default) */
+  mode?: "salary";
 }
 
 /** Respuesta no-streaming */

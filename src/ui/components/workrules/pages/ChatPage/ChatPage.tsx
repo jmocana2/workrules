@@ -37,6 +37,7 @@ import { Button } from '@ui/components/shadcn/button';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Separator } from '@ui/components/shadcn/separator';
 import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
+import { SalaryModeToggle } from '@ui/components/workrules/atoms/SalaryModeToggle';
 import { AlertConflict } from '@ui/components/workrules/molecules/AlertConflict/AlertConflict';
 import { AlertInvalidData } from '@ui/components/workrules/molecules/AlertInvalidData/AlertInvalidData';
 import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
@@ -242,6 +243,11 @@ export function ChatPage({
     activeVariables,
     handleVariableRemove,
     humanizeVariableLabel,
+
+    // Modo calculo salarial
+    salaryMode,
+    setSalaryMode,
+    hasIdentifyingVariables,
   } = useChatPage({
     initialConvenioId,
     initialMessages,
@@ -267,8 +273,12 @@ export function ChatPage({
   const emptyState = getEmptyStateText();
 
   // Handler para el submit del PromptInput
+  const canSubmit = (text: string) =>
+    !!selectedConvenio &&
+    (text.trim().length > 0 || (salaryMode && hasIdentifyingVariables));
+
   const handlePromptSubmit = async (message: { text: string; files: unknown[] }) => {
-    if (!message.text.trim() || !selectedConvenio) return;
+    if (!canSubmit(message.text)) return;
     await handleSubmitFromText(message.text);
   };
 
@@ -612,9 +622,14 @@ export function ChatPage({
                 className="min-h-15 resize-none text-[var(--tokensColorsText)] placeholder:text-[var(--colorsNeutralNeutral9)]"
               />
               <PromptInputFooter>
+                <SalaryModeToggle
+                  active={salaryMode}
+                  onToggle={setSalaryMode}
+                  disabled={!selectedConvenio || isLoading}
+                />
                 <div className="flex-1" />
                 <PromptInputSubmit
-                  disabled={!selectedConvenio || !input.trim() || isLoading}
+                  disabled={isLoading || !canSubmit(input)}
                   status={isLoading ? 'streaming' : undefined}
                 />
               </PromptInputFooter>

@@ -234,6 +234,22 @@ export async function classifyAndExecute(
   request: ChatRequest,
   userId: string,
 ): Promise<ChatUseCaseResult> {
+  // Override explicito del usuario: si pidio modo salary, ejecutar directamente
+  if (request.mode === "salary") {
+    return calculateSalary({
+      convenioId: request.convenio_id,
+      pregunta: request.pregunta,
+      userId,
+      sessionId: request.session_id,
+      variablesConocidas: request.variables as Record<
+        string,
+        string | number | undefined
+      >,
+      stream: request.stream,
+      messages: request.messages,
+    });
+  }
+
   // Primero verificar si es solicitud de "ver todos los rangos"
   // Este caso especial transforma la pregunta para mejorar RAG
   if (isShowRangesRequest(request.pregunta)) {

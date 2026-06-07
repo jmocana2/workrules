@@ -267,4 +267,9 @@ export interface UseChatPageReturn {
   // Util para testing/mocks
   setAlert: (alertState: AlertState) => void;
   setDataRequest: (state: DataRequestState) => void;
+
+  // Modo calculo salarial
+  salaryMode: boolean;
+  setSalaryMode: (value: boolean) => void;
+  hasIdentifyingVariables: boolean;
 }

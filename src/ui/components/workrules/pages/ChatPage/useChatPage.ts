@@ -86,6 +86,20 @@ function humanizeVariableLabel(name: string): string {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 }
 
+/**
+ * Construye una pregunta sintetica para el modo calculo salarial cuando el
+ * usuario no ha escrito texto pero ha seleccionado variables identificadoras.
+ */
+function buildSyntheticPrompt(
+  variables: Record<string, string>,
+  humanize: (name: string) => string,
+): string {
+  const parts = Object.entries(variables).map(
+    ([name, value]) => `${humanize(name)}=${value}`,
+  );
+  return `Calcula el salario con: ${parts.join(", ")}`;
+}
+
 /** Flag para usar mocks en desarrollo/Storybook */
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCKS === "true";
 
@@ -197,6 +211,17 @@ export function useChatPage(
   const [activeVariables, setActiveVariables] = useState<
     Record<string, string>
   >({});
+
+  // Toggle del modo "Calculo salarial". Fuerza el backend a calculateSalary
+  // ignorando la heuristica de clasificacion. No persiste entre conversaciones.
+  const [salaryMode, setSalaryMode] = useState(false);
+
+  // Hay alguna variable identificadora activa? (necesario para habilitar
+  // submit sin texto en modo cálculo)
+  const hasIdentifyingVariables = useMemo(
+    () => Object.keys(activeVariables).some(isIdentifyingVariable),
+    [activeVariables],
+  );
 
   // ============================================================================
   // Hook de Chat Real (useChatStream) - cuando NO usamos mocks
@@ -537,7 +562,14 @@ export function useChatPage(
         return;
       }
 
-      const text = messageText.trim();
+      let text = messageText.trim();
+
+      // Si no hay texto pero estamos en modo calculo con variables
+      // identificadoras, construir una pregunta sintetica.
+      if (!text && salaryMode && hasIdentifyingVariables) {
+        text = buildSyntheticPrompt(activeVariables, humanizeVariableLabel);
+      }
+
       if (!text) {
         return;
       }
@@ -584,6 +616,8 @@ export function useChatPage(
           text,
           currentSessionId || undefined,
           activeVariables,
+          false,
+          salaryMode ? "salary" : undefined,
         );
       }
       setLocalInput("");
@@ -597,6 +631,8 @@ export function useChatPage(
       user?.id,
       shouldUseMocks,
       activeVariables,
+      salaryMode,
+      hasIdentifyingVariables,
     ],
   );
 
@@ -623,6 +659,7 @@ export function useChatPage(
     setAlertState(clearAlertState());
     setDataRequestState(clearDataRequestState());
     setActiveVariables({});
+    setSalaryMode(false);
     setState((prev) => ({
       ...prev,
       currentConversationId: null,
@@ -636,6 +673,7 @@ export function useChatPage(
     async (id: string) => {
       setState((prev) => ({ ...prev, currentConversationId: id }));
       setActiveVariables({});
+      setSalaryMode(false);
 
       // En modo mock, usar mensajes mock (dynamic import para que no entre al bundle prod)
       if (shouldUseMocks) {
@@ -987,5 +1025,10 @@ export function useChatPage(
     // Util para testing/mocks
     setAlert,
     setDataRequest,
+
+    // Modo calculo salarial
+    salaryMode,
+    setSalaryMode,
+    hasIdentifyingVariables,
   };
 }

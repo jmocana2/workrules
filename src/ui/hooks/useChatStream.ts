@@ -91,6 +91,7 @@ export interface UseChatStreamReturn {
     overrideSessionId?: string,
     variables?: Record<string, string | number>,
     replayLastUser?: boolean,
+    mode?: "salary",
   ) => Promise<void>;
   /** Establecer mensajes (util para cargar historial) */
   setMessages: (messages: ChatStreamMessage[]) => void;
@@ -159,6 +160,7 @@ export function useChatStream(
       overrideSessionId?: string,
       variables?: Record<string, string | number>,
       replayLastUser?: boolean,
+      mode?: "salary",
     ) => {
       const trimmedText = text.trim();
 
@@ -237,6 +239,7 @@ export function useChatStream(
             stream: true,
             signal: abortControllerRef.current.signal,
             messages: historyMessages,
+            mode,
           },
           {
             onText: (chunk) => {

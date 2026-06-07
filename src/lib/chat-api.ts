@@ -83,6 +83,8 @@ export interface ChatApiOptions {
   signal?: AbortSignal;
   /** Historial de mensajes anteriores para contexto multi-turno */
   messages?: ChatHistoryMessage[];
+  /** Modo forzado por el usuario. Sobrescribe la heuristica del backend. */
+  mode?: "salary";
 }
 
 /** Callback para eventos de streaming */
@@ -297,7 +299,7 @@ export async function streamChat(
   options: ChatApiOptions,
   callbacks: StreamCallbacks = {},
 ): Promise<void> {
-  const { convenioId, pregunta, sessionId, variables, signal, messages } =
+  const { convenioId, pregunta, sessionId, variables, signal, messages, mode } =
     options;
   const { onError } = callbacks;
 
@@ -323,6 +325,7 @@ export async function streamChat(
         variables,
         stream: true,
         messages,
+        ...(mode && { mode }),
       }),
       signal,
     });
@@ -373,7 +376,7 @@ export async function streamChat(
 export async function sendChat(
   options: Omit<ChatApiOptions, "stream">,
 ): Promise<ChatApiResponse> {
-  const { convenioId, pregunta, sessionId, variables, signal, messages } =
+  const { convenioId, pregunta, sessionId, variables, signal, messages, mode } =
     options;
 
   const token = await getAuthToken();
@@ -397,6 +400,7 @@ export async function sendChat(
       variables,
       stream: false,
       messages,
+      ...(mode && { mode }),
     }),
     signal,
   });
