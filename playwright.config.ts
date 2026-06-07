@@ -73,15 +73,14 @@ export default defineConfig({
   ],
   /* Run your local dev server before starting the tests */
   webServer: {
-    // En CI usamos `vite preview` (build estatico ya generado en el paso anterior)
-    // para que el arranque sea inmediato. En local, `pnpm dev` permite iterar rapido.
-    // Puerto dedicado para evitar reutilizar un dev server sin VITE_E2E_TESTING.
-    command: process.env.CI
-      ? "pnpm exec vite preview --host 127.0.0.1 --port 4173"
-      : "pnpm dev --host 127.0.0.1 --port 4173",
+    // Usamos `vite build` + `vite preview` siempre para que el arranque sea
+    // inmediato (sin cold start de Vite) y deterministas en todos los browsers.
+    // Puerto dedicado para evitar reutilizar un servidor sin VITE_E2E_TESTING.
+    command:
+      "pnpm exec vite build && pnpm exec vite preview --host 127.0.0.1 --port 4173",
     url: "http://127.0.0.1:4173",
     reuseExistingServer: false,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000,
     env: {
       VITE_E2E_TESTING: "true",
     },

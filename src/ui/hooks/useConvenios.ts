@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Convenio } from "@core/types";
 import { useQuery } from "@tanstack/react-query";
+import { E2E_MOCK_CONVENIOS, isE2ETesting } from "./e2eMocks";
 
 /**
  * Hook para obtener la lista de convenios disponibles para el usuario
@@ -15,6 +16,16 @@ export function useConvenios(searchTerm?: string) {
   return useQuery({
     queryKey: ["convenios", searchTerm],
     queryFn: async (): Promise<Convenio[]> => {
+      if (isE2ETesting) {
+        if (searchTerm && searchTerm.trim().length > 0) {
+          const needle = searchTerm.toLowerCase();
+          return E2E_MOCK_CONVENIOS.filter((c) =>
+            c.nombre.toLowerCase().includes(needle),
+          );
+        }
+        return E2E_MOCK_CONVENIOS;
+      }
+
       // Obtener el usuario actual
       const { data: { user } } = await supabase.auth.getUser();
 

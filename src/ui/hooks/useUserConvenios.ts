@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { UserConvenio } from "@core/types";
 import { useQuery } from "@tanstack/react-query";
+import { E2E_MOCK_USER_CONVENIOS, isE2ETesting } from "./e2eMocks";
 import { useSupabase } from "./useSupabase";
 
 export function useUserConvenios() {
@@ -10,6 +11,7 @@ export function useUserConvenios() {
   return useQuery({
     queryKey: ["user-convenios", userId],
     queryFn: async (): Promise<UserConvenio[]> => {
+      if (isE2ETesting) return E2E_MOCK_USER_CONVENIOS;
       if (!userId) return [];
 
       const { data, error } = await supabase
@@ -48,7 +50,7 @@ export function useUserConvenios() {
       }));
     },
     staleTime: 30 * 1000,
-    enabled: userId !== null,
+    enabled: isE2ETesting || userId !== null,
   });
 }
 
