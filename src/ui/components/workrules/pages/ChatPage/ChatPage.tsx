@@ -369,7 +369,7 @@ export function ChatPage({
         {/* Header sticky */}
         {selectedConvenio ? (
           <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
-            <div className="flex h-16 gap-2 px-3 py-3 md:gap-4 md:px-6">
+            <div className="flex h-16 items-start gap-2 px-3 py-3 md:gap-4 md:px-6">
               {/* Hamburger menu - Mobile y Tablet */}
               {(isMobile || isTablet) && (
                 <Button
@@ -377,6 +377,7 @@ export function ChatPage({
                   size="icon"
                   onClick={() => setIsSidebarOpen(true)}
                   aria-label="Abrir menú"
+                  className="shrink-0"
                 >
                   <MenuIcon className="h-5 w-5" />
                 </Button>
@@ -389,7 +390,7 @@ export function ChatPage({
                 onSelect={selectConvenio}
                 onClear={clearConvenio}
                 placeholder={CHAT_TEXTS.convenioSelector.placeholder}
-                className="flex-1"
+                className="min-w-0 flex-1"
               />
 
               {/* Botón Variables Panel - Mobile y Tablet */}
@@ -399,6 +400,7 @@ export function ChatPage({
                   size="icon"
                   onClick={() => setIsVariablesPanelOpen(true)}
                   aria-label="Ver variables"
+                  className="shrink-0"
                 >
                   <SlidersIcon className="h-5 w-5" />
                 </Button>

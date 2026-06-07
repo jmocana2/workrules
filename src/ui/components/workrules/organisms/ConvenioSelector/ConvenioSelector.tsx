@@ -226,7 +226,7 @@ export function ConvenioSelector({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[90vw] max-w-[400px] p-0 bg-[var(--panelSolid)]" align="start">
+        <PopoverContent className="w-[90vw] max-w-[415px] p-0 bg-[var(--panelSolid)]" align="start">
           <Command shouldFilter={false}>
             <CommandInput
               placeholder={CHAT_TEXTS.convenioSelector.searchPlaceholder}
@@ -245,9 +245,9 @@ export function ConvenioSelector({
                     className="flex items-center gap-2 cursor-pointer"
                   >
                    
-                    <div className="flex flex-1 items-center justify-between gap-2">
+                    <div className="flex flex-1 items-center justify-between gap-2 max-w-full">
                       <span
-                        className="flex-1 truncate text-sm min-w-0 max-w-[255px]"
+                        className="flex-1 truncate text-sm min-w-0 max-w-[295px]"
                         title={getFullName(convenio)}
                       >
                         {getDisplayName(convenio)}
