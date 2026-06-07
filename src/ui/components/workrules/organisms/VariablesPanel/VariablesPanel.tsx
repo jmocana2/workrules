@@ -1,20 +1,16 @@
 import { PerfilJson } from '@core/types';
 import { cn } from '@lib/utils';
-import { Badge } from '@ui/components/shadcn/badge';
 import { Button } from '@ui/components/shadcn/button';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Separator } from '@ui/components/shadcn/separator';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@ui/components/shadcn/tooltip';
+import { TooltipProvider } from '@ui/components/shadcn/tooltip';
 import { ChevronDownIcon, ChevronRightIcon, InfoIcon } from 'lucide-react';
+import { VariableCard } from './VariableCard';
 
 export interface VariablesPanelProps {
   perfilJson?: PerfilJson | null;
   onVariableClick: (variable: string, value: string) => void;
+  activeVariables?: Record<string, string>;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   isMobile?: boolean;
@@ -25,6 +21,7 @@ export interface VariablesPanelProps {
 export function VariablesPanel({
   perfilJson,
   onVariableClick,
+  activeVariables,
   isCollapsed = false,
   onToggleCollapse,
   isMobile = false,
@@ -135,66 +132,16 @@ export function VariablesPanel({
         {/* Variables list */}
         <ScrollArea className="flex-1">
           <div className="space-y-6 p-4">
-            {perfilJson.variables_criticas.map((variable) => {
-              const valores = perfilJson.valores_posibles[variable] || [];
-              const descripcion = perfilJson.descripciones?.[variable];
-
-              return (
-                <div key={variable} className="rounded-md border border-border/80 bg-background/60">
-                  {/* Variable name - fixed, no scroll */}
-                  <div className="flex items-center gap-2 p-3 pb-2">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
-                      {variable}
-                    </h3>
-                    {descripcion && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <button
-                            className="flex items-center justify-center text-muted-foreground hover:text-foreground"
-                            aria-label={`Información sobre ${variable}`}
-                          >
-                            <InfoIcon className="h-3 w-3" />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="left"
-                          className="max-w-xs"
-                          sideOffset={8}
-                        >
-                          <p className="text-xs">{descripcion}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-
-                  {/* Values badges - scrollable */}
-                  <div className="max-h-40 overflow-y-auto px-3 pb-3">
-                    {valores.length === 0 ? (
-                      <p className="text-xs italic text-muted-foreground">
-                        Sin valores definidos
-                      </p>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {valores.map((valor, index) => (
-                          <Badge
-                            key={`${variable}-${valor}-${index}`}
-                            variant="secondary"
-                            className={cn(
-                              'max-w-full cursor-pointer border border-border/70 bg-muted/70 px-2 text-left text-xs text-foreground',
-                              'hover:bg-[var(--colorsAccentAccent4)] hover:text-[var(--colorsAccentAccent12)]',
-                              'transition-colors duration-150'
-                            )}
-                            onClick={() => onVariableClick(variable, valor)}
-                          >
-                            <span className="block truncate">{valor}</span>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            {perfilJson.variables_criticas.map((variable) => (
+              <VariableCard
+                key={variable}
+                variable={variable}
+                valores={perfilJson.valores_posibles[variable] || []}
+                descripcion={perfilJson.descripciones?.[variable]}
+                selectedValue={activeVariables?.[variable]}
+                onValueClick={onVariableClick}
+              />
+            ))}
           </div>
         </ScrollArea>
 

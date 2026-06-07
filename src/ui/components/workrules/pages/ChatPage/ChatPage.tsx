@@ -46,7 +46,7 @@ import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSel
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
 import { ExternalLinkIcon, Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
 const MessageResponse = lazy(() =>
   import('@ui/components/ai-elements/message-response').then((m) => ({
@@ -138,6 +138,24 @@ export function ChatPage({
   // Estado para mobile drawers
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isVariablesPanelOpen, setIsVariablesPanelOpen] = useState(false);
+
+  // Medir altura real del input fijo en móvil para evitar que tape el final del chat
+  const [mobileInputEl, setMobileInputEl] = useState<HTMLDivElement | null>(null);
+  const [mobileInputHeight, setMobileInputHeight] = useState(0);
+
+  useEffect(() => {
+    if (!mobileInputEl || !isMobile) {
+      setMobileInputHeight(0);
+      return;
+    }
+    setMobileInputHeight(mobileInputEl.getBoundingClientRect().height);
+    const observer = new ResizeObserver((entries) => {
+      const height = entries[0]?.contentRect.height ?? 0;
+      setMobileInputHeight(height);
+    });
+    observer.observe(mobileInputEl);
+    return () => observer.disconnect();
+  }, [isMobile, mobileInputEl]);
 
   // Usar convenios reales de Supabase (o mocks en Storybook)
   const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
@@ -378,12 +396,16 @@ export function ChatPage({
         )}
 
         {/* Área de mensajes */}
-        <ScrollArea className={cn(
-          "flex-1 overflow-hidden py-4",
-          "px-4 md:px-6",
-          isMobile && "pb-32" // Espacio para input fixed en mobile
-        )}>
-          <div className="mx-auto max-w-3xl space-y-6">
+        <ScrollArea
+          className={cn(
+            "flex-1 overflow-hidden py-4",
+            "px-4 md:px-6"
+          )}
+        >
+          <div
+            className="mx-auto max-w-3xl space-y-6"
+            style={isMobile && mobileInputHeight > 0 ? { paddingBottom: mobileInputHeight + 16 } : undefined}
+          >
             {messages.length === 0 ? (
               // Estado vacío
               <div className="flex flex-col items-center justify-center py-12 md:py-20 text-center">
@@ -525,11 +547,14 @@ export function ChatPage({
         {!isMobile && <Separator />}
 
         {/* Input de chat - Fixed en mobile, estático en desktop */}
-        <div className={cn(
-          "bg-card",
-          isMobile && "fixed bottom-0 left-0 right-0 z-20 border-t border-border",
-          isMobile ? "px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3" : "px-6 py-4"
-        )}>
+        <div
+          ref={setMobileInputEl}
+          className={cn(
+            "bg-card",
+            isMobile && "fixed bottom-0 left-0 right-0 z-20 border-t border-border",
+            isMobile ? "px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3" : "px-6 py-4"
+          )}
+        >
           <div className="mx-auto max-w-3xl">
             <VariableChips
               chips={Object.entries(activeVariables).map(([name, value]): VariableChip => ({
@@ -577,6 +602,7 @@ export function ChatPage({
             <VariablesPanel
               perfilJson={perfilJson}
               onVariableClick={handleVariableClick}
+              activeVariables={activeVariables}
               isCollapsed={true}
               onToggleCollapse={() => setIsVariablesPanelOpen(true)}
               isMobile={false}
@@ -591,6 +617,7 @@ export function ChatPage({
             <VariablesPanel
               perfilJson={perfilJson}
               onVariableClick={handleVariableClick}
+              activeVariables={activeVariables}
               isCollapsed={false}
               onToggleCollapse={() => setIsVariablesPanelOpen(false)}
               isMobile={true}
@@ -602,6 +629,7 @@ export function ChatPage({
         <VariablesPanel
           perfilJson={perfilJson}
           onVariableClick={handleVariableClick}
+          activeVariables={activeVariables}
           isCollapsed={isVariablesPanelCollapsed}
           onToggleCollapse={toggleVariablesPanel}
           isMobile={false}

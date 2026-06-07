@@ -11,6 +11,7 @@
  * - Chip removible para el convenio seleccionado
  */
 
+import { CHAT_TEXTS } from '@/constants/texts';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/ui/components/shadcn/badge';
 import { Button } from '@/ui/components/shadcn/button';
@@ -30,7 +31,7 @@ import {
 import { Skeleton } from '@/ui/components/shadcn/skeleton';
 import { ConvenioChip } from '@/ui/components/workrules/atoms/ConvenioChip/ConvenioChip';
 import type { Convenio } from '@core/types';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { ChevronsUpDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export interface ConvenioSelectorProps {
@@ -155,7 +156,7 @@ export function ConvenioSelector({
   isLoading = false,
   onSelect,
   onClear,
-  placeholder = 'Buscar convenio...',
+  placeholder = CHAT_TEXTS.convenioSelector.placeholder,
   className,
 }: ConvenioSelectorProps) {
   const [open, setOpen] = useState(false);
@@ -217,7 +218,7 @@ export function ConvenioSelector({
             )}
           >
             <span
-              className="truncate max-w-[120px] sm:max-w-[200px] md:max-w-none"
+              className="truncate"
               title={selectedConvenio ? getFullName(selectedConvenio) : undefined}
             >
               {selectedConvenio ? getDisplayName(selectedConvenio) : placeholder}
@@ -228,7 +229,7 @@ export function ConvenioSelector({
         <PopoverContent className="w-[90vw] max-w-[400px] p-0 bg-[var(--panelSolid)]" align="start">
           <Command shouldFilter={false}>
             <CommandInput
-              placeholder="Buscar convenio..."
+              placeholder={CHAT_TEXTS.convenioSelector.searchPlaceholder}
               value={searchQuery}
               onValueChange={setSearchQuery}
             />
@@ -243,17 +244,10 @@ export function ConvenioSelector({
                     data-checked={selectedConvenio?.id === convenio.id}
                     className="flex items-center gap-2 cursor-pointer"
                   >
-                    <Check
-                      className={cn(
-                        'h-4 w-4',
-                        selectedConvenio?.id === convenio.id
-                          ? 'opacity-100'
-                          : 'opacity-0'
-                      )}
-                    />
+                   
                     <div className="flex flex-1 items-center justify-between gap-2">
                       <span
-                        className="flex-1 truncate text-sm min-w-0"
+                        className="flex-1 truncate text-sm min-w-0 max-w-[255px]"
                         title={getFullName(convenio)}
                       >
                         {getDisplayName(convenio)}

@@ -127,7 +127,7 @@ describe('ConvenioSelector', () => {
 
     // Verifica que el listado se muestra
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Buscar convenio...')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Buscar convenio')).toBeInTheDocument();
     });
 
     // Verifica que todos los convenios están visibles
@@ -155,7 +155,7 @@ describe('ConvenioSelector', () => {
     await user.click(screen.getByRole('combobox'));
 
     // Esperar a que aparezca el input de búsqueda
-    const searchInput = await screen.findByPlaceholderText('Buscar convenio...');
+    const searchInput = await screen.findByPlaceholderText('Buscar convenio');
 
     // Buscar "comercio" debería encontrar solo "Convenio Estatal de Comercio"
     await user.type(searchInput, 'comercio');
@@ -198,7 +198,7 @@ describe('ConvenioSelector', () => {
     );
 
     await user.click(screen.getByRole('combobox'));
-    const searchInput = await screen.findByPlaceholderText('Buscar convenio...');
+    const searchInput = await screen.findByPlaceholderText('Buscar convenio');
 
     // Buscar sin acentos debería encontrar el convenio con acentos
     await user.type(searchInput, 'educacion');
@@ -285,7 +285,7 @@ describe('ConvenioSelector', () => {
     );
 
     await user.click(screen.getByRole('combobox'));
-    const searchInput = await screen.findByPlaceholderText('Buscar convenio...');
+    const searchInput = await screen.findByPlaceholderText('Buscar convenio');
 
     // Buscar algo que no existe
     await user.type(searchInput, 'xyz123');
@@ -311,7 +311,7 @@ describe('ConvenioSelector', () => {
 
     // Verificar que está abierto
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Buscar convenio...')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Buscar convenio')).toBeInTheDocument();
     });
 
     // Seleccionar un convenio
@@ -320,7 +320,7 @@ describe('ConvenioSelector', () => {
 
     // Verificar que se cerró (el input de búsqueda ya no está)
     await waitFor(() => {
-      expect(screen.queryByPlaceholderText('Buscar convenio...')).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText('Buscar convenio')).not.toBeInTheDocument();
     });
   });
 
@@ -337,7 +337,7 @@ describe('ConvenioSelector', () => {
 
     // Abrir y buscar
     await user.click(screen.getByRole('combobox'));
-    const searchInput = await screen.findByPlaceholderText('Buscar convenio...');
+    const searchInput = await screen.findByPlaceholderText('Buscar convenio');
     await user.type(searchInput, 'comercio');
 
     // Cerrar presionando Escape
@@ -348,7 +348,7 @@ describe('ConvenioSelector', () => {
 
     // Verificar que el input está vacío
     const newSearchInput = await screen.findByPlaceholderText(
-      'Buscar convenio...'
+      'Buscar convenio'
     );
     expect(newSearchInput).toHaveValue('');
   });

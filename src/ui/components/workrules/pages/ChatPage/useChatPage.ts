@@ -501,7 +501,14 @@ export function useChatPage(
   // del textarea. Reemplazo automatico por grupo (mismo `variable` → sobrescribe).
   const handleVariableClick = useCallback(
     (variable: string, value: string) => {
-      setActiveVariables((prev) => ({ ...prev, [variable]: value }));
+      setActiveVariables((prev) => {
+        if (prev[variable] === value) {
+          const next = { ...prev };
+          delete next[variable];
+          return next;
+        }
+        return { ...prev, [variable]: value };
+      });
     },
     [],
   );
