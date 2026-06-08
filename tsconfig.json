@@ -28,6 +28,8 @@
       "@core/*": ["src/core/*"],
       "@ui/*": ["src/ui/*"],
       "@lib/*": ["src/lib/*"],
+      "@application/*": ["src/application/*"],
+      "@infrastructure/*": ["src/infrastructure/*"],
       "@mocks/*": ["mocks/*"],
       "@constants/*": ["src/constants/*"]
     }

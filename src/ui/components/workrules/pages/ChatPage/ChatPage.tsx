@@ -47,21 +47,10 @@ import { VariableChips, type VariableChip } from '@ui/components/workrules/molec
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
-import { supabase } from '@/lib/supabase';
+import { openConvenioPdf as openConvenioPdfUseCase } from '@/application/use-cases';
+import { useRepositories } from '@/providers/RepositoriesProvider';
 import { ExternalLinkIcon, Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
-
-async function openConvenioPdf(convenioId: string): Promise<void> {
-  try {
-    const { data, error } = await supabase.functions.invoke('sign-pdf', {
-      body: { convenio_id: convenioId },
-    });
-    if (error || !data?.url) return;
-    window.open(data.url, '_blank', 'noopener,noreferrer');
-  } catch (err) {
-    console.error('[openConvenioPdf] unexpected error', err);
-  }
-}
 
 const MessageResponse = lazy(() =>
   import('@ui/components/ai-elements/message-response').then((m) => ({
@@ -94,9 +83,11 @@ function normalizeUserPlan(plan: 'free' | 'premium' | 'enterprise'): 'free' | 'p
 function MessageCitations({
   citations,
   convenioId,
+  onOpenPdf,
 }: {
   citations: NonNullable<import('./ChatPage.types').Citation[]>;
   convenioId?: string | null;
+  onOpenPdf: (convenioId: string) => void;
 }) {
   const uniqueCitations = citations.filter(
     (c, i, arr) =>
@@ -104,7 +95,7 @@ function MessageCitations({
   );
 
   const handleOpen = () => {
-    if (convenioId) void openConvenioPdf(convenioId);
+    if (convenioId) onOpenPdf(convenioId);
   };
 
   return (
@@ -164,6 +155,9 @@ export function ChatPage({
   const { isMobile, isTablet } = useBreakpoint();
 
   const queryClient = useQueryClient();
+  const { convenio: convenioRepo } = useRepositories();
+  const handleOpenConvenioPdf = (convenioId: string) =>
+    void openConvenioPdfUseCase(convenioId, { repo: convenioRepo });
 
   // Estado para mobile drawers
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -505,6 +499,7 @@ export function ChatPage({
                           <MessageCitations
                             citations={message.citations}
                             convenioId={selectedConvenio?.id}
+                            onOpenPdf={handleOpenConvenioPdf}
                           />
                         )}
                       </MessageContent>

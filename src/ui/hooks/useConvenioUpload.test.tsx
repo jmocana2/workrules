@@ -1,38 +1,35 @@
-import { supabase } from "@/lib/supabase";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook } from "@testing-library/react";
-import { type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { IConvenioUploadRepository } from "@/application/ports";
 import { useConvenioUpload } from "./useConvenioUpload";
+import { createTestWrapper } from "./testUtils";
 
-// Mock Supabase
-vi.mock("@/lib/supabase", () => ({
-  supabase: {
-    auth: {
-      getUser: vi.fn(),
-    },
-    storage: {
-      from: vi.fn(),
-    },
-    functions: {
-      invoke: vi.fn(),
-    },
-    from: vi.fn(),
-  },
-}));
-
-// Create QueryClient wrapper for tests
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+function makeUploadRepo(
+  overrides: Partial<IConvenioUploadRepository> = {},
+): IConvenioUploadRepository {
+  return {
+    getUploadIdentity: vi.fn().mockResolvedValue({
+      userId: "user-123",
+      accessToken: "fake-token",
+    }),
+    uploadPdf: vi.fn().mockResolvedValue({
+      signedUrl: "https://example.com/test.pdf?token=abc123",
+      filePath: "user-123/123-test.pdf",
+    }),
+    confirmUpload: vi.fn().mockResolvedValue({
+      status: "started",
+      convenioId: "convenio-123",
+      existingNombre: null,
+    }),
+    fetchProcessingStatus: vi.fn().mockResolvedValue({
+      estado: "procesando",
+      errorMessage: null,
+      progressStage: null,
+      progressValue: null,
+      progressMessage: null,
+    }),
+    ...overrides,
+  };
 }
 
 describe("useConvenioUpload", () => {
@@ -43,46 +40,21 @@ describe("useConvenioUpload", () => {
 
   it("should start in idle state", () => {
     const { result } = renderHook(() => useConvenioUpload(), {
-      wrapper: createWrapper(),
+      wrapper: createTestWrapper({ convenioUpload: makeUploadRepo() }),
     });
     expect(result.current.state.status).toBe("idle");
   });
 
   it("should upload file successfully", async () => {
-    // Mock user authentication
-    (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: { id: "user-123" } },
-    });
-
-    // Mock session for access token
-    (supabase.auth as any).getSession = vi.fn().mockResolvedValue({
-      data: { session: { access_token: "fake-token" } },
-    });
-
-    // Mock fetch for file upload
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({}),
-    });
-    vi.stubGlobal("fetch", mockFetch);
-
-    // Mock createSignedUrl (instead of getPublicUrl)
-    const mockCreateSignedUrl = vi.fn().mockResolvedValue({
-      data: { signedUrl: "https://example.com/test.pdf?token=abc123" },
-      error: null,
-    });
-
-    (supabase.storage.from as any).mockReturnValue({
-      createSignedUrl: mockCreateSignedUrl,
-    });
+    const repo = makeUploadRepo();
 
     const { result } = renderHook(() => useConvenioUpload(), {
-      wrapper: createWrapper(),
+      wrapper: createTestWrapper({ convenioUpload: repo }),
     });
 
     const file = new File(["test"], "test.pdf", { type: "application/pdf" });
 
-    let uploadResult;
+    let uploadResult: { fileUrl: string; filePath: string } | null = null;
     await act(async () => {
       uploadResult = await result.current.uploadFile(file);
     });
@@ -90,31 +62,20 @@ describe("useConvenioUpload", () => {
     expect(result.current.state.status).toBe("preview");
     expect(uploadResult).toEqual({
       fileUrl: "https://example.com/test.pdf?token=abc123",
-      filePath: expect.stringContaining("user-123/"),
+      filePath: "user-123/123-test.pdf",
     });
+    expect(repo.getUploadIdentity).toHaveBeenCalled();
+    expect(repo.uploadPdf).toHaveBeenCalled();
   });
 
   it("should handle upload errors", async () => {
-    (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: { id: "user-123" } },
+    const repo = makeUploadRepo({
+      uploadPdf: vi.fn().mockRejectedValue(new Error("Upload failed")),
     });
-
-    // Mock session for access token
-    (supabase.auth as any).getSession = vi.fn().mockResolvedValue({
-      data: { session: { access_token: "fake-token" } },
-    });
-
-    // Mock fetch to return error
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      json: async () => ({ error: "Upload failed" }),
-    });
-    vi.stubGlobal("fetch", mockFetch);
 
     const onError = vi.fn();
     const { result } = renderHook(() => useConvenioUpload({ onError }), {
-      wrapper: createWrapper(),
+      wrapper: createTestWrapper({ convenioUpload: repo }),
     });
 
     const file = new File(["test"], "test.pdf", { type: "application/pdf" });
@@ -128,44 +89,24 @@ describe("useConvenioUpload", () => {
   });
 
   it("should confirm upload and start polling", async () => {
-    // Use fake timers to control setTimeout
     vi.useFakeTimers();
 
-    // Mock edge function response
-    (supabase.functions.invoke as any).mockResolvedValue({
-      data: { convenio_id: "convenio-123" },
-      error: null,
-    });
-
-    // Mock polling: convenios.estado=activo + sin fila en convenio_processing_status
-    (supabase.from as any).mockImplementation((table: string) => {
-      if (table === "convenio_processing_status") {
-        return {
-          select: () => ({
-            eq: () => ({
-              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-            }),
-          }),
-        };
-      }
-      return {
-        select: () => ({
-          eq: () => ({
-            single: vi.fn().mockResolvedValue({
-              data: { estado: "activo", error_message: null },
-              error: null,
-            }),
-          }),
-        }),
-      };
+    const repo = makeUploadRepo({
+      fetchProcessingStatus: vi.fn().mockResolvedValue({
+        estado: "activo",
+        errorMessage: null,
+        progressStage: null,
+        progressValue: null,
+        progressMessage: null,
+      }),
     });
 
     const onSuccess = vi.fn();
     const { result } = renderHook(
       () => useConvenioUpload({ onSuccess, pollingIntervalMs: 50 }),
       {
-        wrapper: createWrapper(),
-      }
+        wrapper: createTestWrapper({ convenioUpload: repo }),
+      },
     );
 
     await act(async () => {
@@ -182,23 +123,19 @@ describe("useConvenioUpload", () => {
       expect(result.current.state.stage).toBe("queued");
     }
 
-    // Advance timers to trigger polling
     await act(async () => {
       await vi.advanceTimersByTimeAsync(100);
     });
 
-    // Should transition to 100% processing
     expect(result.current.state.status).toBe("processing");
     if (result.current.state.status === "processing") {
       expect(result.current.state.progress).toBe(100);
     }
 
-    // Advance timers past the 800ms transition
     await act(async () => {
       await vi.advanceTimersByTimeAsync(900);
     });
 
-    // Now should be ready
     expect(result.current.state.status).toBe("ready");
     expect(onSuccess).toHaveBeenCalledWith("convenio-123");
 
@@ -208,39 +145,22 @@ describe("useConvenioUpload", () => {
   it("should handle processing errors", async () => {
     vi.useFakeTimers();
 
-    (supabase.functions.invoke as any).mockResolvedValue({
-      data: { convenio_id: "convenio-123" },
-      error: null,
-    });
-
-    (supabase.from as any).mockImplementation((table: string) => {
-      if (table === "convenio_processing_status") {
-        return {
-          select: () => ({
-            eq: () => ({
-              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-            }),
-          }),
-        };
-      }
-      return {
-        select: () => ({
-          eq: () => ({
-            single: vi.fn().mockResolvedValue({
-              data: { estado: "error", error_message: "Processing failed" },
-              error: null,
-            }),
-          }),
-        }),
-      };
+    const repo = makeUploadRepo({
+      fetchProcessingStatus: vi.fn().mockResolvedValue({
+        estado: "error",
+        errorMessage: "Processing failed",
+        progressStage: null,
+        progressValue: null,
+        progressMessage: null,
+      }),
     });
 
     const onError = vi.fn();
     const { result } = renderHook(
       () => useConvenioUpload({ onError, pollingIntervalMs: 50 }),
       {
-        wrapper: createWrapper(),
-      }
+        wrapper: createTestWrapper({ convenioUpload: repo }),
+      },
     );
 
     await act(async () => {
@@ -251,12 +171,10 @@ describe("useConvenioUpload", () => {
       );
     });
 
-    // Advance timers to trigger polling
     await act(async () => {
       await vi.advanceTimersByTimeAsync(100);
     });
 
-    // Should detect error
     expect(result.current.state.status).toBe("error");
     expect(onError).toHaveBeenCalledWith("Processing failed");
 
@@ -265,17 +183,15 @@ describe("useConvenioUpload", () => {
 
   it("should reset state and cleanup", async () => {
     const { result } = renderHook(() => useConvenioUpload(), {
-      wrapper: createWrapper(),
+      wrapper: createTestWrapper({ convenioUpload: makeUploadRepo() }),
     });
 
-    // Set some state
     await act(async () => {
       result.current.setVisibility("publico");
     });
 
     expect(result.current.visibility).toBe("publico");
 
-    // Reset
     act(() => {
       result.current.reset();
     });
@@ -285,7 +201,7 @@ describe("useConvenioUpload", () => {
 
   it("should change visibility setting", () => {
     const { result } = renderHook(() => useConvenioUpload(), {
-      wrapper: createWrapper(),
+      wrapper: createTestWrapper({ convenioUpload: makeUploadRepo() }),
     });
 
     expect(result.current.visibility).toBe("privado");

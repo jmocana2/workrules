@@ -1,9 +1,47 @@
 import type { Convenio, ConversationSummary, PerfilJson } from '@core/types';
+import type { Repositories } from '@/providers/RepositoriesProvider';
+import { RepositoriesProvider } from '@/providers/RepositoriesProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatPage } from './ChatPage';
+
+const fakeRepositories: Partial<Repositories> = {
+  convenio: {
+    getById: vi.fn().mockResolvedValue(null),
+    list: vi.fn().mockResolvedValue([]),
+    listOwnedByUser: vi.fn().mockResolvedValue([]),
+    getPerfil: vi.fn().mockResolvedValue(null),
+    getSignedPdfUrl: vi.fn().mockResolvedValue(null),
+  },
+  chatSession: {
+    listByUser: vi.fn().mockResolvedValue([]),
+    deleteById: vi.fn().mockResolvedValue(undefined),
+    create: vi.fn().mockResolvedValue('mock-session-id'),
+    loadMessages: vi.fn().mockResolvedValue(null),
+    getConvenioIdForSession: vi.fn().mockResolvedValue(null),
+  },
+  userPlan: {
+    getPlan: vi.fn().mockResolvedValue('free'),
+  },
+  convenioUpload: {
+    getUploadIdentity: vi.fn().mockResolvedValue(null),
+    uploadPdf: vi.fn().mockResolvedValue({ signedUrl: '', filePath: '' }),
+    confirmUpload: vi.fn().mockResolvedValue({
+      status: 'started' as const,
+      convenioId: 'mock',
+      existingNombre: null,
+    }),
+    fetchProcessingStatus: vi.fn().mockResolvedValue({
+      estado: 'procesando',
+      errorMessage: null,
+      progressStage: null,
+      progressValue: null,
+      progressMessage: null,
+    }),
+  },
+};
 
 // Mock environment variable for using mocks
 vi.stubEnv('VITE_USE_MOCKS', 'true');
@@ -26,17 +64,13 @@ vi.mock('ai', () => ({
   }),
 }));
 
-// Mock createChatSession y useSupabase
+// Mock useSupabase (auth) — el cliente Supabase real no se carga porque
+// los repositorios son fakes inyectados via RepositoriesProvider.
 vi.mock('@/lib/supabase', () => ({
   supabase: {
-    from: vi.fn(),
     auth: {
       onAuthStateChange: vi.fn(() => ({
-        data: {
-          subscription: {
-            unsubscribe: vi.fn(),
-          },
-        },
+        data: { subscription: { unsubscribe: vi.fn() } },
       })),
       getSession: vi.fn().mockResolvedValue({
         data: { session: null },
@@ -45,7 +79,6 @@ vi.mock('@/lib/supabase', () => ({
     },
   },
   getSupabaseClient: vi.fn(),
-  createChatSession: vi.fn().mockResolvedValue('mock-session-id'),
 }));
 
 // Mock useConvenios hook
@@ -123,12 +156,12 @@ function createTestQueryClient() {
   });
 }
 
-// Wrapper con QueryClientProvider
+// Wrapper con QueryClientProvider + RepositoriesProvider
 function renderWithQueryClient(ui: React.ReactElement) {
   const queryClient = createTestQueryClient();
   return render(
     <QueryClientProvider client={queryClient}>
-      {ui}
+      <RepositoriesProvider value={fakeRepositories}>{ui}</RepositoriesProvider>
     </QueryClientProvider>
   );
 }

@@ -10,7 +10,13 @@
  * - Estados especiales del protocolo (incomplete, invalid, smi_alert, conflicting)
  */
 
-import { createChatSession, loadChatMessages, supabase } from "@/lib/supabase";
+import {
+  createChatSession,
+  getConvenioById,
+  getConvenioIdForSession,
+  loadChatSessionMessages,
+} from "@/application/use-cases";
+import { useRepositories } from "@/providers/RepositoriesProvider";
 import { useChat } from "@ai-sdk/react";
 import { useChatSessions } from "@ui/hooks/useChatSessions";
 import { useChatStream } from "@ui/hooks/useChatStream";
@@ -128,6 +134,8 @@ export function useChatPage(
   // Hooks de data fetching (TFM.3)
   // ============================================================================
   const { user } = useSupabase();
+  const { chatSession: chatSessionRepo, convenio: convenioRepo } =
+    useRepositories();
   const { data: realConversations } = useChatSessions(
     useMocks ? null : user?.id ?? null,
   );
@@ -582,9 +590,12 @@ export function useChatPage(
         state.selectedConvenio.id
       ) {
         const newSessionId = await createChatSession(
-          user.id,
-          state.selectedConvenio.id,
-          text,
+          {
+            userId: user.id,
+            convenioId: state.selectedConvenio.id,
+            firstMessage: text,
+          },
+          { repo: chatSessionRepo },
         );
         if (newSessionId) {
           // Establecer el sessionId inmediatamente
@@ -633,6 +644,7 @@ export function useChatPage(
       activeVariables,
       salaryMode,
       hasIdentifyingVariables,
+      chatSessionRepo,
     ],
   );
 
@@ -691,72 +703,38 @@ export function useChatPage(
 
       // En modo real, cargar la conversación desde el backend
       try {
-        // Cargar la sesión de chat para obtener el convenio_id
-        const { data: sessionData, error: sessionError } = await supabase
-          .from("chat_sessions")
-          .select("convenio_id")
-          .eq("id", id)
-          .single();
-
-        if (sessionError || !sessionData) {
-          console.error("[useChatPage] Session not found:", sessionError);
+        const convenioIdForSession = await getConvenioIdForSession(id, {
+          repo: chatSessionRepo,
+        });
+        if (!convenioIdForSession) {
+          console.error("[useChatPage] Session not found:", id);
           return;
         }
 
-        // Cargar mensajes de la conversación
-        const messages = await loadChatMessages(id);
-
+        const messages = await loadChatSessionMessages(id, {
+          repo: chatSessionRepo,
+        });
         if (!messages) {
           console.error("[useChatPage] Failed to load chat messages");
           return;
         }
 
-        // Convertir mensajes de la BD al formato de ChatStreamMessage
-        const loadedMessages = messages.map((msg) => ({
-          id: msg.id,
-          role: msg.role as "user" | "assistant",
-          content: msg.content,
-          createdAt: new Date(msg.created_at),
-          citations: msg.metadata?.citations || [],
-        }));
+        realSetMessages(
+          messages.map((msg) => ({
+            id: msg.id,
+            role: msg.role as "user" | "assistant",
+            content: msg.content,
+            createdAt: msg.createdAt,
+            citations: msg.citations || [],
+          })),
+        );
 
-        // Establecer los mensajes usando realChat
-        realSetMessages(loadedMessages);
-
-        // Establecer el sessionId para continuar la conversación
         setSessionId(id);
 
-        // Cargar el convenio correspondiente desde Supabase
-        const { data: convenioData, error: convenioError } = await supabase
-          .from("convenios")
-          .select(
-            "id, nombre, nombre_oficial, nombre_corto, ambito, ambito_territorial, codigo_regcon, fecha_vigencia, url_pdf, estado, visibilidad, owner_id, created_at, updated_at",
-          )
-          .eq("id", sessionData.convenio_id)
-          .single();
-
-        if (convenioError) {
-          console.error("[useChatPage] Error loading convenio:", convenioError);
-          return;
-        }
-
-        if (convenioData) {
-          const convenio = {
-            id: convenioData.id,
-            nombre: convenioData.nombre,
-            nombre_oficial: convenioData.nombre_oficial ?? null,
-            nombre_corto: convenioData.nombre_corto ?? null,
-            ambito: convenioData.ambito ?? "",
-            ambito_territorial: convenioData.ambito_territorial ?? null,
-            codigo_regcon: convenioData.codigo_regcon ?? "",
-            fecha_vigencia: convenioData.fecha_vigencia?.toString() ?? "",
-            url_pdf: convenioData.url_pdf ?? "",
-            estado: convenioData.estado,
-            visibilidad: convenioData.visibilidad,
-            owner_id: convenioData.owner_id,
-            created_at: convenioData.created_at,
-            updated_at: convenioData.updated_at,
-          };
+        const convenio = await getConvenioById(convenioIdForSession, {
+          repo: convenioRepo,
+        });
+        if (convenio) {
           setState((prev) => ({ ...prev, selectedConvenio: convenio }));
           setSelectedConvenioId(convenio.id);
         }
@@ -764,7 +742,13 @@ export function useChatPage(
         console.error("[useChatPage] Error loading conversation:", err);
       }
     },
-    [shouldUseMocks, mockSetMessages, realSetMessages],
+    [
+      shouldUseMocks,
+      mockSetMessages,
+      realSetMessages,
+      chatSessionRepo,
+      convenioRepo,
+    ],
   );
 
   // Abrir configuración

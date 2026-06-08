@@ -1,27 +1,24 @@
-import { supabase } from '@/lib/supabase';
 import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { IChatSessionRepository } from '@/application/ports';
 import { useChatSessions, useDeleteChatSession } from './useChatSessions';
-import type { ReactNode } from 'react';
+import {
+  createTestWrapper,
+  createTestWrapperWithClient,
+} from './testUtils';
 
-// Mock Supabase
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(),
-  },
-}));
-
-const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
-};
+function makeChatSessionRepo(
+  overrides: Partial<IChatSessionRepository> = {},
+): IChatSessionRepository {
+  return {
+    listByUser: vi.fn().mockResolvedValue([]),
+    deleteById: vi.fn().mockResolvedValue(undefined),
+    create: vi.fn().mockResolvedValue(null),
+    loadMessages: vi.fn().mockResolvedValue(null),
+    getConvenioIdForSession: vi.fn().mockResolvedValue(null),
+    ...overrides,
+  };
+}
 
 describe('useChatSessions', () => {
   beforeEach(() => {
@@ -29,84 +26,49 @@ describe('useChatSessions', () => {
   });
 
   it('fetches chat sessions successfully', async () => {
-    const mockData = [
-      {
-        id: 'session-1',
-        title: 'Consulta salario',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-02T00:00:00Z',
-        convenio_id: 'conv-1',
-        convenios: { nombre: 'Hostelería Madrid' },
-      },
-    ];
-
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+    const repo = makeChatSessionRepo({
+      listByUser: vi.fn().mockResolvedValue([
+        {
+          id: 'session-1',
+          title: 'Consulta salario',
+          convenioId: 'conv-1',
+          convenioNombre: 'Hostelería Madrid',
+          lastMessageAt: '2024-01-02T00:00:00Z',
+          preview: '',
+        },
+      ]),
     });
 
     const { result } = renderHook(() => useChatSessions('user-123'), {
-      wrapper: createWrapper(),
+      wrapper: createTestWrapper({ chatSession: repo }),
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
     expect(result.current.data?.[0].title).toBe('Consulta salario');
     expect(result.current.data?.[0].convenioNombre).toBe('Hostelería Madrid');
+    expect(repo.listByUser).toHaveBeenCalledWith('user-123');
   });
 
   it('returns empty array when userId is null', async () => {
+    const repo = makeChatSessionRepo();
+
     const { result } = renderHook(() => useChatSessions(null), {
-      wrapper: createWrapper(),
+      wrapper: createTestWrapper({ chatSession: repo }),
     });
 
-    // La query no debería ejecutarse y data está undefined hasta que la query corra
     expect(result.current.data).toBeUndefined();
     expect(result.current.fetchStatus).toBe('idle');
+    expect(repo.listByUser).not.toHaveBeenCalled();
   });
 
-  it('transforms data to ConversationSummary format', async () => {
-    const mockData = [
-      {
-        id: 'session-1',
-        title: null, // Test título por defecto
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-02T00:00:00Z',
-        convenio_id: null,
-        convenios: null,
-      },
-    ];
-
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+  it('throws error when repository fails', async () => {
+    const repo = makeChatSessionRepo({
+      listByUser: vi.fn().mockRejectedValue(new Error('Database error')),
     });
 
     const { result } = renderHook(() => useChatSessions('user-123'), {
-      wrapper: createWrapper(),
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.[0].title).toBe('Nueva conversación');
-    expect(result.current.data?.[0].convenioNombre).toBe('Sin convenio');
-  });
-
-  it('throws error when query fails', async () => {
-    const mockError = new Error('Database error');
-
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue({ data: null, error: mockError }),
-    });
-
-    const { result } = renderHook(() => useChatSessions('user-123'), {
-      wrapper: createWrapper(),
+      wrapper: createTestWrapper({ chatSession: repo }),
     });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
@@ -120,44 +82,35 @@ describe('useDeleteChatSession', () => {
   });
 
   it('deletes session successfully and invalidates cache', async () => {
-    const mockDelete = vi.fn().mockReturnThis();
-    const mockEq = vi.fn().mockResolvedValue({ error: null });
-
-    (supabase.from as any).mockReturnValue({
-      delete: mockDelete,
-      eq: mockEq,
+    const repo = makeChatSessionRepo({
+      deleteById: vi.fn().mockResolvedValue(undefined),
     });
-
-    const queryClient = new QueryClient();
+    const { Wrapper, queryClient } = createTestWrapperWithClient({
+      chatSession: repo,
+    });
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-    const wrapper = ({ children }: { children: ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
-
-    const { result } = renderHook(() => useDeleteChatSession(), { wrapper });
+    const { result } = renderHook(() => useDeleteChatSession(), {
+      wrapper: Wrapper,
+    });
 
     await result.current.mutateAsync('session-1');
 
-    expect(mockDelete).toHaveBeenCalled();
-    expect(mockEq).toHaveBeenCalledWith('id', 'session-1');
+    expect(repo.deleteById).toHaveBeenCalledWith('session-1');
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['chatSessions'] });
   });
 
   it('throws error when deletion fails', async () => {
-    const mockError = new Error('Delete failed');
-
-    (supabase.from as any).mockReturnValue({
-      delete: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockResolvedValue({ error: mockError }),
+    const repo = makeChatSessionRepo({
+      deleteById: vi.fn().mockRejectedValue(new Error('Delete failed')),
     });
 
     const { result } = renderHook(() => useDeleteChatSession(), {
-      wrapper: createWrapper(),
+      wrapper: createTestWrapper({ chatSession: repo }),
     });
 
-    await expect(result.current.mutateAsync('session-1')).rejects.toThrow('Delete failed');
+    await expect(result.current.mutateAsync('session-1')).rejects.toThrow(
+      'Delete failed',
+    );
   });
 });

@@ -1,4 +1,8 @@
 import type { ConversationSummary } from '@core/types';
+import {
+  RepositoriesProvider,
+  type Repositories,
+} from '@/providers/RepositoriesProvider';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -15,6 +19,40 @@ beforeAll(() => {
   };
 });
 
+const fakeRepositories: Partial<Repositories> = {
+  convenio: {
+    getById: vi.fn().mockResolvedValue(null),
+    list: vi.fn().mockResolvedValue([]),
+    listOwnedByUser: vi.fn().mockResolvedValue([]),
+    getPerfil: vi.fn().mockResolvedValue(null),
+    getSignedPdfUrl: vi.fn().mockResolvedValue(null),
+  },
+  chatSession: {
+    listByUser: vi.fn().mockResolvedValue([]),
+    deleteById: vi.fn().mockResolvedValue(undefined),
+    create: vi.fn().mockResolvedValue(null),
+    loadMessages: vi.fn().mockResolvedValue(null),
+    getConvenioIdForSession: vi.fn().mockResolvedValue(null),
+  },
+  userPlan: { getPlan: vi.fn().mockResolvedValue('free') },
+  convenioUpload: {
+    getUploadIdentity: vi.fn().mockResolvedValue(null),
+    uploadPdf: vi.fn().mockResolvedValue({ signedUrl: '', filePath: '' }),
+    confirmUpload: vi.fn().mockResolvedValue({
+      status: 'started' as const,
+      convenioId: 'mock',
+      existingNombre: null,
+    }),
+    fetchProcessingStatus: vi.fn().mockResolvedValue({
+      estado: 'procesando',
+      errorMessage: null,
+      progressStage: null,
+      progressValue: null,
+      progressMessage: null,
+    }),
+  },
+};
+
 // Create QueryClient wrapper for tests
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -25,7 +63,9 @@ function createWrapper() {
     },
   });
   return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <RepositoriesProvider value={fakeRepositories}>{children}</RepositoriesProvider>
+    </QueryClientProvider>
   );
 }
 

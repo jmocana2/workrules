@@ -1,226 +1,107 @@
-import { supabase } from '@/lib/supabase';
 import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Convenio } from '@core/types';
+import type { IConvenioRepository } from '@/application/ports';
 import { useConvenios } from './useConvenios';
-import type { ReactNode } from 'react';
+import { createTestWrapper } from './testUtils';
 
-// Mock Supabase
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(),
-    auth: {
-      getUser: vi.fn(),
-    },
-  },
+vi.mock('./useSupabase', () => ({
+  useSupabase: () => ({ user: null, session: null, loading: false }),
 }));
 
-const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-  return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
-};
+function makeConvenio(partial: Partial<Convenio> = {}): Convenio {
+  return {
+    id: '1',
+    nombre: 'Hostelería Madrid',
+    nombre_oficial: null,
+    nombre_corto: null,
+    ambito: 'provincial',
+    ambito_territorial: null,
+    codigo_regcon: 'REG001',
+    fecha_vigencia: '2024-01-01',
+    url_pdf: '',
+    estado: 'activo',
+    visibilidad: 'publico',
+    owner_id: null,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    ...partial,
+  };
+}
+
+function makeConvenioRepo(
+  overrides: Partial<IConvenioRepository> = {},
+): IConvenioRepository {
+  return {
+    getById: vi.fn().mockResolvedValue(null),
+    list: vi.fn().mockResolvedValue([]),
+    listOwnedByUser: vi.fn().mockResolvedValue([]),
+    getPerfil: vi.fn().mockResolvedValue(null),
+    getSignedPdfUrl: vi.fn().mockResolvedValue(null),
+    ...overrides,
+  };
+}
 
 describe('useConvenios', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('fetches public convenios when user is not authenticated', async () => {
-    const mockData = [
-      {
-        id: '1',
-        nombre: 'Hostelería Madrid',
-        ambito: 'provincial',
-        codigo_regcon: 'REG001',
-        fecha_vigencia: '2024-01-01',
-        estado: 'activo',
-        visibilidad: 'publico',
-        owner_id: null,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-      },
-    ];
-
-    // Mock sin usuario autenticado
-    (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: null },
-      error: null,
+  it('fetches convenios via the repository', async () => {
+    const repo = makeConvenioRepo({
+      list: vi.fn().mockResolvedValue([makeConvenio()]),
     });
 
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+    const { result } = renderHook(() => useConvenios(), {
+      wrapper: createTestWrapper({ convenio: repo }),
     });
-
-    const { result } = renderHook(() => useConvenios(), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
     expect(result.current.data?.[0].nombre).toBe('Hostelería Madrid');
+    expect(repo.list).toHaveBeenCalledWith({
+      searchTerm: undefined,
+      authenticatedUserId: null,
+    });
   });
 
-  it('fetches public and private convenios when user is authenticated', async () => {
-    const mockUserId = 'user-123';
-    const mockData = [
-      {
-        id: '1',
-        nombre: 'Hostelería Madrid',
-        ambito: 'provincial',
-        codigo_regcon: 'REG001',
-        fecha_vigencia: '2024-01-01',
-        estado: 'activo',
-        visibilidad: 'publico',
-        owner_id: null,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-      },
-      {
-        id: '2',
-        nombre: 'Mi Convenio Privado',
-        ambito: 'empresa',
-        codigo_regcon: 'PRIV001',
-        fecha_vigencia: '2024-01-01',
-        estado: 'procesando',
-        visibilidad: 'privado',
-        owner_id: mockUserId,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-      },
-    ];
-
-    // Mock con usuario autenticado
-    (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: { id: mockUserId } },
-      error: null,
+  it('passes searchTerm to the repository', async () => {
+    const repo = makeConvenioRepo({
+      list: vi.fn().mockResolvedValue([]),
     });
 
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      or: vi.fn().mockReturnThis(),
-      not: vi.fn().mockReturnThis(),
-      ilike: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+    const { result } = renderHook(() => useConvenios('madrid'), {
+      wrapper: createTestWrapper({ convenio: repo }),
     });
-
-    const { result } = renderHook(() => useConvenios(), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toHaveLength(2);
-    expect(result.current.data?.[0].nombre).toBe('Hostelería Madrid');
-    expect(result.current.data?.[1].nombre).toBe('Mi Convenio Privado');
+    expect(repo.list).toHaveBeenCalledWith({
+      searchTerm: 'madrid',
+      authenticatedUserId: null,
+    });
   });
 
-  it.skip('filters by search term using ilike', async () => {
-    // TODO: Fix this test - mock chain not working correctly
-    const mockData = [
-      {
-        id: '2',
-        nombre: 'Comercio Madrid',
-        ambito: 'provincial',
-        codigo_regcon: 'REG002',
-        fecha_vigencia: '2024-01-01',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-      },
-    ];
-
-    const mockIlikeFn = vi.fn();
-    const mockChain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      ilike: vi.fn((...args) => {
-        mockIlikeFn(...args);
-        return mockChain;
-      }),
-      order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-    };
-
-    (supabase.from as any).mockReturnValue(mockChain);
-
-    const { result } = renderHook(() => useConvenios('madrid'), { wrapper: createWrapper() });
-
-    // Esperar a que termine (exitoso o con error)
-    await waitFor(() => {
-      if (result.current.isError) {
-        console.log('Error:', result.current.error);
-      }
-      return !result.current.isLoading;
-    }, { timeout: 3000 });
-
-    // Verificar que fue exitoso
-    if (result.current.isError) {
-      console.log('Query failed with error:', result.current.error);
-    }
-    expect(result.current.isSuccess).toBe(true);
-    expect(mockIlikeFn).toHaveBeenCalledWith('nombre', '%madrid%');
-    expect(result.current.data).toHaveLength(1);
-  });
-
-  it('does not apply filter when search term is empty', async () => {
-    const mockData: any[] = [];
-    const mockIlike = vi.fn().mockReturnThis();
-
-    (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: null },
-      error: null,
+  it('returns empty array when repository returns no data', async () => {
+    const repo = makeConvenioRepo({
+      list: vi.fn().mockResolvedValue([]),
     });
 
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      ilike: mockIlike,
-      order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+    const { result } = renderHook(() => useConvenios(), {
+      wrapper: createTestWrapper({ convenio: repo }),
     });
-
-    const { result } = renderHook(() => useConvenios(''), { wrapper: createWrapper() });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(mockIlike).not.toHaveBeenCalled();
-  });
-
-  it('returns empty array when no data', async () => {
-    (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: null },
-      error: null,
-    });
-
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: null, error: null }),
-    });
-
-    const { result } = renderHook(() => useConvenios(), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([]);
   });
 
-  it('throws error when query fails', async () => {
-    const mockError = new Error('Database error');
-
-    (supabase.auth.getUser as any).mockResolvedValue({
-      data: { user: null },
-      error: null,
+  it('throws error when repository fails', async () => {
+    const repo = makeConvenioRepo({
+      list: vi.fn().mockRejectedValue(new Error('Database error')),
     });
 
-    (supabase.from as any).mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: null, error: mockError }),
+    const { result } = renderHook(() => useConvenios(), {
+      wrapper: createTestWrapper({ convenio: repo }),
     });
-
-    const { result } = renderHook(() => useConvenios(), { wrapper: createWrapper() });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeTruthy();

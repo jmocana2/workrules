@@ -1,28 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import type { Convenio } from '@core/types';
+import { useRepositories } from '@/providers/RepositoriesProvider';
+import { getConvenioById } from '@/application/use-cases';
 
 /**
- * Hook para obtener el detalle de un convenio específico
- * @param id - ID del convenio a consultar
- * @returns Query con el detalle del convenio
+ * Hook para obtener el detalle de un convenio especifico.
+ * Consume el caso de uso `getConvenioById` inyectando el repositorio del provider.
  */
 export function useConvenio(id: string | null) {
+  const { convenio } = useRepositories();
+
   return useQuery({
     queryKey: ['convenio', id],
-    queryFn: async (): Promise<Convenio | null> => {
-      if (!id) return null;
-
-      const { data, error } = await supabase
-        .from('convenios')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-
-      return data;
-    },
+    queryFn: (): Promise<Convenio | null> =>
+      getConvenioById(id, { repo: convenio }),
     enabled: !!id,
   });
 }

@@ -12,7 +12,42 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { RepositoriesProvider, type Repositories } from '@/providers/RepositoriesProvider';
 import { useChatPage } from './useChatPage';
+
+const fakeRepositories: Partial<Repositories> = {
+  convenio: {
+    getById: vi.fn().mockResolvedValue(null),
+    list: vi.fn().mockResolvedValue([]),
+    listOwnedByUser: vi.fn().mockResolvedValue([]),
+    getPerfil: vi.fn().mockResolvedValue(null),
+    getSignedPdfUrl: vi.fn().mockResolvedValue(null),
+  },
+  chatSession: {
+    listByUser: vi.fn().mockResolvedValue([]),
+    deleteById: vi.fn().mockResolvedValue(undefined),
+    create: vi.fn().mockResolvedValue('mock-session-id'),
+    loadMessages: vi.fn().mockResolvedValue(null),
+    getConvenioIdForSession: vi.fn().mockResolvedValue(null),
+  },
+  userPlan: { getPlan: vi.fn().mockResolvedValue('free') },
+  convenioUpload: {
+    getUploadIdentity: vi.fn().mockResolvedValue(null),
+    uploadPdf: vi.fn().mockResolvedValue({ signedUrl: '', filePath: '' }),
+    confirmUpload: vi.fn().mockResolvedValue({
+      status: 'started' as const,
+      convenioId: 'mock',
+      existingNombre: null,
+    }),
+    fetchProcessingStatus: vi.fn().mockResolvedValue({
+      estado: 'procesando',
+      errorMessage: null,
+      progressStage: null,
+      progressValue: null,
+      progressMessage: null,
+    }),
+  },
+};
 
 // Mock de los hooks externos
 vi.mock('@ai-sdk/react', () => ({
@@ -49,17 +84,12 @@ vi.mock('@ui/hooks/useChatStream', () => ({
   }),
 }));
 
-// Mock de supabase
+// Mock de supabase (solo auth — los repositorios concretos van por el provider)
 vi.mock('@/lib/supabase', () => ({
   supabase: {
-    from: vi.fn(),
     auth: {
       onAuthStateChange: vi.fn(() => ({
-        data: {
-          subscription: {
-            unsubscribe: vi.fn(),
-          },
-        },
+        data: { subscription: { unsubscribe: vi.fn() } },
       })),
       getSession: vi.fn().mockResolvedValue({
         data: { session: null },
@@ -68,7 +98,6 @@ vi.mock('@/lib/supabase', () => ({
     },
   },
   getSupabaseClient: vi.fn(),
-  createChatSession: vi.fn().mockResolvedValue('mock-session-id'),
 }));
 
 // Mock de convenios
@@ -92,7 +121,7 @@ function createTestQueryClient() {
   });
 }
 
-// Wrapper para renderHook con QueryClient
+// Wrapper para renderHook con QueryClient + Repositories
 function renderHookWithQueryClient<TProps, TResult>(
   hook: (props: TProps) => TResult
 ) {
@@ -100,7 +129,7 @@ function renderHookWithQueryClient<TProps, TResult>(
   return renderHook(hook, {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>
-        {children}
+        <RepositoriesProvider value={fakeRepositories}>{children}</RepositoriesProvider>
       </QueryClientProvider>
     ),
   });

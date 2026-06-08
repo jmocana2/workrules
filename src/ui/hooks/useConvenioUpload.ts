@@ -1,18 +1,13 @@
-import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-/**
- * Calcula el hash SHA-256 de un archivo
- * @param file - Archivo a hashear
- * @returns Hash SHA-256 en formato hexadecimal (64 caracteres)
- */
-async function calculateFileHash(file: File): Promise<string> {
-  const buffer = await file.arrayBuffer();
-  const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+import {
+  calculateFileHash,
+  confirmConvenioUpload,
+  fetchConvenioProcessingStatus,
+  getUploadIdentity,
+  uploadConvenioPdf,
+} from "@/application/use-cases";
+import { useRepositories } from "@/providers/RepositoriesProvider";
 
 // Progreso real basado en eventos: n8n envía POST a /functions/v1/webhook-progress
 // que escribe en la tabla convenio_processing_status. El hook lee esa tabla en cada poll.
@@ -54,13 +49,13 @@ type UploadState =
   | { status: "validating"; fileName: string }
   | { status: "preview"; fileName: string; previewData: ConvenioPreviewData }
   | {
-    status: "processing";
-    fileName: string;
-    convenioId: string;
-    progress: number;
-    stage: string;
-    stageLabel: string;
-  }
+      status: "processing";
+      fileName: string;
+      convenioId: string;
+      progress: number;
+      stage: string;
+      stageLabel: string;
+    }
   | { status: "ready"; fileName: string; convenioId: string; partial?: boolean }
   | { status: "error"; fileName: string; error: string };
 
@@ -77,13 +72,10 @@ interface UseConvenioUploadOptions {
 }
 
 export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
-  const {
-    onSuccess,
-    onError,
-    pollingIntervalMs = 10000,
-  } = options;
+  const { onSuccess, onError, pollingIntervalMs = 10000 } = options;
 
   const queryClient = useQueryClient();
+  const { convenioUpload } = useRepositories();
   const [state, setState] = useState<UploadState>({ status: "idle" });
   const [visibility, setVisibility] = useState<"publico" | "privado">(
     "privado",
@@ -139,160 +131,94 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const uploadFile = useCallback(async (file: File) => {
-    const fileName = file.name;
-    abortControllerRef.current?.abort();
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
+  const uploadFile = useCallback(
+    async (file: File) => {
+      const fileName = file.name;
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
-    try {
-      // 1. Calcular hash del archivo para detección de duplicados
-      // Mostrar estado "validating" mientras se calcula el hash (1-2s para archivos grandes)
-      // Mejora UX vs mostrar "Subiendo 0%" durante el cálculo
-      setState({ status: "validating", fileName });
-      const fileHash = await calculateFileHash(file);
-      fileHashRef.current = fileHash;
+      try {
+        // 1. Hash para deteccion de duplicados (1-2s en archivos grandes -> mostramos validating)
+        setState({ status: "validating", fileName });
+        const fileHash = await calculateFileHash(file);
+        fileHashRef.current = fileHash;
 
-      // 2. Subir a Storage
-      setState({ status: "uploading", progress: 0, fileName });
+        setState({ status: "uploading", progress: 0, fileName });
 
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error("No autenticado");
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("Sesión expirada. Inicia sesión de nuevo.");
-      }
-
-      const filePath = `${user.user.id}/${Date.now()}-${fileName}`;
-      const encodedFilePath = filePath
-        .split("/")
-        .map((segment) => encodeURIComponent(segment))
-        .join("/");
-
-      const uploadResponse = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/convenios-pdf/${encodedFilePath}`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "cache-control": "3600",
-            "x-upsert": "false",
-            "Content-Type": file.type || "application/pdf",
-          },
-          body: file,
-          signal: controller.signal,
-        },
-      );
-
-      if (!uploadResponse.ok) {
-        let uploadMessage = "Error subiendo archivo";
-        try {
-          const errorBody = await uploadResponse.json();
-          uploadMessage = errorBody?.message || errorBody?.error ||
-            uploadMessage;
-        } catch {
-          uploadMessage = `${uploadMessage} (${uploadResponse.status})`;
+        const identity = await getUploadIdentity({ repo: convenioUpload });
+        if (!identity) {
+          throw new Error("Sesión expirada. Inicia sesión de nuevo.");
         }
-        throw new Error(uploadMessage);
-      }
 
-      setState({ status: "uploading", progress: 100, fileName });
+        const { signedUrl, filePath } = await uploadConvenioPdf(
+          { file, identity, signal: controller.signal },
+          { repo: convenioUpload },
+        );
 
-      // 2. Obtener URL firmada (signed URL) válida por 1 hora
-      const { data: urlData, error: urlError } = await supabase.storage
-        .from("convenios-pdf")
-        .createSignedUrl(filePath, 3600); // 3600 segundos = 1 hora
+        setState({ status: "uploading", progress: 100, fileName });
 
-      if (urlError) throw urlError;
+        // Preview básico: nombre extraído del archivo
+        const previewData: ConvenioPreviewData = {
+          nombre: fileName.replace(".pdf", "").replace(/-/g, " "),
+          paginas: undefined,
+          ambito: undefined,
+        };
 
-      // 3. Validar estructura (llamar a edge function de preview)
-      setState({ status: "validating", fileName });
+        setState({ status: "preview", fileName, previewData });
 
-      // Por ahora, extraemos nombre del archivo como preview basico
-      const previewData: ConvenioPreviewData = {
-        nombre: fileName.replace(".pdf", "").replace(/-/g, " "),
-        paginas: undefined,
-        ambito: undefined,
-      };
+        // fileUrl (signed, 1h) viaja solo a n8n para que descargue el PDF una vez.
+        // filePath es lo que se persiste en convenios.url_pdf para firmar bajo demanda.
+        return { fileUrl: signedUrl, filePath };
+      } catch (error) {
+        if (
+          (error instanceof DOMException && error.name === "AbortError") ||
+          (error instanceof Error &&
+            (error.name === "AbortError" ||
+              error.message.toLowerCase().includes("abort")))
+        ) {
+          const message = "Subida cancelada";
+          setState({ status: "error", fileName, error: message });
+          onError?.(message);
+          return null;
+        }
 
-      setState({
-        status: "preview",
-        fileName,
-        previewData,
-      });
-
-      return { fileUrl: urlData.signedUrl, filePath };
-      // fileUrl (signed, 1h) viaja solo a n8n para que descargue el PDF una vez.
-      // filePath es lo que se persiste en convenios.url_pdf para firmar bajo demanda.
-    } catch (error) {
-      if (
-        (error instanceof DOMException && error.name === "AbortError") ||
-        (error instanceof Error &&
-          (error.name === "AbortError" ||
-            error.message.toLowerCase().includes("abort")))
-      ) {
-        const message = "Subida cancelada";
+        const message =
+          error instanceof Error ? error.message : "Error desconocido";
         setState({ status: "error", fileName, error: message });
         onError?.(message);
         return null;
+      } finally {
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+        }
       }
-
-      const message = error instanceof Error
-        ? error.message
-        : "Error desconocido";
-      setState({ status: "error", fileName, error: message });
-      onError?.(message);
-      return null;
-    } finally {
-      if (abortControllerRef.current === controller) {
-        abortControllerRef.current = null;
-      }
-    }
-  }, [onError]);
+    },
+    [convenioUpload, onError],
+  );
 
   const confirmUpload = useCallback(
     async (fileUrl: string, filePath: string, fileName: string) => {
       try {
         setState({ status: "validating", fileName });
 
-        // Llamar a Edge Function para iniciar procesamiento
-        const { data, error } = await supabase.functions.invoke(
-          "upload-convenio",
+        const { convenioId } = await confirmConvenioUpload(
           {
-            body: {
-              file_url: fileUrl,
-              file_path: filePath,
-              nombre_archivo: fileName,
-              visibilidad: visibility,
-              pdf_hash: fileHashRef.current,
-            },
+            fileUrl,
+            filePath,
+            nombreArchivo: fileName,
+            visibilidad: visibility,
+            pdfHash: fileHashRef.current,
           },
+          { repo: convenioUpload },
         );
-
-        if (error) throw error;
-
-        // Verificar si es duplicado (status 409)
-        if (data?.status === "duplicate") {
-          const existingName = data.existing_convenio?.nombre || "desconocido";
-          throw new Error(
-            `Ya tienes un convenio con este PDF: "${existingName}". No es necesario subirlo de nuevo.`,
-          );
-        }
-
-        const convenio_id = data?.convenio_id;
-        if (!convenio_id) {
-          throw new Error("Respuesta inválida del servidor: falta convenio_id");
-        }
 
         // Progreso real: leemos convenio_processing_status (alimentada por n8n).
         // Si todavía no hay fila (n8n no ha emitido el primer evento), mostramos 0% queued.
         setState({
           status: "processing",
           fileName,
-          convenioId: convenio_id,
+          convenioId,
           progress: 0,
           stage: "queued",
           stageLabel: STAGE_LABELS.queued,
@@ -332,7 +258,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
           setState({
             status: "processing",
             fileName,
-            convenioId: convenio_id,
+            convenioId,
             progress: 100,
             stage: "completed",
             stageLabel: STAGE_LABELS.completed,
@@ -341,7 +267,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
             stopPolling({
               status: "ready",
               fileName,
-              convenioId: convenio_id,
+              convenioId,
               partial,
             });
             completionTimeoutRef.current = null;
@@ -361,44 +287,34 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
             return;
           }
 
-          // Consultamos estado final + progreso en paralelo.
-          const [convenioRes, progressRes] = await Promise.all([
-            supabase
-              .from("convenios")
-              .select("estado, error_message")
-              .eq("id", convenio_id)
-              .single(),
-            supabase
-              .from("convenio_processing_status")
-              .select("stage, progress, message")
-              .eq("convenio_id", convenio_id)
-              .maybeSingle(),
-          ]);
-
-          if (convenioRes.error) {
-            const message = convenioRes.error.message || "Error consultando estado";
+          let status;
+          try {
+            status = await fetchConvenioProcessingStatus(convenioId, {
+              repo: convenioUpload,
+            });
+          } catch (err) {
+            const message =
+              err instanceof Error ? err.message : "Error consultando estado";
             stopPolling({ status: "error", fileName, error: message }, message);
             return;
           }
 
-          const estado = convenioRes.data.estado as string;
-
-          if (estado === "activo") {
+          if (status.estado === "activo") {
             finalize(false);
             return;
           }
-          if (estado === "activo_sin_perfil") {
+          if (status.estado === "activo_sin_perfil") {
             finalize(true);
             return;
           }
-          if (estado === "error") {
-            const message = convenioRes.data.error_message ||
-              "Error procesando convenio";
+          if (status.estado === "error") {
+            const message = status.errorMessage || "Error procesando convenio";
             stopPolling({ status: "error", fileName, error: message }, message);
             return;
           }
-          if (estado === "rechazado") {
-            const message = convenioRes.data.error_message ||
+          if (status.estado === "rechazado") {
+            const message =
+              status.errorMessage ||
               "El documento ha sido rechazado por el validador automático.";
             stopPolling({ status: "error", fileName, error: message }, message);
             return;
@@ -407,30 +323,25 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
           // Aún procesando: aplicar el progreso real si está disponible.
           // No retrocedemos el valor mostrado: si el drift ya pasó al hito real
           // mientras esperábamos el evento, mantenemos el valor derivado.
-          const progressRow = progressRes.data;
-          if (progressRow) {
-            const stage = String(progressRow.stage);
-            const realProgress = Math.min(
-              95,
-              Number(progressRow.progress) || 0,
-            );
+          if (status.progressStage !== null && status.progressValue !== null) {
+            const stage = status.progressStage;
+            const realProgress = Math.min(95, status.progressValue);
             setState((prev) =>
               prev.status === "processing"
                 ? {
-                  ...prev,
-                  progress: Math.max(prev.progress, realProgress),
-                  stage,
-                  stageLabel: progressRow.message ||
-                    STAGE_LABELS[stage] || stage,
-                }
-                : prev
+                    ...prev,
+                    progress: Math.max(prev.progress, realProgress),
+                    stage,
+                    stageLabel:
+                      status.progressMessage || STAGE_LABELS[stage] || stage,
+                  }
+                : prev,
             );
           }
         }, pollingIntervalMs);
       } catch (error) {
-        const message = error instanceof Error
-          ? error.message
-          : "Error desconocido";
+        const message =
+          error instanceof Error ? error.message : "Error desconocido";
         setState({ status: "error", fileName, error: message });
         onError?.(message);
       }
@@ -443,6 +354,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
       queryClient,
       startDrift,
       stopDrift,
+      convenioUpload,
     ],
   );
 
