@@ -1,6 +1,7 @@
 import type { Decorator, Preview } from "@storybook/react-vite";
 import { createElement, type PropsWithChildren, useEffect } from "react";
 import "../src/index.css";
+import { withProviders } from "./decorators/withProviders";
 
 // Componente wrapper para aplicar el tema
 const ThemeWrapper = ({ theme, children }: PropsWithChildren<{ theme: string }>) => {
@@ -27,7 +28,7 @@ const withTheme: Decorator = (Story, context) => {
 };
 
 const preview: Preview = {
-  decorators: [withTheme],
+  decorators: [withProviders, withTheme],
 
   globalTypes: {
     theme: {

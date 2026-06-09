@@ -12,6 +12,13 @@ const config: StorybookConfig = {
     "@storybook/addon-docs",
     "@storybook/addon-onboarding"
   ],
-  "framework": "@storybook/react-vite"
+  "framework": "@storybook/react-vite",
+  async viteFinal(config) {
+    config.define = {
+      ...config.define,
+      "import.meta.env.VITE_USE_MOCKS": JSON.stringify("true"),
+    };
+    return config;
+  }
 };
 export default config;
