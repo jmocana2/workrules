@@ -4,8 +4,12 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "installCommand": "pnpm install --frozen-lockfile",
+  "redirects": [
+    { "source": "/storybook", "destination": "/storybook/", "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/((?!storybook).*)", "destination": "/index.html" }
+    { "source": "/storybook/(.*)", "destination": "/storybook/$1" },
+    { "source": "/((?!storybook/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
