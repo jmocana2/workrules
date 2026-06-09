@@ -5,7 +5,7 @@
   "outputDirectory": "dist",
   "installCommand": "pnpm install --frozen-lockfile",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!storybook).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
