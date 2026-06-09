@@ -1,0 +1,39 @@
+PolyForm Noncommercial License 1.0.0
+
+Copyright (c) [Año, ej. 2026] [workrules.eu]
+
+-------------------------------------------------------------------------
+
+Aceptación
+Al recibir o utilizar este software, usted acepta los términos y 
+condiciones de esta licencia.
+
+Concesión de Licencia
+El Licenciante le otorga, de forma gratuita, una licencia mundial, no 
+exclusiva, libre de regalías y perpetua para utilizar, copiar, modificar, 
+fusionar, publicar y distribuir este software y sus modificaciones, 
+SUJETO A LA SIGUIENTE RESTRICCIÓN:
+
+Restricción No Comercial
+Usted no puede utilizar el software con fines comerciales. Un fin es 
+comercial si está destinado o dirigido a obtener una ventaja comercial o 
+compensación económica privada. 
+
+Ejemplos de usos PERMITIDOS:
+- Uso personal para proyectos propios o aprendizaje.
+- Uso en escuelas, universidades o institutos de investigación pública.
+- Uso por parte de organizaciones sin fines de lucro (ONGs) para fines benéficos.
+
+Ejemplos de usos PROHIBIDOS:
+- Utilizar el software como parte de un servicio de pago (SaaS).
+- Incluir el software en productos que tu empresa vende a clientes.
+- Usar el software internamente en una empresa con ánimo de lucro para generar ingresos.
+
+Atribución
+Usted debe incluir este aviso de licencia y el aviso de copyright anterior 
+en todas las copias o partes sustanciales del software.
+
+Sin Garantía
+EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO, 
+EXPRESA O IMPLÍCITA. EL LICENCIANTE NO SERÁ RESPONSABLE DE NINGUNA 
+RECLAMACIÓN, DAÑO O RESPONSABILIDAD LEGAL DERIVADA DEL USO DEL SOFTWARE.

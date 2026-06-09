@@ -1,234 +1,262 @@
-# WorkRules.eu
+# WorkRules
 
-> Consultor Laboral Automatizado basado en IA que transforma convenios colectivos españoles en respuestas precisas y cálculos de costes laborales exactos.
+> La inteligencia que traduce el BOE en respuestas exactas.
+> Consulta convenios colectivos españoles y calcula salarios con precisión.
 
-[![Tests](https://github.com/yourusername/workrules/actions/workflows/test.yml/badge.svg)](https://github.com/yourusername/workrules/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-## Descripción
-
-WorkRules.eu es una plataforma LegalTech que utiliza arquitectura RAG (Retrieval-Augmented Generation) especializada para interpretar y calcular condiciones laborales basadas en convenios colectivos del BOE. A diferencia de herramientas genéricas, WorkRules:
-
-- **Calcula con precisión**: Interpreta variables complejas (categoría, jornada, horario) para dar cifras exactas
-- **Cero alucinaciones**: Respuestas basadas estrictamente en el texto del BOE/REGCON con citas de la fuente
-- **Guía inteligente**: Interfaz que sugiere variables basadas en el convenio seleccionado
-
-### Caso de uso típico
-
-*"Necesito contratar camareras de piso que trabajarán 30 horas semanales en horario nocturno en un hotel de 4 estrellas en Valencia. ¿Cuánto debo pagar?"*
-
-WorkRules extrae automáticamente del convenio el salario base, calcula el prorrateo de pagas extras, aplica el plus de nocturnidad y valida que el resultado cumple con el SMI vigente.
-
-## Quick Start
-
-### Requisitos previos
-
-- Node.js 18+
-- pnpm 8+
-- Cuenta en [Supabase](https://supabase.com)
-- API Keys: [OpenAI](https://platform.openai.com), [LlamaParse](https://llamaparse.com), [Anthropic](https://console.anthropic.com)
-
-### Instalación
-
-```bash
-# Clonar el repositorio
-git clone https://github.com/yourusername/workrules.git
-cd workrules
-
-# Instalar dependencias
-pnpm install
-
-# Configurar variables de entorno
-cp .env.example .env
-# Editar .env con tus credenciales
-
-# Configurar base de datos
-pnpm db:setup
-
-# Iniciar desarrollo
-pnpm dev
-```
-
-### Comandos disponibles
-
-```bash
-pnpm dev              # Inicia el servidor de desarrollo
-pnpm build            # Build para producción
-pnpm test             # Ejecuta tests con Playwright
-pnpm lint             # Ejecuta ESLint
-pnpm format           # Formatea código con Prettier
-pnpm db:setup         # Configura esquema de Supabase
-pnpm db:reset         # Resetea la base de datos
-```
-
-### Configuración de Supabase
-
-1. Crear proyecto en Supabase
-2. Habilitar extensión `pgvector`
-3. Ejecutar migraciones:
-   ```bash
-   cd database
-   # Aplicar schema.sql y funciones en Supabase SQL Editor
-   ```
-
-### Configuración de n8n
-
-Los workflows de n8n están en `n8n/workflows/`. Antes de importarlos:
-
-1. Reemplazar `<SUPABASE_PROJECT_REF>` con tu project ref
-2. Configurar credenciales en n8n (Supabase API, OpenAI, LlamaParse)
-3. Importar workflows desde la UI de n8n
-
-Ver [n8n/docs/setup.md](./n8n/docs/setup.md) para detalles completos.
-
-## Estructura del Proyecto
-
-```
-workrules/
-├── .claude/                    # Documentación del proyecto
-│   ├── docs/                   # Documentos de arquitectura y fases
-│   └── commands/               # Comandos personalizados de Claude
-│
-├── .github/                    # CI/CD workflows
-│   └── workflows/              # GitHub Actions
-│
-├── database/                   # Esquemas y funciones de PostgreSQL
-│   ├── schema.sql             # Definición de tablas
-│   ├── functions/             # Funciones SQL (búsqueda vectorial)
-│   └── README.md              # Documentación de base de datos
-│
-├── n8n/                       # Workflows de automatización
-│   ├── workflows/             # Definiciones JSON de workflows
-│   ├── nodes/                 # Nodos personalizados
-│   │   ├── indexer/          # Pipeline de ingesta de PDFs
-│   │   └── errors/           # Gestión de errores
-│   ├── prompts/              # Templates de prompts para IA
-│   └── docs/                 # Documentación de workflows
-│
-├── supabase/                  # Backend serverless
-│   ├── functions/            # Edge Functions (Deno)
-│   │   ├── chat/            # Función de chat con streaming
-│   │   ├── webhook-pdf/     # Webhook para procesamiento PDF
-│   │   └── _shared/         # Código compartido
-│   │       ├── core/        # Lógica de negocio
-│   │       └── lib/         # Utilidades
-│   └── snippets/            # SQL snippets para desarrollo
-│
-└── tests/                    # Tests E2E con Playwright
-    └── e2e/                 # Test suites
-
-```
-
-## Resumen de Arquitectura
-
-### Stack Tecnológico
-
-| Capa | Tecnología | Propósito |
-|------|------------|-----------|
-| **Frontend** | React 19 + Vite + Tailwind | UI/UX responsiva |
-| **Backend** | Supabase Edge Functions (Deno) | API serverless |
-| **Base de Datos** | PostgreSQL + pgvector | Datos relacionales + búsqueda semántica |
-| **IA** | Anthropic Claude 3.5 Sonnet | Motor de razonamiento y cálculo |
-| **Pipeline** | n8n + LlamaParse | Ingesta y procesamiento de PDFs |
-| **Embeddings** | OpenAI text-embedding-3-small | Vectorización de texto |
-
-### Arquitectura de Alto Nivel
-
-```mermaid
-graph TD
-    subgraph "Frontend"
-        A[React App]
-    end
-
-    subgraph "Backend (Serverless)"
-        B[Supabase Edge Functions]
-        C[Anthropic Claude 3.5]
-    end
-
-    subgraph "Datos"
-        D[(PostgreSQL + pgvector)]
-        E[Supabase Storage]
-    end
-
-    subgraph "Pipeline (Asíncrono)"
-        F[n8n]
-        G[LlamaParse]
-        H[BOE Watchdog]
-    end
-
-    A -->|Query| B
-    B -->|Búsqueda vectorial| D
-    B -->|Prompt + Contexto| C
-    C -->|Streaming| A
-
-    H -->|Nuevo convenio| F
-    F -->|Parse PDF| G
-    G -->|Markdown| F
-    F -->|Vectorización| D
-    E -->|Trigger| F
-```
-
-### Modelo de Datos
-
-El sistema gestiona tres tipos principales de datos:
-
-1. **convenios**: Metadatos de convenios colectivos (nombre, código REGCON, ámbito)
-2. **convenio_chunks**: Fragmentos de texto con embeddings para búsqueda semántica (RAG)
-3. **convenio_perfiles**: Perfiles JSON con variables extraídas (categorías, salarios, pluses)
-
-Ver [database/README.md](./database/README.md) para el esquema completo.
-
-## Testing
-
-```bash
-# Ejecutar todos los tests
-pnpm test
-
-# Tests específicos
-pnpm test:unit
-pnpm test:e2e
-
-# Con UI de Playwright
-pnpm test:ui
-```
-
-## Documentación
-
-- **[Brief del Proyecto](./.claude/docs/brief.md)**: Contexto, problema y propuesta de valor
-- **[Arquitectura Completa](./.claude/docs/arquitectura.md)**: Diseño técnico detallado
-- **[Ciclo de Vida](./.claude/docs/ciclo-de-vida.md)**: Roadmap y fases de desarrollo
-- **[WorkRules EU](./.claude/docs/workrules-eu.md)**: Análisis integral del negocio
-
-## Roadmap
-
-| Fase | Nombre | Estado |
-|------|--------|--------|
-| 1 | El Back (Pipeline ETL) | ✅ Completado |
-| 2 | El Brain (Motor RAG) | 🚧 En progreso |
-| 3 | El Face (Chat UI) | 📋 Planificado |
-| 4 | El Business (Monetización) | 📋 Planificado |
-| 5 | El Scale (Automatización) | 📋 Planificado |
-
-## Licencia
-
-MIT License - Ver [LICENSE](./LICENSE) para detalles.
-
-## Contribuir
-
-Este es un proyecto en desarrollo activo. Las contribuciones son bienvenidas. Por favor:
-
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
-
-## Contacto
-
-- Web: [workrules.eu](https://workrules.eu)
-- Email: info@workrules.eu
-- Issues: [GitHub Issues](https://github.com/yourusername/workrules/issues)
+[Demo en vivo](https://workrules.eu) · [Slides TFM](https://workrules.eu/presentacion-TFM) · [Video TFM](https://workrules.eu/presentacion-TFM-video) · [Storybook](https://workrules.eu/storybook)
 
 ---
 
-**Disclaimer Legal**: La información proporcionada por WorkRules.eu tiene carácter meramente informativo y no constituye asesoramiento jurídico, laboral ni fiscal. Ver [aviso legal completo](./.claude/docs/brief.md#51-disclaimer-legal-obligatorio).
+## Qué es WorkRules
+
+WorkRules es una plataforma LegalTech que interpreta convenios colectivos españoles publicados en el BOE y los convierte en respuestas verificables y cálculos salariales deterministas. Frente a las IAs generalistas, evita alucinaciones combinando **RAG** (Retrieval-Augmented Generation) sobre el texto oficial con un **Perfil JSON** estructurado por convenio que alimenta un motor de cálculo determinista. Cada respuesta cita la fuente exacta del BOE.
+
+**Diferenciadores clave:**
+- Cálculos salariales exactos (no aproximaciones del LLM).
+- Cero alucinaciones: todo apoyado en chunks citables del convenio.
+- Pipeline de ingesta automatizado (n8n + LlamaParse) que mantiene los convenios al día.
+
+---
+
+## Probarlo en producción
+
+1. Entra en https://workrules.eu
+2. Selecciona **"Hostelería Madrid"** en el selector de convenios.
+3. Prueba estas preguntas:
+   - *"¿Cuánto cobra un recepcionista de hotel 4 estrellas?"*
+   - *"Calcula el salario de un camarero con 12 horas extra este mes"*
+   - *"¿Cuál es la jornada máxima del convenio?"*
+
+Cada respuesta incluye citas con enlace al PDF oficial del convenio.
+
+---
+
+## Stack
+
+| Capa | Tecnología | Rol |
+|---|---|---|
+| Frontend | React 19 + Vite 7 + Tailwind 4 | UI/UX, streaming de chat |
+| Chat UI | Vercel AI SDK (`@ai-sdk/react`) | Streaming SSE, `useChat()` |
+| Estado | Zustand + TanStack Query | Local + server state |
+| Componentes | shadcn/ui (Radix) + atoms/molecules/organisms propios | Design System |
+| Backend | Supabase Edge Functions (Deno) | API serverless |
+| BD | PostgreSQL + `pgvector` | Relacional + búsqueda semántica |
+| LLM | Anthropic Claude (Sonnet) | Razonamiento y respuesta |
+| Embeddings | OpenAI `text-embedding-3-small` | Vectorización de chunks |
+| Ingesta | n8n + LlamaParse | Pipeline ETL de PDFs del BOE |
+| Observabilidad | Sentry | Errores frontend y backend |
+| Tests | Playwright (E2E) · Vitest (unit) · Deno test (edge) | Cobertura por capa |
+| Design tokens | Style Dictionary | Tokens → CSS variables |
+
+---
+
+## Instalación local
+
+### Requisitos
+
+- Node.js 20+
+- pnpm 10+
+- Docker (para Supabase local)
+- Cuentas y API keys: [Supabase](https://supabase.com), [OpenAI](https://platform.openai.com), [Anthropic](https://console.anthropic.com), [LlamaParse](https://cloud.llamaindex.ai/)
+
+### Pasos
+
+```bash
+git clone https://github.com/jmocana2/workrules.git
+cd workrules
+
+pnpm install
+
+# Configurar variables de entorno
+cp .env.example .env.local
+# Edita .env.local con tus claves (Supabase, Sentry, etc.)
+
+# Arrancar Supabase local (Postgres + pgvector + Edge Functions)
+supabase start
+
+# Servidor de desarrollo
+pnpm dev
+```
+
+La app queda disponible en http://localhost:5173.
+
+### Scripts disponibles
+
+| Script | Descripción |
+|---|---|
+| `pnpm dev` | Servidor de desarrollo Vite (puerto 5173) |
+| `pnpm build` | Build de producción + Storybook estático |
+| `pnpm preview` | Servir el build localmente |
+| `pnpm lint` / `pnpm lint:fix` | ESLint (incluye SonarJS) |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm test` | Tests E2E con Playwright |
+| `pnpm test:ui` | Playwright en modo UI |
+| `pnpm test:unit` | Tests unitarios con Vitest |
+| `pnpm test:deno` | Tests de Supabase Edge Functions (Deno) |
+| `pnpm storybook` | Storybook en http://localhost:6006 |
+| `pnpm build-storybook` | Storybook estático |
+| `pnpm tokens:build` | Compila design tokens a `src/styles/tokens/variables.css` |
+
+---
+
+## Estructura del proyecto
+
+El frontend sigue **Clean Architecture**: las dependencias apuntan siempre hacia adentro (`ui → application → core`), y la `infrastructure` implementa los **puertos** definidos en `application/` para que el dominio quede aislado de Supabase, fetch y otros detalles técnicos.
+
+```
+workrules/
+├── src/                              # Frontend React — Clean Architecture
+│   ├── core/                         # 🟢 DOMAIN — entidades y reglas de negocio puras
+│   │   ├── auth/                     #   (sin imports de React, Supabase ni HTTP)
+│   │   ├── chat/
+│   │   ├── convenio/
+│   │   ├── types/
+│   │   └── constants/
+│   │
+│   ├── application/                  # 🔵 APPLICATION — casos de uso + puertos
+│   │   ├── use-cases/                #   orquestan el dominio
+│   │   └── ports/                    #   interfaces que la infra debe implementar
+│   │
+│   ├── infrastructure/               # 🟠 INFRASTRUCTURE — adaptadores concretos
+│   │   ├── clients/                  #   Supabase, fetch, SDKs externos
+│   │   └── repositories/             #   implementaciones de los ports
+│   │
+│   ├── ui/                           # 🟣 PRESENTATION — React (depende hacia adentro)
+│   │   └── components/
+│   │       ├── shadcn/               #   primitivas (Radix-based)
+│   │       ├── ai-elements/          #   chat, citaciones, reasoning
+│   │       └── workrules/            #   atoms / molecules / organisms / pages
+│   │
+│   ├── providers/                    # React context (Query, theme, auth)
+│   ├── styles/tokens/                # Variables CSS generadas por Style Dictionary
+│   ├── lib/                          # Helpers transversales (cliente Supabase singleton)
+│   └── App.tsx                       # Entry point del chat
+│
+├── supabase/
+│   ├── functions/
+│   │   ├── chat/                     # Endpoint POST /chat (clasifica y enruta)
+│   │   ├── webhook-pdf/              # Webhook de ingesta de convenios
+│   │   └── _shared/
+│   │       ├── core/chat/            # Casos de uso: ask-question, calculate-salary
+│   │       └── lib/                  # Wrappers Supabase, OpenAI, Anthropic, CORS
+│   └── migrations/                   # Migraciones SQL
+│
+├── database/                         # Schema + funciones SQL (búsqueda vectorial)
+├── n8n/workflows/                    # Pipeline de ingesta (PDF → chunks + Perfil JSON)
+├── design-system/tokens/             # Fuente de tokens (Style Dictionary)
+├── tests/e2e/                        # Playwright
+├── docs/                             # Documentación técnica del TFM
+└── .claude/docs/fases/               # Trazabilidad de fases del proyecto
+```
+
+---
+
+## Flujo completo de la aplicación
+
+Desde que un convenio entra en el sistema (ingesta) hasta que el usuario recibe una respuesta con cita verificable (consulta):
+
+```mermaid
+flowchart LR
+    subgraph INGESTA["🛠️ Pipeline de ingesta (asíncrono)"]
+        BOE[("📄 BOE / REGCON<br/>PDF oficial")]
+        N8N["n8n workflow"]
+        LP["LlamaParse<br/>(PDF → Markdown)"]
+        EMB["OpenAI<br/>text-embedding-3-small"]
+        PROFILE["Extractor<br/>Perfil JSON"]
+    end
+
+    subgraph DATA["🗄️ Datos"]
+        PG[("PostgreSQL<br/>+ pgvector")]
+        STORAGE[("Supabase<br/>Storage (PDFs)")]
+    end
+
+    subgraph APP["💻 Frontend (Clean Architecture)"]
+        UI["UI<br/>React + AI SDK"]
+        APPL["Application<br/>use-cases"]
+        CORE["Core<br/>domain"]
+        INFRA["Infrastructure<br/>repositories"]
+    end
+
+    subgraph BACK["⚙️ Backend serverless"]
+        EDGE["Supabase Edge Function<br/>POST /chat"]
+        CLASS{"Clasificador<br/>de intención"}
+        RAG["Caso de uso:<br/>ask-question (RAG)"]
+        CALC["Caso de uso:<br/>calculate-salary"]
+        CLAUDE["Anthropic Claude<br/>(Sonnet)"]
+    end
+
+    USER(["👤 Usuario"])
+
+    BOE --> N8N
+    N8N --> LP --> N8N
+    N8N --> PROFILE
+    N8N --> EMB
+    EMB --> PG
+    PROFILE --> PG
+    N8N --> STORAGE
+
+    USER -->|pregunta| UI
+    UI --> APPL
+    APPL --> CORE
+    APPL --> INFRA
+    INFRA -->|POST /chat| EDGE
+
+    EDGE --> CLASS
+    CLASS -->|general| RAG
+    CLASS -->|salario| CALC
+
+    RAG -->|búsqueda vectorial| PG
+    CALC -->|Perfil JSON| PG
+    RAG --> CLAUDE
+    CALC -->|cálculo determinista| CALC
+    CALC --> CLAUDE
+
+    CLAUDE -->|stream SSE| EDGE
+    EDGE -->|stream SSE| INFRA
+    INFRA --> UI
+    UI -->|respuesta + citas| USER
+    UI -.->|link cita| STORAGE
+```
+
+**Lectura rápida:**
+- **Ingesta (offline):** n8n orquesta el procesado de cada convenio nuevo del BOE: LlamaParse lo convierte a Markdown, se extrae un **Perfil JSON** estructurado y los chunks se vectorizan con OpenAI antes de guardarse en Postgres/`pgvector`.
+- **Consulta (online):** la UI envía la pregunta a través de los casos de uso del frontend (Clean Arch) → Edge Function → clasificador → `ask-question` (RAG) o `calculate-salary` (determinista sobre el Perfil JSON) → Claude redacta la respuesta y se devuelve en streaming SSE al usuario con citas que enlazan al PDF original.
+
+---
+
+## Funcionalidades principales
+
+- **Chat sobre convenios colectivos** con streaming SSE y citaciones al PDF oficial.
+- **Cálculo determinista de salarios** a partir del **Perfil JSON** del convenio (categoría, horas extra, plus de nocturnidad, prorrateo de pagas, validación SMI).
+- **Selector de convenios** activos con metadata REGCON.
+- **Pipeline de ingesta automatizado**: BOE → n8n → LlamaParse → embeddings → Postgres.
+- **Sistema de citas** con enlace al PDF original almacenado en Supabase Storage.
+- **Light / Dark mode** y design system propio basado en tokens.
+- **Documentación viva** del Design System publicada en Storybook.
+
+---
+
+## Documentación técnica
+
+- [Brief del proyecto](./docs/brief.md) — problema, propuesta de valor, KPIs.
+- [Arquitectura completa](./docs/arquitectura.md) — diseño técnico end-to-end.
+- [Flujo de aplicación](./docs/flujo-aplicacion.md) — recorrido de una consulta.
+- [Ciclo de vida](./docs/ciclo-de-vida.md) — fases del proyecto.
+- [Seguridad](./docs/seguridad.md) — RLS, headers, rate limiting, snapshot.
+- [Tests](./docs/tests/) — estrategia y resultados.
+- [ADRs](./docs/adr/) — decisiones arquitectónicas registradas.
+- [Convenios](./docs/convenios/) — modelo de datos y Perfil JSON.
+- [n8n pipeline](./docs/n8n.md) — workflow de ingesta.
+- [Métricas](./docs/metricas.md) — KPIs operativos.
+- [Storybook público](https://workrules.eu/storybook) — Design System navegable.
+- [Notion del proyecto](https://www.notion.so/workrules-eu-2e1bed77604180129884ec2fb7938f48) — gestión y notas internas.
+
+---
+
+## Licencia
+
+Este proyecto se distribuye bajo la **PolyForm Noncommercial License 1.0.0**. Permite uso, estudio y modificación sin ánimo de lucro; el uso comercial requiere acuerdo explícito con el autor. Ver [LICENSE.txt](./LICENSE.txt) para el texto completo.
+
+---
+
+**Disclaimer legal:** La información proporcionada por WorkRules.eu tiene carácter informativo y no constituye asesoramiento jurídico, laboral ni fiscal. Ver [aviso legal](./docs/brief.md#51-disclaimer-legal-obligatorio).
