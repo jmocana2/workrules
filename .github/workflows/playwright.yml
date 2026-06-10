@@ -20,7 +20,7 @@ jobs:
     - name: Get Playwright version
       id: playwright-version
       run: |
-        version=$(pnpm exec playwright --version | sed 's/Version //')
+        version=$(pnpm list --depth=0 @playwright/test --json | node -e "const j=JSON.parse(require('fs').readFileSync(0,'utf8'));const p=Array.isArray(j)?j[0]:j;const v=p.devDependencies?.['@playwright/test']?.version||p.dependencies?.['@playwright/test']?.version;process.stdout.write(v||'')")
         if [ -z "$version" ]; then echo "Could not determine Playwright version" >&2; exit 1; fi
         echo "version=$version" >> "$GITHUB_OUTPUT"
     - name: Cache Playwright browsers
@@ -28,12 +28,15 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}-chromium
-    - name: Install Playwright chromium browser
+        key: playwright-${{ runner.os }}-v${{ steps.playwright-version.outputs.version }}-chromium
+    - name: Install Playwright chromium browser + system deps
       if: steps.playwright-cache.outputs.cache-hit != 'true'
-      timeout-minutes: 5
-      run: pnpm exec playwright install chromium
-    - name: Install Playwright system deps
+      timeout-minutes: 15
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: pnpm exec playwright install --with-deps chromium
+    - name: Install Playwright system deps only (cache hit)
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
       timeout-minutes: 5
       env:
         DEBIAN_FRONTEND: noninteractive
