@@ -8,6 +8,7 @@ import type { Locator, Page } from "@playwright/test";
 
 // Credenciales de test - usar variables de entorno o valores por defecto
 const TEST_EMAIL = process.env.TEST_USER_EMAIL || "test@example.com";
+// eslint-disable-next-line sonarjs/no-hardcoded-passwords -- test fixture fallback, not a real credential
 const TEST_PASSWORD = process.env.TEST_USER_PASSWORD || "testpassword123";
 
 export class ChatPage {
