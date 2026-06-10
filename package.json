@@ -61,7 +61,7 @@
     "concurrently": "^9.2.1",
     "eslint": "9.0.0",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-sonarjs": "^3.0.6",
+    "eslint-plugin-sonarjs": "^4.0.3",
     "eslint-plugin-storybook": "^10.4.3",
     "http-server": "^14.1.1",
     "husky": "^9.1.7",
