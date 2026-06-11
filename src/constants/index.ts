@@ -3,4 +3,4 @@
  * Centralized exports for all application constants
  */
 
-export { CHAT_TEXTS } from './texts';
+export { AUTH_TEXTS, CHAT_TEXTS } from './texts';

@@ -1,3 +1,4 @@
+import { AUTH_TEXTS } from "@/constants";
 import { Logo } from "@ui/components/workrules/atoms/Logo/Logo";
 import { useSupabase } from "@ui/hooks/useSupabase";
 import { Eye, EyeOff, Github } from "lucide-react";
@@ -60,6 +61,39 @@ export function LandingPage() {
     };
   }, [typedText, isDeleting, loopNum, typingSpeed]);
 
+  const translateAuthError = (message: string, code?: string): string => {
+    const lower = message.toLowerCase();
+
+    if (lower.includes("failed to fetch") || lower.includes("network")) {
+      return AUTH_TEXTS.errors.network;
+    }
+
+    switch (code) {
+      case "invalid_credentials":
+        return AUTH_TEXTS.errors.invalidCredentials;
+      case "email_not_confirmed":
+        return AUTH_TEXTS.errors.emailNotConfirmed;
+      case "user_not_found":
+        return AUTH_TEXTS.errors.userNotFound;
+      case "over_request_rate_limit":
+      case "over_email_send_rate_limit":
+        return AUTH_TEXTS.errors.rateLimit;
+      case "weak_password":
+        return AUTH_TEXTS.errors.weakPassword;
+      case "user_banned":
+        return AUTH_TEXTS.errors.userBanned;
+    }
+
+    if (lower.includes("invalid login credentials")) {
+      return AUTH_TEXTS.errors.invalidCredentials;
+    }
+    if (lower.includes("email not confirmed")) {
+      return AUTH_TEXTS.errors.emailNotConfirmed;
+    }
+
+    return AUTH_TEXTS.errors.generic;
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -68,10 +102,11 @@ export function LandingPage() {
     try {
       const result = await signIn(email, password);
       if (result.error) {
-        setError(result.error.message);
+        setError(translateAuthError(result.error.message, result.error.code));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error inesperado");
+      const message = err instanceof Error ? err.message : "";
+      setError(translateAuthError(message));
     } finally {
       setLoading(false);
     }
@@ -140,26 +175,23 @@ export function LandingPage() {
           <div className="flex justify-center">
             <div
               className="w-full max-w-sm bg-white/10 backdrop-blur-[24px] border-[3px] border-white/60 rounded-3xl p-6 md:p-7"
-              style={{
-                boxShadow:
-                  "0 35px 50px -12px rgba(0, 0, 0, 0.7), 0 20px 25px -8px rgba(0, 0, 0, 0.35), 0 0 40px rgba(255, 255, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
-              }}
+           
             >
               <h2 className="text-lg md:text-[20px] font-medium text-white leading-[1.3] tracking-tight mb-5">
-                Empezar una nueva consulta laboral
+                {AUTH_TEXTS.form.title}
               </h2>
 
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
                   <label htmlFor="usuario" className="block text-sm text-white mb-1.5">
-                    Usuario
+                    {AUTH_TEXTS.form.emailLabel}
                   </label>
                   <input
                     id="usuario"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="usuario@empresa.com"
+                    placeholder={AUTH_TEXTS.form.emailPlaceholder}
                     autoComplete="email"
                     required
                     className="w-full px-3.5 py-2.5 border border-white/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all bg-white text-black placeholder:text-black/40"
@@ -168,7 +200,7 @@ export function LandingPage() {
 
                 <div>
                   <label htmlFor="password" className="block text-sm text-white mb-1.5">
-                    Contraseña
+                    {AUTH_TEXTS.form.passwordLabel}
                   </label>
                   <div className="relative">
                     <input
@@ -176,7 +208,7 @@ export function LandingPage() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder={AUTH_TEXTS.form.passwordPlaceholder}
                       autoComplete="current-password"
                       required
                       className="w-full px-3.5 py-2.5 border border-white/60 rounded-xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition-all pr-12 bg-white text-black placeholder:text-black/40"
@@ -185,7 +217,7 @@ export function LandingPage() {
                       type="button"
                       onClick={() => setShowPassword((s) => !s)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-black/50 hover:text-black transition-colors"
-                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      aria-label={showPassword ? AUTH_TEXTS.form.hidePassword : AUTH_TEXTS.form.showPassword}
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
@@ -203,7 +235,7 @@ export function LandingPage() {
                   disabled={loading}
                   className="w-full bg-[var(--colorsAccentAccent9)] hover:bg-[var(--colorsAccentAccent10)] text-white py-2.5 rounded-xl font-medium transition-all mt-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+                  {loading ? AUTH_TEXTS.form.submitting : AUTH_TEXTS.form.submit}
                 </button>
               </form>
 

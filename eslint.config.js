@@ -16,6 +16,7 @@ export default [
       'playwright-report/**',
       'test-results/**',
       'supabase/functions/coverage/**',
+      'presentacion-tfm/**',
       '**/*.min.js',
       'pnpm-lock.yaml',
       'package-lock.json'

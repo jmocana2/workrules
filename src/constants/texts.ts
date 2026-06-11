@@ -75,3 +75,32 @@ export const CHAT_TEXTS = {
     networkError: "Error de conexión. Verifica tu conexión a internet.",
   },
 } as const;
+
+export const AUTH_TEXTS = {
+  // Form labels y placeholders
+  form: {
+    title: "Empezar una nueva consulta laboral",
+    emailLabel: "Usuario",
+    emailPlaceholder: "usuario@empresa.com",
+    // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- label de UI, no una contraseña real
+    passwordLabel: "Contraseña",
+    passwordPlaceholder: "••••••••",
+    showPassword: "Mostrar contraseña",
+    hidePassword: "Ocultar contraseña",
+    submit: "Iniciar Sesión",
+    submitting: "Iniciando sesión...",
+  },
+
+  // Mensajes de error de autenticación
+  errors: {
+    network:
+      "No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+    invalidCredentials: "Email o contraseña incorrectos.",
+    emailNotConfirmed: "Debes confirmar tu email antes de iniciar sesión.",
+    userNotFound: "No existe ninguna cuenta con ese email.",
+    rateLimit: "Has hecho demasiados intentos. Espera unos minutos.",
+    weakPassword: "La contraseña es demasiado débil.",
+    userBanned: "Esta cuenta ha sido suspendida.",
+    generic: "No se pudo iniciar sesión. Inténtalo de nuevo.",
+  },
+} as const;
