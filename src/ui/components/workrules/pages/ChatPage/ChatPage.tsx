@@ -304,7 +304,7 @@ export function ChatPage({
   return (
     <div
       className={cn(
-        'flex h-screen w-full overflow-hidden bg-background',
+        'flex h-screen h-[100dvh] w-full overflow-hidden bg-background',
         className
       )}
     >
