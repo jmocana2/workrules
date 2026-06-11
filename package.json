@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && pnpm build-storybook && pnpm build-slides",
-    "build-slides": "pnpm -C presentacion-tfm exec slidev build --out ../dist/presentacion-TFM --base /presentacion-TFM/",
+    "build-slides": "pnpm -C presentacion-tfm exec slidev build --out ../dist/presentacion-TFM --base /presentacion-TFM/ --router-mode hash",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
