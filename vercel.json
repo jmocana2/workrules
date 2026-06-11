@@ -5,11 +5,13 @@
   "outputDirectory": "dist",
   "installCommand": "pnpm install --frozen-lockfile",
   "redirects": [
-    { "source": "/storybook", "destination": "/storybook/", "permanent": false }
+    { "source": "/storybook", "destination": "/storybook/", "permanent": false },
+    { "source": "/presentacion-TFM", "destination": "/presentacion-TFM/", "permanent": false }
   ],
   "rewrites": [
     { "source": "/storybook/(.*)", "destination": "/storybook/$1" },
-    { "source": "/((?!storybook/).*)", "destination": "/index.html" }
+    { "source": "/presentacion-TFM/(.*)", "destination": "/presentacion-TFM/$1" },
+    { "source": "/((?!storybook/|presentacion-TFM/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -31,6 +33,13 @@
     },
     {
       "source": "/storybook/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "Content-Security-Policy-Report-Only", "value": "frame-ancestors 'self';" }
+      ]
+    },
+    {
+      "source": "/presentacion-TFM/(.*)",
       "headers": [
         { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "Content-Security-Policy-Report-Only", "value": "frame-ancestors 'self';" }
