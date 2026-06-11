@@ -22,7 +22,10 @@
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o dist/storybook",
-    "tokens:build": "style-dictionary build --config style-dictionary.config.js"
+    "tokens:build": "style-dictionary build --config style-dictionary.config.js",
+    "slides-dev": "pnpm -C presentacion-tfm dev",
+    "slides-build": "pnpm -C presentacion-tfm build",
+    "slides-export": "pnpm -C presentacion-tfm export"
   },
   "keywords": [],
   "author": "",

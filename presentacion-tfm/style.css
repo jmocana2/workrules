@@ -1,0 +1,7 @@
+:root {
+  --slidev-theme-primary: #12a594;
+}
+
+.dark {
+  --slidev-theme-primary: #0eb39e;
+}
