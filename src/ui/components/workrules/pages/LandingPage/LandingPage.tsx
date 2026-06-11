@@ -1,6 +1,6 @@
 import { Logo } from "@ui/components/workrules/atoms/Logo/Logo";
 import { useSupabase } from "@ui/hooks/useSupabase";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Github } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 
 const QUESTIONS = [
@@ -113,14 +113,26 @@ export function LandingPage() {
               <span className="inline-block w-0.5 h-5 bg-white ml-1 align-middle animate-pulse" />
             </p>
 
-            <div>
-              <button
-                type="button"
-                className="bg-white hover:bg-white/90 text-black px-4 py-2 rounded-xl text-[0.85rem] font-medium transition-all shadow-lg flex items-center gap-1.5"
-                title="ver presentación"
+            <div className="flex items-center gap-3">
+              <a
+                href="/presentacion-TFM"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white hover:bg-white/90 text-black px-4 py-2 rounded-xl text-[0.85rem] font-medium transition-all shadow-lg inline-flex items-center gap-1.5"
+                title="Ver slides de la presentación"
               >
                 <abbr title="Trabajo Fin de Máster">TFM</abbr>: Ver slides de la presentación
-              </button>
+              </a>
+              <a
+                href="https://github.com/jmocana2/workrules"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white hover:bg-white/90 text-black p-2 rounded-xl transition-all shadow-lg inline-flex items-center justify-center"
+                title="Código fuente en GitHub"
+                aria-label="Código fuente en GitHub"
+              >
+                <Github size={18} />
+              </a>
             </div>
           </div>
 
