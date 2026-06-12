@@ -129,15 +129,6 @@ export class ChatPage {
    * @throws Error si aparece la pagina de login (indica que VITE_E2E_TESTING no esta activo)
    */
   async goto() {
-    const consoleMessages: string[] = [];
-    const pageErrors: string[] = [];
-    this.page.on("console", (msg) => {
-      consoleMessages.push(`[${msg.type()}] ${msg.text()}`);
-    });
-    this.page.on("pageerror", (err) => {
-      pageErrors.push(`${err.name}: ${err.message}\n${err.stack ?? ""}`);
-    });
-
     await this.page.goto("/");
 
     // Verificar si estamos en la pagina de login (indica que VITE_E2E_TESTING no esta activo)
@@ -153,29 +144,7 @@ export class ChatPage {
     }
 
     // Esperar a que el selector de convenio sea visible (indica que la pagina cargo)
-    try {
-      await this.convenioSelector.waitFor({ state: "visible", timeout: 15000 });
-    } catch (err) {
-      const url = this.page.url();
-      const title = await this.page.title().catch(() => "<no title>");
-      const bodyText = await this.page
-        .locator("body")
-        .innerText()
-        .catch(() => "<no body>");
-      const html = await this.page.content().catch(() => "<no html>");
-      // eslint-disable-next-line no-console -- diagnostic output for CI failures
-      console.error(
-        "\n=== ChatPage.goto() diagnostic dump ===\n" +
-          `URL: ${url}\n` +
-          `TITLE: ${title}\n` +
-          `BODY TEXT (first 500 chars):\n${bodyText.slice(0, 500)}\n` +
-          `HTML (first 2000 chars):\n${html.slice(0, 2000)}\n` +
-          `CONSOLE (${consoleMessages.length} msgs):\n${consoleMessages.join("\n")}\n` +
-          `PAGE ERRORS (${pageErrors.length}):\n${pageErrors.join("\n---\n")}\n` +
-          "=== end diagnostic ===\n",
-      );
-      throw err;
-    }
+    await this.convenioSelector.waitFor({ state: "visible", timeout: 15000 });
   }
 
   /**
