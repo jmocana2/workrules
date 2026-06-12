@@ -1,7 +1,15 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const isE2ETesting = import.meta.env.VITE_E2E_TESTING === "true";
+
+// En E2E toda la red va mockeada con page.route(), por lo que no necesitamos
+// credenciales reales. Usamos valores placeholder para que la app arranque.
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL ||
+  (isE2ETesting ? "https://e2e.supabase.co" : "");
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  (isE2ETesting ? "e2e-anon-key" : "");
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
