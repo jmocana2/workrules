@@ -6,8 +6,11 @@ on:
     branches: [ main, master ]
 jobs:
   test:
-    timeout-minutes: 30
+    timeout-minutes: 20
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --user 1001
     steps:
     - uses: actions/checkout@v4
     - uses: pnpm/action-setup@v4
@@ -17,32 +20,8 @@ jobs:
         cache: 'pnpm'
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
-    - name: Get Playwright version
-      id: playwright-version
-      run: |
-        version=$(pnpm list --depth=0 @playwright/test --json | node -e "const j=JSON.parse(require('fs').readFileSync(0,'utf8'));const p=Array.isArray(j)?j[0]:j;const v=p.devDependencies?.['@playwright/test']?.version||p.dependencies?.['@playwright/test']?.version;process.stdout.write(v||'')")
-        if [ -z "$version" ]; then echo "Could not determine Playwright version" >&2; exit 1; fi
-        echo "version=$version" >> "$GITHUB_OUTPUT"
-    - name: Cache Playwright browsers
-      id: playwright-cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-v${{ steps.playwright-version.outputs.version }}-chromium
-    - name: Install Playwright chromium browser + system deps
-      if: steps.playwright-cache.outputs.cache-hit != 'true'
-      timeout-minutes: 15
-      env:
-        DEBIAN_FRONTEND: noninteractive
-      run: pnpm exec playwright install --with-deps chromium
-    - name: Install Playwright system deps only (cache hit)
-      if: steps.playwright-cache.outputs.cache-hit == 'true'
-      timeout-minutes: 5
-      env:
-        DEBIAN_FRONTEND: noninteractive
-      run: sudo -E pnpm exec playwright install-deps chromium
-    - name: Build app
-      run: pnpm build
+    - name: Build app (vite only, sin storybook ni slides)
+      run: pnpm exec vite build
       env:
         VITE_E2E_TESTING: "true"
         VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -55,6 +34,7 @@ jobs:
         VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
         TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+        HOME: /root
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
