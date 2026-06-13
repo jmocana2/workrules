@@ -20,4 +20,6 @@ docs/arquitectura/arquitectura-seguridad.md
 *storybook.log
 storybook-static
 
+/database/backup
+
 nul
