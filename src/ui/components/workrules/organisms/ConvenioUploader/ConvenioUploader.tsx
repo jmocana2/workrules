@@ -5,9 +5,25 @@ import { DropZone } from './DropZone';
 import { UploadProgress } from './UploadProgress';
 import { VisibilitySelector } from './VisibilitySelector';
 
+export interface ConvenioUploaderController {
+  state: ReturnType<typeof useConvenioUpload>['state'];
+  visibility: ReturnType<typeof useConvenioUpload>['visibility'];
+  setVisibility: ReturnType<typeof useConvenioUpload>['setVisibility'];
+  isUploading: boolean;
+  uploadErrorMessage: string | null;
+  handleFileSelect: (file: File) => Promise<void>;
+  handleConfirm: () => void;
+  handleCancel: () => void;
+  reset: () => void;
+}
+
 interface ConvenioUploaderProps {
   isPremium?: boolean;
   onConvenioReady?: (convenioId: string) => void;
+  // Modo controlado: el padre instancia el hook y posee el estado. Necesario para que
+  // el upload sobreviva al desmontaje del componente (p.ej. cambio de breakpoint en
+  // rotación de móvil que remonta el Sidebar contenedor).
+  controller?: ConvenioUploaderController;
 }
 
 export interface ConvenioUploaderRef {
@@ -15,92 +31,49 @@ export interface ConvenioUploaderRef {
 }
 
 export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploaderProps>(
-  function ConvenioUploader({ isPremium = false, onConvenioReady }, ref) {
-  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
-  const [pendingUpload, setPendingUpload] = useState<{
-    fileUrl: string;
-    filePath: string;
-    fileName: string;
-  } | null>(null);
-
-  const {
-    state,
-    visibility,
-    setVisibility,
-    uploadFile,
-    confirmUpload,
-    reset
-  } = useConvenioUpload({
-    onSuccess: (convenioId) => {
-      onConvenioReady?.(convenioId);
-      if (resetTimeoutRef.current) {
-        clearTimeout(resetTimeoutRef.current);
-      }
-      // Reset despues de 3 segundos de mostrar "ready"
-      resetTimeoutRef.current = setTimeout(() => {
-        reset();
-        resetTimeoutRef.current = null;
-      }, 3000);
-    }
-  });
-
-  useEffect(() => {
-    return () => {
-      if (resetTimeoutRef.current) {
-        clearTimeout(resetTimeoutRef.current);
-        resetTimeoutRef.current = null;
-      }
-    };
-  }, []);
-
-  const handleFileSelect = useCallback(async (file: File) => {
-    setUploadErrorMessage(null);
-    setIsUploading(true);
-
-    try {
-      const result = await uploadFile(file);
-      if (result) {
-        setPendingUpload({
-          fileUrl: result.fileUrl,
-          filePath: result.filePath,
-          fileName: file.name
-        });
-      } else {
-        setUploadErrorMessage('No se pudo completar la subida. Intentalo de nuevo.');
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error inesperado al subir archivo';
-      console.error('Error en handleFileSelect', error);
-      setUploadErrorMessage(message);
-    } finally {
-      setIsUploading(false);
-    }
-  }, [uploadFile]);
-
-  const handleConfirm = () => {
-    if (pendingUpload) {
-      confirmUpload(pendingUpload.fileUrl, pendingUpload.filePath, pendingUpload.fileName);
-      setPendingUpload(null);
-    }
-  };
-
-  const handleCancel = () => {
-    reset();
-    setPendingUpload(null);
-  };
-
-  // Exponer handleFileSelect a través del ref para que el padre pueda llamarlo
-  useImperativeHandle(ref, () => ({
-    handleFileSelect,
-  }), [handleFileSelect]);
-  // No renderizar si no es premium
+  function ConvenioUploader({ isPremium = false, onConvenioReady, controller }, ref) {
   if (!isPremium) return null;
+  if (controller) {
+    return <ControlledUploader controller={controller} forwardedRef={ref} />;
+  }
+  return <UncontrolledUploader onConvenioReady={onConvenioReady} forwardedRef={ref} />;
+});
+
+function ControlledUploader({
+  controller,
+  forwardedRef,
+}: {
+  controller: ConvenioUploaderController;
+  forwardedRef: React.ForwardedRef<ConvenioUploaderRef>;
+}) {
+  useImperativeHandle(forwardedRef, () => ({
+    handleFileSelect: controller.handleFileSelect,
+  }), [controller.handleFileSelect]);
+  return <UploaderView controller={controller} />;
+}
+
+function UncontrolledUploader({
+  onConvenioReady,
+  forwardedRef,
+}: {
+  onConvenioReady?: (convenioId: string) => void;
+  forwardedRef: React.ForwardedRef<ConvenioUploaderRef>;
+}) {
+  const controller = useInternalController({ onConvenioReady });
+  useImperativeHandle(forwardedRef, () => ({
+    handleFileSelect: controller.handleFileSelect,
+  }), [controller.handleFileSelect]);
+  return <UploaderView controller={controller} />;
+}
+
+function UploaderView({ controller }: { controller: ConvenioUploaderController }) {
+  const {
+    state, visibility, setVisibility, isUploading, uploadErrorMessage,
+    handleFileSelect, handleConfirm, handleCancel, reset,
+  } = controller;
 
   return (
     <div className="space-y-3">
-      {/* Estado idle: mostrar dropzone */}
       {state.status === 'idle' && (
         <DropZone
           onFileSelect={handleFileSelect}
@@ -113,7 +86,6 @@ export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploader
           <p className="text-sm text-(--colorsSemanticError11)">{uploadErrorMessage}</p>
         </div>
       )}
-      {/* Estado uploading/validating/processing/ready/error: mostrar progress */}
       {(state.status === 'uploading' ||
         state.status === 'validating' ||
         state.status === 'processing' ||
@@ -141,7 +113,6 @@ export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploader
         </div>
       )}
 
-      {/* Estado preview: mostrar preview + visibilidad + botones */}
       {state.status === 'preview' && (
         <>
           <ConvenioPreview
@@ -156,7 +127,6 @@ export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploader
         </>
       )}
 
-      {/* Boton reset si hay error */}
       {state.status === 'error' && (
         <button
           onClick={reset}
@@ -170,6 +140,98 @@ export const ConvenioUploader = forwardRef<ConvenioUploaderRef, ConvenioUploader
       )}
     </div>
   );
-});
+}
+
+export function useConvenioUploaderController({
+  onConvenioReady,
+}: {
+  onConvenioReady?: (convenioId: string) => void;
+} = {}): ConvenioUploaderController {
+  return useInternalController({ onConvenioReady });
+}
+
+function useInternalController({
+  onConvenioReady,
+}: {
+  onConvenioReady?: (convenioId: string) => void;
+}): ConvenioUploaderController {
+  const resetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
+  const [pendingUpload, setPendingUpload] = useState<{
+    fileUrl: string;
+    filePath: string;
+    fileName: string;
+  } | null>(null);
+
+  const { state, visibility, setVisibility, uploadFile, confirmUpload, reset } = useConvenioUpload({
+    onSuccess: (convenioId) => {
+      onConvenioReady?.(convenioId);
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+      }
+      resetTimeoutRef.current = setTimeout(() => {
+        reset();
+        resetTimeoutRef.current = null;
+      }, 3000);
+    },
+  });
+
+  useEffect(() => {
+    return () => {
+      if (resetTimeoutRef.current) {
+        clearTimeout(resetTimeoutRef.current);
+        resetTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleFileSelect = useCallback(async (file: File) => {
+    setUploadErrorMessage(null);
+    setIsUploading(true);
+    try {
+      const result = await uploadFile(file);
+      if (result) {
+        setPendingUpload({
+          fileUrl: result.fileUrl,
+          filePath: result.filePath,
+          fileName: file.name,
+        });
+      } else {
+        setUploadErrorMessage('No se pudo completar la subida. Intentalo de nuevo.');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error inesperado al subir archivo';
+      console.error('Error en handleFileSelect', error);
+      setUploadErrorMessage(message);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [uploadFile]);
+
+  const handleConfirm = useCallback(() => {
+    if (pendingUpload) {
+      confirmUpload(pendingUpload.fileUrl, pendingUpload.filePath, pendingUpload.fileName);
+      setPendingUpload(null);
+    }
+  }, [confirmUpload, pendingUpload]);
+
+  const handleCancel = useCallback(() => {
+    reset();
+    setPendingUpload(null);
+  }, [reset]);
+
+  return {
+    state,
+    visibility,
+    setVisibility,
+    isUploading,
+    uploadErrorMessage,
+    handleFileSelect,
+    handleConfirm,
+    handleCancel,
+    reset,
+  };
+}
 
 export default ConvenioUploader;

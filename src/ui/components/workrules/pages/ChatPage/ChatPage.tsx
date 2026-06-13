@@ -46,6 +46,7 @@ import { UserMessage } from '@ui/components/workrules/molecules/UserMessage/User
 import { VariableChips, type VariableChip } from '@ui/components/workrules/molecules/VariableChips/VariableChips';
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
+import { useConvenioUploaderController } from '@ui/components/workrules/organisms/ConvenioUploader';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
 import { openConvenioPdf as openConvenioPdfUseCase } from '@/application/use-cases';
 import { useRepositories } from '@/providers/RepositoriesProvider';
@@ -288,6 +289,13 @@ export function ChatPage({
     queryClient.invalidateQueries({ queryKey: ['user-convenios'] });
   };
 
+  // El controller vive en ChatPage para que el estado del upload (y los recursos vivos
+  // del hook: polling, AbortController) sobreviva al remount del Sidebar cuando cambia
+  // el breakpoint mobile/tablet/desktop, p.ej. al rotar el móvil portrait↔landscape.
+  const convenioUploaderController = useConvenioUploaderController({
+    onConvenioReady: handleConvenioUploaded,
+  });
+
   // Handler para seleccionar convenio desde el ConvenioManager
   const handleSelectConvenioFromManager = (convenioId: string) => {
     // Buscar el convenio completo en los userConvenios
@@ -326,6 +334,7 @@ export function ChatPage({
               isLoadingConvenios={loadingUserConvenios}
               onSelectConvenioFromManager={handleSelectConvenioFromManager}
               onConvenioUploaded={handleConvenioUploaded}
+              convenioUploaderController={convenioUploaderController}
             />
           )}
           {/* Drawer para expandir */}
@@ -349,6 +358,7 @@ export function ChatPage({
               isLoadingConvenios={loadingUserConvenios}
               onSelectConvenioFromManager={handleSelectConvenioFromManager}
               onConvenioUploaded={handleConvenioUploaded}
+              convenioUploaderController={convenioUploaderController}
             />
           </MobileDrawer>
           </Suspense>

@@ -9,7 +9,7 @@ import {
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
 import { ThemeToggle } from '@ui/components/workrules/atoms/ThemeToggle';
-import type { ConvenioUploaderRef } from '@ui/components/workrules/organisms/ConvenioUploader';
+import type { ConvenioUploaderController, ConvenioUploaderRef } from '@ui/components/workrules/organisms/ConvenioUploader';
 import { CrownIcon, FileTextIcon, MenuIcon, MessageSquareIcon, PlusIcon, XIcon } from 'lucide-react';
 import { lazy, Suspense, useRef, useState } from 'react';
 
@@ -42,6 +42,9 @@ export interface SidebarProps {
   isLoadingConvenios?: boolean;
   onUploadConvenio?: (file: File) => void | Promise<void>;
   onSelectConvenioFromManager?: (convenioId: string) => void;
+  // Controlador externo del ConvenioUploader. Cuando se pasa, el upload sobrevive al
+  // remount del Sidebar (p.ej. al cambiar de breakpoint en rotación móvil).
+  convenioUploaderController?: ConvenioUploaderController;
 }
 
 export function Sidebar({
@@ -60,6 +63,7 @@ export function Sidebar({
   isLoadingConvenios = false,
   onUploadConvenio,
   onSelectConvenioFromManager,
+  convenioUploaderController,
 }: SidebarProps) {
   const [isConvenioManagerOpen, setIsConvenioManagerOpen] = useState(false);
   const convenioUploaderRef = useRef<ConvenioUploaderRef>(null);
@@ -74,7 +78,9 @@ export function Sidebar({
         return;
       }
 
-      if (convenioUploaderRef.current) {
+      if (convenioUploaderController) {
+        await convenioUploaderController.handleFileSelect(file);
+      } else if (convenioUploaderRef.current) {
         await convenioUploaderRef.current.handleFileSelect(file);
       }
     } catch {
@@ -298,6 +304,7 @@ export function Sidebar({
               ref={convenioUploaderRef}
               isPremium={true}
               onConvenioReady={onConvenioUploaded}
+              controller={convenioUploaderController}
             />
           </Suspense>
         </div>
