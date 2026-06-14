@@ -236,6 +236,50 @@ if (Array.isArray(perfil.categorias_profesionales)) {
   );
 } else {
   allWarnings.push('categorias_profesionales no es un array o no existe');
+  perfil.categorias_profesionales = [];
+}
+
+// 4b. Reconciliar con valores_posibles.categoria_profesional
+// Claude a veces omite categorías en `categorias_profesionales` (tablas
+// fragmentadas, saltos de página) pero sí las lista en `valores_posibles`.
+// Para no romper el DataRequestCard en el front (que ofrece estas opciones),
+// añadimos como entrada mínima cualquier categoría que falte.
+const valoresPosibles = perfil.valores_posibles || {};
+const catsPosibles = Array.isArray(valoresPosibles.categoria_profesional)
+  ? valoresPosibles.categoria_profesional
+  : [];
+
+if (catsPosibles.length > 0) {
+  function norm(s) {
+    return String(s)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .trim();
+  }
+  const existentes = new Set(
+    perfil.categorias_profesionales.map(c => norm(c.nombre))
+  );
+  // También cubrir sinónimos para no duplicar
+  perfil.categorias_profesionales.forEach(c => {
+    if (Array.isArray(c.sinonimos)) {
+      c.sinonimos.forEach(s => existentes.add(norm(s)));
+    }
+  });
+
+  let added = 0;
+  for (const valor of catsPosibles) {
+    if (!existentes.has(norm(valor))) {
+      perfil.categorias_profesionales.push({ nombre: valor });
+      existentes.add(norm(valor));
+      added++;
+    }
+  }
+  if (added > 0) {
+    const msg = `Reconciliación: añadidas ${added} categoría(s) faltantes desde valores_posibles.categoria_profesional`;
+    allWarnings.push(msg);
+    console.log(`⚠ ${msg}`);
+  }
 }
 
 // 5. Validar complementos
