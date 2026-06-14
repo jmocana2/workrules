@@ -73,25 +73,73 @@ export async function validatePdfFileAsync(
       return "El archivo no es un PDF válido";
     }
 
-    // Diccionario /Encrypt indica PDF protegido con contraseña o cifrado.
-    // Buscamos en los primeros KB; los PDF cifrados declaran /Encrypt en el trailer
-    // pero también suele aparecer pronto en el cross-reference. Para mayor cobertura,
-    // leemos también el final del archivo.
-    if (/\/Encrypt\b/.test(headText)) {
-      return "El PDF está protegido con contraseña. Sube una versión sin cifrar.";
-    }
-
+    // /Encrypt en el trailer indica que hay diccionario de cifrado, pero NO
+    // implica que se necesite contraseña para leer: muchos PDFs oficiales (BOE,
+    // boletines autonómicos) llevan /Encrypt solo para restringir edición o
+    // impresión, manteniendo el contenido legible. Solo bloqueamos cuando el
+    // diccionario indica que la extracción de contenido está prohibida.
     const tailSize = Math.min(8192, file.size);
     const tailBytes = await file
       .slice(file.size - tailSize, file.size)
       .arrayBuffer();
     const tailText = new TextDecoder("latin1").decode(tailBytes);
-    if (/\/Encrypt\b/.test(tailText)) {
-      return "El PDF está protegido con contraseña. Sube una versión sin cifrar.";
+
+    if (
+      /\/Encrypt\b/.test(headText) ||
+      /\/Encrypt\b/.test(tailText)
+    ) {
+      const fullBytes = await file.arrayBuffer();
+      const fullText = new TextDecoder("latin1").decode(fullBytes);
+      if (blocksContentExtraction(fullText)) {
+        return "El PDF está protegido con contraseña. Sube una versión sin cifrar.";
+      }
     }
   } catch {
     return "No se pudo leer el archivo para validarlo";
   }
 
   return null;
+}
+
+/**
+ * Determina si un PDF con diccionario /Encrypt requiere contraseña de usuario
+ * para extraer su contenido. Devuelve true solo cuando estamos razonablemente
+ * seguros de que el contenido está bloqueado; ante la duda devuelve false para
+ * dejar que el backend de extracción sea la fuente de verdad.
+ *
+ * Basado en PDF 1.7 §7.6.3: el campo /P del diccionario Encrypt es un entero de
+ * 32 bits con bits de permisos. El bit 5 (valor 16) controla copia de texto;
+ * el bit 10 (valor 512, solo R≥3) controla extracción para accesibilidad.
+ * Si alguno está activo el contenido es extraíble sin contraseña de usuario.
+ */
+function blocksContentExtraction(pdfText: string): boolean {
+  const encryptRef = /\/Encrypt\s+(\d+)\s+(\d+)\s+R/.exec(pdfText);
+  let dict: string | null = null;
+  if (encryptRef) {
+    const objRegex = new RegExp(
+      `\\b${encryptRef[1]}\\s+${encryptRef[2]}\\s+obj\\b([\\s\\S]*?)\\bendobj\\b`,
+    );
+    dict = objRegex.exec(pdfText)?.[1] ?? null;
+  } else {
+    const inline = /\/Encrypt\s*<<([\s\S]*?)>>/.exec(pdfText);
+    dict = inline?.[1] ?? null;
+  }
+
+  if (!dict) return false;
+
+  const pMatch = /\/P\s+(-?\d+)/.exec(dict);
+  const rMatch = /\/R\s+(\d+)/.exec(dict);
+  if (!pMatch || !rMatch) return false;
+
+  const p = Number(pMatch[1]) >>> 0;
+  const r = Number(rMatch[1]);
+
+  const COPY_BIT = 1 << 4;
+  const ACCESSIBILITY_BIT = 1 << 9;
+
+  const canCopy = (p & COPY_BIT) !== 0;
+  const canExtractForAccessibility =
+    r >= 3 ? (p & ACCESSIBILITY_BIT) !== 0 : canCopy;
+
+  return !canCopy && !canExtractForAccessibility;
 }
