@@ -417,6 +417,8 @@ export function useChatPage(
           source: c.source,
           url: buildPdfHref(c.url_pdf, c.pagina) || c.url || "",
           text: c.section,
+          url_pdf: c.url_pdf,
+          pagina: c.pagina,
         })),
         // Agregar parts para compatibilidad con UIMessage
         parts: [{ type: "text" as const, text: msg.content }],
@@ -438,6 +440,8 @@ export function useChatPage(
       source: c.source,
       url: buildPdfHref(c.url_pdf, c.pagina) || c.url || "",
       text: c.section,
+      url_pdf: c.url_pdf,
+      pagina: c.pagina,
     }));
 
   // Parsear citaciones cuando termina el streaming (solo modo mock)

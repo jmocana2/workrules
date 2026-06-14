@@ -52,16 +52,23 @@ export async function getConvenioVariables(
 
 /**
  * Abre el PDF oficial del convenio en una pestaña nueva.
+ * Si se pasa `options.page`, se añade `#page=N` al final de la URL firmada para
+ * que el visor de PDF del navegador navegue directamente a esa página.
  * Side effect: window.open. Solo se usa desde la UI tras un click.
  */
 export async function openConvenioPdf(
   convenioId: string,
   deps: ConvenioDeps,
+  options?: { page?: number | null },
 ): Promise<void> {
   try {
     const url = await deps.repo.getSignedPdfUrl(convenioId);
     if (!url) return;
-    window.open(url, "_blank", "noopener,noreferrer");
+    const page = options?.page;
+    const target = typeof page === "number" && page > 0
+      ? `${url}#page=${page}`
+      : url;
+    window.open(target, "_blank", "noopener,noreferrer");
   } catch (err) {
     console.error("[openConvenioPdf] unexpected error", err);
   }

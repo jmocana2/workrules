@@ -88,15 +88,15 @@ function MessageCitations({
 }: {
   citations: NonNullable<import('./ChatPage.types').Citation[]>;
   convenioId?: string | null;
-  onOpenPdf: (convenioId: string) => void;
+  onOpenPdf: (convenioId: string, options?: { page?: number | null }) => void;
 }) {
   const uniqueCitations = citations.filter(
     (c, i, arr) =>
       arr.findIndex((x) => x.source === c.source && x.pagina === c.pagina) === i,
   );
 
-  const handleOpen = () => {
-    if (convenioId) onOpenPdf(convenioId);
+  const handleOpen = (pagina?: number | null) => {
+    if (convenioId) onOpenPdf(convenioId, { page: pagina ?? undefined });
   };
 
   return (
@@ -108,8 +108,12 @@ function MessageCitations({
             <button
               key={idx}
               type="button"
-              onClick={handleOpen}
-              aria-label={`Abrir PDF oficial - ${citation.source}`}
+              onClick={() => handleOpen(citation.pagina)}
+              aria-label={
+                citation.pagina
+                  ? `Abrir PDF oficial en la página ${citation.pagina} - ${citation.source}`
+                  : `Abrir PDF oficial - ${citation.source}`
+              }
               className="flex items-center gap-2 text-left hover:underline"
             >
               <BookIcon className="h-4 w-4 shrink-0" />
@@ -130,7 +134,7 @@ function MessageCitations({
         {convenioId && (
           <button
             type="button"
-            onClick={handleOpen}
+            onClick={() => handleOpen(null)}
             aria-label="Abrir PDF original en una pestaña nueva"
             className="mt-1 flex items-center gap-2 text-primary hover:underline"
           >
@@ -157,8 +161,10 @@ export function ChatPage({
 
   const queryClient = useQueryClient();
   const { convenio: convenioRepo } = useRepositories();
-  const handleOpenConvenioPdf = (convenioId: string) =>
-    void openConvenioPdfUseCase(convenioId, { repo: convenioRepo });
+  const handleOpenConvenioPdf = (
+    convenioId: string,
+    options?: { page?: number | null },
+  ) => void openConvenioPdfUseCase(convenioId, { repo: convenioRepo }, options);
 
   // Estado para mobile drawers
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
