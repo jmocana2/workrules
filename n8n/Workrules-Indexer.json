@@ -10,8 +10,8 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [37760, 5968],
-      "id": "996647ae-8d1b-4248-98f7-1399bbeaeb55",
+      "position": [36800, 6592],
+      "id": "965938b0-b288-42de-b1c5-144e977c54f8",
       "name": "Webhook",
       "webhookId": "01c36b3d-fb3a-4df1-8577-16f5b82c6e6f"
     },
@@ -21,8 +21,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [38128, 5968],
-      "id": "30c09826-efaf-4591-ad8c-5ae09c755f03",
+      "position": [37168, 6592],
+      "id": "2cc1f977-58d0-41f4-8eba-a37f217cdd5c",
       "name": "Check Duplicate Convenio"
     },
     {
@@ -31,8 +31,8 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [38400, 5968],
-      "id": "61b7ceb1-39d2-41cd-9345-c796ed880f98",
+      "position": [37440, 6592],
+      "id": "b22fcd38-6045-4de6-b1c9-d0770724f78a",
       "name": "Convenio Exists?"
     },
     {
@@ -41,8 +41,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [38448, 6384],
-      "id": "112b4f73-f8ca-4c92-8e7a-a699609c4f12",
+      "position": [37488, 7008],
+      "id": "3093407b-346a-4c4b-9319-fba544cc1b5a",
       "name": "Respond Duplicate"
     },
     {
@@ -58,8 +58,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [38960, 5952],
-      "id": "f0ccde3b-4ef8-4323-ab37-6742ac61c912",
+      "position": [38000, 6576],
+      "id": "d61820df-d78c-4565-8a9e-baac0e8ae6b2",
       "name": "HTTP Supabase storage PDF",
       "credentials": {
         "supabaseApi": {
@@ -82,8 +82,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [38704, 5952],
-      "id": "78110530-0a27-4abe-b202-0f1bdde4450e",
+      "position": [37744, 6576],
+      "id": "e5b49e2a-5634-4762-95d8-0a720f5d9d7f",
       "name": "HTTP PDF Request"
     },
     {
@@ -92,8 +92,8 @@
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [39168, 6240],
-      "id": "71024ad3-2f3b-411a-9dd1-6a47e0109453",
+      "position": [38208, 6864],
+      "id": "a19b2219-f4c4-44b0-93f2-9359eed5e74c",
       "name": "Wait",
       "webhookId": "e7907ffd-20a4-42e8-9fdf-ec94c7eeb960"
     },
@@ -126,8 +126,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [38928, 6240],
-      "id": "de85c06c-ce01-4355-b8e6-fb95bb773ff7",
+      "position": [37968, 6864],
+      "id": "a05e9352-0d8a-4687-be53-bf505c1973f0",
       "name": "HTTP LlamaParse PDF",
       "credentials": {
         "httpHeaderAuth": {
@@ -151,8 +151,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [39408, 6240],
-      "id": "92f3983c-1730-4cd4-b274-040ae445a71f",
+      "position": [38448, 6864],
+      "id": "8db42594-b03c-4e90-a1f4-3b969d8138e5",
       "name": "Check LlamaParse Status",
       "credentials": {
         "httpHeaderAuth": {
@@ -237,8 +237,8 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [39680, 6224],
-      "id": "aea0e991-3c6e-420f-9799-d23dc5ccdd38",
+      "position": [38720, 6848],
+      "id": "f92547cf-efd2-4026-819c-6221b8a86547",
       "name": "Is Processing Complete?"
     },
     {
@@ -256,8 +256,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [39952, 6208],
-      "id": "968abe00-6711-49b5-99ad-5f65f0e52648",
+      "position": [38992, 6832],
+      "id": "f29dd7ec-b4f0-41e5-9b89-3feeb1244c31",
       "name": "Get Markdown Result",
       "credentials": {
         "httpHeaderAuth": {
@@ -272,8 +272,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [40208, 6208],
-      "id": "ea6effb0-304a-44ed-84fc-847dc65937b4",
+      "position": [39248, 6832],
+      "id": "0b369aac-84dc-4de6-b72f-fcec8a5c1eca",
       "name": "Clear Retry Counter"
     },
     {
@@ -282,8 +282,8 @@
       },
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [39936, 6496],
-      "id": "df361a9c-9678-4101-863b-3c5ec18b64f1",
+      "position": [38976, 7120],
+      "id": "0e622c37-fbaf-421d-8c7c-18da837fdf31",
       "name": "Stop and Error"
     },
     {
@@ -292,8 +292,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [39792, 5968],
-      "id": "0bf0616b-86a0-499b-9bcc-556aea253d4d",
+      "position": [38832, 6592],
+      "id": "42d33e1c-2bdb-484a-9af8-195be6fa2dc7",
       "name": "Check Retry Limit"
     },
     {
@@ -302,8 +302,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [40128, 6960],
-      "id": "be7644b3-74ec-4717-a8aa-14a68d219936",
+      "position": [39168, 7584],
+      "id": "a7c1a5b5-6156-4126-9d79-d00186f66f1b",
       "name": "Chunk Markdown"
     },
     {
@@ -312,8 +312,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [40432, 6960],
-      "id": "3eb38f81-34ba-4ffc-b961-e8299eb0d6ba",
+      "position": [39472, 7584],
+      "id": "d95dafe1-3540-49fb-b267-e2b8e713b907",
       "name": "Prepare Chunks for Insert"
     },
     {
@@ -322,8 +322,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [40752, 6960],
-      "id": "07d92d86-f160-4816-814b-be9ced1a5cbf",
+      "position": [39792, 7584],
+      "id": "289cde0b-a2ad-4485-8cc6-d645a77cd0a3",
       "name": "Prepare Batch for OpenAI",
       "notes": "NUEVO I1.8: Prepara payload para OpenAI Embeddings API"
     },
@@ -355,8 +355,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [41056, 6960],
-      "id": "aeb418ad-c372-410a-9379-3d322568b35a",
+      "position": [40096, 7584],
+      "id": "1f1f9146-2588-41b8-be90-11b6c2ec3e32",
       "name": "HTTP Request OpenAI Embeddings",
       "credentials": {
         "openAiApi": {
@@ -372,8 +372,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [41392, 6960],
-      "id": "625ed486-bdc9-48bb-9147-396891f9fd83",
+      "position": [40432, 7584],
+      "id": "fecb8637-b7eb-4eb6-b368-2448b8d470e3",
       "name": "Merge Embeddings with Chunks",
       "notes": "NUEVO I1.8: Combina embeddings con chunks y valida dimensiones"
     },
@@ -403,8 +403,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [41680, 6960],
-      "id": "71fd6222-dd17-44ce-891e-6bd1b64f7e65",
+      "position": [40720, 7584],
+      "id": "51063c8d-d67e-4446-958a-d4786d47d442",
       "name": "Bulk Insert Chunks",
       "credentials": {
         "supabaseApi": {
@@ -419,8 +419,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [42240, 6960],
-      "id": "f49bb59b-7a9c-48d8-a95c-fed2801678a6",
+      "position": [41280, 7584],
+      "id": "f8662d33-1f16-4ca3-b9d3-d5286ea0654e",
       "name": "Chunks Branch Complete",
       "notes": "Pasa datos al merge para que ambas ramas completen"
     },
@@ -430,8 +430,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [40400, 6624],
-      "id": "99f22a64-d52e-48e2-9cc3-f62bedabf272",
+      "position": [39440, 7248],
+      "id": "73a40436-9692-403c-886f-02f1b4dd965e",
       "name": "Extract and clean md1"
     },
     {
@@ -440,8 +440,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [38144, 6976],
-      "id": "f1206d2e-7fc7-46a9-ba1a-592099849f0c",
+      "position": [37184, 7600],
+      "id": "13e2a9c7-aada-43b9-87a2-eed1317849eb",
       "name": "Heuristic Score",
       "notes": "Capa 3: keyword scoring rápido antes de gastar Claude"
     },
@@ -451,8 +451,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [38464, 6976],
-      "id": "40a3dff9-e22c-4ef9-86f0-5725acbc7b5c",
+      "position": [37504, 7600],
+      "id": "fb427f6c-92e9-477c-aeae-130afe472517",
       "name": "Prepare Classifier Request",
       "notes": "Capa 2: prepara payload para Claude Haiku"
     },
@@ -478,8 +478,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [38720, 6976],
-      "id": "e1acae5a-1001-4866-95b7-adab0d0584ce",
+      "position": [37760, 7600],
+      "id": "ddb9a023-a5d6-44d1-be2e-d8620fb526ac",
       "name": "HTTP Claude Classifier",
       "credentials": {
         "anthropicApi": {
@@ -496,8 +496,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [39024, 6976],
-      "id": "eed2087b-5df1-4f27-8a76-18c656a462d6",
+      "position": [38064, 7600],
+      "id": "4f7bc869-66c7-448d-afd7-36012b85f2e8",
       "name": "Parse Classification",
       "notes": "Capa 2: decide aceptar/rechazar según categoría, confianza y visibilidad"
     },
@@ -527,8 +527,8 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [39328, 6976],
-      "id": "251788ec-b29f-441b-be2b-79c2c31a495d",
+      "position": [38368, 7600],
+      "id": "4864547e-bc46-4d91-906e-21f819a3e939",
       "name": "Is Document Acceptable?"
     },
     {
@@ -557,8 +557,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [39296, 7344],
-      "id": "645df78a-7f8f-4289-a3f3-9859136ac724",
+      "position": [38336, 7968],
+      "id": "2114aa98-4b2d-44e7-b70c-898b8ca258fb",
       "name": "Mark Rechazado",
       "credentials": {
         "supabaseApi": {
@@ -594,8 +594,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [39648, 6960],
-      "id": "fbbeee00-43a2-41cd-be4c-8cadaf63f849",
+      "position": [38688, 7584],
+      "id": "d3c99990-b0bc-41df-844e-bb48502b6e0e",
       "name": "Save md in supabase1",
       "retryOnFail": false,
       "notesInFlow": false,
@@ -608,12 +608,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// ============================================\n// NODO: Prepare Claude Request (v2 - Perfil Enriquecido)\n// FASE: I1.9\n// FUNCIÓN: Preparar payload para llamada a Claude API\n// ============================================\n// CAMBIOS v2:\n// - Extraer TODAS las categorías profesionales (no solo principales)\n// - Añadir sinónimos de categorías\n// - Añadir salarios por tipo de establecimiento\n// - Añadir mapeo de establecimientos a clases\n// ============================================\n\nconst MODEL = 'claude-sonnet-4-20250514';\nconst MAX_OUTPUT_TOKENS = 8192;\nconst TEMPERATURE = 0;\nconst MAX_INPUT_CHARS = 60000;\n\nconst SYSTEM_PROMPT = `Eres un experto en derecho laboral espanol especializado en convenios colectivos.\n\nTu tarea es analizar el texto completo de un convenio colectivo y extraer un JSON estructurado con TODA la informacion relevante para calcular condiciones laborales (salarios, jornada, complementos, etc.).\n\nREGLAS ESTRICTAS:\n1. Solo extrae datos que aparezcan EXPLICITAMENTE en el texto. Nunca inventes ni supongas valores.\n2. Si un dato no aparece en el convenio, omite ese campo del JSON. No pongas null ni valores inventados.\n3. Los salarios deben ser EXACTOS tal como aparecen en las tablas del convenio, sin redondear.\n4. Cita el articulo del convenio donde aparece cada dato siempre que sea posible.\n5. Si hay ambiguedad en un dato, incluyelo en el array \"notas_extraccion\" explicando la ambiguedad.\n6. Responde UNICAMENTE con el JSON. Sin texto antes ni despues. Sin bloques de codigo markdown.\n7. El JSON debe ser valido y parseable directamente.\n8. IMPORTANTE: Extrae TODAS las categorias profesionales que aparezcan en las tablas salariales, no solo las principales.\n9. VALORES POSIBLES OBLIGATORIO: El JSON DEBE incluir el campo \"valores_posibles\". Este campo es un objeto cuyas claves son EXACTAMENTE las mismas que aparecen en \"variables_criticas\" (mismo nombre, mismo formato snake_case). Para cada variable critica debes incluir su array de valores posibles:\n   - Si la variable es categorica (tipo_contrato, turno_trabajo, etc.): incluye los valores del convenio o defaults sectoriales si no aparecen explicitamente.\n   - Si la variable es numerica continua (edad, antiguedad): incluye un array con el rango como strings, ej: [\"0-5 anos\", \"6-10 anos\", \"11-20 anos\", \"mas de 20 anos\"].\n   - Todas las claves de \"variables_criticas\" DEBEN aparecer como clave en \"valores_posibles\". Sin excepciones.\n   - Usa snake_case sin tildes para TODAS las claves de \"valores_posibles\".\n10. SINONIMOS OBLIGATORIOS: Para cada categoria profesional, DEBES incluir:\n   - Variaciones de genero del nombre principal (masculino/femenino)\n   - TODOS los sinonimos que el convenio liste entre parentesis\n   - Variaciones de genero de terminos cortos (1-2 palabras) en los sinonimos\n   - Sé conservador: NO generes todas las combinaciones posibles, solo las mas relevantes\n   - Ejemplo: \"Gobernanta\" → [\"Gobernante\"]; \"Auxiliar (o Ayudante, Mozo/a)\" → [\"Ayudante\", \"Mozo\", \"Moza\"]\n11. MANEJO DE SALTOS DE PÁGINA Y ENCABEZADOS DUPLICADOS:\n   - Los convenios procesados pueden tener saltos de página que crean secciones duplicadas o fragmentadas\n   - Ignora completamente encabezados de páginas (ej: \"BOCM\", \"B.O.C.M.\", \"BOLETÍN OFICIAL\", \"Pág. XX\", \"SÁBADO\", fechas de publicación)\n   - Si encuentras MÚLTIPLES secciones con el MISMO NIVEL (ej: dos secciones \"NIVEL III\" separadas), combínalas en una sola\n   - Usa el CONTEXTO y la COHERENCIA SEMÁNTICA para determinar el nivel correcto de cada categoría:\n     * Personal cualificado (Cocinero/a, Recepcionista, Camarero/a) suele estar en NIVEL III\n     * Personal de supervisión (Jefe de Cocina, Encargado/a) suele estar en NIVEL II o superior\n     * Ayudantes y auxiliares suelen estar en NIVEL IV o V\n   - Si una categoría aparece en dos niveles diferentes y hay evidencia de salto de página entre ellos, elige el nivel que tenga categorías de similar cualificación\n   - En caso de duda genuina entre dos niveles para la misma categoría, documéntalo en \"notas_extraccion\"`;\n\nfunction buildUserPrompt(markdown) {\n  return `Analiza el siguiente convenio colectivo y extrae un JSON estructurado con esta informacion:\n\n1. **Datos basicos**: nombre del convenio, nombre_corto (etiqueta breve del sector/area del convenio para mostrar en un selector, MAXIMO 5 palabras, sin la palabra \"Convenio\" ni \"Sector\" ni numeros romanos, ej: \"Oficinas y Despachos\", \"Hosteleria\", \"Consultoria TI\", \"Comercio Textil\", \"Construccion\"; para convenios de empresa usa el nombre de la empresa: \"Empresa ACME\"), ambito (estatal/autonomico/provincial/empresa), ambito_territorial (localizacion legible exactamente como aparece en el convenio: \"Comunidad de Madrid\", \"Estatal\", \"Barcelona\", \"Empresa: ACME S.A.\", etc.), vigencia, codigo REGCON si aparece.\n\n2. **Variables criticas y valores posibles**: lista de variables que un usuario necesitaria para un calculo salarial preciso. Solo incluye variables que REALMENTE afecten al salario segun este convenio.\n   - Usa exclusivamente snake_case sin tildes para los nombres de variable (ej: \"tipo_contrato\", no \"Tipo de Contrato\").\n   - Junto a \"variables_criticas\" genera SIEMPRE el campo \"valores_posibles\": un objeto con exactamente las mismas claves que \"variables_criticas\", cada una con su array de valores. Si el convenio no los explicita, usa defaults sectoriales razonables.\n\n3. **Categorias profesionales**: Extrae TODAS las categorias/puestos que aparezcan en las tablas salariales y clasificacion profesional del convenio. NO solo las principales, TODAS. Para cada una incluye:\n   - nombre: nombre exacto tal como aparece en el convenio\n   - sinonimos: array de nombres alternativos. DEBES incluir:\n     * Variaciones de género del NOMBRE PRINCIPAL: Si el convenio lista \"Auxiliar de Limpieza\", incluye \"Auxiliares de Limpieza\" en sinonimos\n     * TODOS los sinónimos que el convenio liste entre paréntesis: Si dice \"Auxiliar de Limpieza (o Personal de Limpieza, Fregador/a, Limpiador/a)\", incluye TODOS esos terminos en el array\n     * Variaciones de género de términos cortos en los sinónimos: Si un sinónimo es \"Fregador/a\", incluye \"Fregador\" y \"Fregadora\"\n     * NO generes todas las combinaciones posibles de género/número de TODOS los sinónimos (solo los más relevantes)\n     * Ejemplo: \"Auxiliar de Limpieza (o Personal de Limpieza, Fregador/a, Limpiador/a)\" → sinonimos: [\"Auxiliares de Limpieza\", \"Personal de Limpieza\", \"Fregador\", \"Fregadora\", \"Limpiador\", \"Limpiadora\"]\n   - grupo: grupo profesional si existe\n   - nivel: OBLIGATORIO - nivel retributivo (I, II-A, II-B, II-C, III, III-A, III-B, IV, V, etc.)\n   - area_funcional: area funcional si el convenio la define (Cocina, Sala, Recepcion, Administracion, etc.)\n   - salarios: objeto con salario base MENSUAL por tipo/clase de establecimiento. Las claves son los tipos del convenio (A, B, C, D, Lujo, Primera, Segunda, Tercera, Cuarta) y los valores son los importes en euros. Ejemplo: {\"A\": 1283.83, \"B\": 1250.91, \"C\": 1160.37, \"D\": 1277.36}\n   - salario_base_mensual: solo si el convenio NO distingue por tipo de establecimiento\n\n   IMPORTANTE - CLASIFICACIÓN PROFESIONAL Y SALTOS DE PÁGINA:\n   - Los convenios pueden tener saltos de página que FRAGMENTAN las tablas de clasificación profesional\n   - Si encuentras la MISMA categoría profesional listada en MÚLTIPLES NIVELES diferentes:\n     1. Verifica si hay encabezados de página entre las secciones (ej: \"Pág. 42\", \"BOCM-...\", \"B.O.C.M. Núm. XX\")\n     2. Busca CONTINUIDAD LÓGICA: si ves \"Recepcionista\", \"Cocinero/a\", \"Encargado/a de Economato\" en NIVEL III, y después de un salto de página aparece una nueva sección con \"Camarero/a\", \"Conductor/a\", \"Ayudante de Supervisor/a\" bajo un encabezado \"NIVEL I\", es MUY PROBABLE que sea una CONTINUACIÓN del NIVEL III\n     3. Usa el CONTEXTO de categorías similares: Camarero/a cualificado tiene nivel similar a Cocinero/a y Recepcionista\n     4. En hostelería: Cocinero/a, Recepcionista, Camarero/a, Repostero/a son típicamente NIVEL III; Ayudante de Camarero/a, Ayudante de Cocina son NIVEL IV o V\n   - Si detectas este patrón de fragmentación, COMBINA las secciones y asigna el nivel correcto basándote en la coherencia semántica\n   - Si después del análisis aún tienes duda genuina, documéntalo en \"notas_extraccion\"\n\n4. **Mapeo de establecimientos**: Crea un objeto que mapee tipos de establecimiento comunes a las clases salariales del convenio. Busca en el convenio la clasificacion de establecimientos y crea el mapeo. Ejemplo:\n   {\n     \"hotel 5 estrellas\": \"A\",\n     \"hotel 4 estrellas\": \"A\",\n     \"hotel 3 estrellas\": \"B\",\n     \"hotel 2 estrellas\": \"C\",\n     \"restaurante 5 tenedores\": \"A\",\n     \"restaurante 4 tenedores\": \"A\",\n     \"restaurante 3 tenedores\": \"B\",\n     \"restaurante 2 tenedores\": \"C\",\n     \"restaurante 1 tenedor\": \"C\",\n     \"cafeteria 3 tazas\": \"A\",\n     \"cafeteria 2 tazas\": \"B\",\n     \"cafeteria 1 taza\": \"C\",\n     \"bar\": \"C\",\n     \"taberna\": \"C\",\n     \"whisqueria\": \"B\",\n     \"bar americano\": \"B\",\n     \"discoteca\": \"A\",\n     \"sala de fiestas\": \"A\",\n     \"catering\": \"D\"\n   }\n   Incluye TODOS los tipos que mencione el convenio.\n\n5. **Jornada laboral**: horas anuales, semanales, si hay distribucion irregular. Cita articulo.\n\n6. **Tablas salariales**: ano referencia, num pagas, pagas extra, revision salarial.\n\n7. **Complementos salariales**: TODOS con nombre, tipo, valor, base calculo, condicion, excepcion (tipos de establecimiento donde NO aplica), articulo.\n\n8. **Horas extraordinarias**: recargos, precio fijo, maximo anual, compensacion descanso. Cita articulo.\n\n9. **Periodo de prueba**: duracion por tipo de trabajador. Cita articulo.\n\n10. **Vacaciones**: dias naturales o laborables. Cita articulo.\n\n11. **Variables especificas del sector**: cualquier variable propia con valores posibles como array.\n\n12. **Notas de extraccion**: ambiguedades, datos no extraidos con certeza.\n\nFORMATO DE SALIDA - JSON con esta estructura:\n{\n  \"convenio\": \"string\",\n  \"nombre_corto\": \"string (etiqueta breve, max 5 palabras, sin Convenio/Sector/numeros romanos: Oficinas y Despachos, Hosteleria, Consultoria TI, ...)\",\n  \"ambito\": \"estatal|autonomico|provincial|empresa\",\n  \"ambito_territorial\": \"string (localizacion legible: Comunidad de Madrid, Estatal, Barcelona, Empresa: ACME S.A., etc.)\",\n  \"vigencia\": { \"inicio\": \"YYYY\", \"fin\": \"YYYY\", \"prorroga_automatica\": true|false },\n  \"codigo_convenio\": \"string\",\n  \"variables_criticas\": [\"string\"],\n  \"valores_posibles\": {\n    \"categoria_profesional\": [\"valor1\", \"valor2\"],\n    \"tipo_establecimiento\": [\"hotel 5 estrellas\", \"restaurante\"],\n    \"tipo_contrato\": [\"indefinido\", \"temporal\", \"fijo discontinuo\", \"formacion\", \"practicas\"],\n    \"turno_trabajo\": [\"manana\", \"tarde\", \"noche\", \"rotativo\", \"partido\"],\n    \"antiguedad_empresa\": [\"0-5 anos\", \"6-10 anos\", \"11-20 anos\", \"mas de 20 anos\"],\n    \"jornada_laboral\": [\"completa\", \"parcial\"]\n  },\n  \"categorias_profesionales\": [\n    {\n      \"nombre\": \"string (nombre exacto del convenio)\",\n      \"sinonimos\": [\"variacion genero\", \"variacion singular/plural\", \"denominacion alternativa\"],\n      \"grupo\": \"string\",\n      \"nivel\": \"string (OBLIGATORIO)\",\n      \"area_funcional\": \"string\",\n      \"salarios\": { \"A\": number, \"B\": number, \"C\": number, \"D\": number }\n    }\n  ],\n  \"mapeo_establecimientos\": {\n    \"hotel 5 estrellas\": \"A\",\n    \"hotel 4 estrellas\": \"A\",\n    \"whisqueria\": \"B\"\n  },\n  \"jornada\": { \"horas_anuales\": number, \"horas_semanales\": number, \"distribucion_irregular\": boolean, \"articulo\": \"string\" },\n  \"tablas_salariales\": { \"ano_referencia\": \"YYYY\", \"num_pagas\": number, \"pagas_extra\": number, \"revision_salarial\": \"string\" },\n  \"complementos\": [\n    { \"nombre\": \"string\", \"tipo\": \"porcentaje|cantidad_fija|trienio|quinquenio|bienio|otro\", \"valor\": number, \"base_calculo\": \"string\", \"condicion\": \"string\", \"excepcion\": \"string\", \"articulo\": \"string\" }\n  ],\n  \"horas_extra\": { \"recargo_laborable_pct\": number, \"recargo_festivo_pct\": number, \"precio_fijo_hora\": number, \"maximo_anual\": number, \"compensacion_descanso\": boolean, \"articulo\": \"string\" },\n  \"periodo_prueba\": [\n    { \"tipo_trabajador\": \"string\", \"duracion\": \"string\", \"articulo\": \"string\" }\n  ],\n  \"vacaciones\": { \"dias_naturales\": number, \"dias_laborables\": number, \"articulo\": \"string\" },\n  \"variables_especificas\": { \"nombre_variable\": [\"valor1\", \"valor2\"] },\n  \"notas_extraccion\": [\"string\"]\n}\n\nEJEMPLO DE VALORES POSIBLES:\nSi \"variables_criticas\" es [\"categoria_profesional\", \"tipo_establecimiento\", \"tipo_contrato\", \"turno_trabajo\", \"antiguedad_empresa\"],\nentonces \"valores_posibles\" DEBE ser:\n{\n  \"categoria_profesional\": [\"Cocinero/a\", \"Camarero/a\", \"Recepcionista\", ...],\n  \"tipo_establecimiento\": [\"hotel 5 estrellas\", \"restaurante\", \"cafeteria\", \"bar\", ...],\n  \"tipo_contrato\": [\"indefinido\", \"temporal\", \"fijo discontinuo\", \"formacion\", \"practicas\"],\n  \"turno_trabajo\": [\"manana\", \"tarde\", \"noche\", \"rotativo\", \"partido\"],\n  \"antiguedad_empresa\": [\"0-5 anos\", \"6-10 anos\", \"11-20 anos\", \"mas de 20 anos\"]\n}\nObserva que CADA elemento de \"variables_criticas\" aparece exactamente como clave en \"valores_posibles\".\n\nEJEMPLOS CONCRETOS DE CATEGORIAS PROFESIONALES:\n\nEjemplo 1 - Categoria simple:\nConvenio: \"Gobernanta\"\nExtraccion:\n{\n  \"nombre\": \"Gobernanta\",\n  \"sinonimos\": [\"Gobernante\"],\n  \"nivel\": \"IV\",\n  \"salarios\": { \"A\": 1400.00 }\n}\n\nEjemplo 2 - Categoria con sinonimos del convenio:\nConvenio: \"Auxiliar de Limpieza (o Personal de Limpieza, Fregador/a, Limpiador/a, Mozo de Lavanderia)\"\nExtraccion:\n{\n  \"nombre\": \"Auxiliar de Limpieza\",\n  \"sinonimos\": [\n    \"Auxiliares de Limpieza\",\n    \"Personal de Limpieza\",\n    \"Fregador\",\n    \"Fregadora\",\n    \"Limpiador\",\n    \"Limpiadora\",\n    \"Mozo de Lavanderia\",\n    \"Moza de Lavanderia\"\n  ],\n  \"nivel\": \"V\",\n  \"salarios\": { \"A\": 1150.00 }\n}\n\nEjemplo 3 - Categoria con muchos sinonimos (ser selectivo):\nConvenio: \"Camarero/a (o Dependiente de Cafeteria, Dependiente de 1a, Planchista, Cafetero/a)\"\nExtraccion:\n{\n  \"nombre\": \"Camarero/a\",\n  \"sinonimos\": [\n    \"Camarero\",\n    \"Camarera\",\n    \"Dependiente de Cafeteria\",\n    \"Dependiente de 1a\",\n    \"Planchista\",\n    \"Cafetero\",\n    \"Cafetera\"\n  ],\n  \"nivel\": \"III\",\n  \"salarios\": { \"A\": 1283.83 }\n}\n\nEjemplo 4 - Manejo de saltos de página (CASO REAL):\nConvenio tiene salto de página que fragmenta NIVEL III:\n\nSección 1 (antes del salto):\n\"NIVEL III (Nivel III-A Sector Catering)\n- Recepcionista, Administrativo/a (...)\n- Cocinero/a (o Cocinero/a)\n- Repostero/a (o Repostero/a)\n- Encargado/a de Economato (...)\"\n\n[SALTO DE PÁGINA: \"Pág. 42 SÁBADO 6 DE ABRIL DE 2024 B.O.C.M. Núm. 82\", \"BOCM-20240406-2\"]\n\nSección 2 (después del salto - INCORRECTAMENTE etiquetada):\n\"### NIVEL I\n- Camarero/a (o Camarero/a, Dependiente de Cafetería, ...)\n- Conductor/a de Equipo de Catering (o Conductor/a)\n- Ayudante de Supervisor/a\"\n\nEXTRACCIÓN CORRECTA: Detectar que \"Camarero/a\" y \"Conductor/a de Equipo de Catering\" son CONTINUACIÓN de NIVEL III (no NIVEL I), porque:\n1. Hay encabezado de página entre las secciones\n2. Camarero/a tiene cualificación similar a Cocinero/a y Recepcionista\n3. \"Conductor/a de Equipo\" aparece explícitamente con \"(Nivel III-A Sector Catering)\" en la primera sección\n\nPor tanto, asignar:\n{\n  \"nombre\": \"Camarero/a\",\n  \"nivel\": \"III\",  // NO \"I\"\n  \"sinonimos\": [\"Camarero\", \"Camarera\", \"Dependiente de Cafetería\"]\n}\nIMPORTANTE: Extrae TODOS los sinonimos que el convenio mencione. Genera variaciones de genero solo de terminos cortos y relevantes. Se conservador para evitar explotar el array.\n\nOmite campos sin informacion. No inventes datos.\n\n---\n\nTEXTO DEL CONVENIO:\n\n${markdown}`;\n}\n\n// MAIN\nconst upstreamItem = $('Extract and clean md1').first();\n\nif (\n  !upstreamItem ||\n  !upstreamItem.json ||\n  typeof upstreamItem.json !== 'object' ||\n  !('markdown_completo' in upstreamItem.json) ||\n  !('convenio_id' in upstreamItem.json) ||\n  !('nombre' in upstreamItem.json)\n) {\n  throw new Error(\n    \"Upstream node 'Extract and clean md1' returned no data or is missing required fields: markdown_completo, convenio_id, nombre\"\n  );\n}\n\nconst markdownData = upstreamItem.json;\nconst markdown = markdownData.markdown_completo;\nconst convenioId = markdownData.convenio_id;\nconst convenioNombre = markdownData.nombre;\n\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No hay markdown del convenio para extraer perfil');\n}\n\n// Truncar markdown muy largo para reducir latencia (anexos administrativos al final suelen ser prescindibles)\nlet markdownForClaude = markdown;\nlet truncated = false;\nif (markdown.length > MAX_INPUT_CHARS) {\n  markdownForClaude = markdown.slice(0, MAX_INPUT_CHARS) + '\\n\\n[...documento truncado por longitud...]';\n  truncated = true;\n}\n\nconsole.log(\n  `Preparando request para Claude: ${convenioNombre || convenioId} (${markdown.length} chars${truncated ? `, truncado a ${MAX_INPUT_CHARS}` : ''})`\n);\n\nconst userPrompt = buildUserPrompt(markdownForClaude);\nconst requestStartTime = Date.now();\n\n// Preparar payload para el nodo HTTP\n// El system prompt es estable entre llamadas => usar prompt caching (Anthropic).\nconst payload = {\n  model: MODEL,\n  max_tokens: MAX_OUTPUT_TOKENS,\n  temperature: TEMPERATURE,\n  system: [\n    { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }\n  ],\n  messages: [{ role: 'user', content: userPrompt }]\n};\n\nreturn [\n  {\n    json: {\n      payload: payload,\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      request_start_time: requestStartTime\n    }\n  }\n];\n"
+        "jsCode": "// ============================================\n// NODO: Prepare Claude Request (v2 - Perfil Enriquecido)\n// FASE: I1.9\n// FUNCIÓN: Preparar payload para llamada a Claude API\n// ============================================\n// CAMBIOS v2:\n// - Extraer TODAS las categorías profesionales (no solo principales)\n// - Añadir sinónimos de categorías\n// - Añadir salarios por tipo de establecimiento\n// - Añadir mapeo de establecimientos a clases\n// ============================================\n\nconst MODEL = 'claude-sonnet-4-5';\nconst MAX_OUTPUT_TOKENS = 8192;\nconst TEMPERATURE = 0;\nconst MAX_INPUT_CHARS = 60000;\n\nconst SYSTEM_PROMPT = `Eres un experto en derecho laboral espanol especializado en convenios colectivos.\n\nTu tarea es analizar el texto completo de un convenio colectivo y extraer un JSON estructurado con TODA la informacion relevante para calcular condiciones laborales (salarios, jornada, complementos, etc.).\n\nREGLAS ESTRICTAS:\n1. Solo extrae datos que aparezcan EXPLICITAMENTE en el texto. Nunca inventes ni supongas valores.\n2. Si un dato no aparece en el convenio, omite ese campo del JSON. No pongas null ni valores inventados.\n3. Los salarios deben ser EXACTOS tal como aparecen en las tablas del convenio, sin redondear.\n4. Cita el articulo del convenio donde aparece cada dato siempre que sea posible.\n5. Si hay ambiguedad en un dato, incluyelo en el array \"notas_extraccion\" explicando la ambiguedad.\n6. Responde UNICAMENTE con el JSON. Sin texto antes ni despues. Sin bloques de codigo markdown.\n7. El JSON debe ser valido y parseable directamente.\n8. IMPORTANTE: Extrae TODAS las categorias profesionales que aparezcan en las tablas salariales, no solo las principales.\n9. VALORES POSIBLES OBLIGATORIO: El JSON DEBE incluir el campo \"valores_posibles\". Este campo es un objeto cuyas claves son EXACTAMENTE las mismas que aparecen en \"variables_criticas\" (mismo nombre, mismo formato snake_case). Para cada variable critica debes incluir su array de valores posibles:\n   - Si la variable es categorica (tipo_contrato, turno_trabajo, etc.): incluye los valores del convenio o defaults sectoriales si no aparecen explicitamente.\n   - Si la variable es numerica continua (edad, antiguedad): incluye un array con el rango como strings, ej: [\"0-5 anos\", \"6-10 anos\", \"11-20 anos\", \"mas de 20 anos\"].\n   - Todas las claves de \"variables_criticas\" DEBEN aparecer como clave en \"valores_posibles\". Sin excepciones.\n   - Usa snake_case sin tildes para TODAS las claves de \"valores_posibles\".\n10. SINONIMOS OBLIGATORIOS: Para cada categoria profesional, DEBES incluir:\n   - Variaciones de genero del nombre principal (masculino/femenino)\n   - TODOS los sinonimos que el convenio liste entre parentesis\n   - Variaciones de genero de terminos cortos (1-2 palabras) en los sinonimos\n   - Sé conservador: NO generes todas las combinaciones posibles, solo las mas relevantes\n   - Ejemplo: \"Gobernanta\" → [\"Gobernante\"]; \"Auxiliar (o Ayudante, Mozo/a)\" → [\"Ayudante\", \"Mozo\", \"Moza\"]\n11. MANEJO DE SALTOS DE PÁGINA Y ENCABEZADOS DUPLICADOS:\n   - Los convenios procesados pueden tener saltos de página que crean secciones duplicadas o fragmentadas\n   - Ignora completamente encabezados de páginas (ej: \"BOCM\", \"B.O.C.M.\", \"BOLETÍN OFICIAL\", \"Pág. XX\", \"SÁBADO\", fechas de publicación)\n   - Si encuentras MÚLTIPLES secciones con el MISMO NIVEL (ej: dos secciones \"NIVEL III\" separadas), combínalas en una sola\n   - Usa el CONTEXTO y la COHERENCIA SEMÁNTICA para determinar el nivel correcto de cada categoría:\n     * Personal cualificado (Cocinero/a, Recepcionista, Camarero/a) suele estar en NIVEL III\n     * Personal de supervisión (Jefe de Cocina, Encargado/a) suele estar en NIVEL II o superior\n     * Ayudantes y auxiliares suelen estar en NIVEL IV o V\n   - Si una categoría aparece en dos niveles diferentes y hay evidencia de salto de página entre ellos, elige el nivel que tenga categorías de similar cualificación\n   - En caso de duda genuina entre dos niveles para la misma categoría, documéntalo en \"notas_extraccion\"`;\n\nfunction buildUserPrompt(markdown) {\n  return `Analiza el siguiente convenio colectivo y extrae un JSON estructurado con esta informacion:\n\n1. **Datos basicos**: nombre del convenio, nombre_corto (etiqueta breve del sector/area del convenio para mostrar en un selector, MAXIMO 5 palabras, sin la palabra \"Convenio\" ni \"Sector\" ni numeros romanos, ej: \"Oficinas y Despachos\", \"Hosteleria\", \"Consultoria TI\", \"Comercio Textil\", \"Construccion\"; para convenios de empresa usa el nombre de la empresa: \"Empresa ACME\"), ambito (estatal/autonomico/provincial/empresa), ambito_territorial (localizacion legible exactamente como aparece en el convenio: \"Comunidad de Madrid\", \"Estatal\", \"Barcelona\", \"Empresa: ACME S.A.\", etc.), vigencia, codigo REGCON si aparece.\n\n2. **Variables criticas y valores posibles**: lista de variables que un usuario necesitaria para un calculo salarial preciso. Solo incluye variables que REALMENTE afecten al salario segun este convenio.\n   - Usa exclusivamente snake_case sin tildes para los nombres de variable (ej: \"tipo_contrato\", no \"Tipo de Contrato\").\n   - Junto a \"variables_criticas\" genera SIEMPRE el campo \"valores_posibles\": un objeto con exactamente las mismas claves que \"variables_criticas\", cada una con su array de valores. Si el convenio no los explicita, usa defaults sectoriales razonables.\n\n3. **Categorias profesionales**: Extrae TODAS las categorias/puestos que aparezcan en las tablas salariales y clasificacion profesional del convenio. NO solo las principales, TODAS. Para cada una incluye:\n   - nombre: nombre exacto tal como aparece en el convenio\n   - sinonimos: array de nombres alternativos. DEBES incluir:\n     * Variaciones de género del NOMBRE PRINCIPAL: Si el convenio lista \"Auxiliar de Limpieza\", incluye \"Auxiliares de Limpieza\" en sinonimos\n     * TODOS los sinónimos que el convenio liste entre paréntesis: Si dice \"Auxiliar de Limpieza (o Personal de Limpieza, Fregador/a, Limpiador/a)\", incluye TODOS esos terminos en el array\n     * Variaciones de género de términos cortos en los sinónimos: Si un sinónimo es \"Fregador/a\", incluye \"Fregador\" y \"Fregadora\"\n     * NO generes todas las combinaciones posibles de género/número de TODOS los sinónimos (solo los más relevantes)\n     * Ejemplo: \"Auxiliar de Limpieza (o Personal de Limpieza, Fregador/a, Limpiador/a)\" → sinonimos: [\"Auxiliares de Limpieza\", \"Personal de Limpieza\", \"Fregador\", \"Fregadora\", \"Limpiador\", \"Limpiadora\"]\n   - grupo: grupo profesional si existe\n   - nivel: OBLIGATORIO - nivel retributivo (I, II-A, II-B, II-C, III, III-A, III-B, IV, V, etc.)\n   - area_funcional: area funcional si el convenio la define (Cocina, Sala, Recepcion, Administracion, etc.)\n   - salarios: objeto con salario base MENSUAL por tipo/clase de establecimiento. Las claves son los tipos del convenio (A, B, C, D, Lujo, Primera, Segunda, Tercera, Cuarta) y los valores son los importes en euros. Ejemplo: {\"A\": 1283.83, \"B\": 1250.91, \"C\": 1160.37, \"D\": 1277.36}\n   - salario_base_mensual: solo si el convenio NO distingue por tipo de establecimiento\n\n   IMPORTANTE - CLASIFICACIÓN PROFESIONAL Y SALTOS DE PÁGINA:\n   - Los convenios pueden tener saltos de página que FRAGMENTAN las tablas de clasificación profesional\n   - Si encuentras la MISMA categoría profesional listada en MÚLTIPLES NIVELES diferentes:\n     1. Verifica si hay encabezados de página entre las secciones (ej: \"Pág. 42\", \"BOCM-...\", \"B.O.C.M. Núm. XX\")\n     2. Busca CONTINUIDAD LÓGICA: si ves \"Recepcionista\", \"Cocinero/a\", \"Encargado/a de Economato\" en NIVEL III, y después de un salto de página aparece una nueva sección con \"Camarero/a\", \"Conductor/a\", \"Ayudante de Supervisor/a\" bajo un encabezado \"NIVEL I\", es MUY PROBABLE que sea una CONTINUACIÓN del NIVEL III\n     3. Usa el CONTEXTO de categorías similares: Camarero/a cualificado tiene nivel similar a Cocinero/a y Recepcionista\n     4. En hostelería: Cocinero/a, Recepcionista, Camarero/a, Repostero/a son típicamente NIVEL III; Ayudante de Camarero/a, Ayudante de Cocina son NIVEL IV o V\n   - Si detectas este patrón de fragmentación, COMBINA las secciones y asigna el nivel correcto basándote en la coherencia semántica\n   - Si después del análisis aún tienes duda genuina, documéntalo en \"notas_extraccion\"\n\n4. **Mapeo de establecimientos**: Crea un objeto que mapee tipos de establecimiento comunes a las clases salariales del convenio. Busca en el convenio la clasificacion de establecimientos y crea el mapeo. Ejemplo:\n   {\n     \"hotel 5 estrellas\": \"A\",\n     \"hotel 4 estrellas\": \"A\",\n     \"hotel 3 estrellas\": \"B\",\n     \"hotel 2 estrellas\": \"C\",\n     \"restaurante 5 tenedores\": \"A\",\n     \"restaurante 4 tenedores\": \"A\",\n     \"restaurante 3 tenedores\": \"B\",\n     \"restaurante 2 tenedores\": \"C\",\n     \"restaurante 1 tenedor\": \"C\",\n     \"cafeteria 3 tazas\": \"A\",\n     \"cafeteria 2 tazas\": \"B\",\n     \"cafeteria 1 taza\": \"C\",\n     \"bar\": \"C\",\n     \"taberna\": \"C\",\n     \"whisqueria\": \"B\",\n     \"bar americano\": \"B\",\n     \"discoteca\": \"A\",\n     \"sala de fiestas\": \"A\",\n     \"catering\": \"D\"\n   }\n   Incluye TODOS los tipos que mencione el convenio.\n\n5. **Jornada laboral**: horas anuales, semanales, si hay distribucion irregular. Cita articulo.\n\n6. **Tablas salariales**: ano referencia, num pagas, pagas extra, revision salarial.\n\n7. **Complementos salariales**: TODOS con nombre, tipo, valor, base calculo, condicion, excepcion (tipos de establecimiento donde NO aplica), articulo.\n\n8. **Horas extraordinarias**: recargos, precio fijo, maximo anual, compensacion descanso. Cita articulo.\n\n9. **Periodo de prueba**: duracion por tipo de trabajador. Cita articulo.\n\n10. **Vacaciones**: dias naturales o laborables. Cita articulo.\n\n11. **Variables especificas del sector**: cualquier variable propia con valores posibles como array.\n\n12. **Notas de extraccion**: ambiguedades, datos no extraidos con certeza.\n\nFORMATO DE SALIDA - JSON con esta estructura:\n{\n  \"convenio\": \"string\",\n  \"nombre_corto\": \"string (etiqueta breve, max 5 palabras, sin Convenio/Sector/numeros romanos: Oficinas y Despachos, Hosteleria, Consultoria TI, ...)\",\n  \"ambito\": \"estatal|autonomico|provincial|empresa\",\n  \"ambito_territorial\": \"string (localizacion legible: Comunidad de Madrid, Estatal, Barcelona, Empresa: ACME S.A., etc.)\",\n  \"vigencia\": { \"inicio\": \"YYYY\", \"fin\": \"YYYY\", \"prorroga_automatica\": true|false },\n  \"codigo_convenio\": \"string\",\n  \"variables_criticas\": [\"string\"],\n  \"valores_posibles\": {\n    \"categoria_profesional\": [\"valor1\", \"valor2\"],\n    \"tipo_establecimiento\": [\"hotel 5 estrellas\", \"restaurante\"],\n    \"tipo_contrato\": [\"indefinido\", \"temporal\", \"fijo discontinuo\", \"formacion\", \"practicas\"],\n    \"turno_trabajo\": [\"manana\", \"tarde\", \"noche\", \"rotativo\", \"partido\"],\n    \"antiguedad_empresa\": [\"0-5 anos\", \"6-10 anos\", \"11-20 anos\", \"mas de 20 anos\"],\n    \"jornada_laboral\": [\"completa\", \"parcial\"]\n  },\n  \"categorias_profesionales\": [\n    {\n      \"nombre\": \"string (nombre exacto del convenio)\",\n      \"sinonimos\": [\"variacion genero\", \"variacion singular/plural\", \"denominacion alternativa\"],\n      \"grupo\": \"string\",\n      \"nivel\": \"string (OBLIGATORIO)\",\n      \"area_funcional\": \"string\",\n      \"salarios\": { \"A\": number, \"B\": number, \"C\": number, \"D\": number }\n    }\n  ],\n  \"mapeo_establecimientos\": {\n    \"hotel 5 estrellas\": \"A\",\n    \"hotel 4 estrellas\": \"A\",\n    \"whisqueria\": \"B\"\n  },\n  \"jornada\": { \"horas_anuales\": number, \"horas_semanales\": number, \"distribucion_irregular\": boolean, \"articulo\": \"string\" },\n  \"tablas_salariales\": { \"ano_referencia\": \"YYYY\", \"num_pagas\": number, \"pagas_extra\": number, \"revision_salarial\": \"string\" },\n  \"complementos\": [\n    { \"nombre\": \"string\", \"tipo\": \"porcentaje|cantidad_fija|trienio|quinquenio|bienio|otro\", \"valor\": number, \"base_calculo\": \"string\", \"condicion\": \"string\", \"excepcion\": \"string\", \"articulo\": \"string\" }\n  ],\n  \"horas_extra\": { \"recargo_laborable_pct\": number, \"recargo_festivo_pct\": number, \"precio_fijo_hora\": number, \"maximo_anual\": number, \"compensacion_descanso\": boolean, \"articulo\": \"string\" },\n  \"periodo_prueba\": [\n    { \"tipo_trabajador\": \"string\", \"duracion\": \"string\", \"articulo\": \"string\" }\n  ],\n  \"vacaciones\": { \"dias_naturales\": number, \"dias_laborables\": number, \"articulo\": \"string\" },\n  \"variables_especificas\": { \"nombre_variable\": [\"valor1\", \"valor2\"] },\n  \"notas_extraccion\": [\"string\"]\n}\n\nEJEMPLO DE VALORES POSIBLES:\nSi \"variables_criticas\" es [\"categoria_profesional\", \"tipo_establecimiento\", \"tipo_contrato\", \"turno_trabajo\", \"antiguedad_empresa\"],\nentonces \"valores_posibles\" DEBE ser:\n{\n  \"categoria_profesional\": [\"Cocinero/a\", \"Camarero/a\", \"Recepcionista\", ...],\n  \"tipo_establecimiento\": [\"hotel 5 estrellas\", \"restaurante\", \"cafeteria\", \"bar\", ...],\n  \"tipo_contrato\": [\"indefinido\", \"temporal\", \"fijo discontinuo\", \"formacion\", \"practicas\"],\n  \"turno_trabajo\": [\"manana\", \"tarde\", \"noche\", \"rotativo\", \"partido\"],\n  \"antiguedad_empresa\": [\"0-5 anos\", \"6-10 anos\", \"11-20 anos\", \"mas de 20 anos\"]\n}\nObserva que CADA elemento de \"variables_criticas\" aparece exactamente como clave en \"valores_posibles\".\n\nEJEMPLOS CONCRETOS DE CATEGORIAS PROFESIONALES:\n\nEjemplo 1 - Categoria simple:\nConvenio: \"Gobernanta\"\nExtraccion:\n{\n  \"nombre\": \"Gobernanta\",\n  \"sinonimos\": [\"Gobernante\"],\n  \"nivel\": \"IV\",\n  \"salarios\": { \"A\": 1400.00 }\n}\n\nEjemplo 2 - Categoria con sinonimos del convenio:\nConvenio: \"Auxiliar de Limpieza (o Personal de Limpieza, Fregador/a, Limpiador/a, Mozo de Lavanderia)\"\nExtraccion:\n{\n  \"nombre\": \"Auxiliar de Limpieza\",\n  \"sinonimos\": [\n    \"Auxiliares de Limpieza\",\n    \"Personal de Limpieza\",\n    \"Fregador\",\n    \"Fregadora\",\n    \"Limpiador\",\n    \"Limpiadora\",\n    \"Mozo de Lavanderia\",\n    \"Moza de Lavanderia\"\n  ],\n  \"nivel\": \"V\",\n  \"salarios\": { \"A\": 1150.00 }\n}\n\nEjemplo 3 - Categoria con muchos sinonimos (ser selectivo):\nConvenio: \"Camarero/a (o Dependiente de Cafeteria, Dependiente de 1a, Planchista, Cafetero/a)\"\nExtraccion:\n{\n  \"nombre\": \"Camarero/a\",\n  \"sinonimos\": [\n    \"Camarero\",\n    \"Camarera\",\n    \"Dependiente de Cafeteria\",\n    \"Dependiente de 1a\",\n    \"Planchista\",\n    \"Cafetero\",\n    \"Cafetera\"\n  ],\n  \"nivel\": \"III\",\n  \"salarios\": { \"A\": 1283.83 }\n}\n\nEjemplo 4 - Manejo de saltos de página (CASO REAL):\nConvenio tiene salto de página que fragmenta NIVEL III:\n\nSección 1 (antes del salto):\n\"NIVEL III (Nivel III-A Sector Catering)\n- Recepcionista, Administrativo/a (...)\n- Cocinero/a (o Cocinero/a)\n- Repostero/a (o Repostero/a)\n- Encargado/a de Economato (...)\"\n\n[SALTO DE PÁGINA: \"Pág. 42 SÁBADO 6 DE ABRIL DE 2024 B.O.C.M. Núm. 82\", \"BOCM-20240406-2\"]\n\nSección 2 (después del salto - INCORRECTAMENTE etiquetada):\n\"### NIVEL I\n- Camarero/a (o Camarero/a, Dependiente de Cafetería, ...)\n- Conductor/a de Equipo de Catering (o Conductor/a)\n- Ayudante de Supervisor/a\"\n\nEXTRACCIÓN CORRECTA: Detectar que \"Camarero/a\" y \"Conductor/a de Equipo de Catering\" son CONTINUACIÓN de NIVEL III (no NIVEL I), porque:\n1. Hay encabezado de página entre las secciones\n2. Camarero/a tiene cualificación similar a Cocinero/a y Recepcionista\n3. \"Conductor/a de Equipo\" aparece explícitamente con \"(Nivel III-A Sector Catering)\" en la primera sección\n\nPor tanto, asignar:\n{\n  \"nombre\": \"Camarero/a\",\n  \"nivel\": \"III\",  // NO \"I\"\n  \"sinonimos\": [\"Camarero\", \"Camarera\", \"Dependiente de Cafetería\"]\n}\nIMPORTANTE: Extrae TODOS los sinonimos que el convenio mencione. Genera variaciones de genero solo de terminos cortos y relevantes. Se conservador para evitar explotar el array.\n\nOmite campos sin informacion. No inventes datos.\n\n---\n\nTEXTO DEL CONVENIO:\n\n${markdown}`;\n}\n\n// MAIN\nconst upstreamItem = $('Extract and clean md1').first();\n\nif (\n  !upstreamItem ||\n  !upstreamItem.json ||\n  typeof upstreamItem.json !== 'object' ||\n  !('markdown_completo' in upstreamItem.json) ||\n  !('convenio_id' in upstreamItem.json) ||\n  !('nombre' in upstreamItem.json)\n) {\n  throw new Error(\n    \"Upstream node 'Extract and clean md1' returned no data or is missing required fields: markdown_completo, convenio_id, nombre\"\n  );\n}\n\nconst markdownData = upstreamItem.json;\nconst markdown = markdownData.markdown_completo;\nconst convenioId = markdownData.convenio_id;\nconst convenioNombre = markdownData.nombre;\n\nif (!markdown || markdown.trim().length === 0) {\n  throw new Error('No hay markdown del convenio para extraer perfil');\n}\n\n// Truncar markdown muy largo para reducir latencia (anexos administrativos al final suelen ser prescindibles)\nlet markdownForClaude = markdown;\nlet truncated = false;\nif (markdown.length > MAX_INPUT_CHARS) {\n  markdownForClaude = markdown.slice(0, MAX_INPUT_CHARS) + '\\n\\n[...documento truncado por longitud...]';\n  truncated = true;\n}\n\nconsole.log(\n  `Preparando request para Claude: ${convenioNombre || convenioId} (${markdown.length} chars${truncated ? `, truncado a ${MAX_INPUT_CHARS}` : ''})`\n);\n\nconst userPrompt = buildUserPrompt(markdownForClaude);\nconst requestStartTime = Date.now();\n\n// Preparar payload para el nodo HTTP\n// El system prompt es estable entre llamadas => usar prompt caching (Anthropic).\nconst payload = {\n  model: MODEL,\n  max_tokens: MAX_OUTPUT_TOKENS,\n  temperature: TEMPERATURE,\n  system: [\n    { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }\n  ],\n  messages: [{ role: 'user', content: userPrompt }]\n};\n\nreturn [\n  {\n    json: {\n      payload: payload,\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      request_start_time: requestStartTime\n    }\n  }\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [39680, 7376],
-      "id": "361e47ad-e804-4be4-b011-100330fbb053",
+      "position": [39008, 8288],
+      "id": "c34a9f84-6f72-4d76-a1b2-68599945eb11",
       "name": "Prepare Claude Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara el payload para Claude API"
@@ -640,8 +640,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [39984, 7376],
-      "id": "5214e15e-1811-4954-9812-a8652149066b",
+      "position": [39248, 8288],
+      "id": "2c482591-01ef-4587-b3af-b4c8fd5043ce",
       "name": "HTTP Claude API",
       "credentials": {
         "anthropicApi": {
@@ -654,12 +654,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// ============================================\n// NODO: Extract Perfil Claude\n// FASE: I1.9\n// FUNCIÓN: Procesar la respuesta de HTTP Claude API y extraer el JSON del perfil\n// ============================================\n// NOTA: Este nodo NO llama a Claude directamente.\n// La llamada a Claude se hace en el nodo anterior \"HTTP Claude API\".\n// Este nodo solo extrae y formatea la respuesta.\n// ============================================\n\n// Obtener la respuesta del nodo HTTP Claude API\nconst httpResponse = $input.first().json;\n\n// Verificar que tenemos respuesta\nif (!httpResponse) {\n  throw new Error('No se recibió respuesta del nodo HTTP Claude API');\n}\n\n// Extraer el texto de la respuesta de Claude\n// La estructura de respuesta de Anthropic es: { content: [{ type: \"text\", text: \"...\" }], usage: {...} }\nconst responseText = httpResponse.content?.[0]?.text;\n\nif (!responseText) {\n  // Log para debug\n  console.log(\n    'Estructura de respuesta recibida:',\n    JSON.stringify(httpResponse, null, 2).substring(0, 500)\n  );\n  throw new Error(\n    'Claude no devolvió contenido en la respuesta. Verifica el nodo HTTP Claude API.'\n  );\n}\n\n// Obtener datos del convenio del nodo Extract and clean md\n// NOTA: Ajusta el nombre del nodo si es diferente en tu workflow\nlet convenioId = null;\nlet convenioNombre = null;\n\ntry {\n  const markdownData = $('Extract and clean md1').first().json;\n  convenioId = markdownData.convenio_id;\n  convenioNombre = markdownData.nombre;\n} catch (error) {\n  // Intentar con nombre alternativo del nodo\n  console.log('⚠ Intento 1 fallido:', error.message);\n  try {\n    const markdownData = $('Extract and clean md').first().json;\n    convenioId = markdownData.convenio_id;\n    convenioNombre = markdownData.nombre;\n  } catch (error2) {\n    console.log(\n      '⚠ No se pudo obtener datos del nodo Extract and clean md:',\n      error2.message,\n      'Continuando sin ellos.'\n    );\n  }\n}\n\n// Estadísticas de uso de Claude\nconst usage = {\n  input_tokens: httpResponse.usage?.input_tokens || 0,\n  output_tokens: httpResponse.usage?.output_tokens || 0,\n  model: httpResponse.model || 'unknown',\n  stop_reason: httpResponse.stop_reason || null\n};\n\n// Calcular costo estimado usando las tarifas del modelo reportado por la API.\n// Fallback a tarifas de Sonnet si el modelo no está mapeado.\nconst ratesByModel = {\n  'claude-3-5-sonnet-20241022': { input: 3, output: 15 },\n  'claude-3-7-sonnet-20250219': { input: 3, output: 15 },\n  'claude-sonnet-4-20250514': { input: 3, output: 15 },\n  'claude-3-5-haiku-20241022': { input: 0.8, output: 4 },\n  'claude-3-haiku-20240307': { input: 0.25, output: 1.25 },\n  'claude-opus-4-20250514': { input: 15, output: 75 },\n  'claude-3-opus-20240229': { input: 15, output: 75 }\n};\n\nconst defaultRates = { input: 3, output: 15 };\nconst { input: inputRate, output: outputRate } =\n  ratesByModel[usage.model] || defaultRates;\n\nconst estimatedCostUsd =\n  (usage.input_tokens / 1_000_000) * inputRate +\n  (usage.output_tokens / 1_000_000) * outputRate;\n\nconsole.log(`✓ Respuesta de Claude procesada:`);\nconsole.log(`  - Convenio: ${convenioNombre || convenioId || 'desconocido'}`);\nconsole.log(`  - Input tokens: ${usage.input_tokens}`);\nconsole.log(`  - Output tokens: ${usage.output_tokens}`);\nconsole.log(\n  `  - Modelo: ${usage.model} (input: $${inputRate}/M, output: $${outputRate}/M)`\n);\nconsole.log(`  - Costo estimado: $${estimatedCostUsd.toFixed(4)}`);\nconsole.log(`  - Longitud respuesta: ${responseText.length} caracteres`);\n\nreturn [\n  {\n    json: {\n      raw_response: responseText,\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      claude_usage: {\n        ...usage,\n        estimated_cost_usd: estimatedCostUsd\n      }\n    }\n  }\n];\n"
+        "jsCode": "// ============================================\n// NODO: Extract Perfil Claude\n// FASE: I1.9\n// FUNCIÓN: Procesar la respuesta de HTTP Claude API y extraer el JSON del perfil\n// ============================================\n// NOTA: Este nodo NO llama a Claude directamente.\n// La llamada a Claude se hace en el nodo anterior \"HTTP Claude API\".\n// Este nodo solo extrae y formatea la respuesta.\n// ============================================\n\n// Obtener la respuesta del nodo HTTP Claude API\nconst httpResponse = $input.first().json;\n\n// Verificar que tenemos respuesta\nif (!httpResponse) {\n  throw new Error('No se recibió respuesta del nodo HTTP Claude API');\n}\n\n// Extraer el texto de la respuesta de Claude\n// La estructura de respuesta de Anthropic es: { content: [{ type: \"text\", text: \"...\" }], usage: {...} }\nconst responseText = httpResponse.content?.[0]?.text;\n\nif (!responseText) {\n  // Log para debug\n  console.log(\n    'Estructura de respuesta recibida:',\n    JSON.stringify(httpResponse, null, 2).substring(0, 500)\n  );\n  throw new Error(\n    'Claude no devolvió contenido en la respuesta. Verifica el nodo HTTP Claude API.'\n  );\n}\n\n// Obtener datos del convenio del nodo Extract and clean md\n// NOTA: Ajusta el nombre del nodo si es diferente en tu workflow\nlet convenioId = null;\nlet convenioNombre = null;\n\ntry {\n  const markdownData = $('Extract and clean md1').first().json;\n  convenioId = markdownData.convenio_id;\n  convenioNombre = markdownData.nombre;\n} catch (error) {\n  // Intentar con nombre alternativo del nodo\n  console.log('⚠ Intento 1 fallido:', error.message);\n  try {\n    const markdownData = $('Extract and clean md').first().json;\n    convenioId = markdownData.convenio_id;\n    convenioNombre = markdownData.nombre;\n  } catch (error2) {\n    console.log(\n      '⚠ No se pudo obtener datos del nodo Extract and clean md:',\n      error2.message,\n      'Continuando sin ellos.'\n    );\n  }\n}\n\n// Estadísticas de uso de Claude\nconst usage = {\n  input_tokens: httpResponse.usage?.input_tokens || 0,\n  output_tokens: httpResponse.usage?.output_tokens || 0,\n  model: httpResponse.model || 'unknown',\n  stop_reason: httpResponse.stop_reason || null\n};\n\n// Calcular costo estimado usando las tarifas del modelo reportado por la API.\n// Fallback a tarifas de Sonnet si el modelo no está mapeado.\nconst ratesByModel = {\n  'claude-3-5-sonnet-20241022': { input: 3, output: 15 },\n  'claude-3-7-sonnet-20250219': { input: 3, output: 15 },\n  'claude-sonnet-4-5': { input: 3, output: 15 },\n  'claude-3-5-haiku-20241022': { input: 0.8, output: 4 },\n  'claude-3-haiku-20240307': { input: 0.25, output: 1.25 },\n  'claude-opus-4-20250514': { input: 15, output: 75 },\n  'claude-3-opus-20240229': { input: 15, output: 75 }\n};\n\nconst defaultRates = { input: 3, output: 15 };\nconst { input: inputRate, output: outputRate } =\n  ratesByModel[usage.model] || defaultRates;\n\nconst estimatedCostUsd =\n  (usage.input_tokens / 1_000_000) * inputRate +\n  (usage.output_tokens / 1_000_000) * outputRate;\n\nconsole.log(`✓ Respuesta de Claude procesada:`);\nconsole.log(`  - Convenio: ${convenioNombre || convenioId || 'desconocido'}`);\nconsole.log(`  - Input tokens: ${usage.input_tokens}`);\nconsole.log(`  - Output tokens: ${usage.output_tokens}`);\nconsole.log(\n  `  - Modelo: ${usage.model} (input: $${inputRate}/M, output: $${outputRate}/M)`\n);\nconsole.log(`  - Costo estimado: $${estimatedCostUsd.toFixed(4)}`);\nconsole.log(`  - Longitud respuesta: ${responseText.length} caracteres`);\n\nreturn [\n  {\n    json: {\n      raw_response: responseText,\n      convenio_id: convenioId,\n      convenio_nombre: convenioNombre,\n      claude_usage: {\n        ...usage,\n        estimated_cost_usd: estimatedCostUsd\n      }\n    }\n  }\n];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [40272, 7376],
-      "id": "3146f08e-6631-4240-88c7-f452ef228fd9",
+      "position": [39536, 8288],
+      "id": "16cdbcf6-a6e2-4fc7-a125-32920af382e5",
       "name": "Extract Perfil Claude",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Claude API"
@@ -670,8 +670,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [40608, 7376],
-      "id": "e24474bc-1dd4-443d-973f-2d8dfc439cde",
+      "position": [39872, 8288],
+      "id": "ea52fff2-a8f9-43d8-ad26-b03805c709f6",
       "name": "Validate Perfil JSON",
       "notes": "NUEVO I1.9: Parsea, valida y normaliza el JSON del perfil"
     },
@@ -681,8 +681,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [40928, 7376],
-      "id": "b55ed177-f48d-4c0f-acda-589514b26986",
+      "position": [40192, 8288],
+      "id": "8779c4e0-fa9c-4ecd-80fd-9e894818fb56",
       "name": "Prepare Supabase Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara datos para upsert en Supabase"
@@ -697,8 +697,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [41248, 7376],
-      "id": "fc4089f3-9e98-4d70-bf35-b41877bb6bd7",
+      "position": [40512, 8288],
+      "id": "1edfd593-b941-4f3c-9e65-799049d46f40",
       "name": "HTTP Supabase Delete Perfil",
       "credentials": {
         "supabaseApi": {
@@ -731,8 +731,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [41488, 7376],
-      "id": "5e7ec1c6-3df1-445c-a184-36496f167f7d",
+      "position": [40752, 8288],
+      "id": "42fbd7b2-517d-4e50-8a98-a6f652092790",
       "name": "HTTP Supabase Insert Perfil",
       "credentials": {
         "supabaseApi": {
@@ -749,8 +749,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [41728, 7376],
-      "id": "aa6b8b4b-2a33-4ad6-a7b4-8ca4f7733238",
+      "position": [40992, 8288],
+      "id": "2685fb94-2d95-4876-bf6c-9c666c6aee19",
       "name": "Upsert Perfil Supabase",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Supabase"
@@ -763,8 +763,8 @@
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
-      "position": [42416, 7216],
-      "id": "abae064c-d736-4c70-8b6e-996df7868a71",
+      "position": [41456, 7840],
+      "id": "c676be2d-435f-44c2-b1ed-496079077e0c",
       "name": "Wait Both Branches",
       "notes": "NUEVO I1.9: Espera a que ambas ramas (chunks + perfil) terminen antes de responder"
     },
@@ -808,8 +808,8 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [43008, 7216],
-      "id": "384e64f9-b423-4d23-8705-b5b7f217cc21",
+      "position": [42048, 7840],
+      "id": "4e4fd626-5861-4c91-bedf-a245f0bcaff3",
       "name": "Update Convenio Status",
       "credentials": {
         "supabaseApi": {
@@ -843,8 +843,8 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [43296, 7216],
-      "id": "369c99b4-ade8-49d0-a25e-c18194e3647e",
+      "position": [42336, 7840],
+      "id": "c871ba27-189e-441f-8b9f-b380d72b3e47",
       "name": "Set Codigo Regcon",
       "credentials": {
         "supabaseApi": {
@@ -879,8 +879,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [40464, 6208],
-      "id": "bcfb6fb8-3ccf-4713-8001-5f4495597fb3",
+      "position": [39504, 6832],
+      "id": "3130cbcf-b6d6-4642-879e-549bc280f3da",
       "name": "Notify Progress Parsing",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: notifica al frontend que LlamaParse terminó (20%)"
@@ -909,8 +909,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [39856, 6960],
-      "id": "f8bdecb6-ed12-45a5-bb28-c5aaf633c52f",
+      "position": [38896, 7584],
+      "id": "3716dbee-7adf-4006-a57d-e68729ac4589",
       "name": "Notify Progress Markdown",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: markdown guardado (40%)"
@@ -939,8 +939,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [41984, 6960],
-      "id": "14b26b8c-547c-4770-83be-899444410073",
+      "position": [41024, 7584],
+      "id": "48c0177c-c799-4cc5-9e15-8e404d3c1f11",
       "name": "Notify Progress Chunks",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: chunks insertados (60%)"
@@ -969,8 +969,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [41984, 7376],
-      "id": "936433be-7480-4a02-b54a-8a084d3878ae",
+      "position": [41248, 8288],
+      "id": "844b3009-47ff-4a93-ae19-75cfdea7c35e",
       "name": "Notify Progress Profile",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: perfil Claude procesado (80%)"
@@ -999,8 +999,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [43584, 7216],
-      "id": "ca070d6b-934d-493f-b5b1-283f745b8af6",
+      "position": [42624, 7840],
+      "id": "4be7a701-8d85-473f-a8bd-a11ed0c81717",
       "name": "Notify Progress Completed",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: convenio listo (100%)"
@@ -1029,8 +1029,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [39648, 7344],
-      "id": "e1aad683-94ff-4d3a-827c-e311f673695b",
+      "position": [38688, 7968],
+      "id": "c6cb9c87-38a6-4c30-b268-4000284b756c",
       "name": "Notify Progress Rejected",
       "continueOnFail": true,
       "notes": "Bug fix: actualiza convenio_processing_status a 'failed' cuando el clasificador rechaza el PDF (antes quedaba congelado en parsing/20%)"
@@ -1041,8 +1041,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [42704, 7216],
-      "id": "d424b781-c96a-4bc9-996b-7c7d1ba825aa",
+      "position": [41744, 7840],
+      "id": "8b1eec63-b7f3-4547-afca-cbbcfec15bec",
       "name": "Determine Final Estado",
       "notes": "Doc 03 / Perfil degradado: decide activo vs activo_sin_perfil"
     }
@@ -1555,7 +1555,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "4d1cd5f4-0d8a-4eac-a14f-c0b6b2c1e76e",
+  "versionId": "4dda6854-de68-46e2-bee6-4ce248412a17",
   "meta": {
     "instanceId": "f72a9e83ddf781aec5a22208462a7d8c35ce6440f1e460ba7b8702ce4b52a0a2"
   },
