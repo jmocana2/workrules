@@ -114,7 +114,7 @@ Deno.test("validateOptions - acepta opciones validas minimas", () => {
 
   assertEquals(result.systemPrompt, "System");
   assertEquals(result.userMessage, "User");
-  assertEquals(result.model, "claude-sonnet-4-20250514");
+  assertEquals(result.model, "claude-sonnet-4-5");
   assertEquals(result.maxTokens, 2048);
   assertEquals(result.temperature, 0.3);
 });

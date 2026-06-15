@@ -16,7 +16,7 @@ export interface StreamOptions {
   systemPrompt: string;
   /** Mensaje del usuario (contexto + pregunta) */
   userMessage: string;
-  /** Modelo a usar (default: claude-sonnet-4-20250514) */
+  /** Modelo a usar (default: claude-sonnet-4-5) */
   model?: string;
   /** Max tokens de respuesta (default: 2048) */
   maxTokens?: number;
@@ -47,7 +47,7 @@ export class AnthropicError extends Error {
 // CONFIGURACION
 // ============================================
 
-const DEFAULT_MODEL = "claude-sonnet-4-20250514";
+const DEFAULT_MODEL = "claude-sonnet-4-5";
 const DEFAULT_MAX_TOKENS = 2048;
 const DEFAULT_TEMPERATURE = 0.3;
 

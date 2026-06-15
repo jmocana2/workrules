@@ -96,7 +96,7 @@ Deno.test("calculateSalary - calculo exitoso con datos completos", async () => {
     assertExists(result.response);
     assertExists(result.metadata);
     assertEquals(result.metadata.cacheHit, false);
-    assertEquals(result.metadata.model, "claude-sonnet-4-20250514");
+    assertEquals(result.metadata.model, "claude-sonnet-4-5");
     assertExists(result.metadata.variablesUsadas);
     assertEquals(result.metadata.variablesUsadas.categoria, "Gobernanta");
     assertEquals(result.metadata.variablesUsadas.jornada, "completa");

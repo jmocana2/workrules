@@ -253,7 +253,7 @@ Deno.test('mapResultToHttpResponse - success returns 200 with respuesta', () => 
     metadata: {
       cacheHit: false,
       chunksUsed: 3,
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       latencyMs: 1200,
     },
     citations: [
@@ -276,7 +276,7 @@ Deno.test('mapResultToHttpResponse - salary_calculated returns 200 with desglose
     metadata: {
       cacheHit: false,
       chunksUsed: 4,
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5',
       latencyMs: 1500,
       variablesUsadas: { categoria: 'Camarero' },
     },

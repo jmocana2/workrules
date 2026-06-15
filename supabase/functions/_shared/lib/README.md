@@ -230,7 +230,7 @@ const response = await createChatResponse({
 
 | Parametro | Valor |
 |-----------|-------|
-| Modelo | `claude-sonnet-4-20250514` |
+| Modelo | `claude-sonnet-4-5` |
 | Max tokens | 2048 (configurable) |
 | Temperature | 0.3 (configurable) |
 | Context window | 200K tokens |

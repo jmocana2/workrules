@@ -371,7 +371,7 @@ Deno.test("askQuestion - retorna success con respuesta completa", async () => {
     assertExists(result.response);
     assertEquals(result.metadata.cacheHit, false);
     assertEquals(result.metadata.chunksUsed, MOCK_CHUNKS.length);
-    assertEquals(result.metadata.model, "claude-sonnet-4-20250514");
+    assertEquals(result.metadata.model, "claude-sonnet-4-5");
     assertEquals(typeof result.metadata.latencyMs, "number");
   }
 });

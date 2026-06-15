@@ -128,7 +128,7 @@ export type AskQuestionResult =
 const DEFAULT_CHUNK_LIMIT = 8;
 const DEFAULT_CHUNK_THRESHOLD = 0.45;
 const CACHE_THRESHOLD = 0.95;
-const MODEL_NAME = "claude-sonnet-4-20250514";
+const MODEL_NAME = "claude-sonnet-4-5";
 /** Tope total tras expandir con vecinos de la misma sección/artículo */
 const EXPANDED_CHUNK_CAP = 15;
 
