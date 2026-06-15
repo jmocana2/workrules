@@ -821,6 +821,42 @@
     },
     {
       "parameters": {
+        "operation": "update",
+        "tableId": "convenios",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Determine Final Estado').first().json.convenio_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "codigo_regcon",
+              "fieldValue": "={{ $('Determine Final Estado').first().json.codigo_regcon }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [37224, 5920],
+      "id": "c1d2e3f4-5678-4abc-9def-1234567890ab",
+      "name": "Set Codigo Regcon",
+      "credentials": {
+        "supabaseApi": {
+          "id": "zTfHTKIsATQcLHo2",
+          "name": "Supabase account"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "Persiste codigo_regcon extraído por Claude (perfil_data.codigo_convenio). continueOnFail porque puede chocar con el UNIQUE index si otro convenio ya lo tiene."
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "={{ $env.SUPABASE_URL }}/functions/v1/webhook-progress",
         "sendHeaders": true,
@@ -971,7 +1007,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ============================================\n// NODO: Determine Final Estado\n// FUNCIÓN: Decide si el convenio termina como 'activo' o 'activo_sin_perfil'\n//          según si el perfil Claude se generó correctamente.\n// ============================================\n\nlet operation = 'skipped';\nlet perfilData = null;\nlet validation = null;\n\ntry {\n  const upsert = $('Upsert Perfil Supabase').first().json;\n  operation = upsert.operation || 'skipped';\n  validation = upsert.validation || null;\n} catch {\n  // Si Upsert Perfil Supabase falló en runtime, asumimos sin perfil\n  operation = 'skipped';\n}\n\ntry {\n  perfilData = $('Validate Perfil JSON').first().json.perfil_data || null;\n} catch {\n  perfilData = null;\n}\n\nconst webhookBody = $('Webhook').first().json.body;\nconst convenioId = webhookBody.convenio_id;\n\n// Si NO se hizo upsert del perfil o el perfil no es válido, marcar como activo_sin_perfil.\n// El RAG (chunks) sigue funcionando pero el calculador salarial se debe deshabilitar.\nconst hasValidProfile = operation === 'upserted' && perfilData;\nconst estado = hasValidProfile ? 'activo' : 'activo_sin_perfil';\n\nreturn [{\n  json: {\n    convenio_id: convenioId,\n    estado,\n    nombre_oficial: perfilData?.convenio || null,\n    nombre_corto: perfilData?.nombre_corto || null,\n    ambito_territorial: perfilData?.ambito_territorial || null,\n    ambito: perfilData?.ambito || null,\n    has_valid_profile: hasValidProfile,\n    validation\n  }\n}];"
+        "jsCode": "// ============================================\n// NODO: Determine Final Estado\n// FUNCIÓN: Decide si el convenio termina como 'activo' o 'activo_sin_perfil'\n//          según si el perfil Claude se generó correctamente.\n// ============================================\n\nlet operation = 'skipped';\nlet perfilData = null;\nlet validation = null;\n\ntry {\n  const upsert = $('Upsert Perfil Supabase').first().json;\n  operation = upsert.operation || 'skipped';\n  validation = upsert.validation || null;\n} catch {\n  // Si Upsert Perfil Supabase falló en runtime, asumimos sin perfil\n  operation = 'skipped';\n}\n\ntry {\n  perfilData = $('Validate Perfil JSON').first().json.perfil_data || null;\n} catch {\n  perfilData = null;\n}\n\nconst webhookBody = $('Webhook').first().json.body;\nconst convenioId = webhookBody.convenio_id;\n\n// Si NO se hizo upsert del perfil o el perfil no es válido, marcar como activo_sin_perfil.\n// El RAG (chunks) sigue funcionando pero el calculador salarial se debe deshabilitar.\nconst hasValidProfile = operation === 'upserted' && perfilData;\nconst estado = hasValidProfile ? 'activo' : 'activo_sin_perfil';\n\nreturn [{\n  json: {\n    convenio_id: convenioId,\n    estado,\n    nombre_oficial: perfilData?.convenio || null,\n    nombre_corto: perfilData?.nombre_corto || null,\n    ambito_territorial: perfilData?.ambito_territorial || null,\n    ambito: perfilData?.ambito || null,\n    codigo_regcon: perfilData?.codigo_convenio || null,\n    has_valid_profile: hasValidProfile,\n    validation\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1451,6 +1487,17 @@
       ]
     },
     "Update Convenio Status": {
+      "main": [
+        [
+          {
+            "node": "Set Codigo Regcon",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Codigo Regcon": {
       "main": [
         [
           {
