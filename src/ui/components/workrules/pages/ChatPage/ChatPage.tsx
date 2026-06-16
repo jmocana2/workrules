@@ -85,10 +85,12 @@ function MessageCitations({
   citations,
   convenioId,
   onOpenPdf,
+  hidePerCitationLinks = false,
 }: {
   citations: NonNullable<import('./ChatPage.types').Citation[]>;
   convenioId?: string | null;
   onOpenPdf: (convenioId: string, options?: { page?: number | null }) => void;
+  hidePerCitationLinks?: boolean;
 }) {
   const uniqueCitations = citations.filter(
     (c, i, arr) =>
@@ -103,7 +105,7 @@ function MessageCitations({
     <Sources>
       <SourcesTrigger count={uniqueCitations.length} />
       <SourcesContent>
-        {uniqueCitations.map((citation, idx) =>
+        {!hidePerCitationLinks && uniqueCitations.map((citation, idx) =>
           convenioId ? (
             <button
               key={idx}
@@ -516,6 +518,7 @@ export function ChatPage({
                             citations={message.citations}
                             convenioId={selectedConvenio?.id}
                             onOpenPdf={handleOpenConvenioPdf}
+                            hidePerCitationLinks={isMobile || isTablet}
                           />
                         )}
                       </MessageContent>
