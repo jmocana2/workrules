@@ -11,7 +11,7 @@ import { useRepositories } from "@/providers/RepositoriesProvider";
 
 // Progreso real basado en eventos: n8n envía POST a /functions/v1/webhook-progress
 // que escribe en la tabla convenio_processing_status. El hook lee esa tabla en cada poll.
-// Etapas (stage, progress): parsing 20 → saving_markdown 40 → chunking 60 → profile 80 → completed 100.
+// Etapas (stage, progress): parsing 20 → saving_markdown 40 → chunking 60 → analyzing 70 → extracting 85 → profile 90 → completed 100.
 
 const STAGE_LABELS: Record<string, string> = {
   queued: "Preparando el convenio…",
@@ -21,7 +21,9 @@ const STAGE_LABELS: Record<string, string> = {
   saving_markdown: "Guardando el contenido…",
   chunking: "Organizando la información…",
   embedding: "Analizando el texto…",
-  profile: "Extrayendo los datos del convenio…",
+  analyzing: "Analizando el contenido…",
+  extracting: "Extrayendo los datos del convenio…",
+  profile: "Casi listo…",
   completed: "¡Listo!",
   failed: "Algo ha ido mal",
 };
@@ -35,13 +37,45 @@ const STAGE_CEILING: Record<string, number> = {
   parsing: 35,
   classifying: 38,
   saving_markdown: 55,
-  chunking: 75,
-  embedding: 78,
+  chunking: 65,
+  embedding: 68,
+  analyzing: 83,
+  extracting: 88,
   profile: 95,
   completed: 100,
 };
 const DRIFT_INTERVAL_MS = 500;
 const DRIFT_STEP = 0.3;
+
+// Constante de tiempo (segundos) para el drift logarítmico por etapa.
+// El progreso avanza rápido al principio y se asíntota al techo. Tau más alto = más lento.
+// Etapas largas (analyzing ~80-150s) usan tau alto para que no se quede pegado al techo
+// en los primeros 30s y conserve "espacio" para los 2 min siguientes.
+const STAGE_TAU_S: Record<string, number> = {
+  analyzing: 60,
+  extracting: 30,
+};
+
+// Mensajes rotativos durante etapas largas: aunque la barra avance lento,
+// el texto va cambiando cada ROTATING_LABEL_INTERVAL_MS para dar sensación
+// de que el sistema está haciendo cosas distintas.
+const ROTATING_LABEL_INTERVAL_MS = 12_000;
+const ROTATING_LABELS: Record<string, string[]> = {
+  analyzing: [
+    "Analizando el contenido…",
+    "Identificando categorías profesionales…",
+    "Extrayendo tablas salariales…",
+    "Detectando complementos y pluses…",
+    "Mapeando tipos de establecimiento…",
+    "Procesando vigencias y revisiones…",
+    "Casi terminamos…",
+  ],
+  extracting: [
+    "Extrayendo los datos del convenio…",
+    "Validando estructura…",
+    "Guardando resultado…",
+  ],
+};
 
 type UploadState =
   | { status: "idle" }
@@ -83,13 +117,29 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const completionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const driftRef = useRef<NodeJS.Timeout | null>(null);
+  const labelRotationRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const fileHashRef = useRef<string | null>(null);
+  // Anclaje del drift logarítmico: cada vez que cambia el stage guardamos
+  // el momento de entrada y el progreso base, para calcular la curva
+  // asintótica progress(t) = base + (ceiling - base) * (1 - e^(-t/tau)).
+  const stageAnchorRef = useRef<{
+    stage: string;
+    startTime: number;
+    baseProgress: number;
+  } | null>(null);
 
   const stopDrift = useCallback(() => {
     if (driftRef.current) {
       clearInterval(driftRef.current);
       driftRef.current = null;
+    }
+  }, []);
+
+  const stopLabelRotation = useCallback(() => {
+    if (labelRotationRef.current) {
+      clearInterval(labelRotationRef.current);
+      labelRotationRef.current = null;
     }
   }, []);
 
@@ -100,11 +150,50 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
         if (prev.status !== "processing") return prev;
         const ceiling = STAGE_CEILING[prev.stage] ?? 95;
         if (prev.progress >= ceiling) return prev;
-        const next = Math.min(ceiling, prev.progress + DRIFT_STEP);
+
+        const tau = STAGE_TAU_S[prev.stage];
+        let next: number;
+
+        if (tau && stageAnchorRef.current?.stage === prev.stage) {
+          // Drift logarítmico: rápido al principio, frena cerca del techo.
+          // No usa prev.progress como input (evita errores acumulados); se
+          // recalcula a partir del tiempo transcurrido desde el anchor.
+          const elapsedS = (Date.now() - stageAnchorRef.current.startTime) /
+            1000;
+          const base = stageAnchorRef.current.baseProgress;
+          const target = base + (ceiling - base) * (1 - Math.exp(-elapsedS / tau));
+          next = Math.min(ceiling, Math.max(prev.progress, target));
+        } else {
+          // Drift lineal clásico para etapas cortas
+          next = Math.min(ceiling, prev.progress + DRIFT_STEP);
+        }
+
         return { ...prev, progress: next };
       });
     }, DRIFT_INTERVAL_MS);
   }, [stopDrift]);
+
+  // Rota el stageLabel cada ROTATING_LABEL_INTERVAL_MS para las etapas
+  // largas (analyzing/extracting). El índice avanza pero se "ancla" en el
+  // último mensaje cuando se agota la lista, en lugar de volver al principio.
+  const startLabelRotation = useCallback(
+    (stage: string) => {
+      stopLabelRotation();
+      const labels = ROTATING_LABELS[stage];
+      if (!labels || labels.length <= 1) return;
+      let idx = 0;
+      labelRotationRef.current = setInterval(() => {
+        idx = Math.min(idx + 1, labels.length - 1);
+        setState((prev) => {
+          if (prev.status !== "processing" || prev.stage !== stage) {
+            return prev;
+          }
+          return { ...prev, stageLabel: labels[idx] };
+        });
+      }, ROTATING_LABEL_INTERVAL_MS);
+    },
+    [stopLabelRotation],
+  );
 
   const reset = useCallback(() => {
     if (pollingRef.current) {
@@ -116,13 +205,15 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
       completionTimeoutRef.current = null;
     }
     stopDrift();
+    stopLabelRotation();
+    stageAnchorRef.current = null;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
     fileHashRef.current = null;
     setState({ status: "idle" });
-  }, [stopDrift]);
+  }, [stopDrift, stopLabelRotation]);
 
   useEffect(() => {
     return () => {
@@ -240,6 +331,8 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
             pollingRef.current = null;
           }
           stopDrift();
+          stopLabelRotation();
+          stageAnchorRef.current = null;
 
           setState(nextState);
 
@@ -255,6 +348,7 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
 
         const finalize = (partial: boolean) => {
           stopDrift();
+          stopLabelRotation();
           setState({
             status: "processing",
             fileName,
@@ -272,6 +366,74 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
             });
             completionTimeoutRef.current = null;
           }, 800);
+        };
+
+        // Aplica el evento de progreso real al estado. Reancla el drift
+        // logarítmico cuando cambia el stage y arranca/para la rotación
+        // de etiquetas según corresponda.
+        const applyProgressEvent = (
+          stage: string,
+          progressValue: number,
+          progressMessage: string | null,
+        ) => {
+          const realProgress = Math.min(95, progressValue);
+          const previousStage = stageAnchorRef.current?.stage;
+
+          if (previousStage !== stage) {
+            stageAnchorRef.current = {
+              stage,
+              startTime: Date.now(),
+              baseProgress: realProgress,
+            };
+            if (ROTATING_LABELS[stage]) {
+              startLabelRotation(stage);
+            } else {
+              stopLabelRotation();
+            }
+          }
+
+          const nextLabel = ROTATING_LABELS[stage]
+            ? ROTATING_LABELS[stage][0]
+            : (progressMessage || STAGE_LABELS[stage] || stage);
+
+          setState((prev) =>
+            prev.status === "processing"
+              ? {
+                  ...prev,
+                  progress: Math.max(prev.progress, realProgress),
+                  stage,
+                  stageLabel: nextLabel,
+                }
+              : prev,
+          );
+        };
+
+        // Procesa un estado terminal (activo / error / rechazado) llamando a
+        // finalize o stopPolling. Devuelve true si el polling debe terminar.
+        const handleTerminalState = (
+          status: Awaited<ReturnType<typeof fetchConvenioProcessingStatus>>,
+        ): boolean => {
+          if (status.estado === "activo") {
+            finalize(false);
+            return true;
+          }
+          if (status.estado === "activo_sin_perfil") {
+            finalize(true);
+            return true;
+          }
+          if (status.estado === "error") {
+            const message = status.errorMessage || "Error procesando convenio";
+            stopPolling({ status: "error", fileName, error: message }, message);
+            return true;
+          }
+          if (status.estado === "rechazado") {
+            const message =
+              status.errorMessage ||
+              "El documento ha sido rechazado por el validador automático.";
+            stopPolling({ status: "error", fileName, error: message }, message);
+            return true;
+          }
+          return false;
         };
 
         pollingRef.current = setInterval(async () => {
@@ -299,43 +461,16 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
             return;
           }
 
-          if (status.estado === "activo") {
-            finalize(false);
-            return;
-          }
-          if (status.estado === "activo_sin_perfil") {
-            finalize(true);
-            return;
-          }
-          if (status.estado === "error") {
-            const message = status.errorMessage || "Error procesando convenio";
-            stopPolling({ status: "error", fileName, error: message }, message);
-            return;
-          }
-          if (status.estado === "rechazado") {
-            const message =
-              status.errorMessage ||
-              "El documento ha sido rechazado por el validador automático.";
-            stopPolling({ status: "error", fileName, error: message }, message);
-            return;
-          }
+          if (handleTerminalState(status)) return;
 
           // Aún procesando: aplicar el progreso real si está disponible.
           // No retrocedemos el valor mostrado: si el drift ya pasó al hito real
           // mientras esperábamos el evento, mantenemos el valor derivado.
           if (status.progressStage !== null && status.progressValue !== null) {
-            const stage = status.progressStage;
-            const realProgress = Math.min(95, status.progressValue);
-            setState((prev) =>
-              prev.status === "processing"
-                ? {
-                    ...prev,
-                    progress: Math.max(prev.progress, realProgress),
-                    stage,
-                    stageLabel:
-                      status.progressMessage || STAGE_LABELS[stage] || stage,
-                  }
-                : prev,
+            applyProgressEvent(
+              status.progressStage,
+              status.progressValue,
+              status.progressMessage,
             );
           }
         }, pollingIntervalMs);
@@ -354,6 +489,8 @@ export function useConvenioUpload(options: UseConvenioUploadOptions = {}) {
       queryClient,
       startDrift,
       stopDrift,
+      startLabelRotation,
+      stopLabelRotation,
       convenioUpload,
     ],
   );

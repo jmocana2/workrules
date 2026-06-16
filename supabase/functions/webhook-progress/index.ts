@@ -14,6 +14,8 @@ const VALID_STAGES = new Set([
   "saving_markdown",
   "chunking",
   "embedding",
+  "analyzing",
+  "extracting",
   "profile",
   "completed",
   "failed",
