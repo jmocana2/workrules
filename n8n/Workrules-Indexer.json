@@ -10,11 +10,8 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [
-        36800,
-        6592
-      ],
-      "id": "965938b0-b288-42de-b1c5-144e977c54f8",
+      "position": [51552, 9728],
+      "id": "012e8034-ae87-48bf-9e00-fdcad9109e8c",
       "name": "Webhook",
       "webhookId": "01c36b3d-fb3a-4df1-8577-16f5b82c6e6f"
     },
@@ -24,11 +21,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        37168,
-        6592
-      ],
-      "id": "2cc1f977-58d0-41f4-8eba-a37f217cdd5c",
+      "position": [51920, 9728],
+      "id": "6a17ea5d-9d82-4182-901f-7b0acdfb6867",
       "name": "Check Duplicate Convenio"
     },
     {
@@ -37,11 +31,8 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        37440,
-        6592
-      ],
-      "id": "b22fcd38-6045-4de6-b1c9-d0770724f78a",
+      "position": [52192, 9728],
+      "id": "a1692ac4-3bfd-4505-886b-de63c8d076f6",
       "name": "Convenio Exists?"
     },
     {
@@ -50,11 +41,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        37488,
-        7008
-      ],
-      "id": "3093407b-346a-4c4b-9319-fba544cc1b5a",
+      "position": [52240, 10144],
+      "id": "dc08f972-5648-4d8f-ae9c-40a4926f7070",
       "name": "Respond Duplicate"
     },
     {
@@ -70,11 +58,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        38000,
-        6576
-      ],
-      "id": "d61820df-d78c-4565-8a9e-baac0e8ae6b2",
+      "position": [52752, 9712],
+      "id": "de1e643f-fc81-47e1-b922-5cc01c11a2a2",
       "name": "HTTP Supabase storage PDF",
       "credentials": {
         "supabaseApi": {
@@ -97,11 +82,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        37744,
-        6576
-      ],
-      "id": "e5b49e2a-5634-4762-95d8-0a720f5d9d7f",
+      "position": [52496, 9712],
+      "id": "4bcb0d73-242a-4c12-bf55-e7de9a0dd08f",
       "name": "HTTP PDF Request"
     },
     {
@@ -110,11 +92,8 @@
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [
-        38208,
-        6864
-      ],
-      "id": "a19b2219-f4c4-44b0-93f2-9359eed5e74c",
+      "position": [52960, 10000],
+      "id": "7fc1e0f7-7e71-4b27-b95b-e9ecb915cdb8",
       "name": "Wait",
       "webhookId": "e7907ffd-20a4-42e8-9fdf-ec94c7eeb960"
     },
@@ -147,11 +126,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        37968,
-        6864
-      ],
-      "id": "a05e9352-0d8a-4687-be53-bf505c1973f0",
+      "position": [52720, 10000],
+      "id": "7763929a-7c95-4a7a-b5fb-df113ec96e42",
       "name": "HTTP LlamaParse PDF",
       "credentials": {
         "httpHeaderAuth": {
@@ -175,11 +151,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        38448,
-        6864
-      ],
-      "id": "8db42594-b03c-4e90-a1f4-3b969d8138e5",
+      "position": [53200, 10000],
+      "id": "addfe29c-fd76-4234-9844-936209ee8bf1",
       "name": "Check LlamaParse Status",
       "credentials": {
         "httpHeaderAuth": {
@@ -264,11 +237,8 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [
-        38720,
-        6848
-      ],
-      "id": "f92547cf-efd2-4026-819c-6221b8a86547",
+      "position": [53472, 9984],
+      "id": "794492e6-b4a3-4d7e-aff1-dbfcbbede8ee",
       "name": "Is Processing Complete?"
     },
     {
@@ -286,11 +256,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        38992,
-        6832
-      ],
-      "id": "f29dd7ec-b4f0-41e5-9b89-3feeb1244c31",
+      "position": [53744, 9968],
+      "id": "5b433f60-3e6a-43d2-ac5a-5851ca250e1b",
       "name": "Get Markdown Result",
       "credentials": {
         "httpHeaderAuth": {
@@ -305,11 +272,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39248,
-        6832
-      ],
-      "id": "0b369aac-84dc-4de6-b72f-fcec8a5c1eca",
+      "position": [54000, 9968],
+      "id": "cb3bc5a9-db74-4e92-be1e-91b9b5195770",
       "name": "Clear Retry Counter"
     },
     {
@@ -318,11 +282,8 @@
       },
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [
-        38976,
-        7120
-      ],
-      "id": "0e622c37-fbaf-421d-8c7c-18da837fdf31",
+      "position": [53728, 10256],
+      "id": "0df36e79-5d78-4c49-ab93-09e43c35e364",
       "name": "Stop and Error"
     },
     {
@@ -331,11 +292,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        38832,
-        6592
-      ],
-      "id": "42d33e1c-2bdb-484a-9af8-195be6fa2dc7",
+      "position": [53584, 9728],
+      "id": "c34aedfc-165a-451b-a222-2f4a8e7057f0",
       "name": "Check Retry Limit"
     },
     {
@@ -344,11 +302,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39168,
-        7584
-      ],
-      "id": "a7c1a5b5-6156-4126-9d79-d00186f66f1b",
+      "position": [53920, 10720],
+      "id": "2fe8e34b-dbce-44c2-a279-b9eb60f0602c",
       "name": "Chunk Markdown"
     },
     {
@@ -357,11 +312,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39472,
-        7584
-      ],
-      "id": "d95dafe1-3540-49fb-b267-e2b8e713b907",
+      "position": [54224, 10720],
+      "id": "4320874f-1bc1-4fc7-a268-259d40c925a8",
       "name": "Prepare Chunks for Insert"
     },
     {
@@ -370,11 +322,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39792,
-        7584
-      ],
-      "id": "289cde0b-a2ad-4485-8cc6-d645a77cd0a3",
+      "position": [54544, 10720],
+      "id": "f276cfba-4656-44d6-8e29-85cb7bad1ae5",
       "name": "Prepare Batch for OpenAI",
       "notes": "NUEVO I1.8: Prepara payload para OpenAI Embeddings API"
     },
@@ -406,11 +355,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        40096,
-        7584
-      ],
-      "id": "1f1f9146-2588-41b8-be90-11b6c2ec3e32",
+      "position": [54848, 10720],
+      "id": "ff442f6d-8e34-41c1-91bf-4d38bd432fde",
       "name": "HTTP Request OpenAI Embeddings",
       "credentials": {
         "openAiApi": {
@@ -426,11 +372,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        40432,
-        7584
-      ],
-      "id": "fecb8637-b7eb-4eb6-b368-2448b8d470e3",
+      "position": [55184, 10720],
+      "id": "04f2f086-6875-4275-98db-e305e3850be9",
       "name": "Merge Embeddings with Chunks",
       "notes": "NUEVO I1.8: Combina embeddings con chunks y valida dimensiones"
     },
@@ -460,11 +403,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        40720,
-        7584
-      ],
-      "id": "51063c8d-d67e-4446-958a-d4786d47d442",
+      "position": [55472, 10720],
+      "id": "b007e279-5012-4f7b-8db0-6031ff242ea2",
       "name": "Bulk Insert Chunks",
       "credentials": {
         "supabaseApi": {
@@ -479,11 +419,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        41280,
-        7584
-      ],
-      "id": "f8662d33-1f16-4ca3-b9d3-d5286ea0654e",
+      "position": [56032, 10720],
+      "id": "41e53ae1-a10e-4ec2-8961-f6396f3020ec",
       "name": "Chunks Branch Complete",
       "notes": "Pasa datos al merge para que ambas ramas completen"
     },
@@ -493,11 +430,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39440,
-        7248
-      ],
-      "id": "73a40436-9692-403c-886f-02f1b4dd965e",
+      "position": [54192, 10384],
+      "id": "9330bf68-1903-40ac-b149-32f629c7806c",
       "name": "Extract and clean md1"
     },
     {
@@ -506,11 +440,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        37184,
-        7600
-      ],
-      "id": "13e2a9c7-aada-43b9-87a2-eed1317849eb",
+      "position": [51936, 10736],
+      "id": "869eb426-815b-4b67-8261-e915f07a81b8",
       "name": "Heuristic Score",
       "notes": "Capa 3: keyword scoring rápido antes de gastar Claude"
     },
@@ -520,11 +451,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        37504,
-        7600
-      ],
-      "id": "fb427f6c-92e9-477c-aeae-130afe472517",
+      "position": [52256, 10736],
+      "id": "0a9e80ea-0179-45aa-8c3f-5cb723ee966f",
       "name": "Prepare Classifier Request",
       "notes": "Capa 2: prepara payload para Claude Haiku"
     },
@@ -550,11 +478,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        37760,
-        7600
-      ],
-      "id": "ddb9a023-a5d6-44d1-be2e-d8620fb526ac",
+      "position": [52512, 10736],
+      "id": "91904d8a-db02-44a3-8354-6c72fbad5ed0",
       "name": "HTTP Claude Classifier",
       "credentials": {
         "anthropicApi": {
@@ -571,11 +496,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        38064,
-        7600
-      ],
-      "id": "4f7bc869-66c7-448d-afd7-36012b85f2e8",
+      "position": [52816, 10736],
+      "id": "119fc5b7-36d4-4ab5-9f30-9c712056b0bc",
       "name": "Parse Classification",
       "notes": "Capa 2: decide aceptar/rechazar según categoría, confianza y visibilidad"
     },
@@ -605,11 +527,8 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        38368,
-        7600
-      ],
-      "id": "4864547e-bc46-4d91-906e-21f819a3e939",
+      "position": [53120, 10736],
+      "id": "490796c9-a815-4181-afa7-90a7d6fb1365",
       "name": "Is Document Acceptable?"
     },
     {
@@ -638,11 +557,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        38336,
-        7968
-      ],
-      "id": "2114aa98-4b2d-44e7-b70c-898b8ca258fb",
+      "position": [53088, 11104],
+      "id": "c3426b69-1ae1-4008-95bd-a76385780b5e",
       "name": "Mark Rechazado",
       "credentials": {
         "supabaseApi": {
@@ -678,11 +594,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        38688,
-        7584
-      ],
-      "id": "d3c99990-b0bc-41df-844e-bb48502b6e0e",
+      "position": [53440, 10720],
+      "id": "c9164782-256d-48c7-ac0d-c2a5975652b0",
       "name": "Save md in supabase1",
       "retryOnFail": false,
       "notesInFlow": false,
@@ -699,11 +612,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39008,
-        8288
-      ],
-      "id": "c34a9f84-6f72-4d76-a1b2-68599945eb11",
+      "position": [53760, 11424],
+      "id": "a1c3584a-c2be-4e59-b06a-42c85566bdf4",
       "name": "Prepare Claude Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara el payload para Claude API"
@@ -730,11 +640,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        39248,
-        8288
-      ],
-      "id": "2c482591-01ef-4587-b3af-b4c8fd5043ce",
+      "position": [54192, 11424],
+      "id": "2f8fe105-044e-49c8-8f00-10714d2a3159",
       "name": "HTTP Claude API",
       "credentials": {
         "anthropicApi": {
@@ -751,11 +658,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39536,
-        8288
-      ],
-      "id": "16cdbcf6-a6e2-4fc7-a125-32920af382e5",
+      "position": [54432, 11424],
+      "id": "05054941-e48d-4c6e-b2f8-e381d5a727f8",
       "name": "Extract Perfil Claude",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Claude API"
@@ -766,11 +670,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39872,
-        8288
-      ],
-      "id": "ea52fff2-a8f9-43d8-ad26-b03805c709f6",
+      "position": [54848, 11424],
+      "id": "eb5f4ee1-730a-4244-a4cf-db46fb4509e7",
       "name": "Validate Perfil JSON",
       "notes": "NUEVO I1.9: Parsea, valida y normaliza el JSON del perfil"
     },
@@ -780,11 +681,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        40192,
-        8288
-      ],
-      "id": "8779c4e0-fa9c-4ecd-80fd-9e894818fb56",
+      "position": [55088, 11424],
+      "id": "f8bf2fd7-9342-4c5f-8207-088a1f6535f5",
       "name": "Prepare Supabase Request",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Prepara datos para upsert en Supabase"
@@ -799,11 +697,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        40512,
-        8288
-      ],
-      "id": "1edfd593-b941-4f3c-9e65-799049d46f40",
+      "position": [55344, 11424],
+      "id": "9eab496c-632d-4b0c-9892-a21a8dba7539",
       "name": "HTTP Supabase Delete Perfil",
       "credentials": {
         "supabaseApi": {
@@ -836,11 +731,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        40752,
-        8288
-      ],
-      "id": "42fbd7b2-517d-4e50-8a98-a6f652092790",
+      "position": [55584, 11424],
+      "id": "acbcdba3-9d53-42b0-be2b-306a7f164afe",
       "name": "HTTP Supabase Insert Perfil",
       "credentials": {
         "supabaseApi": {
@@ -857,11 +749,8 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        40992,
-        8288
-      ],
-      "id": "2685fb94-2d95-4876-bf6c-9c666c6aee19",
+      "position": [55824, 11424],
+      "id": "49b54964-6386-4600-b09c-9b742b3442d6",
       "name": "Upsert Perfil Supabase",
       "continueOnFail": true,
       "notes": "NUEVO I1.9: Procesa respuesta de Supabase"
@@ -874,11 +763,8 @@
       },
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.1,
-      "position": [
-        41456,
-        7840
-      ],
-      "id": "c676be2d-435f-44c2-b1ed-496079077e0c",
+      "position": [56512, 11040],
+      "id": "d29ca31b-216f-457b-a9ae-889d75138543",
       "name": "Wait Both Branches",
       "notes": "NUEVO I1.9: Espera a que ambas ramas (chunks + perfil) terminen antes de responder"
     },
@@ -922,11 +808,8 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        42048,
-        7840
-      ],
-      "id": "4e4fd626-5861-4c91-bedf-a245f0bcaff3",
+      "position": [57104, 11040],
+      "id": "e0a156df-ff29-4b39-9f4d-e3950403fed7",
       "name": "Update Convenio Status",
       "credentials": {
         "supabaseApi": {
@@ -960,11 +843,8 @@
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
-      "position": [
-        42336,
-        7840
-      ],
-      "id": "c871ba27-189e-441f-8b9f-b380d72b3e47",
+      "position": [57392, 11040],
+      "id": "366173ce-cadb-4cde-a9a2-8e58e76245dd",
       "name": "Set Codigo Regcon",
       "credentials": {
         "supabaseApi": {
@@ -999,11 +879,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        39504,
-        6832
-      ],
-      "id": "3130cbcf-b6d6-4642-879e-549bc280f3da",
+      "position": [54256, 9968],
+      "id": "a6a79046-8c1e-4419-aec0-f2ce2eb4e0ef",
       "name": "Notify Progress Parsing",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: notifica al frontend que LlamaParse terminó (20%)"
@@ -1032,11 +909,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        38896,
-        7584
-      ],
-      "id": "3716dbee-7adf-4006-a57d-e68729ac4589",
+      "position": [53648, 10720],
+      "id": "3af35635-0ce1-49fe-8fa9-4496d87e7601",
       "name": "Notify Progress Markdown",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: markdown guardado (40%)"
@@ -1065,11 +939,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        41024,
-        7584
-      ],
-      "id": "48c0177c-c799-4cc5-9e15-8e404d3c1f11",
+      "position": [55776, 10720],
+      "id": "68b3a7be-cb01-41e9-a5b6-76e4c000a7fd",
       "name": "Notify Progress Chunks",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: chunks insertados (60%)"
@@ -1098,11 +969,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        41248,
-        8288
-      ],
-      "id": "844b3009-47ff-4a93-ae19-75cfdea7c35e",
+      "position": [56080, 11424],
+      "id": "bd64710c-8eaf-429e-8e4b-46c1a6d6be6b",
       "name": "Notify Progress Profile",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: perfil Claude procesado (80%)"
@@ -1131,11 +999,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        42624,
-        7840
-      ],
-      "id": "4be7a701-8d85-473f-a8bd-a11ed0c81717",
+      "position": [57680, 11040],
+      "id": "ef1af1f4-4926-438a-820d-6b2a5fc46ea4",
       "name": "Notify Progress Completed",
       "continueOnFail": true,
       "notes": "Doc TODO progreso: convenio listo (100%)"
@@ -1164,11 +1029,8 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
-      "position": [
-        38688,
-        7968
-      ],
-      "id": "c6cb9c87-38a6-4c30-b268-4000284b756c",
+      "position": [53440, 11104],
+      "id": "ad981923-e90c-4a0a-8345-5dd16a7af25e",
       "name": "Notify Progress Rejected",
       "continueOnFail": true,
       "notes": "Bug fix: actualiza convenio_processing_status a 'failed' cuando el clasificador rechaza el PDF (antes quedaba congelado en parsing/20%)"
@@ -1179,43 +1041,30 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        41744,
-        7840
-      ],
-      "id": "8b1eec63-b7f3-4547-afca-cbbcfec15bec",
+      "position": [56800, 11040],
+      "id": "a1db4f4a-897c-44df-8456-f46a6018e9e5",
       "name": "Determine Final Estado",
       "notes": "Doc 03 / Perfil degradado: decide activo vs activo_sin_perfil"
     },
     {
-      "id": "olBdgZujOQlvRJys",
+      "parameters": {
+        "jsCode": "// Notify progress (stage=analyzing, 70%) sin romper el dataflow.\n// IMPORTANTE: este nodo reemite $input intacto para que el siguiente nodo\n// reciba los datos del nodo previo a este (no la respuesta del webhook).\n\nconst url = $env.SUPABASE_URL + '/functions/v1/webhook-progress';\nconst convenioId = $('Webhook').first().json.body.convenio_id;\nconst body = {\n  convenio_id: convenioId,\n  stage: 'analyzing',\n  progress: 70,\n  message: 'Analizando el contenido…',\n};\n\ntry {\n  const res = await this.helpers.httpRequest({\n    method: 'POST',\n    url,\n    headers: {\n      'Content-Type': 'application/json',\n      'X-Webhook-Secret': 'wp_secret_a7f3e9b2c8d4e5f6',\n    },\n    body,\n    json: true,\n  });\n  console.log('[Notify analyzing] ok:', JSON.stringify(res));\n} catch (err) {\n  // No interrumpir el workflow si el webhook falla\n  console.error('[Notify analyzing] error:', err.message || String(err));\n}\n\n// Reemitir el input INTACTO\nreturn $input.all();\n"
+      },
+      "id": "b73b8296-4d2e-4591-8a8b-b825e7bf8814",
       "name": "Notify Progress Analyzing",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39140,
-        8288
-      ],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "language": "javaScript",
-        "jsCode": "// Notify progress (stage=analyzing, 70%) sin romper el dataflow.\n// IMPORTANTE: este nodo reemite $input intacto para que el siguiente nodo\n// reciba los datos del nodo previo a este (no la respuesta del webhook).\n\nconst url = $env.SUPABASE_URL + '/functions/v1/webhook-progress';\nconst convenioId = $('Webhook').first().json.body.convenio_id;\nconst body = {\n  convenio_id: convenioId,\n  stage: 'analyzing',\n  progress: 70,\n  message: 'Analizando el contenido…',\n};\n\ntry {\n  const res = await this.helpers.httpRequest({\n    method: 'POST',\n    url,\n    headers: {\n      'Content-Type': 'application/json',\n      'X-Webhook-Secret': 'wp_secret_a7f3e9b2c8d4e5f6',\n    },\n    body,\n    json: true,\n  });\n  console.log('[Notify analyzing] ok:', JSON.stringify(res));\n} catch (err) {\n  // No interrumpir el workflow si el webhook falla\n  console.error('[Notify analyzing] error:', err.message || String(err));\n}\n\n// Reemitir el input INTACTO\nreturn $input.all();\n"
-      }
+      "position": [53968, 11424]
     },
     {
-      "id": "WZG2BO2kO6lsqqbs",
+      "parameters": {
+        "jsCode": "// Notify progress (stage=extracting, 85%) sin romper el dataflow.\n// IMPORTANTE: este nodo reemite $input intacto para que el siguiente nodo\n// reciba los datos del nodo previo a este (no la respuesta del webhook).\n\nconst url = $env.SUPABASE_URL + '/functions/v1/webhook-progress';\nconst convenioId = $('Webhook').first().json.body.convenio_id;\nconst body = {\n  convenio_id: convenioId,\n  stage: 'extracting',\n  progress: 85,\n  message: 'Extrayendo los datos del convenio…',\n};\n\ntry {\n  const res = await this.helpers.httpRequest({\n    method: 'POST',\n    url,\n    headers: {\n      'Content-Type': 'application/json',\n      'X-Webhook-Secret': 'wp_secret_a7f3e9b2c8d4e5f6',\n    },\n    body,\n    json: true,\n  });\n  console.log('[Notify extracting] ok:', JSON.stringify(res));\n} catch (err) {\n  // No interrumpir el workflow si el webhook falla\n  console.error('[Notify extracting] error:', err.message || String(err));\n}\n\n// Reemitir el input INTACTO\nreturn $input.all();\n"
+      },
+      "id": "e7ab98b4-44ed-466a-bb85-71193704a2de",
       "name": "Notify Progress Extracting",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        39700,
-        8288
-      ],
-      "parameters": {
-        "mode": "runOnceForAllItems",
-        "language": "javaScript",
-        "jsCode": "// Notify progress (stage=extracting, 85%) sin romper el dataflow.\n// IMPORTANTE: este nodo reemite $input intacto para que el siguiente nodo\n// reciba los datos del nodo previo a este (no la respuesta del webhook).\n\nconst url = $env.SUPABASE_URL + '/functions/v1/webhook-progress';\nconst convenioId = $('Webhook').first().json.body.convenio_id;\nconst body = {\n  convenio_id: convenioId,\n  stage: 'extracting',\n  progress: 85,\n  message: 'Extrayendo los datos del convenio…',\n};\n\ntry {\n  const res = await this.helpers.httpRequest({\n    method: 'POST',\n    url,\n    headers: {\n      'Content-Type': 'application/json',\n      'X-Webhook-Secret': 'wp_secret_a7f3e9b2c8d4e5f6',\n    },\n    body,\n    json: true,\n  });\n  console.log('[Notify extracting] ok:', JSON.stringify(res));\n} catch (err) {\n  // No interrumpir el workflow si el webhook falla\n  console.error('[Notify extracting] error:', err.message || String(err));\n}\n\n// Reemitir el input INTACTO\nreturn $input.all();\n"
-      }
+      "position": [54640, 11424]
     }
   ],
   "pinData": {},
@@ -1748,7 +1597,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "4dda6854-de68-46e2-bee6-4ce248412a17",
+  "versionId": "97508645-8c2e-4273-9ae8-26061ee20326",
   "meta": {
     "instanceId": "f72a9e83ddf781aec5a22208462a7d8c35ce6440f1e460ba7b8702ce4b52a0a2"
   },
