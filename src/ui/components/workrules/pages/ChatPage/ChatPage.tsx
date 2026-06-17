@@ -101,11 +101,28 @@ function MessageCitations({
     if (convenioId) onOpenPdf(convenioId, { page: pagina ?? undefined });
   };
 
+  const openPdfButton = convenioId ? (
+    <button
+      type="button"
+      onClick={() => handleOpen(null)}
+      aria-label="Abrir PDF original en una pestaña nueva"
+      className="mt-1 flex items-center gap-2 text-primary hover:underline"
+    >
+      <ExternalLinkIcon className="h-4 w-4 shrink-0" />
+      <span className="font-medium">Abrir PDF original</span>
+    </button>
+  ) : null;
+
+  if (hidePerCitationLinks) {
+    if (!openPdfButton) return null;
+    return <div className="not-prose mb-4 text-primary text-xs">{openPdfButton}</div>;
+  }
+
   return (
     <Sources>
       <SourcesTrigger count={uniqueCitations.length} />
       <SourcesContent>
-        {!hidePerCitationLinks && uniqueCitations.map((citation, idx) =>
+        {uniqueCitations.map((citation, idx) =>
           convenioId ? (
             <button
               key={idx}
@@ -133,18 +150,8 @@ function MessageCitations({
             />
           ),
         )}
-        {convenioId && (
-          <button
-            type="button"
-            onClick={() => handleOpen(null)}
-            aria-label="Abrir PDF original en una pestaña nueva"
-            className="mt-1 flex items-center gap-2 text-primary hover:underline"
-          >
-            <ExternalLinkIcon className="h-4 w-4 shrink-0" />
-            <span className="font-medium">Abrir PDF original</span>
-          </button>
-        )}
       </SourcesContent>
+      {openPdfButton}
     </Sources>
   );
 }
