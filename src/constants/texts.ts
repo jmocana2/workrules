@@ -28,7 +28,7 @@ export const CHAT_TEXTS = {
         "Elige un convenio colectivo del selector superior para comenzar tu consulta.",
     },
     withConvenio: {
-      title: "Consulta sobre {convenio}",
+      title: "Consulta sobre el convenio: {convenio}",
       description:
         "Haz una pregunta sobre el convenio o usa las variables del panel derecho para consultas específicas.",
     },

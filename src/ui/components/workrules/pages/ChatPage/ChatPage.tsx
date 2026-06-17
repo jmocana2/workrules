@@ -269,10 +269,14 @@ export function ChatPage({
   // Obtener texto del estado vacío
   const getEmptyStateText = () => {
     if (selectedConvenio) {
+      const convenioLabel =
+        selectedConvenio.nombre_corto ||
+        selectedConvenio.nombre_oficial ||
+        selectedConvenio.nombre;
       return {
         title: CHAT_TEXTS.empty.withConvenio.title.replace(
           '{convenio}',
-          selectedConvenio.nombre
+          convenioLabel
         ),
         description: CHAT_TEXTS.empty.withConvenio.description,
       };
