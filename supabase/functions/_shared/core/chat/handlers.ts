@@ -496,9 +496,11 @@ export function buildStatusStreamResponse(
       }\n\n`;
       controller.enqueue(encoder.encode(statusEvent));
 
-      // Emit the human-readable message as text so it also appears in the
-      // assistant bubble (consistent with non-stream behaviour).
-      if (assistantMessage) {
+      // Para `incomplete` el DataRequestCard ya muestra el mensaje de forma
+      // estructurada; emitir además el texto duplicaría el contenido en la
+      // burbuja del asistente. Para `invalid`/`conflicting` sí se emite porque
+      // esos estados no tienen una tarjeta equivalente que muestre el mensaje.
+      if (assistantMessage && state !== "incomplete") {
         const textEvent = `data: ${
           JSON.stringify({ type: "text", content: assistantMessage })
         }\n\n`;
