@@ -274,6 +274,11 @@ export async function calculateSalary(
     // ========================================
     const classification = classifyDataState(allVariables, perfilContexto);
 
+    // Construir citaciones desde los chunks ya recuperados.
+    // Se incluyen en estados no-completos para que el front muestre Sources/PDF
+    // aunque la respuesta sea una solicitud de datos o un aviso de error.
+    const citations = buildCitations(chunks, convenio.url_pdf ?? null);
+
     // Manejar estados no completos
     if (classification.state === "incomplete") {
       return {
@@ -281,6 +286,7 @@ export async function calculateSalary(
         message: buildIncompleteMessage(classification, convenio.nombre),
         missingVariables: classification.missingVariables,
         suggestions: classification.suggestions,
+        citations,
       };
     }
 
@@ -289,6 +295,7 @@ export async function calculateSalary(
         type: "invalid_data",
         message: buildInvalidMessage(classification),
         invalidVariables: classification.invalidVariables,
+        citations,
       };
     }
 
@@ -298,6 +305,7 @@ export async function calculateSalary(
         message: buildConflictMessage(classification),
         invalidVariables: [],
         conflictingVariables: classification.conflictingVariables,
+        citations,
       };
     }
 
@@ -333,7 +341,7 @@ export async function calculateSalary(
       return {
         type: "stream",
         stream,
-        citations: buildCitations(chunks, convenio.url_pdf ?? null),
+        citations,
         cleanup: async (fullResponse: string) => {
           // Fire and forget para cache
           deps
@@ -429,7 +437,7 @@ export async function calculateSalary(
         latencyMs: Date.now() - startTime,
         variablesUsadas: allVariables,
       },
-      citations: buildCitations(chunks, convenio.url_pdf ?? null),
+      citations,
       desglose: {
         // El desglose real viene en el response de Claude
         conceptos: [],

@@ -347,6 +347,7 @@ export function mapResultToHttpResponse(
           respuesta: result.message,
           missingVariables: result.missingVariables,
           suggestions: result.suggestions,
+          fuentes: result.citations ?? [],
           metadata: {
             classification: "incomplete",
           },
@@ -362,6 +363,7 @@ export function mapResultToHttpResponse(
           error: result.message,
           invalidVariables: result.invalidVariables,
           conflictingVariables: result.conflictingVariables,
+          fuentes: result.citations ?? [],
           metadata: {
             classification: "invalid",
           },
@@ -456,6 +458,7 @@ export function buildStatusStreamResponse(
   let state: "incomplete" | "invalid" | "conflicting" | null = null;
   let payload: Record<string, unknown> | null = null;
   let assistantMessage = "";
+  let citations: ChatCitation[] = [];
 
   if (result.type === "incomplete_data") {
     state = "incomplete";
@@ -464,6 +467,7 @@ export function buildStatusStreamResponse(
       suggestions: result.suggestions,
     };
     assistantMessage = result.message;
+    citations = result.citations ?? [];
   } else if (result.type === "invalid_data") {
     if (result.conflictingVariables && result.conflictingVariables.length > 0) {
       state = "conflicting";
@@ -479,6 +483,7 @@ export function buildStatusStreamResponse(
       };
     }
     assistantMessage = result.message;
+    citations = result.citations ?? [];
   } else {
     return null;
   }
@@ -498,6 +503,21 @@ export function buildStatusStreamResponse(
           JSON.stringify({ type: "text", content: assistantMessage })
         }\n\n`;
         controller.enqueue(encoder.encode(textEvent));
+      }
+
+      // Emit citation events so the front renders Sources/PDF link even when
+      // the use-case returned incomplete/invalid/conflicting state.
+      for (const citation of citations) {
+        const citationEvent = `data: ${
+          JSON.stringify({
+            type: "citation",
+            articulo: citation.articulo,
+            seccion: citation.seccion,
+            url_pdf: citation.url_pdf,
+            pagina: citation.pagina,
+          })
+        }\n\n`;
+        controller.enqueue(encoder.encode(citationEvent));
       }
 
       const doneEvent = `data: ${

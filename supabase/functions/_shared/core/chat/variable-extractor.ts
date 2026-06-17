@@ -417,16 +417,29 @@ const SALARY_CONTINUATION_PATTERNS: RegExp[] = [
 ];
 
 /** Patrones regex que indican consulta salarial */
+// Nota: los mensajes ya vienen normalizados (lowercase + sin acentos) cuando
+// llegan a estos patrones, asi que no hace falta contemplar tildes aqui.
 const SALARY_PATTERNS: RegExp[] = [
-  /cuant[oa]\s{1,3}(?:cobr|gan|pag)/i,
+  // "cuanto cobra/gana/paga/cobraria/ganaria/pagaria..."
+  // Permitimos hasta 3 palabras intermedias para cubrir
+  // "cuanto cobraria yo", "cuanto me pagan", "cuanto seria mi..."
+  /cuant[oa]\s{1,3}(?:(?:me|te|le|se|yo|tu|el|ella|usted)\s{1,3}){0,2}(?:cobr|gan|pag)/i,
+  // "cuanto seria/sera/es mi salario/sueldo/nomina"
+  /cuant[oa]\s{1,3}(?:ser[ia]a?|es)\s{1,3}(?:mi|el|la|tu)?\s{0,3}(?:salario|sueldo|nomina|retribuc|paga)/i,
+  // "que cobraria/ganaria/pagaria" (sin "cuanto")
+  /que\s{1,3}(?:(?:me|te|le|yo|tu)\s{1,3}){0,2}(?:cobr|gan|pag)(?:aria|eria|are|ere|aran|eran)/i,
+  // "cuanto me corresponde / toca"
+  /cuant[oa]\s{1,3}(?:me|te|le)\s{1,3}(?:corresponde|toca|tocaria|correspondería|correspond)/i,
   /calcula(?:r|me)?/i,
   /horas?\s{1,3}extra/i,
-  /retribuci[oó]n/i,
+  /retribucion/i,
   /precio\s{1,3}hora/i,
   /valor\s{1,3}hora/i,
   /coste\s{1,3}laboral/i,
   /plus(?:es)?/i,
   /complemento(?:s)?/i,
+  // "mi/la nomina/salario/sueldo" como objeto de la pregunta
+  /(?:mi|la|el)\s{1,3}(?:nomina|salario|sueldo|paga\s{1,3}mensual)/i,
   // Patrones para rangos/tablas salariales
   /rangos?\s{0,3}salarial/i,
   /tabla.{0,20}(?:salario|sueldo|rangos?|retribuc)/i,
@@ -463,22 +476,34 @@ function matchesSalaryPatterns(message: string): boolean {
  * isSalaryQuery("que dice el articulo 14?"); // false
  * isSalaryQuery("que dice el convenio sobre horas extraordinarias?"); // false
  */
+/**
+ * Normaliza un mensaje para clasificacion: lowercase + sin acentos.
+ * Necesario porque los patrones salariales se escriben sin tildes
+ * (ej: `cuant[oa]` no matchea "cuánto" con tilde).
+ */
+function normalizeForClassification(message: string): string {
+  return message
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
 export function isSalaryQuery(message: string): boolean {
-  const lowerMessage = message.toLowerCase();
+  const normalized = normalizeForClassification(message);
 
   // Continuacion de flujo de calculo (respuesta a DataRequestCard, aclaracion).
   // Comprobar ANTES que isInformativeQuestion, porque "Mis datos son: ..."
   // no debe interpretarse como pregunta informativa.
   for (const pattern of SALARY_CONTINUATION_PATTERNS) {
-    if (pattern.test(message)) return true;
+    if (pattern.test(normalized)) return true;
   }
 
   // Si es una pregunta informativa, no es consulta de salario
-  if (isInformativeQuestion(lowerMessage)) {
+  if (isInformativeQuestion(normalized)) {
     return false;
   }
 
-  return matchesSalaryPatterns(lowerMessage);
+  return matchesSalaryPatterns(normalized);
 }
 
 /**
@@ -489,7 +514,7 @@ export function isSalaryQuery(message: string): boolean {
  * @returns true si es solicitud de mostrar rangos u opciones
  */
 export function isShowRangesRequest(message: string): boolean {
-  const lowerMessage = message.toLowerCase();
+  const lowerMessage = normalizeForClassification(message);
 
   // Patrones especificos para "ver todos los rangos" o "mostrar opciones"
   const patterns = [

@@ -172,6 +172,8 @@ export interface CalculateSalaryIncomplete {
   message: string;
   missingVariables: string[];
   suggestions: Record<string, string[]>;
+  /** Citaciones de chunks recuperados (para mostrar Sources aunque falte info) */
+  citations?: ChatCitation[];
 }
 
 /**
@@ -182,4 +184,6 @@ export interface CalculateSalaryInvalid {
   message: string;
   invalidVariables: InvalidVariable[];
   conflictingVariables?: ConflictingVariables[];
+  /** Citaciones de chunks recuperados (para mostrar Sources aunque haya error) */
+  citations?: ChatCitation[];
 }
