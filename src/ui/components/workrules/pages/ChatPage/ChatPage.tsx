@@ -106,7 +106,7 @@ function MessageCitations({
       type="button"
       onClick={() => handleOpen(null)}
       aria-label="Abrir PDF original en una pestaña nueva"
-      className="mt-1 flex items-center gap-2 text-primary hover:underline"
+      className="mt-3 flex items-center gap-2 text-primary hover:underline"
     >
       <ExternalLinkIcon className="h-4 w-4 shrink-0" />
       <span className="font-medium">Abrir PDF original</span>
