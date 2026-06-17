@@ -242,7 +242,7 @@ export function ConvenioSelector({
                     value={convenio.id}
                     onSelect={() => handleSelect(convenio)}
                     data-checked={selectedConvenio?.id === convenio.id}
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex items-center gap-2 cursor-pointer mb-[2px] hover:!bg-[var(--colorsAccentAccent4)]"
                   >
                    
                     <div className="flex flex-1 items-center justify-between gap-2 max-w-full">
