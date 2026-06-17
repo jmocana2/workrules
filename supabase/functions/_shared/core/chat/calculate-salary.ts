@@ -207,7 +207,16 @@ export async function calculateSalary(
     // 2. Expandir consulta con sinónimos y generar embedding
     // ========================================
     const expandedQuery = expandQuery(input.pregunta);
-    const embedding = await deps.embedQuestion(expandedQuery);
+    // En cálculo salarial las variables (tipo establecimiento, categoría,
+    // turno, etc.) determinan la respuesta. Si no las metemos en el texto
+    // embebido, dos consultas con la misma pregunta y variables distintas
+    // (p.ej. hotel 4★ vs 3★) producen embeddings casi idénticos y la cache
+    // semántica (umbral 0.95) devuelve el resultado del turno anterior.
+    const cacheKeyText = buildCacheKeyText(
+      expandedQuery,
+      input.variablesConocidas,
+    );
+    const embedding = await deps.embedQuestion(cacheKeyText);
 
     const cacheHit = await deps.searchSemanticCache(
       embedding,
@@ -455,6 +464,25 @@ export async function calculateSalary(
 // ============================================
 // HELPERS
 // ============================================
+
+/**
+ * Construye el texto que se embebe para la cache semántica.
+ * Incluye las variables conocidas ordenadas para que el embedding refleje
+ * la combinación concreta de inputs y no colisione con turnos previos que
+ * tenían otras variables.
+ */
+function buildCacheKeyText(
+  expandedQuery: string,
+  variables: Record<string, string | number | undefined> | undefined,
+): string {
+  if (!variables) return expandedQuery;
+  const entries = Object.entries(variables)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${k}=${v}`)
+    .sort();
+  if (entries.length === 0) return expandedQuery;
+  return `${expandedQuery} [variables: ${entries.join(", ")}]`;
+}
 
 /**
  * Devuelve el artículo utilizable de un chunk.

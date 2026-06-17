@@ -494,9 +494,38 @@ export function useChatPage(
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Extraer funciones de los hooks de chat para evitar warnings de dependencias
+  const mockSetMessages = mockChat.setMessages;
+  const mockSendMessage = mockChat.sendMessage;
+  const realClearMessages = realChat.clearMessages;
+
   // Seleccionar convenio
   const selectConvenio = useCallback((convenio: Convenio) => {
-    setState((prev) => ({ ...prev, selectedConvenio: convenio }));
+    setState((prev) => {
+      // Si cambia el convenio, descartar la conversación previa: mantenerla
+      // mezclaría contexto de un convenio distinto en el siguiente turno.
+      const isChangingConvenio = prev.selectedConvenio?.id !== convenio.id;
+      if (isChangingConvenio) {
+        if (useMocks) {
+          mockSetMessages([]);
+          setMockCitations([]);
+        } else {
+          realClearMessages();
+        }
+        setLocalInput("");
+        setSessionId(null);
+        setAlertState(clearAlertState());
+        setDataRequestState(clearDataRequestState());
+        setSalaryMode(false);
+      }
+      return {
+        ...prev,
+        selectedConvenio: convenio,
+        currentConversationId: isChangingConvenio
+          ? null
+          : prev.currentConversationId,
+      };
+    });
     setSelectedConvenioId(convenio.id);
     setActiveVariables({});
 
@@ -507,12 +536,7 @@ export function useChatPage(
       });
     }
     // En modo real, el perfil se actualizará automáticamente vía useEffect
-  }, [useMocks]);
-
-  // Extraer funciones de los hooks de chat para evitar warnings de dependencias
-  const mockSetMessages = mockChat.setMessages;
-  const mockSendMessage = mockChat.sendMessage;
-  const realClearMessages = realChat.clearMessages;
+  }, [useMocks, mockSetMessages, realClearMessages]);
   const realSendMessage = realChat.sendMessage;
   const realSetMessages = realChat.setMessages;
 
