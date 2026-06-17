@@ -508,8 +508,11 @@ export function buildStatusStreamResponse(
       }
 
       // Emit citation events so the front renders Sources/PDF link even when
-      // the use-case returned incomplete/invalid/conflicting state.
-      for (const citation of citations) {
+      // the use-case returned invalid/conflicting state. Para `incomplete` se
+      // omiten: el DataRequestCard ya cubre la UX del turno y las citations
+      // aparecerán en el turno siguiente con la respuesta real del cálculo.
+      const shouldEmitCitations = state !== "incomplete";
+      for (const citation of shouldEmitCitations ? citations : []) {
         const citationEvent = `data: ${
           JSON.stringify({
             type: "citation",
