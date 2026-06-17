@@ -89,7 +89,7 @@ describe('VariablesPanel', () => {
       expect(screen.getByText('Gobernanta')).toBeInTheDocument();
       expect(screen.getByText('Camarera de piso')).toBeInTheDocument();
       expect(screen.getByText('3 estrellas')).toBeInTheDocument();
-      expect(screen.getByText('0-2 anos')).toBeInTheDocument();
+      expect(screen.getByText('0-2 años')).toBeInTheDocument();
     });
 
     it('muestra nombre del convenio en el footer', () => {

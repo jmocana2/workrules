@@ -7,6 +7,12 @@ import {
 } from '@ui/components/shadcn/tooltip';
 import { InfoIcon } from 'lucide-react';
 
+function formatValor(valor: string): string {
+  return valor
+    .replace(/\banos\b/gi, (m) => (m[0] === 'A' ? 'Años' : 'años'))
+    .replace(/\bmas de\b/gi, (m) => (m[0] === 'M' ? 'Más de' : 'más de'));
+}
+
 export interface VariableCardProps {
   variable: string;
   valores: string[];
@@ -65,7 +71,7 @@ export function VariableCard({
                   )}
                   onClick={() => onValueClick(variable, valor)}
                 >
-                  <span className="block truncate">{valor}</span>
+                  <span className="block truncate">{formatValor(valor)}</span>
                 </Badge>
               );
             })}

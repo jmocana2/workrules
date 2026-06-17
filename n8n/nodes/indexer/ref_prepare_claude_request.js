@@ -29,7 +29,7 @@ REGLAS ESTRICTAS:
 8. IMPORTANTE: Extrae TODAS las categorias profesionales que aparezcan en las tablas salariales, no solo las principales.
 9. VALORES POSIBLES OBLIGATORIO: El JSON DEBE incluir el campo "valores_posibles". Este campo es un objeto cuyas claves son EXACTAMENTE las mismas que aparecen en "variables_criticas" (mismo nombre, mismo formato snake_case). Para cada variable critica debes incluir su array de valores posibles:
    - Si la variable es categorica (tipo_contrato, turno_trabajo, etc.): incluye los valores del convenio o defaults sectoriales si no aparecen explicitamente.
-   - Si la variable es numerica continua (edad, antiguedad): incluye un array con el rango como strings, ej: ["0-5 anos", "6-10 anos", "11-20 anos", "mas de 20 anos"].
+   - Si la variable es numerica continua (edad, antiguedad): incluye un array con el rango como strings, ej: ["0-5 años", "6-10 años", "11-20 años", "más de 20 años"].
    - Todas las claves de "variables_criticas" DEBEN aparecer como clave en "valores_posibles". Sin excepciones.
    - Usa snake_case sin tildes para TODAS las claves de "valores_posibles".
 10. SINONIMOS OBLIGATORIOS: Para cada categoria profesional, DEBES incluir:
@@ -134,7 +134,7 @@ FORMATO DE SALIDA - JSON con esta estructura:
     "tipo_establecimiento": ["hotel 5 estrellas", "restaurante"],
     "tipo_contrato": ["indefinido", "temporal", "fijo discontinuo", "formacion", "practicas"],
     "turno_trabajo": ["manana", "tarde", "noche", "rotativo", "partido"],
-    "antiguedad_empresa": ["0-5 anos", "6-10 anos", "11-20 anos", "mas de 20 anos"],
+    "antiguedad_empresa": ["0-5 años", "6-10 años", "11-20 años", "más de 20 años"],
     "jornada_laboral": ["completa", "parcial"]
   },
   "categorias_profesionales": [
@@ -174,7 +174,7 @@ entonces "valores_posibles" DEBE ser:
   "tipo_establecimiento": ["hotel 5 estrellas", "restaurante", "cafeteria", "bar", ...],
   "tipo_contrato": ["indefinido", "temporal", "fijo discontinuo", "formacion", "practicas"],
   "turno_trabajo": ["manana", "tarde", "noche", "rotativo", "partido"],
-  "antiguedad_empresa": ["0-5 anos", "6-10 anos", "11-20 anos", "mas de 20 anos"]
+  "antiguedad_empresa": ["0-5 años", "6-10 años", "11-20 años", "más de 20 años"]
 }
 Observa que CADA elemento de "variables_criticas" aparece exactamente como clave en "valores_posibles".
 
