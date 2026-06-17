@@ -168,6 +168,7 @@ export interface AskQuestionDeps {
     query: string,
     response: string,
     convenioId: string,
+    citations?: Record<string, unknown>[],
   ) => Promise<void>;
   saveChatMessage: (
     sessionId: string,
@@ -451,7 +452,7 @@ export async function askQuestion(
           model: "cache",
           latencyMs: Date.now() - startTime,
         },
-        citations: [],
+        citations: (cacheHit.citations ?? []) as unknown as ChatCitation[],
       };
     }
 
@@ -506,6 +507,8 @@ export async function askQuestion(
     // ========================================
     // 7. Llamar a Claude
     // ========================================
+    const citations = buildCitations(chunks, convenio.url_pdf ?? null);
+
     if (input.stream) {
       // Modo streaming
       const stream = await deps.streamChatResponse({
@@ -517,7 +520,7 @@ export async function askQuestion(
       return {
         type: "stream",
         stream,
-        citations: buildCitations(chunks, convenio.url_pdf ?? null),
+        citations,
         cleanup: async (fullResponse: string) => {
           // Fire and forget para cache (no bloquear ni fallar por esto)
           deps.saveToSemanticCache(
@@ -525,6 +528,7 @@ export async function askQuestion(
             input.pregunta,
             fullResponse,
             input.convenioId,
+            citations as unknown as Record<string, unknown>[],
           ).catch((err) => {
             console.error(
               "[ask-question] Stream cleanup - Error saving to cache:",
@@ -584,6 +588,7 @@ export async function askQuestion(
       input.pregunta,
       response,
       input.convenioId,
+      citations as unknown as Record<string, unknown>[],
     ).catch((err) => {
       console.error("[ask-question] Error saving to cache:", err);
     });
@@ -614,7 +619,7 @@ export async function askQuestion(
         model: MODEL_NAME,
         latencyMs: Date.now() - startTime,
       },
-      citations: buildCitations(chunks, convenio.url_pdf ?? null),
+      citations,
     };
   } catch (error) {
     // ========================================

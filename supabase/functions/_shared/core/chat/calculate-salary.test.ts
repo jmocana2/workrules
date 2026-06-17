@@ -203,6 +203,7 @@ Deno.test("calculateSalary - cache hit retorna respuesta cacheada", async () => 
       response: "Respuesta cacheada",
       similarity: 0.98,
       hit_count: 5,
+      citations: [],
     }),
   });
   const input = createInput();

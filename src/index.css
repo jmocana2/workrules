@@ -270,9 +270,31 @@ body {
 }
 
 [data-streamdown="list-item"]::marker {
+  content: "• ";
   color: var(--app-foreground);
 }
 
+/* Reducir el hueco entre bullet y texto.
+   Con list-style-position: outside (por defecto), el espacio entre el marker
+   y el texto = padding-left del <ul>/<ol> menos el ancho del marker. Bajamos
+   el padding del contenedor para que el bullet quede a ~5px del texto. */
+[data-streamdown="list"],
+[data-streamdown="ordered-list"] {
+  padding-left: 1rem;
+}
+
+/* El ::marker se posiciona respecto a la primera caja de línea del <li>.
+   Si el primer hijo es un <p> block, el marker queda en una línea propia
+   encima del párrafo. Forzamos al <p> a inline para que comparta línea con
+   el bullet. */
 [data-streamdown="list-item"] > p {
+  display: inline;
   margin: 0;
+}
+
+/* Si hay varios <p> dentro del <li> (saltos de párrafo reales), solo el
+   primero va inline; los siguientes recuperan el bloque. */
+[data-streamdown="list-item"] > p ~ p {
+  display: block;
+  margin-top: 0.25rem;
 }

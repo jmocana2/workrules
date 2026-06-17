@@ -62,6 +62,7 @@ const MOCK_CACHE_HIT: CacheHit = {
   response: "Respuesta cacheada: El salario base es 20.000 euros.",
   similarity: 0.98,
   hit_count: 5,
+  citations: [],
 };
 
 const DEFAULT_INPUT: AskQuestionInput = {

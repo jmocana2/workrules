@@ -25,6 +25,8 @@ export interface CacheHit {
   response: string;
   similarity: number;
   hit_count: number;
+  /** Citas asociadas a la respuesta cacheada (puede estar vacío en filas viejas) */
+  citations: Record<string, unknown>[];
 }
 
 /** Estado de cuota de usuario */
@@ -490,6 +492,7 @@ export async function searchSemanticCache(
       response: hit.cached_response,
       similarity: hit.similarity,
       hit_count: hit.hit_count + 1,
+      citations: Array.isArray(hit.citations) ? hit.citations : [],
     };
   }
 
@@ -504,6 +507,7 @@ export async function saveToSemanticCache(
   query: string,
   response: string,
   convenioId: string,
+  citations: Record<string, unknown>[] = [],
   tokensUsed = 0,
   client?: SupabaseClient,
 ): Promise<void> {
@@ -537,6 +541,7 @@ export async function saveToSemanticCache(
     query_text: query,
     response: response,
     convenio_id: convenioId,
+    citations: citations,
     tokens_saved: tokensUsed,
     hit_count: 1,
     expires_at: new Date(

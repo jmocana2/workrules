@@ -115,6 +115,7 @@ export interface CalculateSalaryDeps {
     query: string,
     response: string,
     convenioId: string,
+    citations?: Record<string, unknown>[],
   ) => Promise<void>;
   saveChatMessage: (
     sessionId: string,
@@ -224,7 +225,7 @@ export async function calculateSalary(
           model: "cache",
           latencyMs: Date.now() - startTime,
         },
-        citations: [],
+        citations: (cacheHit.citations ?? []) as unknown as ChatCitation[],
       };
     }
 
@@ -350,6 +351,7 @@ export async function calculateSalary(
               input.pregunta,
               fullResponse,
               input.convenioId,
+              citations as unknown as Record<string, unknown>[],
             )
             .catch((err) => {
               console.error(
@@ -404,6 +406,7 @@ export async function calculateSalary(
         input.pregunta,
         response,
         input.convenioId,
+        citations as unknown as Record<string, unknown>[],
       )
       .catch((err) => {
         console.error("[calculate-salary] Error saving to cache:", err);
