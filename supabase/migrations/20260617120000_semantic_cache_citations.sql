@@ -13,8 +13,12 @@ ALTER TABLE semantic_cache
 COMMENT ON COLUMN semantic_cache.citations IS
     'Array de citas (ChatCitation[]) asociadas a la respuesta cacheada';
 
--- Actualizar la función RPC para devolver también las citas
-CREATE OR REPLACE FUNCTION search_semantic_cache(
+-- Actualizar la función RPC para devolver también las citas.
+-- Nota: PostgreSQL no permite cambiar el tipo de retorno (RETURNS TABLE) con
+-- CREATE OR REPLACE — hay que DROP + CREATE.
+DROP FUNCTION IF EXISTS search_semantic_cache(vector, float, UUID);
+
+CREATE FUNCTION search_semantic_cache(
     p_query_embedding vector(1536),
     similarity_threshold float DEFAULT 0.95,
     p_convenio_id UUID DEFAULT NULL
