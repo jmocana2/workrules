@@ -18,19 +18,22 @@ favicon: ./favicon.svg
 ---
 
 <!-- Bloque 0 — Portada e introducción -->
-<div class="flex flex-col items-center justify-center h-full">
-  <img src="./logo.svg" class="w-32 mb-8" alt="WorkRules" />
-  <h1 class="text-5xl font-bold mb-2">WorkRules</h1>
-  <p class="text-xl opacity-80 mb-8">La inteligencia que traduce el BOE en respuestas exactas</p>
-
-  <div class="text-sm opacity-70 mt-8">
-    <p><strong>Autor:</strong> José María Ocaña · <strong>Tutor:</strong> Brais Moure</p>
-    <p>Máster en Desarrollo con IA · BIG School · Curso 2025-2026 · Primera edición </p>
+<div class="grid grid-cols-2 gap-8 items-center h-full px-8">
+  <div class="flex flex-col items-start justify-center text-left">
+    <img src="./logo.svg" class="w-56 mb-0" alt="WorkRules" />
+    <p class="text-l text-white/90 mb-16 text-left">La inteligencia que traduce el BOE en respuestas exactas</p>
+    <div class="text-sm text-white/75 mt-8 text-left">
+      <p class="mb-2"><strong>Autor:</strong> José María Ocaña · <strong>Tutor:</strong> Brais Moure</p>
+      <p class="text-xs">Máster en Desarrollo con IA · BIG School · Curso 2025-2026 · Primera edición</p>
+    </div>
   </div>
-
-  <div class="abs-br m-6 text-xs opacity-60">
-    Pulsa <kbd>Espacio</kbd> para avanzar · <kbd>d</kbd> para alternar tema
+  <div class="flex items-center justify-center">
+    <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=900&q=80" class="rounded-2xl shadow-2xl max-h-[70vh] object-cover" alt="Documentos legales y justicia laboral" />
   </div>
+</div>
+
+<div class="abs-br m-6 text-xs opacity-60">
+  Pulsa <kbd>Espacio</kbd> para avanzar · <kbd>d</kbd> para alternar tema
 </div>
 
 <!--

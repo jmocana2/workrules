@@ -45,30 +45,26 @@ Cero vulnerabilidades High en runtime de producción. Las que aparecen en pnpm a
 
 # Observabilidad
 
-<div class="grid grid-cols-2 gap-6 mt-4 text-sm">
-<div>
+<div class="grid grid-cols-5 gap-6 mt-2 items-start">
+<div class="col-span-3 text-[11px] text-white/90 leading-tight">
 
-**Sentry**
+**Sentry — errores y rendimiento**
 
-- Errores frontend + Edge Functions.
+- Errores capturados en frontend y Edge Functions.
 - **Source maps** subidos en cada deploy → traza en código original.
 - Release tracking por commit SHA.
 - Performance trace en consultas críticas.
 
-</div>
-<div>
+**Infraestructura**
 
-**Plausible Analytics**
-
-- Privacy-first: sin cookies, sin tracking individual.
-- Métricas de uso: convenios consultados, latencia chat, conversiones.
-- Cumple RGPD por diseño — no requiere banner de cookies.
+- Dashboard nativo de **Supabase** (DB + Edge Functions).
+- Logs y métricas de **Vercel** para frontend y CDN.
+- **Vercel Analytics (Hobby)** para métricas de uso del frontend (visitas, Core Web Vitals reales).
 
 </div>
+<div class="col-span-2">
+  <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80" class="rounded-2xl shadow-2xl w-full h-[45vh] object-cover" alt="Dashboard de métricas y observabilidad" />
 </div>
-
-<div class="mt-6 p-3 border-l-2 border-primary text-xs opacity-80">
-La observabilidad cubre los tres ejes: errores (Sentry), uso (Plausible), infraestructura (Supabase dashboard + Vercel analytics).
 </div>
 
 <!--
@@ -82,35 +78,25 @@ Para infraestructura uso los dashboards nativos: Supabase para DB y Edge Functio
 
 # CI/CD
 
-<div class="grid grid-cols-2 gap-6 mt-4 text-sm">
-<div>
+<div class="grid grid-cols-5 gap-6 mt-2 items-start">
+<div class="col-span-3 text-[11px] text-white/90 leading-tight">
 
 **GitHub Actions**
 
 | Pipeline | Trigger | Pasos |
 |---|---|---|
-| `ci.yml` | PR | lint, typecheck, unit |
 | `playwright.yml` | PR / main | E2E con caché de browsers |
-| `security.yml` | semanal | Snyk + audit |
-| `deploy.yml` | merge main | Vercel + Supabase |
+| `security.yml` | semanal | Snyk + `pnpm audit` |
+
+**Despliegue continuo (Vercel + Supabase)**
+
+- **Vercel** despliega el frontend automáticamente en cada push (preview por PR, producción al hacer merge a `main`).
+- **Supabase CLI** despliega Edge Functions y migraciones desde local con `supabase functions deploy`.
+- **Source maps** subidos a Sentry tras cada deploy de frontend.
 
 </div>
-<div>
-
-**Flujo**
-
-```
-1. Push → preview deploy automático
-2. Reviewers + checks verdes
-3. Merge main → producción
-4. Source maps a Sentry
-5. Smoke test post-deploy
-```
-
-<div class="text-xs opacity-70 mt-3">
-Preview deploys por PR permiten validar visualmente cambios antes de mergear. Smoke test post-deploy confirma que <code>/chat</code> responde y la home carga.
-</div>
-
+<div class="col-span-2">
+  <img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80" class="rounded-2xl shadow-2xl w-full h-[45vh] object-cover" alt="Automatización de procesos" />
 </div>
 </div>
 
@@ -128,34 +114,30 @@ El flujo del PR: push genera preview deploy automático en Vercel con URL única
 
 # Documentación
 
-<div class="grid grid-cols-3 gap-4 mt-4 text-sm">
-<div class="border border-primary/30 rounded p-3">
-<div class="font-bold text-primary mb-2">Repo</div>
+<div class="grid grid-cols-5 gap-6 mt-2 items-start">
+<div class="col-span-3 text-[11px] text-white/90 leading-tight">
 
-- `README.md` raíz (orientado al director).
+**Repositorio**
+
+- `README.md` raíz orientado al director del TFM.
 - `docs/` — brief, arquitectura, flujo, seguridad, tests, ADRs.
-- `CHANGELOG.md` por release.
+- `CHANGELOG.md` mantenido por release (último: TFM.7).
 
-</div>
-<div class="border border-primary/30 rounded p-3">
-<div class="font-bold text-primary mb-2">Storybook</div>
+**Storybook — documentación viva del Design System**
 
-- Design System (tokens, tipografías).
+- Tokens, tipografías y paleta del Design System.
 - Componentes propios documentados con stories.
-- Desplegado en producción bajo subpath.
+- Desplegado en producción: [workrules.eu/storybook](https://workrules.eu/storybook).
+
+**Notion — planificación y gestión**
+
+- KPIs, notas de iteración y planificación de fases.
+- Acceso: [app.notion.com/p/workrules-eu](https://app.notion.com/p/workrules-eu-2e1bed77604180129884ec2fb7938f48?pvs=12).
 
 </div>
-<div class="border border-primary/30 rounded p-3">
-<div class="font-bold text-primary mb-2">Workspace</div>
-
-- Notion con planificación, KPIs y notas de iteración.
-- `.claude/` con guion del proyecto y paso a paso de cada fase.
-
+<div class="col-span-2">
+  <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=800&q=80" class="rounded-2xl shadow-2xl w-full h-[45vh] object-cover" alt="Documentación y conocimiento" />
 </div>
-</div>
-
-<div class="mt-6 text-xs opacity-80 text-center">
-La documentación de <code>docs/</code> es la <em>single source of truth</em>. Las slides resumen y enlazan, no duplican.
 </div>
 
 <!--
@@ -168,36 +150,35 @@ El principio rector: docs/ es la fuente de la verdad. Las slides y este README r
 
 ---
 
-# Demo en vivo
+# Pruébalo tú mismo
 
-<div class="grid grid-cols-2 gap-8 mt-6">
-<div class="text-sm">
+<div class="grid grid-cols-5 gap-6 mt-2 items-start">
+<div class="col-span-3 text-[11px] text-white/90 leading-tight">
 
-**Flujos a demostrar**
+**Flujos sugeridos para explorar el producto**
 
-1. Selección de convenio Hostelería Madrid.
-2. Pregunta general con cita a PDF.
-3. Cálculo salarial con datos completos.
-4. Cálculo con datos incompletos → `DataRequestForm`.
-5. Validación (horas extra > límite legal).
-6. Toggle dark/light + responsive.
+1. **Sube un convenio** (público o privado) — el indexer procesa el PDF y queda disponible en el selector. *Opcional: puedes usar el convenio de **Hostelería Madrid** ya indexado o subir uno propio.*
+2. Selecciona el convenio cargado y lanza una pregunta general: la respuesta cita el artículo y enlaza al PDF oficial.
+3. Abre el **panel de variables** para revisar y editar los datos que la IA usará (categoría, antigüedad, complementos).
+4. Activa el **switch de cálculo salarial** y pide un cálculo con datos completos.
+5. Repite con datos incompletos: aparece la **`DataRequestCard`** pidiendo las variables **identificadoras** (categoría, puesto, nivel, zona o tipo de establecimiento). Las moduladoras (jornada, antigüedad, complementos) son opcionales. Prueba además a meter horas extra por encima del límite legal — salta la **alerta de validación**.
+6. Alterna **modo claro/oscuro** y prueba el layout responsive.
 
+<div class="mt-2 text-[10px] opacity-70">
+Cada pregunta y respuesta queda guardada en el <strong>historial de conversaciones</strong> accesible desde el sidebar.
 </div>
-<div class="text-sm">
 
-**URLs**
+**Enlaces**
 
 - Producción: [workrules.eu](https://workrules.eu)
-- Slides: [workrules.eu/presentacion-TFM](https://workrules.eu/presentacion-TFM)
-- Video: [workrules.eu/presentacion-TFM-video](https://workrules.eu/presentacion-TFM-video)
-- Storybook: [workrules.eu/storybook](https://workrules.eu/storybook)
 - Repositorio: [github.com/jmocana2/workrules](https://github.com/jmocana2/workrules)
+- Storybook: [workrules.eu/storybook](https://workrules.eu/storybook)
+- Esta presentación: [workrules.eu/presentacion-TFM](https://workrules.eu/presentacion-TFM)
 
 </div>
+<div class="col-span-2">
+  <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=800&q=80" class="rounded-2xl shadow-2xl w-full h-[45vh] object-cover" alt="Explora el producto en producción" />
 </div>
-
-<div class="mt-8 text-center text-xs opacity-70">
-Para la defensa: ver demo en vivo. Como respaldo, video grabado con los mismos flujos en <code>/presentacion-TFM-video</code>.
 </div>
 
 <!--
@@ -215,29 +196,26 @@ Si por lo que sea la demo en vivo falla, hay un video grabado con los mismos flu
 
 # Conclusiones
 
-<div class="grid grid-cols-2 gap-8 mt-4 text-sm">
-<div>
+<div class="grid grid-cols-5 gap-6 mt-2 items-start">
+<div class="col-span-3 text-[11px] text-white/90 leading-tight">
 
 **Deuda técnica y mejoras pendientes**
 
-- **Indexer** — evaluar arquitecturas alternativas a n8n (Edge Function dedicada, worker en cola, Inngest) para reducir dependencia del self-hosted.
-- **Exactitud salarial** — ampliar batería de pruebas con bajo volumen de convenios validados manualmente contra PDF oficial.
+- **Indexer** — migrar de **n8n self-hosted** a **LangChain** o integrarlo directamente en `src/` junto con el resto del front. n8n resulta tedioso para actualizar flujos, poco escalable y difícil de mantener a largo plazo.
+- **Testing** — eliminar tests innecesarios y reforzar las pruebas **core** (clasificador, extractor de variables, validadores) para mejorar la fiabilidad de las respuestas.
+- **Exactitud salarial** — ampliar batería de pruebas con más convenios validados manualmente contra PDF oficial.
 - **Performance** — pasar de 60+ a 90+ en PageSpeed (bundle splitting, lazy load del AI SDK, optimización de imágenes).
-- **Accesibilidad** — auditoría WCAG completa, navegación teclado en todos los flujos, contraste en alerts.
-
-</div>
-<div>
+- **Accesibilidad** — auditoría WCAG completa, navegación por teclado en todos los flujos, contraste en alerts y **resolución de los errores de accesibilidad detectados en Storybook**.
 
 **Siguientes pasos**
 
-- **Fase 4 · Monetización** — planes premium y pagos (Stripe). La subida privada de convenios ya está disponible en el MVP.
-- **Fase 5 · Scale** — Watchdog del BOE: detección automática de convenios nuevos/actualizados.
-- **Fase 6 · Value** — features específicas para ETTs (bulk calculation, exports).
+- **Fase 4 · Alta, gestión de usuarios y monetización** — registro y onboarding, panel de cuenta, planes premium y pagos con Stripe.
+- **Fase 5 · Scale** — Watchdog del BOE: detección automática de convenios nuevos o actualizados.
+- **Fase 6 · Value** — features específicas para ETTs: **cálculo masivo de salarios** (varias contrataciones a la vez) y **exportación de resultados** a PDF/Excel para integrarlos en procesos internos.
 
-<div class="text-xs opacity-70 mt-4">
-El MVP entregado hoy cubre el caso de uso completo para un convenio validado. La escalabilidad horizontal (más convenios) es una cuestión de procesar más PDFs por el pipeline, sin cambios de arquitectura.
 </div>
-
+<div class="col-span-2">
+  <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80" class="rounded-2xl shadow-2xl w-full h-[45vh] object-cover" alt="Conclusiones y próximos pasos" />
 </div>
 </div>
 
@@ -273,7 +251,7 @@ Y, sobre todo, **gracias** al equipo docente de BIG School por la calidad de los
 
 <div class="mt-10 opacity-80 text-sm">
 
-[workrules.eu](https://workrules.eu) · [github.com/jmocana2/workrules](https://github.com/jmocana2/workrules)
+[workrules.eu](https://www.workrules.eu) · [github.com/jmocana2/workrules](https://github.com/jmocana2/workrules)
 
 </div>
 

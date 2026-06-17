@@ -5,16 +5,16 @@
 
 **Propuesta de valor**
 
-Consultor laboral con IA que **interpreta y calcula** condiciones de convenios colectivos a partir de las variables específicas de cada caso (categoría, antigüedad, horas, complementos).
+Consultor laboral con IA que **interpreta y calcula** condiciones de convenios colectivos a partir de las variables específicas de cada caso (categoría, antigüedad, horas, complementos), ofreciendo **información y cálculos salariales fiables con referencias directas al convenio aplicable**.
 
 </div>
 <div>
 
 **Diferenciador**
 
-- **Zero Hallucinations** — RAG sobre el PDF oficial + cita directa a la página del BOE.
-- **Perfil JSON** — estructura del convenio extraída por Claude, base para cálculos deterministas.
-- **Cálculo aritmético exacto** — la IA razona, el código calcula.
+- **Zero Hallucinations** — RAG sobre el PDF oficial con cita directa a la página y artículo del BOE en cada respuesta, garantizando trazabilidad legal.
+- **Perfil JSON estructurado** — la estructura del convenio se extrae con Claude y sirve como base determinista para cálculos reproducibles (categoría, antigüedad, complementos, horas).
+- **Interfaz conversacional cuidada** — UI/UX optimizada para consultas legales: citas inline, historial, exportación PDF y feedback visual del proceso de razonamiento.
 
 </div>
 </div>
@@ -29,52 +29,32 @@ Si me preguntan: ¿por qué no usar ChatGPT directamente? La respuesta está en 
 
 # ¿Cómo surge WorkRules?
 
-<div class="grid grid-cols-5 gap-6 mt-4">
-<div class="col-span-2 text-sm">
+<div class="grid grid-cols-5 gap-8 mt-2 items-center">
+<div class="col-span-2">
+  <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80" class="rounded-2xl shadow-2xl w-full h-[48vh] object-cover" alt="Profesional de RRHH en ETT" />
+</div>
+<div class="col-span-3 text-xs text-white/90 leading-snug">
 
-**El origen — una conversación familiar**
+**Origen del proyecto**
 
-Mi hermana trabaja en una **ETT**. Un día me contó que necesitaba calcular el salario de una camarera de pisos para un hotel concreto y que las IAs generalistas que probaba **le daban una cifra distinta cada vez** — ninguna con cita al convenio aplicable.
+Necesidad real detectada en el sector de las **Empresas de Trabajo Temporal (ETT)**. Los equipos de RRHH dedican gran parte de su jornada a calcular salarios y condiciones aplicables a cada contratación, consultando manualmente los convenios colectivos del BOE.
 
-<div class="mt-4 text-xs opacity-70">
-Lo que parecía un caso aislado resultó ser un patrón. De ahí nació WorkRules: una IA que <strong>razona sobre el convenio oficial</strong> y <strong>calcula con código determinista</strong>.
+<div class="mt-3">
+
+**El problema observado**
+
+Al recurrir a IAs generalistas, los profesionales encontraron tres limitaciones críticas: **respuestas inconsistentes**, **ausencia de trazabilidad** a la fuente oficial y **errores aritméticos** inadmisibles en un contexto donde una desviación de pocos euros en una nómina tiene implicaciones legales.
+
 </div>
 
-</div>
+<div class="mt-3">
 
-<div class="col-span-3 bg-[#0b141a] rounded-lg p-3 border border-white/10 shadow-xl text-xs">
+**La propuesta**
 
-<div class="flex items-center gap-2 pb-2 mb-2 border-b border-white/10">
-  <div class="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-black">S</div>
-  <div>
-    <div class="font-semibold">Mi hermana</div>
-    <div class="opacity-50 text-[10px]">en línea</div>
-  </div>
-</div>
-
-<div class="flex flex-col gap-2">
-
-<div class="self-start bg-[#202c33] rounded-lg rounded-tl-none px-3 py-2 max-w-[80%]">
-Oye, ¿tú sabes cuánto cobra una camarera de pisos en un hotel de 4 estrellas en Madrid? 🤔
-</div>
-
-<div class="self-end bg-primary/80 text-grey rounded-lg rounded-tr-none px-3 py-2 max-w-[80%]">
-Ni idea, pero pregúntale a ChatGPT
-</div>
-
-<div class="self-start bg-[#202c33] rounded-lg rounded-tl-none px-3 py-2 max-w-[80%]">
-Ya lo he hecho. Le pregunto tres veces y me da tres cifras distintas. Y ninguna me dice de dónde la saca 😤
-</div>
-
-<div class="self-start bg-[#202c33] rounded-lg rounded-tl-none px-3 py-2 max-w-[80%]">
-Necesito el dato exacto del convenio, con su artículo. Si me equivoco 20€ en una nómina la liamos.
-</div>
-
-<div class="self-end bg-primary/80 text-grey rounded-lg rounded-tr-none px-3 py-2 max-w-[80%]">
-Espera… eso no debería ser tan difícil 💡
-</div>
+WorkRules combina el **razonamiento de la IA** sobre el texto legal con **cálculos deterministas** ejecutados por código, garantizando en cada respuesta una **cita directa al artículo y página del convenio oficial**.
 
 </div>
+
 </div>
 </div>
 
@@ -95,26 +75,28 @@ Después validé el problema más allá del círculo familiar con BDL Eurofilms,
 <div class="grid grid-cols-2 gap-6 mt-4">
 <div>
 
-**Los convenios colectivos en España son opacos**
+**Un marco normativo difícil de consultar**
 
-- 5.000+ convenios activos (sectoriales, provinciales, de empresa).
-- Tablas salariales en PDFs no indexados, con celdas combinadas y notas al pie.
-- Revisiones a mitad de año por IPC o SMI.
+- Más de **5.000 convenios** colectivos activos en España (sectoriales, provinciales y de empresa), con ámbitos de aplicación solapados.
+- Tablas salariales publicadas en **PDFs no indexados**, con celdas combinadas, notas al pie y anexos.
+- **Revisiones intermedias** por IPC, SMI o acuerdos paritarios que invalidan versiones anteriores.
+- Determinar el convenio aplicable a un caso concreto requiere **conocimiento experto** y consulta cruzada de varias fuentes oficiales.
 
 </div>
 <div>
 
-**Las IAs comerciales fallan en tres dimensiones**
+**Por qué las IAs generalistas no resuelven el problema**
 
-- **Corte de conocimiento** — no saben qué se publicó ayer en el BOE.
-- **Ambigüedad legal** — ignoran cláusulas condicionales (*"salvo que..."*).
-- **Cálculo aritmético** — son predictores de texto, no calculadoras. Un error de 1 céntimo en nómina es problema legal.
+- **Información desactualizada** — su conocimiento tiene fecha de corte y desconoce publicaciones recientes del BOE.
+- **Interpretación imprecisa del texto legal** — pasan por alto cláusulas condicionales (*"salvo que…"*, *"excepto para…"*) que cambian el resultado.
+- **Sin trazabilidad** — responden sin citar el artículo ni la página del convenio, impidiendo verificar el dato.
+- **Lectura limitada de PDFs** — fallan ante convenios escaneados, con formatos inconsistentes, celdas combinadas o tablas multipágina.
 
 </div>
 </div>
 
 <div class="mt-6 p-4 border-l-4 border-primary bg-primary/10 text-sm italic">
-"Lo que no hace nadie hoy es analizar el convenio. Decirle a la IA: tengo que contratar camareras de piso para tal hotel, ¿cuánto tengo que pagar?"
+"Lo que la IA no te da a día de hoy es analizar el convenio de verdad. Poder decirle: tengo que contratar camareras de piso para un hotel de 4 estrellas, ¿cuánto tengo que pagar exactamente?"
 <br /><span class="opacity-70 not-italic">— Directora de ETT, validación de problema</span>
 </div>
 
@@ -128,8 +110,8 @@ La cita de abajo viene de una directora de una ETT real, BDL Eurofilms, que es n
 
 # Análisis
 
-<div class="grid grid-cols-2 gap-8">
-<div>
+<div class="grid grid-cols-5 gap-6 mt-2 items-start">
+<div class="col-span-3 text-[11px] text-white/90 leading-tight">
 
 **Stakeholders**
 
@@ -137,26 +119,22 @@ La cita de abajo viene de una directora de una ETT real, BDL Eurofilms, que es n
 - **RRHH y ETTs** — cálculo de costes para contrataciones.
 - **Asesorías laborales** — verificación rápida.
 
-**Caso real validado**
-
-BDL Eurofilms (ETT) — necesitan calcular costes de personal de hostelería bajo el convenio aplicable, por categoría y horas.
-
-</div>
-<div>
-
 **KPIs del producto**
 
-- Precisión salarial: error 0€ vs PDF oficial.
+- Precisión salarial: error 0 € frente al PDF oficial.
 - Cita verificable en cada respuesta.
-- Latencia < 3s para consultas estándar.
+- Latencia < 3 s para consultas estándar.
 - Core Web Vitals 60+ de rendimiento (PageSpeed).
 
 **Restricciones**
 
-- Presupuesto operativo: ~100 €/mes.
-- Solo-dev — automatización máxima.
+- Presupuesto operativo ~100 €/mes.
+- Solo-dev — automatización máxima (n8n, Vercel, GH Actions).
 - Sin asesoría legal vinculante (disclaimer obligatorio).
 
+</div>
+<div class="col-span-2">
+  <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80" class="rounded-2xl shadow-2xl w-full h-[45vh] object-cover" alt="Análisis y planificación de producto" />
 </div>
 </div>
 

@@ -1,14 +1,13 @@
 # Buenas prácticas
 
-<div class="grid grid-cols-2 gap-6 mt-4 text-sm">
-<div>
+<div class="grid grid-cols-5 gap-6 mt-2 items-start">
+<div class="col-span-3 text-[11px] text-white/90 leading-tight">
 
 **Calidad de código**
 
 - **TypeScript estricto** — `strict: true`, sin `any` implícito.
 - **ESLint** + **SonarJS** + plugin `react-hooks` — análisis estático en CI.
 - **Husky** + lint-staged — pre-commit hook bloquea código con errores.
-- **Prettier** alineado con ESLint — formato consistente.
 
 **Principios aplicados**
 
@@ -16,17 +15,15 @@
 - **DRY** sin sobre-ingeniería — abstraer cuando hay 3 repeticiones, no antes.
 - **YAGNI** — no implementar nada sin caso de uso real.
 
-</div>
-<div>
-
-**Workflow y trazabilidad**
+**Trazabilidad y documentación**
 
 - **Conventional Commits** — `feat:`, `fix:`, `refactor:`, etc.
-- **Pull Request por feature** — revisión + CI obligatoria antes de merge.
 - **ADRs** en `docs/adr/` para decisiones arquitectónicas importantes.
-- **CHANGELOG.md** mantenido en cada release.
 - **Storybook** como documentación viva del Design System.
 
+</div>
+<div class="col-span-2">
+  <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?auto=format&fit=crop&w=800&q=80" class="rounded-2xl shadow-2xl w-full h-[45vh] object-cover" alt="Checklist de calidad" />
 </div>
 </div>
 
