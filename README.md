@@ -1,4 +1,6 @@
-# WorkRules
+<p align="center">
+  <img src="./docs/assets/workrules-banner.png" alt="WorkRules" width="480" />
+</p>
 
 > La inteligencia que traduce el BOE en respuestas exactas.
 > Consulta convenios colectivos españoles y calcula salarios con precisión.
@@ -14,7 +16,7 @@ WorkRules es una plataforma LegalTech que interpreta convenios colectivos españ
 **Diferenciadores clave:**
 - Cálculos salariales exactos (no aproximaciones del LLM).
 - Cero alucinaciones: todo apoyado en chunks citables del convenio.
-- Pipeline de ingesta automatizado (n8n + LlamaParse) que mantiene los convenios al día.
+- UI personalizada para cálculos salariales, con desglose paso a paso y trazabilidad de cada concepto retributivo.
 
 ---
 
@@ -24,7 +26,7 @@ WorkRules es una plataforma LegalTech que interpreta convenios colectivos españ
 2. Selecciona **"Hostelería Madrid"** en el selector de convenios.
 3. Prueba estas preguntas:
    - *"¿Cuánto cobra un recepcionista de hotel 4 estrellas?"*
-   - *"Calcula el salario de un camarero con 12 horas extra este mes"*
+   - *"Calcula el salario de un camarero con 12 horas extra este mes"* — para esta pregunta puedes activar el **switch de cálculo salarial** en la UI y obtener el desglose determinista del Perfil JSON.
    - *"¿Cuál es la jornada máxima del convenio?"*
 
 Cada respuesta incluye citas con enlace al PDF oficial del convenio.
@@ -79,6 +81,10 @@ pnpm dev
 ```
 
 La app queda disponible en http://localhost:5173.
+
+> **Edge Functions:** `supabase start` ya levanta el runtime de Edge Functions dentro de Docker, así que no necesitas `supabase functions serve` para ejecutar la app. Úsalo solo si estás iterando sobre `supabase/functions/*` y quieres recarga en caliente y trazas de `console.log`.
+>
+> **Pipeline de ingesta (n8n):** el workflow de ingesta de convenios corre en una instancia de **n8n auto-alojada vía Docker**, independiente del stack de Supabase. No hace falta para ejecutar el frontend contra los convenios ya cargados; ver [docs/n8n.md](./docs/n8n.md) si quieres reproducirlo.
 
 ### Scripts disponibles
 
@@ -238,16 +244,15 @@ flowchart LR
 
 ## Documentación técnica
 
-- [Brief del proyecto](./docs/brief.md) — problema, propuesta de valor, KPIs.
-- [Arquitectura completa](./docs/arquitectura.md) — diseño técnico end-to-end.
-- [Flujo de aplicación](./docs/flujo-aplicacion.md) — recorrido de una consulta.
-- [Ciclo de vida](./docs/ciclo-de-vida.md) — fases del proyecto.
-- [Seguridad](./docs/seguridad.md) — RLS, headers, rate limiting, snapshot.
-- [Tests](./docs/tests/) — estrategia y resultados.
-- [ADRs](./docs/adr/) — decisiones arquitectónicas registradas.
-- [Convenios](./docs/convenios/) — modelo de datos y Perfil JSON.
-- [n8n pipeline](./docs/n8n.md) — workflow de ingesta.
-- [Métricas](./docs/metricas.md) — KPIs operativos.
+- [Brief del proyecto](docs/brief.md) — problema, propuesta de valor, KPIs.
+- [Arquitectura completa](docs/arquitectura.md) — diseño técnico end-to-end.
+- [Flujo de aplicación](docs/flujo-aplicacion.md) — recorrido de una consulta.
+- [Ciclo de vida](docs/ciclo-de-vida.md) — fases del proyecto.
+- [Estrategia de tests](docs/tests/estrategia-testing.md) — cobertura por capa y resultados.
+- [ADRs](docs/adr/README.md) — decisiones arquitectónicas registradas.
+- [Convenios — Hostelería Madrid](docs/convenios/hosteleria-madrid-datos.md) — modelo de datos y Perfil JSON.
+- [n8n pipeline](docs/n8n.md) — workflow de ingesta.
+- [Métricas](docs/metricas.md) — KPIs operativos.
 - [Storybook público](https://workrules.eu/storybook) — Design System navegable.
 - [Notion del proyecto](https://www.notion.so/workrules-eu-2e1bed77604180129884ec2fb7938f48) — gestión y notas internas.
 
@@ -259,4 +264,4 @@ Este proyecto se distribuye bajo la **PolyForm Noncommercial License 1.0.0**. Pe
 
 ---
 
-**Disclaimer legal:** La información proporcionada por WorkRules.eu tiene carácter informativo y no constituye asesoramiento jurídico, laboral ni fiscal. Ver [aviso legal](./docs/brief.md#51-disclaimer-legal-obligatorio).
+**Disclaimer legal:** La información proporcionada por WorkRules.eu tiene carácter informativo y no constituye asesoramiento jurídico, laboral ni fiscal.
