@@ -7,10 +7,11 @@ import {
 } from '@ui/components/shadcn/tooltip';
 import { InfoIcon } from 'lucide-react';
 
-function formatValor(valor: string): string {
+export function formatValor(valor: string): string {
   return valor
     .replace(/\banos\b/gi, (m) => (m[0] === 'A' ? 'Años' : 'años'))
-    .replace(/\bmas de\b/gi, (m) => (m[0] === 'M' ? 'Más de' : 'más de'));
+    .replace(/\bmas de\b/gi, (m) => (m[0] === 'M' ? 'Más de' : 'más de'))
+    .replace(/\bmanana\b/gi, (m) => (m[0] === 'M' ? 'Mañana' : 'mañana'));
 }
 
 export interface VariableCardProps {

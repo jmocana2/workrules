@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { formatValor } from "@ui/components/workrules/organisms/VariablesPanel/VariableCard";
 import { X } from "lucide-react";
 
 export interface VariableChip {
@@ -42,7 +43,7 @@ export function VariableChips({
           className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground"
         >
           <span className="text-muted-foreground">{chip.label}:</span>
-          <span>{chip.value}</span>
+          <span>{formatValor(chip.value)}</span>
           <button
             type="button"
             onClick={() => onRemove(chip.name)}

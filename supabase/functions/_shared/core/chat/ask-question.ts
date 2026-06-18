@@ -429,8 +429,13 @@ export async function askQuestion(
     // ========================================
     // 2. Expandir consulta con sinónimos y generar embedding
     // ========================================
+    // Las variables (turno, jornada, categoría, etc.) deben formar parte de la
+    // clave de cache: dos preguntas con la misma redacción pero variables
+    // distintas (p. ej. turno mañana vs. tarde) producen embeddings casi
+    // idénticos y, con umbral 0.95, la cache devolvería la respuesta anterior.
     const expandedQuery = expandQuery(input.pregunta);
-    const embedding = await deps.embedQuestion(expandedQuery);
+    const cacheKeyText = buildCacheKeyText(expandedQuery, input.variables);
+    const embedding = await deps.embedQuestion(cacheKeyText);
 
     // ========================================
     // 3. Buscar en semantic cache
@@ -679,4 +684,22 @@ function handleError(error: unknown): AskQuestionError {
     message: "Error interno del servidor.",
     code: "INTERNAL_ERROR",
   };
+}
+
+/**
+ * Construye el texto que se embebe para la cache semántica incluyendo las
+ * variables conocidas. Sin esto, dos preguntas idénticas con variables
+ * distintas (p. ej. turno mañana vs. tarde) colisionarían en la cache.
+ */
+function buildCacheKeyText(
+  expandedQuery: string,
+  variables: Record<string, string> | undefined,
+): string {
+  if (!variables) return expandedQuery;
+  const entries = Object.entries(variables)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => `${k}=${v}`)
+    .sort();
+  if (entries.length === 0) return expandedQuery;
+  return `${expandedQuery} [variables: ${entries.join(", ")}]`;
 }
