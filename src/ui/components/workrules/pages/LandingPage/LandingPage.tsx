@@ -1,8 +1,16 @@
 import { AUTH_TEXTS } from "@/constants";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "@/ui/components/shadcn/dialog";
 import { Logo } from "@ui/components/workrules/atoms/Logo/Logo";
 import { useSupabase } from "@ui/hooks/useSupabase";
-import { Eye, EyeOff, Github } from "lucide-react";
+import { Eye, EyeOff, Github, PlayCircle } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
+
+const DEMO_VIDEO_ID = "BsdlVp62qpY";
 
 const QUESTIONS = [
   "¿Cuánto cobraría una gobernanta de piso con 10 años de antigüedad?",
@@ -149,15 +157,35 @@ export function LandingPage() {
             </p>
 
             <div className="flex items-center gap-3">
-              <a
-                href="/presentacion-TFM"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white hover:bg-white/90 text-black px-4 py-2 rounded-xl text-[0.85rem] font-medium transition-all shadow-lg inline-flex items-center gap-1.5"
-                title="Ver slides de la presentación"
-              >
-                <abbr title="Trabajo Fin de Máster">TFM</abbr>: Ver slides de la presentación
-              </a>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="bg-white hover:bg-white/90 text-black px-4 py-2 rounded-xl text-[0.85rem] font-medium transition-all shadow-lg inline-flex items-center gap-1.5"
+                    title="Ver demo del producto"
+                  >
+                    <PlayCircle size={22} />
+                    Ver demo (2 min)
+                  </button>
+                </DialogTrigger>
+                <DialogContent
+                  showCloseButton
+                  className="sm:max-w-[min(1800px,95vw)] p-0 bg-black border-0 overflow-hidden"
+                >
+                  <DialogTitle className="sr-only">
+                    WorkRules — Demo del producto
+                  </DialogTitle>
+                  <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${DEMO_VIDEO_ID}?autoplay=1&rel=0&modestbranding=1`}
+                      title="WorkRules — Demo del producto"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 w-full h-full"
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
               <a
                 href="https://github.com/jmocana2/workrules"
                 target="_blank"
