@@ -5,7 +5,7 @@
 > La inteligencia que traduce el BOE en respuestas exactas.
 > Consulta convenios colectivos españoles y calcula salarios con precisión.
 
-[Demo en vivo](https://workrules.eu) · [Slides TFM](https://workrules.eu/presentacion-TFM) · [Video TFM](https://workrules.eu/presentacion-TFM-video) · [Storybook](https://workrules.eu/storybook)
+[workrules.eu](https://workrules.eu) · [Video TFM](https://youtu.be/BsdlVp62qpY) · [Storybook](https://workrules.eu/storybook)
 
 ---
 
@@ -250,11 +250,9 @@ flowchart LR
 - [Ciclo de vida](docs/ciclo-de-vida.md) — fases del proyecto.
 - [Estrategia de tests](docs/tests/estrategia-testing.md) — cobertura por capa y resultados.
 - [ADRs](docs/adr/README.md) — decisiones arquitectónicas registradas.
-- [Convenios — Hostelería Madrid](docs/convenios/hosteleria-madrid-datos.md) — modelo de datos y Perfil JSON.
 - [n8n pipeline](docs/n8n.md) — workflow de ingesta.
 - [Métricas](docs/metricas.md) — KPIs operativos.
 - [Storybook público](https://workrules.eu/storybook) — Design System navegable.
-- [Notion del proyecto](https://www.notion.so/workrules-eu-2e1bed77604180129884ec2fb7938f48) — gestión y notas internas.
 
 ---
 
