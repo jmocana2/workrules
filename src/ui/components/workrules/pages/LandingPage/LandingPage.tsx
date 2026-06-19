@@ -10,7 +10,7 @@ import { useSupabase } from "@ui/hooks/useSupabase";
 import { Eye, EyeOff, Github, PlayCircle } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 
-const DEMO_VIDEO_ID = "6A102zoa3Fc";
+const DEMO_VIDEO_ID = "ToEGWSl5mHM";
 
 const QUESTIONS = [
   "¿Cuánto cobraría una gobernanta de piso con 10 años de antigüedad?",
