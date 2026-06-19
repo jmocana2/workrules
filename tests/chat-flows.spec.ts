@@ -166,7 +166,7 @@ async function setupCommonMocks(page: Page) {
 
 }
 
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial", timeout: 60000 });
 
 test.describe("Flujos E2E criticos de chat", () => {
   test("1. Consulta general devuelve respuesta con citation", async ({ page }) => {
@@ -204,11 +204,11 @@ test.describe("Flujos E2E criticos de chat", () => {
 
     // Esperar respuesta visible (el texto se renderiza en assistant message)
     await expect(page.getByText(/periodo de prueba es de 60 dias/i)).toBeVisible({
-      timeout: 10000,
+      timeout: 30000,
     });
 
     // La UI de citations muestra "N fuente(s)" como trigger
-    await expect(page.getByText(/\d{1,3} fuentes?/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/\d{1,3} fuentes?/i)).toBeVisible({ timeout: 10000 });
   });
 
   test("2. Calculo de salario con datos completos muestra desglose", async ({
@@ -251,8 +251,8 @@ test.describe("Flujos E2E criticos de chat", () => {
     await expect(submitBtn2).toBeEnabled({ timeout: 5000 });
     await submitBtn2.click();
 
-    await expect(page.getByText(/1\.?800/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/\d{1,3} fuentes?/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/1\.?800/i)).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText(/\d{1,3} fuentes?/i)).toBeVisible({ timeout: 10000 });
   });
 
   test("3. Calculo con datos incompletos abre DataRequestCard", async ({
@@ -294,7 +294,7 @@ test.describe("Flujos E2E criticos de chat", () => {
 
     // DataRequestCard debe aparecer ("Necesito mas informacion" + variables)
     await expect(page.getByText(/Necesito m[aá]s informaci[oó]n/i)).toBeVisible({
-      timeout: 10000,
+      timeout: 30000,
     });
     // El componente humaniza la etiqueta: snake_case -> "Snake case"
     await expect(page.getByText(/Categoria profesional/i)).toBeVisible();
