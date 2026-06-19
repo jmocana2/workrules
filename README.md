@@ -41,9 +41,9 @@ WorkRules es una plataforma LegalTech que interpreta convenios colectivos españ
 3. Prueba estas preguntas:
    - **Información general:** *"¿Cuál es la jornada máxima anual del convenio?"*
 
-   Para los cálculos salariales, activa el **switch de cálculo salarial** en la UI y selecciona las variables en el **panel de variables** (es lo recomendado para obtener el desglose determinista del Perfil JSON):
-   - **Cálculo salarial** (panel: Categoría profesional = Jefe de cocina): *"Calcula el salario"*
-   - **Cálculo salarial con más variables** (panel: Categoría profesional = Barman/Barwoman, Tipo de establecimiento = Clase A, Antigüedad empresa = 3-6 años): *"Calcula el salario"*
+   Para los cálculos salariales, activa el **switch de cálculo salarial** en la UI y selecciona las variables en el **panel de variables** (es lo recomendado para obtener el desglose determinista del Perfil JSON). Una vez seleccionadas pulsar en el botón de enviar.
+   - **Cálculo salarial** — panel: Categoría profesional = Jefe de cocina.
+   - **Cálculo salarial con más variables** — panel: Categoría profesional = Barman/Barwoman, Tipo de establecimiento = Clase A, Antigüedad empresa = 3-6 años.
 
 Cada respuesta incluye citas con enlace al PDF oficial del convenio.
 
