@@ -185,7 +185,7 @@ Cada pregunta y respuesta queda guardada en el <strong>historial de conversacion
 Aquí es donde abro el navegador y muestro la app en producción. Los seis flujos cubren lo esencial.
 Uno: selecciono Hostelería Madrid en el ConvenioSelector.
 Dos: pregunta general — "¿cuál es la jornada máxima del convenio?". Respuesta de Claude streaming con cita a la página del PDF que abre directamente en el artículo.
-Tres: cálculo salarial completo — "calcula el salario de un recepcionista de hotel 4 estrellas con 5 años de antigüedad". El sistema identifica la categoría, busca en el Perfil JSON, calcula y responde con el desglose.
+Tres: cálculo salarial completo — "calcula el salario de un jefe de cocina en un restaurante de 4 tenedores con 5 años de antigüedad". El sistema identifica la categoría, busca en el Perfil JSON, calcula y responde con el desglose.
 Cuatro: ahora pregunto algo incompleto — "calcula el salario de un camarero". Como falta la categoría exacta y las horas, el sistema responde con DataRequestForm, un formulario con los campos que faltan generado a partir del Perfil JSON.
 Cinco: pruebo a meter un valor ilegal — 100 horas extra al mes. AlertInvalidData salta porque el Estatuto de los Trabajadores limita a 80 al año.
 Seis: tecla d alterna tema claro / oscuro. En móvil (emulador o real) el layout responsive se adapta.

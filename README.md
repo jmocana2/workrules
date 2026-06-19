@@ -39,9 +39,11 @@ WorkRules es una plataforma LegalTech que interpreta convenios colectivos españ
 1. Entra en https://workrules.eu
 2. Selecciona **"Hostelería Madrid"** en el selector de convenios.
 3. Prueba estas preguntas:
-   - *"¿Cuánto cobra un recepcionista de hotel 4 estrellas?"*
-   - *"Calcula el salario de un camarero con 12 horas extra este mes"* — para esta pregunta puedes activar el **switch de cálculo salarial** en la UI y obtener el desglose determinista del Perfil JSON.
-   - *"¿Cuál es la jornada máxima del convenio?"*
+   - **Información general:** *"¿Cuál es la jornada máxima anual del convenio?"*
+
+   Para los cálculos salariales, activa el **switch de cálculo salarial** en la UI y selecciona las variables en el **panel de variables** (es lo recomendado para obtener el desglose determinista del Perfil JSON):
+   - **Cálculo salarial** (panel: Categoría profesional = Jefe de cocina): *"Calcula el salario"*
+   - **Cálculo salarial con más variables** (panel: Categoría profesional = Barman/Barwoman, Tipo de establecimiento = Clase A, Antigüedad empresa = 3-6 años): *"Calcula el salario"*
 
 Cada respuesta incluye citas con enlace al PDF oficial del convenio.
 
