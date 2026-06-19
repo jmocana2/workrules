@@ -2,6 +2,20 @@
   <img src="./docs/assets/workrules-banner.png" alt="WorkRules" width="480" />
 </p>
 
+<p align="center">
+  <h1 align="center">WorkRules</h1>
+</p>
+
+<p align="center">
+  WorkRules — LegalTech para convenios colectivos españoles con RAG y cálculo salarial determinista.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/release-v1.0.0-555555" alt="release" />
+  <img src="https://img.shields.io/badge/License-PolyForm_NC_1.0-blue" alt="License" />
+  <img src="https://img.shields.io/badge/Node-20+-339933?logo=node.js&logoColor=white" alt="Node 20+" />
+</p>
+
 > La inteligencia que traduce el BOE en respuestas exactas.
 > Consulta convenios colectivos españoles y calcula salarios con precisión.
 

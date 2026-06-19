@@ -39,6 +39,12 @@ export interface SSEDoneEvent {
   type: "done";
   metadata?: {
     response_length: number;
+    /**
+     * Variables resueltas en el turno con las claves crudas del perfil
+     * (las mismas que usa el panel del frontend). Permite sincronizar los
+     * chips activos con lo que el backend ha entendido del mensaje.
+     */
+    resolvedVariables?: Record<string, string>;
   };
 }
 

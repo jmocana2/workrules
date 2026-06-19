@@ -134,6 +134,15 @@ const SYSTEM_PROMPT_ASK_QUESTION =
 
 9. **EXCEPCIONES Y CONDICIONES ESPECIALES**: Si el contexto menciona excepciones, exclusiones o condiciones especiales que apliquen al caso del usuario (ej: "excepto en whisquerias", "salvo para contratos temporales", "no aplica a jornada parcial"), DEBES mencionarlas en tu respuesta. Estas excepciones son informacion crucial para el usuario.
 
+10. **PERSONALIZACIÓN SEGÚN DATOS DEL USUARIO**: Si el mensaje incluye una seccion "--- DATOS DEL USUARIO ---" con variables (categoria, tipo/nivel de establecimiento, jornada, turno, etc.), esos datos son el FOCO de la respuesta. Aplica estas reglas:
+    a) **Responde SOLO sobre el caso del usuario.** No enumeres ni describas otras categorias, clases o tipos que no correspondan a sus datos. Ejemplo: si el usuario indica "Hotel 3 estrellas", NO listes las clases A/B/C/D completas con todos sus establecimientos; explica unicamente la clase que aplica a su caso.
+
+    b) **Si el contexto no clasifica explicitamente el caso del usuario, indicalo en UNA frase y aplica la asimilacion mas razonable**, sin desplegar todo el catalogo de alternativas. Ejemplo correcto: "El convenio no clasifica explicitamente Hotel 3★; por servicios prestados se asimila a Clase B (Art. X)." Ejemplo INCORRECTO: listar las cuatro clases con todos sus establecimientos "para que el usuario decida".
+
+    c) **Solo menciona otras categorias si el usuario las pide expresamente** (ej: "compara con clase A") o si son imprescindibles por contraste para entender la suya (una mencion breve, no un listado).
+
+    d) **NO repitas los DATOS DEL USUARIO al principio** como si fueran un encabezado ("Para Hotel 3 estrellas:..."). Ve directo a la respuesta personalizada.
+
 ## FORMATO DE RESPUESTA
 
 [Respuesta directa a la pregunta]
@@ -196,6 +205,8 @@ const SYSTEM_PROMPT_CALCULATE_SALARY =
     NO preguntes por estas moduladoras. NO omitas esta linea. Despues de ella, continua con el calculo normalmente.
 
 11. **TABLAS MARKDOWN OBLIGATORIAS**: Cuando presentes importes salariales por categoria, nivel, tipo de establecimiento o cualquier eje comparativo (mas de 2 valores), DEBES usar una tabla markdown con sintaxis de barras verticales (| columna | columna |). NO uses listas con guiones para mostrar importes comparables. La tabla resumen final del calculo es OBLIGATORIA aunque solo haya un concepto.
+
+12. **DATOS DEL USUARIO SON FUENTE DE VERDAD**: La seccion "--- DATOS DEL USUARIO ---" contiene los valores actuales seleccionados por el usuario en el panel de variables y es SIEMPRE la fuente autoritativa. Si cualquier dato del HISTORIAL DE CONVERSACION (categoria, tipo/nivel de establecimiento, turno, antiguedad, etc.) contradice los DATOS DEL USUARIO, IGNORA el historial para ese dato y usa el valor de DATOS DEL USUARIO. No interpretes la pregunta actual como una "actualizacion" del calculo previo: recalcula desde cero con los DATOS DEL USUARIO vigentes. Ejemplo: si el historial mencionaba "Recepcionista" pero DATOS DEL USUARIO indica categoria=camarero/a, calcula para camarero/a y NO arrastres "Recepcionista" al titulo ni al desarrollo.
 
 ## FORMATO DE RESPUESTA
 
@@ -427,40 +438,45 @@ export function buildUserMessage(
 ): string {
   const parts: string[] = [];
 
-  // 1. Historial de conversación (si existe)
-  // IMPORTANTE: Incluir primero para dar contexto a la pregunta actual
+  // 1. Variables del usuario (si las hay) — FUENTE DE VERDAD
+  // Se colocan ANTES del historial para que el modelo las trate como autoritativas
+  // y no arrastre valores contradictorios desde turnos anteriores.
+  if (variablesUsuario && Object.keys(variablesUsuario).length > 0) {
+    parts.push("--- DATOS DEL USUARIO ---");
+    parts.push(
+      "Estos son los valores VIGENTES seleccionados por el usuario. Son la fuente de verdad y prevalecen sobre cualquier dato contradictorio del historial.",
+    );
+    for (const [key, value] of Object.entries(variablesUsuario)) {
+      parts.push(`- ${key}: ${value}`);
+    }
+    parts.push("");
+  }
+
+  // 2. Historial de conversación (si existe)
   if (historyMessages && historyMessages.length > 0) {
     parts.push("--- HISTORIAL DE CONVERSACION ---");
     parts.push(
-      "A continuacion se muestra el historial de mensajes anteriores de esta conversacion.",
+      "Historial de mensajes anteriores SOLO como referencia contextual.",
     );
     parts.push(
-      "Usa este contexto para entender mejor la pregunta actual del usuario.",
+      "Si cualquier dato del historial (categoria, establecimiento, etc.) difiere de DATOS DEL USUARIO, IGNORA el historial y usa DATOS DEL USUARIO.",
     );
     parts.push("");
     parts.push(formatHistoryForContext(historyMessages));
   }
 
-  // 2. Chunks de contexto
+  // 3. Chunks de contexto
   if (chunks.length > 0) {
     parts.push("\n--- CONTEXTO DEL CONVENIO ---");
     parts.push(formatChunksForContext(chunks));
   }
 
-  // 3. Perfil JSON (si existe)
+  // 4. Perfil JSON (si existe)
   if (perfilContexto) {
     parts.push("\n--- PERFIL DEL CONVENIO ---");
     parts.push(
       formatPerfilForContext(perfilContexto, userQuestion, variablesUsuario),
     );
-  }
-
-  // 4. Variables del usuario (si las hay)
-  if (variablesUsuario && Object.keys(variablesUsuario).length > 0) {
-    parts.push("\n--- DATOS DEL USUARIO ---");
-    for (const [key, value] of Object.entries(variablesUsuario)) {
-      parts.push(`- ${key}: ${value}`);
-    }
   }
 
   // 4.b Variables moduladoras no proporcionadas

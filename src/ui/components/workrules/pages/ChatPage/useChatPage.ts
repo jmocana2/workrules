@@ -370,6 +370,12 @@ export function useChatPage(
     onError: (err) => {
       console.error("[useChatPage] Chat error:", err);
     },
+    // El backend devuelve las variables que ha resuelto del mensaje con las
+    // claves crudas del perfil; las mergeamos en `activeVariables` para que el
+    // panel refleje el contexto vigente sin que el usuario tenga que re-marcarlas.
+    onResolvedVariables: (resolved) => {
+      setActiveVariables((prev) => ({ ...prev, ...resolved }));
+    },
   });
 
   // ============================================================================

@@ -68,6 +68,7 @@ import {
   extractVariables,
   mergeVariables,
   normalizeKnownVariables,
+  resolveVariableKey,
 } from "./variable-extractor.ts";
 
 // ============================================
@@ -289,6 +290,14 @@ export async function calculateSalary(
     // aunque la respuesta sea una solicitud de datos o un aviso de error.
     const citations = buildCitations(chunks, convenio.url_pdf ?? null);
 
+    // Variables resueltas con las claves crudas del perfil (las que usa el panel
+    // del frontend). Se devuelven en cada turno para que el front sincronice los
+    // chips activos con lo que el backend ha entendido del mensaje.
+    const resolvedVariables = buildResolvedVariables(
+      allVariables,
+      perfilContexto,
+    );
+
     // Manejar estados no completos
     if (classification.state === "incomplete") {
       return {
@@ -297,6 +306,7 @@ export async function calculateSalary(
         missingVariables: classification.missingVariables,
         suggestions: classification.suggestions,
         citations,
+        resolvedVariables,
       };
     }
 
@@ -352,6 +362,7 @@ export async function calculateSalary(
         type: "stream",
         stream,
         citations,
+        resolvedVariables,
         cleanup: async (fullResponse: string) => {
           // Fire and forget para cache
           deps
@@ -448,6 +459,7 @@ export async function calculateSalary(
         model: MODEL_NAME,
         latencyMs: Date.now() - startTime,
         variablesUsadas: allVariables,
+        resolvedVariables,
       },
       citations,
       desglose: {
@@ -464,6 +476,32 @@ export async function calculateSalary(
 // ============================================
 // HELPERS
 // ============================================
+
+/**
+ * Construye el mapa de variables resueltas con las claves crudas del perfil.
+ * El frontend usa esas claves (ej: "categoria_profesional", "tipo_establecimiento")
+ * como ids en su panel; devolverlas tal cual permite hacer merge directo en
+ * `activeVariables` sin tener que mantener un mapeo inverso en el cliente.
+ *
+ * Solo se incluyen variables criticas del perfil que tengan un valor resuelto
+ * (string no vacio). Las numericas como horasExtra se omiten porque no se
+ * pintan como chips activos del panel.
+ */
+function buildResolvedVariables(
+  allVariables: ExtractedVariables,
+  perfil: { variables_criticas: string[] } | null,
+): Record<string, string> {
+  if (!perfil) return {};
+  const out: Record<string, string> = {};
+  for (const varCritica of perfil.variables_criticas) {
+    const canonical = resolveVariableKey(varCritica);
+    const value = allVariables[canonical];
+    if (typeof value === "string" && value.length > 0) {
+      out[varCritica] = value;
+    }
+  }
+  return out;
+}
 
 /**
  * Construye el texto que se embebe para la cache semántica.

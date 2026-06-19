@@ -117,6 +117,7 @@ async function handleChatRequest(
       result.cleanup,
       result.citations,
       sseHeaders,
+      result.resolvedVariables,
     );
   }
 

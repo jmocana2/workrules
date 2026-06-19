@@ -465,6 +465,10 @@ export function buildStatusStreamResponse(
     payload = {
       missingVariables: result.missingVariables,
       suggestions: result.suggestions,
+      ...(result.resolvedVariables &&
+          Object.keys(result.resolvedVariables).length > 0
+        ? { resolvedVariables: result.resolvedVariables }
+        : {}),
     };
     assistantMessage = result.message;
     citations = result.citations ?? [];
@@ -552,6 +556,7 @@ export function handleStreamResponse(
   cleanup: (fullResponse: string) => Promise<void>,
   citations: ChatCitation[],
   headers: Record<string, string>,
+  resolvedVariables?: Record<string, string>,
 ): Response {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
@@ -590,7 +595,12 @@ export function handleStreamResponse(
         const doneEvent = `data: ${
           JSON.stringify({
             type: "done",
-            metadata: { response_length: fullResponse.length },
+            metadata: {
+              response_length: fullResponse.length,
+              ...(resolvedVariables && Object.keys(resolvedVariables).length > 0
+                ? { resolvedVariables }
+                : {}),
+            },
           })
         }\n\n`;
         controller.enqueue(encoder.encode(doneEvent));

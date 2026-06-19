@@ -62,6 +62,12 @@ export interface UseChatStreamOptions {
   onFinish?: (message: ChatStreamMessage) => void;
   /** Callback en caso de error */
   onError?: (error: Error) => void;
+  /**
+   * Callback cuando el backend devuelve las variables resueltas en el turno
+   * (con claves crudas del perfil). El consumidor las usa para sincronizar el
+   * panel de variables con lo que el backend ha entendido del mensaje.
+   */
+  onResolvedVariables?: (variables: Record<string, string>) => void;
 }
 
 export interface UseChatStreamReturn {
@@ -127,6 +133,7 @@ export function useChatStream(
     onSpecialState,
     onFinish,
     onError,
+    onResolvedVariables,
   } = options;
 
   // Estado
@@ -281,9 +288,24 @@ export function useChatStream(
               };
               setSpecialState(state);
               onSpecialState?.(state);
+
+              // Estados como `incomplete` traen las variables que SI se resolvieron
+              // junto al listado de las que faltan; sincronizamos chips antes de
+              // que el DataRequestCard pida las ausentes.
+              const resolved = (status.payload as {
+                resolvedVariables?: Record<string, string>;
+              }).resolvedVariables;
+              if (resolved && Object.keys(resolved).length > 0) {
+                onResolvedVariables?.(resolved);
+              }
             },
 
-            onDone: () => {
+            onDone: (metadata) => {
+              const resolved = metadata?.resolvedVariables;
+              if (resolved && Object.keys(resolved).length > 0) {
+                onResolvedVariables?.(resolved);
+              }
+
               if (currentMessageRef.current) {
                 // Capturar el mensaje final ANTES de cualquier cambio de estado
                 // Esto evita race condition con el finally block que hace currentMessageRef.current = null
@@ -349,7 +371,14 @@ export function useChatStream(
         currentMessageRef.current = null;
       }
     },
-    [convenioId, messages, onSpecialState, onFinish, onError],
+    [
+      convenioId,
+      messages,
+      onSpecialState,
+      onFinish,
+      onError,
+      onResolvedVariables,
+    ],
   );
 
   /**

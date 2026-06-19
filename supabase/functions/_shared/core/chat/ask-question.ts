@@ -111,6 +111,12 @@ export interface AskQuestionStreamResult {
   citations: ChatCitation[];
   /** Funcion a llamar al finalizar el stream para guardar en cache */
   cleanup: (fullResponse: string) => Promise<void>;
+  /**
+   * Variables resueltas en este turno, con claves crudas del perfil. Se emitiran
+   * en el evento `done` del stream para que el front sincronice los chips.
+   * Opcional: solo calculate-salary las rellena hoy.
+   */
+  resolvedVariables?: Record<string, string>;
 }
 
 export type AskQuestionResult =

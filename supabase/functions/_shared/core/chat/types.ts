@@ -135,6 +135,12 @@ export interface CalculateSalaryMetadata {
   model: string;
   latencyMs: number;
   variablesUsadas: ExtractedVariables;
+  /**
+   * Variables resueltas con las claves crudas del perfil (las mismas que usa el
+   * panel del frontend). Permite que el front sincronice los chips activos con
+   * lo que el backend ha entendido del mensaje.
+   */
+  resolvedVariables?: Record<string, string>;
 }
 
 /**
@@ -174,6 +180,12 @@ export interface CalculateSalaryIncomplete {
   suggestions: Record<string, string[]>;
   /** Citaciones de chunks recuperados (para mostrar Sources aunque falte info) */
   citations?: ChatCitation[];
+  /**
+   * Variables que SI se resolvieron en este turno, con claves crudas del perfil.
+   * Permite que el front pre-marque los chips ya conocidos antes de mostrar el
+   * DataRequestCard para las que faltan.
+   */
+  resolvedVariables?: Record<string, string>;
 }
 
 /**
