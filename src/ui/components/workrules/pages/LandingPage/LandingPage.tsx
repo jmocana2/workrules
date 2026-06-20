@@ -170,7 +170,7 @@ export function LandingPage() {
                 </DialogTrigger>
                 <DialogContent
                   showCloseButton
-                  className="sm:max-w-[min(1800px,95vw)] p-0 bg-black border-0 overflow-hidden"
+                  className="w-[95vw] max-w-[95vw] sm:max-w-[min(1800px,95vw,142vh)] p-0 gap-0 bg-black border-0"
                 >
                   <DialogTitle className="sr-only">
                     WorkRules — Demo del producto
