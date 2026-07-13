@@ -12,7 +12,6 @@ import {
 import { embedQuestion as defaultEmbedQuestion } from "../../lib/openai.ts";
 import {
   checkUserQuota as defaultCheckUserQuota,
-  type ChunkSearchResult,
   getChunksByGroup as defaultGetChunksByGroup,
   getConvenioById as defaultGetConvenioById,
   getPerfilByConvenio as defaultGetPerfilByConvenio,
@@ -34,7 +33,6 @@ import {
   CACHE_THRESHOLD,
   DEFAULT_CHUNK_LIMIT,
   DEFAULT_CHUNK_THRESHOLD,
-  EXPANDED_CHUNK_CAP,
   MODEL_NAME,
 } from "./ask-question/config.ts";
 import type {
@@ -48,6 +46,7 @@ import {
   buildCitations,
   mapChunksToPromptFormat,
 } from "./ask-question/chunk-rules.ts";
+import { expandChunksWithNeighbors } from "./ask-question/chunk-expansion.ts";
 
 export type {
   AskQuestionCacheHit,
@@ -77,117 +76,6 @@ export const defaultDeps: AskQuestionDeps = {
   saveChatMessage: defaultSaveChatMessage,
   incrementQueryCount: defaultIncrementQueryCount,
 };
-
-// ============================================
-// HELPERS
-// ============================================
-
-/**
- * Expande el conjunto de chunks recuperados trayendo los vecinos del mismo
- * `articulo` o `seccion`. Sirve para que respuestas enumerables (áreas, grupos,
- * niveles, categorías) repartidas en chunks consecutivos lleguen completas al
- * LLM, aunque la búsqueda vectorial solo haya puntuado alto al primero.
- *
- * Estrategia:
- *   1. Para cada chunk recuperado, mira si tiene `articulo` o, en su defecto,
- *      `seccion` en metadata.
- *   2. Por cada grupo único (articulo o seccion), pide a la BD todos los chunks
- *      de ese grupo en este convenio (función `getChunksByGroup`).
- *   3. Fusiona los originales con los vecinos, deduplica por `chunk_id` y
- *      mantiene la `similarity` original cuando existe (los vecinos añadidos
- *      llevan similarity = 0 para que no afecten al ranking).
- *   4. Limita el total a `EXPANDED_CHUNK_CAP` para no inflar el contexto.
- *
- * Si la consulta falla para algún grupo, se ignora silenciosamente y se
- * devuelve lo que se haya podido reunir; nunca debe romper el flujo principal.
- */
-type ChunkGroup = { key: "articulo" | "seccion"; value: string };
-
-function detectChunkGroups(base: ChunkSearchResult[]): Map<string, ChunkGroup> {
-  const groups = new Map<string, ChunkGroup>();
-  for (const chunk of base) {
-    const meta = chunk.metadata as Record<string, unknown>;
-    const articulo = typeof meta?.articulo === "string"
-      ? meta.articulo.trim()
-      : "";
-    const seccion = typeof meta?.seccion === "string"
-      ? meta.seccion.trim()
-      : "";
-
-    if (articulo) {
-      groups.set(`articulo:${articulo}`, { key: "articulo", value: articulo });
-    } else if (seccion) {
-      groups.set(`seccion:${seccion}`, { key: "seccion", value: seccion });
-    }
-  }
-  return groups;
-}
-
-async function fetchNeighborsForGroups(
-  groups: ChunkGroup[],
-  convenioId: string,
-  fetchGroup: AskQuestionDeps["getChunksByGroup"],
-): Promise<ChunkSearchResult[][]> {
-  return await Promise.all(
-    groups.map((g) =>
-      fetchGroup(convenioId, g.key, g.value).catch((err) => {
-        console.error(
-          `[ask-question] Error expanding chunks for ${g.key}=${g.value}:`,
-          err,
-        );
-        return [] as ChunkSearchResult[];
-      })
-    ),
-  );
-}
-
-function mergeChunks(
-  base: ChunkSearchResult[],
-  neighborResults: ChunkSearchResult[][],
-): ChunkSearchResult[] {
-  const byId = new Map<string, ChunkSearchResult>();
-  for (const c of base) byId.set(c.chunk_id, c);
-
-  for (const list of neighborResults) {
-    for (const neighbor of list) {
-      if (!byId.has(neighbor.chunk_id)) {
-        byId.set(neighbor.chunk_id, neighbor);
-      }
-    }
-  }
-
-  // Ordenar: similarity desc primero, luego numero_chunk asc para los vecinos
-  // (orden natural del documento).
-  return Array.from(byId.values()).sort((a, b) => {
-    if (a.similarity !== b.similarity) return b.similarity - a.similarity;
-    const ia = (a.metadata as Record<string, unknown>)?.numero_chunk as
-      | number
-      | undefined;
-    const ib = (b.metadata as Record<string, unknown>)?.numero_chunk as
-      | number
-      | undefined;
-    return (ia ?? 0) - (ib ?? 0);
-  });
-}
-
-async function expandChunksWithNeighbors(
-  base: ChunkSearchResult[],
-  convenioId: string,
-  fetchGroup: AskQuestionDeps["getChunksByGroup"],
-): Promise<ChunkSearchResult[]> {
-  if (base.length === 0) return base;
-
-  const groups = detectChunkGroups(base);
-  if (groups.size === 0) return base;
-
-  const neighborResults = await fetchNeighborsForGroups(
-    Array.from(groups.values()),
-    convenioId,
-    fetchGroup,
-  );
-
-  return mergeChunks(base, neighborResults).slice(0, EXPANDED_CHUNK_CAP);
-}
 
 // ============================================
 // USE CASE PRINCIPAL
