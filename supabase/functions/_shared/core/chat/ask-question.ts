@@ -22,7 +22,6 @@ import {
   searchChunksByConvenio as defaultSearchChunksByConvenio,
   searchSemanticCache as defaultSearchSemanticCache,
 } from "../../lib/supabase.ts";
-import type { ChunkResult } from "./prompts.ts";
 import {
   buildSystemPrompt,
   buildUserMessage,
@@ -45,6 +44,10 @@ import type {
 } from "./ask-question/types.ts";
 import { buildCacheKeyText } from "./ask-question/cache-key.ts";
 import { handleError } from "./ask-question/error-mapper.ts";
+import {
+  buildCitations,
+  mapChunksToPromptFormat,
+} from "./ask-question/chunk-rules.ts";
 
 export type {
   AskQuestionCacheHit,
@@ -78,44 +81,6 @@ export const defaultDeps: AskQuestionDeps = {
 // ============================================
 // HELPERS
 // ============================================
-
-/**
- * Devuelve el artículo utilizable de un chunk.
- * Omite el artículo para:
- * - `tabla_salarial`: suele venir mal referenciado
- * - Contenido de ANEXOS: no tienen artículos numerados
- * - Secciones sin artículo real (clasificación profesional, categorías, etc.)
- */
-function getChunkArticulo(
-  metadata: Record<string, unknown>,
-): string | undefined {
-  const tipo = metadata?.tipo as string | undefined;
-  const seccion = (metadata?.seccion as string | undefined)?.toLowerCase() ||
-    "";
-  const articulo = metadata?.articulo as string | undefined;
-
-  // Tipos que NO deben mostrar artículo
-  if (tipo === "tabla_salarial") {
-    return undefined;
-  }
-
-  // Secciones de ANEXO no tienen artículos numerados
-  const esAnexo = seccion.includes("anexo") ||
-    seccion.includes("tabla") ||
-    seccion.includes("disposicion") ||
-    seccion.includes("clasificación profesional") ||
-    seccion.includes("clasificacion profesional") ||
-    seccion.includes("categorías profesionales") ||
-    seccion.includes("categorias profesionales") ||
-    seccion.includes("niveles retributivos") ||
-    seccion.includes("grupos profesionales");
-
-  if (esAnexo) {
-    return undefined;
-  }
-
-  return articulo;
-}
 
 /**
  * Expande el conjunto de chunks recuperados trayendo los vecinos del mismo
@@ -222,48 +187,6 @@ async function expandChunksWithNeighbors(
   );
 
   return mergeChunks(base, neighborResults).slice(0, EXPANDED_CHUNK_CAP);
-}
-
-/**
- * Convierte ChunkSearchResult a ChunkResult para prompts
- * Ignora el artículo para chunks de tipo "tabla_salarial" ya que suelen tener
- * artículos incorrectos (ej: "Art. 1" cuando realmente son del Anexo)
- */
-function mapChunksToPromptFormat(
-  chunks: ChunkSearchResult[],
-): ChunkResult[] {
-  return chunks.map((c) => {
-    const metadata = c.metadata as Record<string, unknown>;
-
-    return {
-      content: c.contenido,
-      articulo: getChunkArticulo(metadata),
-      seccion: metadata?.seccion as string | undefined,
-      similarity: c.similarity,
-    };
-  });
-}
-
-/**
- * Construye citaciones desde los chunks usados
- */
-function buildCitations(
-  chunks: ChunkSearchResult[],
-  convenioUrlPdf: string | null,
-): ChatCitation[] {
-  return chunks.map((c) => {
-    const metadata = c.metadata as Record<string, unknown>;
-    const pagina = typeof metadata?.pagina === "number" ? metadata.pagina : null;
-
-    return {
-      articulo: getChunkArticulo(metadata),
-      seccion: (metadata?.seccion as string) || null,
-      chunk_id: c.chunk_id,
-      relevance_score: c.similarity,
-      url_pdf: convenioUrlPdf,
-      pagina,
-    };
-  });
 }
 
 // ============================================
