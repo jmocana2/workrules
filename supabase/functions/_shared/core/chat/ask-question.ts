@@ -6,14 +6,10 @@
  */
 
 import {
-  AnthropicError,
   createChatResponse as defaultCreateChatResponse,
   streamChatResponse as defaultStreamChatResponse,
 } from "../../lib/anthropic.ts";
-import {
-  EmbeddingError,
-  embedQuestion as defaultEmbedQuestion,
-} from "../../lib/openai.ts";
+import { embedQuestion as defaultEmbedQuestion } from "../../lib/openai.ts";
 import {
   checkUserQuota as defaultCheckUserQuota,
   type ChunkSearchResult,
@@ -21,7 +17,6 @@ import {
   getConvenioById as defaultGetConvenioById,
   getPerfilByConvenio as defaultGetPerfilByConvenio,
   incrementQueryCount as defaultIncrementQueryCount,
-  RepositoryError,
   saveChatMessage as defaultSaveChatMessage,
   saveToSemanticCache as defaultSaveToSemanticCache,
   searchChunksByConvenio as defaultSearchChunksByConvenio,
@@ -45,10 +40,11 @@ import {
 } from "./ask-question/config.ts";
 import type {
   AskQuestionDeps,
-  AskQuestionError,
   AskQuestionInput,
   AskQuestionResult,
 } from "./ask-question/types.ts";
+import { buildCacheKeyText } from "./ask-question/cache-key.ts";
+import { handleError } from "./ask-question/error-mapper.ts";
 
 export type {
   AskQuestionCacheHit,
@@ -519,72 +515,3 @@ export async function askQuestion(
   }
 }
 
-/**
- * Mapea errores a resultado tipado
- */
-function handleError(error: unknown): AskQuestionError {
-  // Error de embedding (OpenAI)
-  if (error instanceof EmbeddingError) {
-    console.error("[ask-question] Embedding error:", error.message);
-    return {
-      type: "error",
-      message: "Error al procesar la pregunta. Intenta de nuevo.",
-      code: `EMBEDDING_${error.code}`,
-    };
-  }
-
-  // Error de Anthropic
-  if (error instanceof AnthropicError) {
-    console.error("[ask-question] Anthropic error:", error.message);
-
-    if (error.code === "RATE_LIMIT" || error.code === "OVERLOADED") {
-      return {
-        type: "error",
-        message: "El servicio esta sobrecargado. Intenta en unos minutos.",
-        code: `ANTHROPIC_${error.code}`,
-      };
-    }
-
-    return {
-      type: "error",
-      message: "Error al generar la respuesta. Intenta de nuevo.",
-      code: `ANTHROPIC_${error.code}`,
-    };
-  }
-
-  // Error de repository (Supabase)
-  if (error instanceof RepositoryError) {
-    console.error("[ask-question] Repository error:", error.message);
-    return {
-      type: "error",
-      message: "Error de base de datos. Intenta de nuevo.",
-      code: `DB_${error.code}`,
-    };
-  }
-
-  // Error desconocido
-  console.error("[ask-question] Unexpected error:", error);
-  return {
-    type: "error",
-    message: "Error interno del servidor.",
-    code: "INTERNAL_ERROR",
-  };
-}
-
-/**
- * Construye el texto que se embebe para la cache semántica incluyendo las
- * variables conocidas. Sin esto, dos preguntas idénticas con variables
- * distintas (p. ej. turno mañana vs. tarde) colisionarían en la cache.
- */
-function buildCacheKeyText(
-  expandedQuery: string,
-  variables: Record<string, string> | undefined,
-): string {
-  if (!variables) return expandedQuery;
-  const entries = Object.entries(variables)
-    .filter(([, v]) => v !== undefined && v !== null && v !== "")
-    .map(([k, v]) => `${k}=${v}`)
-    .sort();
-  if (entries.length === 0) return expandedQuery;
-  return `${expandedQuery} [variables: ${entries.join(", ")}]`;
-}
