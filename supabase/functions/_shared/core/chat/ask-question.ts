@@ -47,6 +47,7 @@ import {
   mapChunksToPromptFormat,
 } from "./ask-question/chunk-rules.ts";
 import { expandChunksWithNeighbors } from "./ask-question/chunk-expansion.ts";
+import { persistResponse } from "./ask-question/finalize.ts";
 
 export type {
   AskQuestionCacheHit,
@@ -218,55 +219,19 @@ export async function askQuestion(
         type: "stream",
         stream,
         citations,
-        cleanup: async (fullResponse: string) => {
-          // Fire and forget para cache (no bloquear ni fallar por esto)
-          deps.saveToSemanticCache(
+        cleanup: (fullResponse: string) =>
+          persistResponse({
+            deps,
             embedding,
-            input.pregunta,
-            fullResponse,
-            input.convenioId,
-            citations as unknown as Record<string, unknown>[],
-          ).catch((err) => {
-            console.error(
-              "[ask-question] Stream cleanup - Error saving to cache:",
-              err,
-            );
-          });
-
-          // Guardar en historial si hay session (fire and forget)
-          if (input.sessionId) {
-            deps.saveChatMessage(
-              input.sessionId,
-              "user",
-              input.pregunta,
-            ).catch((err) => {
-              console.error(
-                "[ask-question] Stream cleanup - Error saving user message:",
-                err,
-              );
-            });
-            deps.saveChatMessage(
-              input.sessionId,
-              "assistant",
-              fullResponse,
-            ).catch((err) => {
-              console.error(
-                "[ask-question] Stream cleanup - Error saving assistant message:",
-                err,
-              );
-            });
-          }
-
-          // Incrementar contador (este sí es crítico para la cuota)
-          try {
-            await deps.incrementQueryCount(input.userId);
-          } catch (err) {
-            console.error(
-              "[ask-question] Stream cleanup - Error incrementing query count:",
-              err,
-            );
-          }
-        },
+            question: input.pregunta,
+            response: fullResponse,
+            convenioId: input.convenioId,
+            citations,
+            sessionId: input.sessionId,
+            userId: input.userId,
+            logTag: "Stream cleanup",
+            sequentialMessages: false,
+          }),
       };
     }
 
@@ -277,32 +242,20 @@ export async function askQuestion(
     });
 
     // ========================================
-    // 8. Guardar en cache e historial
+    // 8. Guardar en cache e historial + incrementar cuota
     // ========================================
-    // Fire and forget para cache (no bloquear respuesta)
-    deps.saveToSemanticCache(
+    await persistResponse({
+      deps,
       embedding,
-      input.pregunta,
+      question: input.pregunta,
       response,
-      input.convenioId,
-      citations as unknown as Record<string, unknown>[],
-    ).catch((err) => {
-      console.error("[ask-question] Error saving to cache:", err);
+      convenioId: input.convenioId,
+      citations,
+      sessionId: input.sessionId,
+      userId: input.userId,
+      logTag: "non-stream",
+      sequentialMessages: true,
     });
-
-    // Guardar en historial si hay session
-    if (input.sessionId) {
-      // Save sequentially to maintain order
-      deps.saveChatMessage(input.sessionId, "user", input.pregunta)
-        .then(() =>
-          deps.saveChatMessage(input.sessionId!, "assistant", response)
-        )
-        .catch((err) => {
-          console.error("[ask-question] Error saving chat messages:", err);
-        });
-    }
-    // Incrementar contador de queries
-    await deps.incrementQueryCount(input.userId);
 
     // ========================================
     // 9. Retornar respuesta
