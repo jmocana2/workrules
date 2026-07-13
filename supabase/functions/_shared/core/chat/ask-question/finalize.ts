@@ -48,6 +48,9 @@ export async function persistResponse(params: PersistResponseParams): Promise<vo
   } = params;
 
   // Cache semántica: fire and forget.
+  // TODO: envolver en EdgeRuntime.waitUntil(...) para evitar que el Edge
+  // Runtime termine la instancia antes de que la escritura complete.
+  // Aplica también a saveChatMessage más abajo. Bug preexistente al refactor.
   deps.saveToSemanticCache(
     embedding,
     question,
