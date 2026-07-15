@@ -5,7 +5,7 @@
  */
 export function buildCacheKeyText(
   expandedQuery: string,
-  variables: Record<string, string> | undefined,
+  variables: Record<string, string | number | undefined> | undefined,
 ): string {
   if (!variables) return expandedQuery;
   const entries = Object.entries(variables)

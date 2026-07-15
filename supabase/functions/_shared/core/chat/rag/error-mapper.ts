@@ -2,17 +2,28 @@
  * Mapea errores de las librerías externas (OpenAI, Anthropic, Supabase) al
  * resultado tipado `AskQuestionError`. Función pura: no lanza, no hace I/O
  * más allá del `console.error` de observabilidad.
+ *
+ * El `logTag` distingue qué use case emitió el error (ask-question,
+ * calculate-salary, etc.) sin obligar a cada uno a tener su propio mapper.
  */
 
 import { AnthropicError } from "../../../lib/anthropic.ts";
 import { EmbeddingError } from "../../../lib/openai.ts";
 import { RepositoryError } from "../../../lib/supabase.ts";
-import type { AskQuestionError } from "./types.ts";
+import type { AskQuestionError } from "../ask-question/types.ts";
 
-export function handleError(error: unknown): AskQuestionError {
+export interface HandleErrorOptions {
+  /** Prefijo de log para observabilidad. Default: "ask-question". */
+  logTag?: string;
+}
+
+export function handleError(
+  error: unknown,
+  { logTag = "ask-question" }: HandleErrorOptions = {},
+): AskQuestionError {
   // Error de embedding (OpenAI)
   if (error instanceof EmbeddingError) {
-    console.error("[ask-question] Embedding error:", error.message);
+    console.error(`[${logTag}] Embedding error:`, error.message);
     return {
       type: "error",
       message: "Error al procesar la pregunta. Intenta de nuevo.",
@@ -22,7 +33,7 @@ export function handleError(error: unknown): AskQuestionError {
 
   // Error de Anthropic
   if (error instanceof AnthropicError) {
-    console.error("[ask-question] Anthropic error:", error.message);
+    console.error(`[${logTag}] Anthropic error:`, error.message);
 
     if (error.code === "RATE_LIMIT" || error.code === "OVERLOADED") {
       return {
@@ -41,7 +52,7 @@ export function handleError(error: unknown): AskQuestionError {
 
   // Error de repository (Supabase)
   if (error instanceof RepositoryError) {
-    console.error("[ask-question] Repository error:", error.message);
+    console.error(`[${logTag}] Repository error:`, error.message);
     return {
       type: "error",
       message: "Error de base de datos. Intenta de nuevo.",
@@ -50,7 +61,7 @@ export function handleError(error: unknown): AskQuestionError {
   }
 
   // Error desconocido
-  console.error("[ask-question] Unexpected error:", error);
+  console.error(`[${logTag}] Unexpected error:`, error);
   return {
     type: "error",
     message: "Error interno del servidor.",

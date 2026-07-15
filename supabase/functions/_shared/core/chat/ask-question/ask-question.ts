@@ -12,21 +12,21 @@ import {
 } from "../prompts.ts";
 import { expandQuery } from "../query-expander.ts";
 import type { ChatCitation } from "../types.ts";
-import { buildCacheKeyText } from "./cache-key.ts";
+import { buildCacheKeyText } from "../rag/cache-key.ts";
 import { expandChunksWithNeighbors } from "./chunk-expansion.ts";
 import {
   buildCitations,
   mapChunksToPromptFormat,
-} from "./chunk-rules.ts";
+} from "../rag/chunk-rules.ts";
 import {
   CACHE_THRESHOLD,
   DEFAULT_CHUNK_LIMIT,
   DEFAULT_CHUNK_THRESHOLD,
   MODEL_NAME,
-} from "./config.ts";
+} from "../rag/config.ts";
 import { defaultDeps } from "./deps.ts";
-import { handleError } from "./error-mapper.ts";
-import { persistResponse } from "./finalize.ts";
+import { handleError } from "../rag/error-mapper.ts";
+import { persistResponse } from "../rag/finalize.ts";
 import type {
   AskQuestionDeps,
   AskQuestionInput,

@@ -10,16 +10,30 @@
  *
  * `sequentialMessages` reproduce la diferencia que existía entre las dos ramas
  * del orquestador antes del refactor:
- *   - `false` (default, rama streaming): user y assistant se disparan en paralelo.
+ *   - `false` (rama streaming): user y assistant se disparan en paralelo.
  *   - `true` (rama no-streaming): user primero y, tras completarse, assistant,
  *     para garantizar orden en el historial.
+ *
+ * `logTag` prefija todos los logs de este módulo para que cada use case
+ * (ask-question, calculate-salary, ...) se identifique en observabilidad.
  */
 
 import type { ChatCitation } from "../types.ts";
-import type { AskQuestionDeps } from "./types.ts";
+import type { AskQuestionDeps } from "../ask-question/types.ts";
+
+/**
+ * Sub-conjunto de dependencias que `persistResponse` realmente necesita.
+ * Cualquier `Deps` de use case que cumpla estas tres capacidades vale — así
+ * este módulo lo reutilizan otros use cases sin heredar `AskQuestionDeps`
+ * completa.
+ */
+export type PersistResponseDeps = Pick<
+  AskQuestionDeps,
+  "saveToSemanticCache" | "saveChatMessage" | "incrementQueryCount"
+>;
 
 export interface PersistResponseParams {
-  deps: AskQuestionDeps;
+  deps: PersistResponseDeps;
   embedding: number[];
   question: string;
   response: string;
@@ -27,7 +41,7 @@ export interface PersistResponseParams {
   citations: ChatCitation[];
   sessionId: string | undefined;
   userId: string;
-  /** Log tag para distinguir stream vs no-stream en los errores. */
+  /** Prefijo de log. Ej: "ask-question", "calculate-salary". */
   logTag: string;
   /** Si true, guarda user antes que assistant secuencialmente. */
   sequentialMessages: boolean;
@@ -58,7 +72,7 @@ export async function persistResponse(params: PersistResponseParams): Promise<vo
     convenioId,
     citations as unknown as Record<string, unknown>[],
   ).catch((err) => {
-    console.error(`[ask-question] ${logTag} - Error saving to cache:`, err);
+    console.error(`[${logTag}] Error saving to cache:`, err);
   });
 
   // Historial: fire and forget, respetando el orden pedido.
@@ -67,23 +81,14 @@ export async function persistResponse(params: PersistResponseParams): Promise<vo
       deps.saveChatMessage(sessionId, "user", question)
         .then(() => deps.saveChatMessage(sessionId, "assistant", response))
         .catch((err) => {
-          console.error(
-            `[ask-question] ${logTag} - Error saving chat messages:`,
-            err,
-          );
+          console.error(`[${logTag}] Error saving chat messages:`, err);
         });
     } else {
       deps.saveChatMessage(sessionId, "user", question).catch((err) => {
-        console.error(
-          `[ask-question] ${logTag} - Error saving user message:`,
-          err,
-        );
+        console.error(`[${logTag}] Error saving user message:`, err);
       });
       deps.saveChatMessage(sessionId, "assistant", response).catch((err) => {
-        console.error(
-          `[ask-question] ${logTag} - Error saving assistant message:`,
-          err,
-        );
+        console.error(`[${logTag}] Error saving assistant message:`, err);
       });
     }
   }
@@ -92,9 +97,6 @@ export async function persistResponse(params: PersistResponseParams): Promise<vo
   try {
     await deps.incrementQueryCount(userId);
   } catch (err) {
-    console.error(
-      `[ask-question] ${logTag} - Error incrementing query count:`,
-      err,
-    );
+    console.error(`[${logTag}] Error incrementing query count:`, err);
   }
 }

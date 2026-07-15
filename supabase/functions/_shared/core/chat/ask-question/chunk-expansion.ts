@@ -19,7 +19,7 @@
  */
 
 import type { ChunkSearchResult } from "../../../lib/supabase.ts";
-import { EXPANDED_CHUNK_CAP } from "./config.ts";
+import { EXPANDED_CHUNK_CAP } from "../rag/config.ts";
 import type { AskQuestionDeps } from "./types.ts";
 
 type ChunkGroup = { key: "articulo" | "seccion"; value: string };
