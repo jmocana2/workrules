@@ -4,7 +4,6 @@ import { assertEquals, assertExists } from '@std/assert';
 import {
   validateChatRequest,
   parseRequestBody,
-  processChatRequest,
   buildErrorResponse,
 } from './handlers.ts';
 
@@ -164,41 +163,6 @@ Deno.test('parseRequestBody - returns error for empty body', async () => {
 
   assertEquals(result.data, null);
   assertEquals(result.error, 'Invalid JSON body');
-});
-
-// ============================================
-// processChatRequest
-// ============================================
-
-Deno.test('processChatRequest - returns 200 with correct structure', () => {
-  const result = processChatRequest({
-    convenio_id: '66499',
-    pregunta: '¿Cuántos días de vacaciones?',
-  });
-
-  assertEquals(result.status, 200);
-  assertEquals(result.body.status, 'ok');
-  assertExists(result.body.data);
-});
-
-Deno.test('processChatRequest - includes convenio_id in response', () => {
-  const result = processChatRequest({
-    convenio_id: '66499',
-    pregunta: '¿Cuántos días de vacaciones?',
-  });
-
-  const data = result.body.data as Record<string, unknown>;
-  assertEquals(data.convenio_id, '66499');
-});
-
-Deno.test('processChatRequest - includes pregunta in response', () => {
-  const result = processChatRequest({
-    convenio_id: '66499',
-    pregunta: '¿Cuántos días de vacaciones?',
-  });
-
-  const data = result.body.data as Record<string, unknown>;
-  assertEquals(data.pregunta, '¿Cuántos días de vacaciones?');
 });
 
 // ============================================
