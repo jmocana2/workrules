@@ -6,7 +6,7 @@ import {
   calculateSalary,
   type CalculateSalaryResult,
   isSalaryQuery,
-} from "./calculate-salary.ts";
+} from "./calculate-salary/index.ts";
 import type { ChatCitation, ChatMetadata, ChatRequest } from "./types.ts";
 import { isShowRangesRequest } from "./variable-extractor.ts";
 

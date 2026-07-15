@@ -8,7 +8,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   calculateSalary,
   type CalculateSalaryDeps,
-} from "./calculate-salary.ts";
+} from "./calculate-salary/index.ts";
 import type { CalculateSalaryInput } from "./types.ts";
 
 // ============================================
