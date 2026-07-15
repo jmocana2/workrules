@@ -5,7 +5,7 @@ import {
   calculateSalary,
   isSalaryQuery,
 } from "./calculate-salary/index.ts";
-import type { ChatCitation, ChatRequest } from "./types.ts";
+import type { ChatRequest } from "./types.ts";
 import { isShowRangesRequest } from "./variable-extractor.ts";
 import type { ChatUseCaseResult } from "./http/result-mapper.ts";
 
@@ -24,6 +24,10 @@ export {
   type ChatUseCaseResult,
   mapResultToHttpResponse,
 } from "./http/result-mapper.ts";
+
+// Re-exports de la capa SSE (paso 2 del refactor)
+export { buildStatusStreamResponse } from "./sse/status-stream.ts";
+export { handleStreamResponse } from "./sse/anthropic-stream.ts";
 
 /**
  * Transforma una solicitud de "ver rangos/opciones" en una pregunta optimizada
@@ -127,153 +131,3 @@ export async function classifyAndExecute(
   });
 }
 
-/**
- * Construye una respuesta SSE para estados especiales (incomplete/invalid/conflicting)
- * cuando el cliente pidió streaming.
- */
-export function buildStatusStreamResponse(
-  result: ChatUseCaseResult,
-  headers: Record<string, string>,
-): Response | null {
-  let state: "incomplete" | "invalid" | "conflicting" | null = null;
-  let payload: Record<string, unknown> | null = null;
-  let assistantMessage = "";
-  let citations: ChatCitation[] = [];
-
-  if (result.type === "incomplete_data") {
-    state = "incomplete";
-    payload = {
-      missingVariables: result.missingVariables,
-      suggestions: result.suggestions,
-      ...(result.resolvedVariables &&
-          Object.keys(result.resolvedVariables).length > 0
-        ? { resolvedVariables: result.resolvedVariables }
-        : {}),
-    };
-    assistantMessage = result.message;
-    citations = result.citations ?? [];
-  } else if (result.type === "invalid_data") {
-    if (result.conflictingVariables && result.conflictingVariables.length > 0) {
-      state = "conflicting";
-      payload = {
-        message: result.message,
-        conflictingVariables: result.conflictingVariables,
-      };
-    } else {
-      state = "invalid";
-      payload = {
-        message: result.message,
-        invalidVariables: result.invalidVariables,
-      };
-    }
-    assistantMessage = result.message;
-    citations = result.citations ?? [];
-  } else {
-    return null;
-  }
-
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream<Uint8Array>({
-    start(controller) {
-      const statusEvent = `data: ${
-        JSON.stringify({ type: "status", state, payload })
-      }\n\n`;
-      controller.enqueue(encoder.encode(statusEvent));
-
-      if (assistantMessage && state !== "incomplete") {
-        const textEvent = `data: ${
-          JSON.stringify({ type: "text", content: assistantMessage })
-        }\n\n`;
-        controller.enqueue(encoder.encode(textEvent));
-      }
-
-      const shouldEmitCitations = state !== "incomplete";
-      for (const citation of shouldEmitCitations ? citations : []) {
-        const citationEvent = `data: ${
-          JSON.stringify({
-            type: "citation",
-            articulo: citation.articulo,
-            seccion: citation.seccion,
-            url_pdf: citation.url_pdf,
-            pagina: citation.pagina,
-          })
-        }\n\n`;
-        controller.enqueue(encoder.encode(citationEvent));
-      }
-
-      const doneEvent = `data: ${
-        JSON.stringify({
-          type: "done",
-          metadata: { response_length: assistantMessage.length },
-        })
-      }\n\n`;
-      controller.enqueue(encoder.encode(doneEvent));
-      controller.close();
-    },
-  });
-
-  return new Response(stream, { headers });
-}
-
-/**
- * Transforma ReadableStream de Anthropic en SSE events
- */
-export function handleStreamResponse(
-  stream: ReadableStream<Uint8Array>,
-  cleanup: (fullResponse: string) => Promise<void>,
-  citations: ChatCitation[],
-  headers: Record<string, string>,
-  resolvedVariables?: Record<string, string>,
-): Response {
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
-
-  let fullResponse = "";
-
-  const transformedStream = stream.pipeThrough(
-    new TransformStream<Uint8Array, Uint8Array>({
-      transform(chunk, controller) {
-        const text = decoder.decode(chunk, { stream: true });
-        fullResponse += text;
-
-        const sseEvent = `data: ${
-          JSON.stringify({ type: "text", content: text })
-        }\n\n`;
-        controller.enqueue(encoder.encode(sseEvent));
-      },
-      flush(controller) {
-        for (const citation of citations) {
-          const citationEvent = `data: ${
-            JSON.stringify({
-              type: "citation",
-              articulo: citation.articulo,
-              seccion: citation.seccion,
-              url_pdf: citation.url_pdf,
-              pagina: citation.pagina,
-            })
-          }\n\n`;
-          controller.enqueue(encoder.encode(citationEvent));
-        }
-
-        const doneEvent = `data: ${
-          JSON.stringify({
-            type: "done",
-            metadata: {
-              response_length: fullResponse.length,
-              ...(resolvedVariables && Object.keys(resolvedVariables).length > 0
-                ? { resolvedVariables }
-                : {}),
-            },
-          })
-        }\n\n`;
-        controller.enqueue(encoder.encode(doneEvent));
-
-        cleanup(fullResponse).catch((err) => {
-          console.error("[handlers] Stream cleanup error:", err);
-        });
-      },
-    }),
-  );
-
-  return new Response(transformedStream, { headers });
-}
