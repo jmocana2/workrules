@@ -1,6 +1,6 @@
 // supabase/functions/_shared/core/chat/http/result-mapper.ts
 
-import type { AskQuestionResult } from "../ask-question.ts";
+import type { AskQuestionResult } from "../ask-question/index.ts";
 import type { CalculateSalaryResult } from "../calculate-salary/index.ts";
 import type { ChatMetadata } from "../types.ts";
 import type { ChatHandlerResponse } from "./error-response.ts";

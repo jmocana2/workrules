@@ -1,7 +1,6 @@
 /**
  * Barrel del use case AskQuestion.
- * Los consumidores externos importan desde aquí (o desde `../ask-question.ts`,
- * que es un shim que re-exporta este módulo).
+ * Los consumidores externos importan desde aquí.
  */
 
 export { askQuestion } from "./ask-question.ts";

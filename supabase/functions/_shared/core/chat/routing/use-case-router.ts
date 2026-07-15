@@ -1,6 +1,6 @@
 // supabase/functions/_shared/core/chat/routing/use-case-router.ts
 
-import { askQuestion } from "../ask-question.ts";
+import { askQuestion } from "../ask-question/index.ts";
 import {
   calculateSalary,
   isSalaryQuery,
