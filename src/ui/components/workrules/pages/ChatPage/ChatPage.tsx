@@ -15,7 +15,6 @@
 import { cn } from '@/lib/utils';
 import { CHAT_TEXTS } from '@constants/texts';
 import { useBreakpoint } from '@core/hooks';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   Message,
   MessageContent,
@@ -39,12 +38,11 @@ import { UserMessage } from '@ui/components/workrules/molecules/UserMessage/User
 import { VariableChips, type VariableChip } from '@ui/components/workrules/molecules/VariableChips/VariableChips';
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
-import { useConvenioUploaderController } from '@ui/components/workrules/organisms/ConvenioUploader';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
 import { openConvenioPdf as openConvenioPdfUseCase } from '@/application/use-cases';
 import { useRepositories } from '@/providers/RepositoriesProvider';
 import { Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 
 const MessageResponse = lazy(() =>
   import('@ui/components/ai-elements/message-response').then((m) => ({
@@ -72,6 +70,8 @@ import { MessageCitations } from './components/MessageCitations';
 import { canSubmit as canSubmitHelper } from './helpers/canSubmit';
 import { getEmptyStateText } from './helpers/emptyState';
 import { normalizeUserPlan } from './helpers/normalizeUserPlan';
+import { useMobileInputHeight } from './hooks/useMobileInputHeight';
+import { useConvenioUploadIntegration } from './hooks/useConvenioUploadIntegration';
 
 export function ChatPage({
   initialConvenioId,
@@ -85,7 +85,6 @@ export function ChatPage({
   // Detectar viewport
   const { isMobile, isTablet } = useBreakpoint();
 
-  const queryClient = useQueryClient();
   const { convenio: convenioRepo } = useRepositories();
   const handleOpenConvenioPdf = (
     convenioId: string,
@@ -97,22 +96,7 @@ export function ChatPage({
   const [isVariablesPanelOpen, setIsVariablesPanelOpen] = useState(false);
 
   // Medir altura real del input fijo en móvil para evitar que tape el final del chat
-  const [mobileInputEl, setMobileInputEl] = useState<HTMLDivElement | null>(null);
-  const [mobileInputHeight, setMobileInputHeight] = useState(0);
-
-  useEffect(() => {
-    if (!mobileInputEl || !isMobile) {
-      setMobileInputHeight(0);
-      return;
-    }
-    setMobileInputHeight(mobileInputEl.getBoundingClientRect().height);
-    const observer = new ResizeObserver((entries) => {
-      const height = entries[0]?.contentRect.height ?? 0;
-      setMobileInputHeight(height);
-    });
-    observer.observe(mobileInputEl);
-    return () => observer.disconnect();
-  }, [isMobile, mobileInputEl]);
+  const { ref: setMobileInputEl, height: mobileInputHeight } = useMobileInputHeight(isMobile);
 
   // Usar convenios reales de Supabase (o mocks en Storybook)
   const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
@@ -201,16 +185,13 @@ export function ChatPage({
     }
   };
 
-  const handleConvenioUploaded = (_convenioId: string) => {
-    queryClient.invalidateQueries({ queryKey: ['user-convenios'] });
-  };
-
   // El controller vive en ChatPage para que el estado del upload (y los recursos vivos
   // del hook: polling, AbortController) sobreviva al remount del Sidebar cuando cambia
   // el breakpoint mobile/tablet/desktop, p.ej. al rotar el móvil portrait↔landscape.
-  const convenioUploaderController = useConvenioUploaderController({
-    onConvenioReady: handleConvenioUploaded,
-  });
+  const {
+    controller: convenioUploaderController,
+    onConvenioUploaded: handleConvenioUploaded,
+  } = useConvenioUploadIntegration();
 
   // Handler para seleccionar convenio desde el ConvenioManager
   const handleSelectConvenioFromManager = (convenioId: string) => {
