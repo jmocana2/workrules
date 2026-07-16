@@ -16,8 +16,8 @@ export function buildErrorResponse(
   return {
     status,
     body: {
-      error,
       ...details,
+      error,
     },
   };
 }

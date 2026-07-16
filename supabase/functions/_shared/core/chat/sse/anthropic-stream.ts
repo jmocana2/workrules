@@ -38,9 +38,15 @@ export function handleStreamResponse(
           }),
         );
 
-        cleanup(fullResponse).catch((err) => {
+        const cleanupTask = cleanup(fullResponse).catch((err) => {
           console.error("[handlers] Stream cleanup error:", err);
         });
+        // Mantiene vivo el trabajo post-stream (guardar mensaje, cache semántica)
+        // más allá del cierre del SSE. `EdgeRuntime` sólo existe en Supabase Edge
+        // Runtime; en entornos de test/dev se ignora silenciosamente.
+        const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } })
+          .EdgeRuntime;
+        runtime?.waitUntil?.(cleanupTask);
       },
     }),
   );

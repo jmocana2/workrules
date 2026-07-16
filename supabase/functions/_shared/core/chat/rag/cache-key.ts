@@ -10,8 +10,7 @@ export function buildCacheKeyText(
   if (!variables) return expandedQuery;
   const entries = Object.entries(variables)
     .filter(([, v]) => v !== undefined && v !== null && v !== "")
-    .map(([k, v]) => `${k}=${v}`)
-    .sort();
+    .sort(([left], [right]) => left.localeCompare(right));
   if (entries.length === 0) return expandedQuery;
-  return `${expandedQuery} [variables: ${entries.join(", ")}]`;
+  return JSON.stringify({ expandedQuery, variables: entries });
 }

@@ -19,7 +19,7 @@ export function useMobileInputHeight(enabled: boolean): {
     }
     setHeight(element.getBoundingClientRect().height);
     const observer = new ResizeObserver((entries) => {
-      const next = entries[0]?.contentRect.height ?? 0;
+      const next = entries[0]?.target.getBoundingClientRect().height ?? 0;
       setHeight(next);
     });
     observer.observe(element);

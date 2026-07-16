@@ -45,6 +45,13 @@ export function validateChatRequest(body: unknown): ValidationResult {
     };
   }
 
+  if (request.convenio_id.trim().length === 0) {
+    return {
+      valid: false,
+      error: "convenio_id must not be blank",
+    };
+  }
+
   if (typeof request.pregunta !== "string") {
     return {
       valid: false,

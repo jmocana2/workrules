@@ -124,6 +124,7 @@ export function ChatSidebarColumn({
       isLoadingConvenios={loadingUserConvenios}
       onSelectConvenioFromManager={handleSelectConvenioFromManager}
       onConvenioUploaded={onConvenioUploaded}
+      convenioUploaderController={convenioUploaderController}
     />
   );
 }

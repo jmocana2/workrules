@@ -105,7 +105,7 @@ src/ui/components/workrules/pages/ChatPage/
 ├── parseAlertEvent.ts              # (sin cambios)
 ├── components/                     # NUEVO
 │   ├── ChatSidebarColumn.tsx       # Sidebar + drawer + normalización de plan
-│   ├── ChatCenterColumn.tsx        # header sticky + área de mensajes + input
+│   ├── ChatConversationColumn.tsx        # header sticky + área de mensajes + input
 │   ├── ChatVariablesColumn.tsx     # VariablesPanel + drawer
 │   └── MessageCitations.tsx        # extraído del archivo raíz
 ├── hooks/                          # NUEVO
@@ -141,7 +141,7 @@ src/ui/components/workrules/pages/ChatPage/
 | Archivo | Contiene | Razón de existir |
 |---|---|---|
 | `components/ChatSidebarColumn.tsx` | Render del sidebar en 3 variantes (desktop, tablet-colapsado, drawer). Recibe estado (conversations, currentConversationId, userConvenios, plan) + handlers como props. Posee `isSidebarOpen` interno. | Cambia con el criterio responsive del sidebar o con nuevas variantes de `Sidebar`. |
-| `components/ChatCenterColumn.tsx` | Header sticky + `ScrollArea` con mensajes/alertas/typing + input fijo/estático. Posee la ref al elemento del input (delega la medición a `useMobileInputHeight`). | Cambia con el layout central o con nuevos tipos de mensaje/alerta. |
+| `components/ChatConversationColumn.tsx` | Header sticky + `ScrollArea` con mensajes/alertas/typing + input fijo/estático. Posee la ref al elemento del input (delega la medición a `useMobileInputHeight`). | Cambia con el layout central o con nuevos tipos de mensaje/alerta. |
 | `components/ChatVariablesColumn.tsx` | Render del panel de variables en 3 variantes (desktop, tablet-colapsado, drawer). Posee `isVariablesPanelOpen` interno. | Cambia con el criterio responsive del panel de variables. |
 | `components/MessageCitations.tsx` | Dedup + render de citaciones + botón "Abrir PDF". Sin cambios de API. | Cambia con la lógica de citaciones. |
 | `hooks/useMobileInputHeight.ts` | Hook que devuelve `{ ref, height }`. Registra `ResizeObserver` sólo cuando `enabled` (isMobile). Cero acoplamiento a chat. | Cambia con el mecanismo de medición. |
@@ -154,20 +154,20 @@ src/ui/components/workrules/pages/ChatPage/
 ### 5.2 Notas de diseño puntuales
 
 - **`ChatSidebarColumn`** posee `isSidebarOpen` como estado interno. Expone un método imperativo NO — recibe callbacks (`onSelectConversation`, `onSelectConvenioFromManager`) y decide cerrar el drawer localmente cuando `isMobile || isTablet`. Los handlers compuestos (`handleSelectConversationAndClosDrawer`, `handleSelectConvenioFromManager`) desaparecen del root.
-- **`ChatCenterColumn`** recibe la lista de props de `useChatPage` que consume (messages, isLoading, alertState, dataRequestState, input, handlers, refs, activeVariables, salaryMode, etc.). Es una interfaz larga pero explícita. **No** promocionamos a Context aquí — Context ocultaría el contrato y complica testing.
+- **`ChatConversationColumn`** recibe la lista de props de `useChatPage` que consume (messages, isLoading, alertState, dataRequestState, input, handlers, refs, activeVariables, salaryMode, etc.). Es una interfaz larga pero explícita. **No** promocionamos a Context aquí — Context ocultaría el contrato y complica testing.
 - **`ChatVariablesColumn`** posee `isVariablesPanelOpen`. Recibe `perfilJson`, `activeVariables`, `handleVariableClick`, `isVariablesPanelCollapsed`, `toggleVariablesPanel`.
-- **`useMobileInputHeight`** firma: `useMobileInputHeight(enabled: boolean): { ref: (el: HTMLDivElement | null) => void; height: number }`. Cuando `enabled === false`, height siempre es 0. Se usa dentro de `ChatCenterColumn`.
+- **`useMobileInputHeight`** firma: `useMobileInputHeight(enabled: boolean): { ref: (el: HTMLDivElement | null) => void; height: number }`. Cuando `enabled === false`, height siempre es 0. Se usa dentro de `ChatConversationColumn`.
 - **`useConvenioUploadIntegration`** firma: `useConvenioUploadIntegration(): { controller, onConvenioUploaded }`. Se llama en `ChatPage.tsx` (root) para preservar el hook a través de remounts del sidebar.
 - **`MessageCitations`** conserva su API actual (`citations`, `convenioId`, `onOpenPdf`, `hidePerCitationLinks`). Sólo cambia su path de import.
 - **Cómo pasa `ChatPage.tsx` la avalancha de props a las columnas** — se agrupan por columna. Ejemplo esbozado:
   ```tsx
   const sidebar = { conversations, currentConversationId, userConvenios, userPlan, ... };
-  const center  = { messages, input, isLoading, alertState, dataRequestState, handlers..., refs... };
+  const conversation = { messages, input, isLoading, alertState, dataRequestState, handlers..., refs... };
   const variables = { perfilJson, activeVariables, handleVariableClick, ... };
   return (
     <ChatLayout>
       <ChatSidebarColumn {...sidebar} />
-      <ChatCenterColumn {...center} />
+      <ChatConversationColumn {...conversation} />
       <ChatVariablesColumn {...variables} />
     </ChatLayout>
   );
@@ -208,18 +208,19 @@ Cada paso es reversible por sí mismo. `pnpm typecheck`, `pnpm lint` y `pnpm tes
 1. Crear `components/ChatVariablesColumn.tsx` moviendo el bloque JSX del panel de variables (líneas 666–709) + el estado `isVariablesPanelOpen` + el botón "Ver variables" del header (que hoy vive en el header).
 2. Nota: el botón `SlidersIcon` del header abre este drawer. Hay dos opciones:
    - **Opción A** (elegida): el drawer y su `useState` viven dentro de `ChatVariablesColumn`. El botón sigue en el header pero se pasa `onOpenVariablesPanel` como callback desde el root — o se sube el estado con `useState` en el root y se pasa a ambos (el botón del header y la columna). Esta segunda opción es más simple: dejar `isVariablesPanelOpen` en el root y pasarlo a las dos zonas.
-   - **Recomendación:** dejar `isVariablesPanelOpen` en `ChatPage.tsx` como estado root y pasarlo por props tanto al header (`ChatCenterColumn`) como al panel (`ChatVariablesColumn`). Es la única pieza de estado UI compartida entre columnas y es honesta.
+   - **Recomendación:** dejar `isVariablesPanelOpen` en `ChatPage.tsx` como estado root y pasarlo por props tanto al header (`ChatConversationColumn`) como al panel (`ChatVariablesColumn`). Es la única pieza de estado UI compartida entre columnas y es honesta.
 3. Reemplazar el bloque en `ChatPage.tsx` por `<ChatVariablesColumn ... />`.
 4. `pnpm typecheck` + tests verdes.
 5. **Commit:** `refactor(chat-page): extract ChatVariablesColumn`.
 
-### Paso 5 — Extraer `ChatCenterColumn`
-1. Crear `components/ChatCenterColumn.tsx` moviendo header + ScrollArea + input (líneas 401–663).
+### Paso 5 — Extraer `ChatConversationColumn`
+> **Nota:** en el plan original esta columna se llamaba `ChatCenterColumn`. Se renombró a `ChatConversationColumn` durante la ejecución para mantener consistencia con `ChatSidebarColumn` y `ChatVariablesColumn` (nombre describe *qué* renderiza, no *dónde*).
+1. Crear `components/ChatConversationColumn.tsx` moviendo header + ScrollArea + input (líneas 401–663).
 2. Recibe props: `selectedConvenio`, `convenios`, `loadingConvenios`, `messages`, `isLoading`, `alertState`, `dataRequestState`, `input`, `activeVariables`, `salaryMode`, `hasIdentifyingVariables`, `messagesEndRef`, `inputRef`, refs y handlers necesarios (`handleInputChange`, `handlePromptSubmit`, `handleVariableRemove`, `humanizeVariableLabel`, alerts handlers, dataRequest handlers, `handleOpenConvenioPdf`, `selectConvenio`, `clearConvenio`, `setSalaryMode`), `onOpenSidebar`, `onOpenVariablesPanel`, flags `isMobile`, `isTablet`.
 3. Dentro usa `useMobileInputHeight(isMobile)` para el padding-bottom del scroll.
 4. Reemplazar el bloque en `ChatPage.tsx`.
 5. `pnpm typecheck` + tests unitarios + **Playwright e2e** verdes.
-6. **Commit:** `refactor(chat-page): extract ChatCenterColumn`.
+6. **Commit:** `refactor(chat-page): extract ChatConversationColumn`.
 
 ### Paso 6 — Verificación final y limpieza
 1. Ejecutar `pnpm typecheck` + `pnpm lint` + `pnpm test` (Playwright) + `pnpm build`.
@@ -238,7 +239,7 @@ Cada paso es reversible por sí mismo. `pnpm typecheck`, `pnpm lint` y `pnpm tes
 - **Storybook:** `ChatPage.stories.tsx` importa `ChatPage` y pasa mocks. Debe seguir funcionando sin cambios. Ejecutar `pnpm storybook` como verificación visual final.
 - **Elevación del controller de upload:** el comentario de las líneas 311–314 documenta explícitamente por qué el hook vive en el root: para sobrevivir a remounts del sidebar al cambiar breakpoint (rotar el móvil). El nuevo `useConvenioUploadIntegration` **debe llamarse en `ChatPage.tsx`, no dentro de `ChatSidebarColumn`**. Si por error se llama dentro de la columna, se rompe la persistencia del upload en curso al rotar el dispositivo.
 - **`useChatPage` intacto:** este PR **no** modifica `useChatPage.ts`. La destructuración de 57 líneas se mantiene en `ChatPage.tsx` (o se agrupa manualmente por columna). El refactor de `useChatPage` va en el doc 006, que es donde realmente se ataca la audiencia "estado + handlers".
-- **Ref forwarding en textarea:** `inputRef` se pasa hoy al `PromptInputTextarea`. Al mover ese bloque a `ChatCenterColumn`, la ref sigue viniendo desde `useChatPage` en el root y se propaga por props. Verificar que el foco tras enviar mensaje sigue funcionando.
+- **Ref forwarding en textarea:** `inputRef` se pasa hoy al `PromptInputTextarea`. Al mover ese bloque a `ChatConversationColumn`, la ref sigue viniendo desde `useChatPage` en el root y se propaga por props. Verificar que el foco tras enviar mensaje sigue funcionando.
 - **`isMobile`/`isTablet` como prop vs hook interno:** las columnas pueden leer `useBreakpoint()` o recibir los flags por props. **Recomendación:** recibir por props para que sean puras y testables sin mockear el hook. `ChatPage.tsx` lee una sola vez y distribuye.
 - **Import cycle:** cuidado con circularidades entre `ChatPage.tsx` → `components/*` → `hooks/*` → helpers. Mantener helpers y hooks sin imports desde `components/` ni `ChatPage.tsx`.
 - **No cambiar `ChatPage.types.ts`:** los tipos `Citation`, `AlertConflictPayload`, etc. siguen viviendo donde están. Sólo se importan desde más sitios (columnas + `MessageCitations.tsx`).
