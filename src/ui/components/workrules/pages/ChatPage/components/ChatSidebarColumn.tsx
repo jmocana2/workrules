@@ -28,6 +28,12 @@ export interface ChatSidebarColumnProps {
   setIsSidebarOpen: (open: boolean) => void;
 }
 
+/**
+ * Columna izquierda del ChatPage: navegación de conversaciones y convenios.
+ * Renderiza el Sidebar en 3 variantes según viewport (desktop expandido,
+ * tablet colapsado, mobile/tablet en drawer) y encapsula el cierre del drawer
+ * al seleccionar conversación o convenio.
+ */
 export function ChatSidebarColumn({
   isMobile,
   isTablet,

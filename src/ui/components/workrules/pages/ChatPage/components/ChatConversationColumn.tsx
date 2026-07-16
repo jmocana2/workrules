@@ -97,6 +97,13 @@ export interface ChatConversationColumnProps {
   onOpenVariablesPanel: () => void;
 }
 
+/**
+ * Columna central del ChatPage: hilo de conversación.
+ * Renderiza el header sticky con `ConvenioSelector`, el ScrollArea con la lista
+ * de mensajes/citaciones/alertas del protocolo/indicador de typing y el
+ * `PromptInput` (fijo en mobile, estático en desktop). Los botones de hamburger
+ * y variables delegan la apertura de los drawers vecinos vía callbacks.
+ */
 export function ChatConversationColumn({
   isMobile,
   isTablet,

@@ -24,6 +24,11 @@ export interface ChatVariablesColumnProps {
   setIsVariablesPanelOpen: (open: boolean) => void;
 }
 
+/**
+ * Columna derecha del ChatPage: panel de variables del convenio seleccionado.
+ * Renderiza el VariablesPanel en 3 variantes según viewport (desktop expandido/
+ * colapsable, tablet colapsado, mobile/tablet en drawer).
+ */
 export function ChatVariablesColumn({
   isMobile,
   isTablet,

@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
 
+/**
+ * Mide con `ResizeObserver` la altura de un elemento (el input fijo en móvil)
+ * para poder ajustar el `padding-bottom` del scroll y evitar que tape el chat.
+ * Cuando `enabled` es `false` la altura queda en `0` y no se observa nada.
+ */
 export function useMobileInputHeight(enabled: boolean): {
   ref: (el: HTMLDivElement | null) => void;
   height: number;

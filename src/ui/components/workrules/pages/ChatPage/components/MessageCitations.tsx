@@ -14,6 +14,12 @@ interface MessageCitationsProps {
   hidePerCitationLinks?: boolean;
 }
 
+/**
+ * Renderiza las citaciones (BOE) de un mensaje del asistente: deduplica por
+ * `source`+`pagina`, muestra los enlaces per-citation y añade un botón
+ * "Abrir PDF original". En mobile/tablet oculta los enlaces individuales
+ * (`hidePerCitationLinks`) y sólo deja el botón de PDF.
+ */
 export function MessageCitations({
   citations,
   convenioId,
