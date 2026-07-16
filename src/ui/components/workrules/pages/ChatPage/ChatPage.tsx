@@ -26,13 +26,6 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from '@ui/components/ai-elements/prompt-input';
-import {
-  Source,
-  Sources,
-  SourcesContent,
-  SourcesTrigger,
-} from '@ui/components/ai-elements/sources';
-import { BookIcon } from 'lucide-react';
 import { Button } from '@ui/components/shadcn/button';
 import { ScrollArea } from '@ui/components/shadcn/scroll-area';
 import { Separator } from '@ui/components/shadcn/separator';
@@ -50,7 +43,7 @@ import { useConvenioUploaderController } from '@ui/components/workrules/organism
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
 import { openConvenioPdf as openConvenioPdfUseCase } from '@/application/use-cases';
 import { useRepositories } from '@/providers/RepositoriesProvider';
-import { ExternalLinkIcon, Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
+import { Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 
 const MessageResponse = lazy(() =>
@@ -75,86 +68,10 @@ import type {
   ChatPageProps,
 } from './ChatPage.types';
 import { useChatPage } from './useChatPage';
-
-/** El Sidebar solo distingue free vs premium; enterprise hereda los privilegios de premium. */
-function normalizeUserPlan(plan: 'free' | 'premium' | 'enterprise'): 'free' | 'premium' {
-  return plan === 'free' ? 'free' : 'premium';
-}
-
-function MessageCitations({
-  citations,
-  convenioId,
-  onOpenPdf,
-  hidePerCitationLinks = false,
-}: {
-  citations: NonNullable<import('./ChatPage.types').Citation[]>;
-  convenioId?: string | null;
-  onOpenPdf: (convenioId: string, options?: { page?: number | null }) => void;
-  hidePerCitationLinks?: boolean;
-}) {
-  const uniqueCitations = citations.filter(
-    (c, i, arr) =>
-      arr.findIndex((x) => x.source === c.source && x.pagina === c.pagina) === i,
-  );
-
-  const handleOpen = (pagina?: number | null) => {
-    if (convenioId) onOpenPdf(convenioId, { page: pagina ?? undefined });
-  };
-
-  const openPdfButton = convenioId ? (
-    <button
-      type="button"
-      onClick={() => handleOpen(null)}
-      aria-label="Abrir PDF original en una pestaña nueva"
-      className="mt-3 flex items-center gap-2 text-primary hover:underline"
-    >
-      <ExternalLinkIcon className="h-4 w-4 shrink-0" />
-      <span className="font-medium">Abrir PDF original</span>
-    </button>
-  ) : null;
-
-  if (hidePerCitationLinks) {
-    if (!openPdfButton) return null;
-    return <div className="not-prose mb-4 text-primary text-xs">{openPdfButton}</div>;
-  }
-
-  return (
-    <Sources>
-      <SourcesTrigger count={uniqueCitations.length} />
-      <SourcesContent>
-        {uniqueCitations.map((citation, idx) =>
-          convenioId ? (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => handleOpen(citation.pagina)}
-              aria-label={
-                citation.pagina
-                  ? `Abrir PDF oficial en la página ${citation.pagina} - ${citation.source}`
-                  : `Abrir PDF oficial - ${citation.source}`
-              }
-              className="flex items-center gap-2 text-left hover:underline"
-            >
-              <BookIcon className="h-4 w-4 shrink-0" />
-              <span className="block font-medium">{citation.source}</span>
-              {citation.pagina && (
-                <span className="text-muted-foreground">p. {citation.pagina}</span>
-              )}
-            </button>
-          ) : (
-            <Source
-              key={idx}
-              href={citation.url_pdf ?? citation.url}
-              title={citation.source}
-              pagina={citation.pagina ?? undefined}
-            />
-          ),
-        )}
-      </SourcesContent>
-      {openPdfButton}
-    </Sources>
-  );
-}
+import { MessageCitations } from './components/MessageCitations';
+import { canSubmit as canSubmitHelper } from './helpers/canSubmit';
+import { getEmptyStateText } from './helpers/emptyState';
+import { normalizeUserPlan } from './helpers/normalizeUserPlan';
 
 export function ChatPage({
   initialConvenioId,
@@ -266,30 +183,10 @@ export function ChatPage({
     mockConversations,
   });
 
-  // Obtener texto del estado vacío
-  const getEmptyStateText = () => {
-    if (selectedConvenio) {
-      const convenioLabel =
-        selectedConvenio.nombre_corto ||
-        selectedConvenio.nombre_oficial ||
-        selectedConvenio.nombre;
-      return {
-        title: CHAT_TEXTS.empty.withConvenio.title.replace(
-          '{convenio}',
-          convenioLabel
-        ),
-        description: CHAT_TEXTS.empty.withConvenio.description,
-      };
-    }
-    return CHAT_TEXTS.empty.noConvenio;
-  };
+  const emptyState = getEmptyStateText(selectedConvenio);
 
-  const emptyState = getEmptyStateText();
-
-  // Handler para el submit del PromptInput
   const canSubmit = (text: string) =>
-    !!selectedConvenio &&
-    (text.trim().length > 0 || (salaryMode && hasIdentifyingVariables));
+    canSubmitHelper({ text, selectedConvenio, salaryMode, hasIdentifyingVariables });
 
   const handlePromptSubmit = async (message: { text: string; files: unknown[] }) => {
     if (!canSubmit(message.text)) return;
