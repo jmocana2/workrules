@@ -48,16 +48,6 @@ const MessageResponse = lazy(() =>
     default: m.MessageResponse,
   }))
 );
-const VariablesPanel = lazy(() =>
-  import('@ui/components/workrules/organisms/VariablesPanel/VariablesPanel').then((m) => ({
-    default: m.VariablesPanel,
-  }))
-);
-const MobileDrawer = lazy(() =>
-  import('@ui/components/workrules/organisms/MobileDrawer/MobileDrawer').then((m) => ({
-    default: m.MobileDrawer,
-  }))
-);
 import type {
   AlertConflictPayload,
   AlertInvalidDataPayload,
@@ -72,6 +62,7 @@ import { normalizeUserPlan } from './helpers/normalizeUserPlan';
 import { useMobileInputHeight } from './hooks/useMobileInputHeight';
 import { useConvenioUploadIntegration } from './hooks/useConvenioUploadIntegration';
 import { ChatSidebarColumn } from './components/ChatSidebarColumn';
+import { ChatVariablesColumn } from './components/ChatVariablesColumn';
 
 export function ChatPage({
   initialConvenioId,
@@ -476,50 +467,17 @@ export function ChatPage({
         </div>
       </main>
 
-      {/* VariablesPanel - Derecha */}
-      {/* TODO TFM.7-G: envolver con ErrorBoundary global (junto a Sentry) */}
-      <Suspense fallback={null}>
-      {isMobile || isTablet ? (
-        <>
-          {/* Panel colapsado visible en tablet */}
-          {isTablet && (
-            <VariablesPanel
-              perfilJson={perfilJson}
-              onVariableClick={handleVariableClick}
-              activeVariables={activeVariables}
-              isCollapsed={true}
-              onToggleCollapse={() => setIsVariablesPanelOpen(true)}
-              isMobile={false}
-            />
-          )}
-          {/* Drawer para expandir */}
-          <MobileDrawer
-            isOpen={isVariablesPanelOpen}
-            onClose={() => setIsVariablesPanelOpen(false)}
-            side="right"
-          >
-            <VariablesPanel
-              perfilJson={perfilJson}
-              onVariableClick={handleVariableClick}
-              activeVariables={activeVariables}
-              isCollapsed={false}
-              onToggleCollapse={() => setIsVariablesPanelOpen(false)}
-              isMobile={true}
-              inDrawer={true}
-            />
-          </MobileDrawer>
-        </>
-      ) : (
-        <VariablesPanel
-          perfilJson={perfilJson}
-          onVariableClick={handleVariableClick}
-          activeVariables={activeVariables}
-          isCollapsed={isVariablesPanelCollapsed}
-          onToggleCollapse={toggleVariablesPanel}
-          isMobile={false}
-        />
-      )}
-      </Suspense>
+      <ChatVariablesColumn
+        isMobile={isMobile}
+        isTablet={isTablet}
+        perfilJson={perfilJson}
+        activeVariables={activeVariables}
+        onVariableClick={handleVariableClick}
+        isVariablesPanelCollapsed={isVariablesPanelCollapsed}
+        toggleVariablesPanel={toggleVariablesPanel}
+        isVariablesPanelOpen={isVariablesPanelOpen}
+        setIsVariablesPanelOpen={setIsVariablesPanelOpen}
+      />
     </div>
   );
 }
