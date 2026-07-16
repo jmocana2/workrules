@@ -37,7 +37,6 @@ import { DataRequestCard } from '@ui/components/workrules/molecules/DataRequestC
 import { UserMessage } from '@ui/components/workrules/molecules/UserMessage/UserMessage';
 import { VariableChips, type VariableChip } from '@ui/components/workrules/molecules/VariableChips/VariableChips';
 import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
-import { Sidebar } from '@ui/components/workrules/organisms/Sidebar/Sidebar';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
 import { openConvenioPdf as openConvenioPdfUseCase } from '@/application/use-cases';
 import { useRepositories } from '@/providers/RepositoriesProvider';
@@ -72,6 +71,7 @@ import { getEmptyStateText } from './helpers/emptyState';
 import { normalizeUserPlan } from './helpers/normalizeUserPlan';
 import { useMobileInputHeight } from './hooks/useMobileInputHeight';
 import { useConvenioUploadIntegration } from './hooks/useConvenioUploadIntegration';
+import { ChatSidebarColumn } from './components/ChatSidebarColumn';
 
 export function ChatPage({
   initialConvenioId,
@@ -177,14 +177,6 @@ export function ChatPage({
     await handleSubmitFromText(message.text);
   };
 
-  // Handler para seleccionar conversación y cerrar drawer en móvil
-  const handleSelectConversationAndClosDrawer = async (id: string) => {
-    await handleSelectConversation(id);
-    if (isMobile || isTablet) {
-      setIsSidebarOpen(false);
-    }
-  };
-
   // El controller vive en ChatPage para que el estado del upload (y los recursos vivos
   // del hook: polling, AbortController) sobreviva al remount del Sidebar cuando cambia
   // el breakpoint mobile/tablet/desktop, p.ej. al rotar el móvil portrait↔landscape.
@@ -193,19 +185,6 @@ export function ChatPage({
     onConvenioUploaded: handleConvenioUploaded,
   } = useConvenioUploadIntegration();
 
-  // Handler para seleccionar convenio desde el ConvenioManager
-  const handleSelectConvenioFromManager = (convenioId: string) => {
-    // Buscar el convenio completo en los userConvenios
-    const convenio = userConvenios.find(c => c.id === convenioId);
-    if (convenio) {
-      selectConvenio(convenio);
-    }
-    // Cerrar drawer en mobile/tablet si está abierto
-    if (isMobile || isTablet) {
-      setIsSidebarOpen(false);
-    }
-  };
-
   return (
     <div
       className={cn(
@@ -213,67 +192,23 @@ export function ChatPage({
         className
       )}
     >
-      {/* Sidebar - Izquierda */}
-      {isMobile || isTablet ? (
-        <>
-          {/* Sidebar colapsada visible en tablet */}
-          {isTablet && (
-            <Sidebar
-              currentConversationId={currentConversationId ?? undefined}
-              conversations={conversations}
-              userPlan={userPlan}
-              onNewConversation={handleNewConversation}
-              onSelectConversation={handleSelectConversationAndClosDrawer}
-              onOpenSettings={handleOpenSettings}
-              isCollapsed={true}
-              onExpand={() => setIsSidebarOpen(true)}
-              userConvenios={userConvenios}
-              isLoadingConvenios={loadingUserConvenios}
-              onSelectConvenioFromManager={handleSelectConvenioFromManager}
-              onConvenioUploaded={handleConvenioUploaded}
-              convenioUploaderController={convenioUploaderController}
-            />
-          )}
-          {/* Drawer para expandir */}
-          {/* TODO TFM.7-G: envolver con ErrorBoundary global (junto a Sentry) */}
-          <Suspense fallback={null}>
-          <MobileDrawer
-            isOpen={isSidebarOpen}
-            onClose={() => setIsSidebarOpen(false)}
-            side="left"
-          >
-            <Sidebar
-              currentConversationId={currentConversationId ?? undefined}
-              conversations={conversations}
-              userPlan={userPlan}
-              onNewConversation={handleNewConversation}
-              onSelectConversation={handleSelectConversationAndClosDrawer}
-              onOpenSettings={handleOpenSettings}
-              onClose={() => setIsSidebarOpen(false)}
-              inDrawer={true}
-              userConvenios={userConvenios}
-              isLoadingConvenios={loadingUserConvenios}
-              onSelectConvenioFromManager={handleSelectConvenioFromManager}
-              onConvenioUploaded={handleConvenioUploaded}
-              convenioUploaderController={convenioUploaderController}
-            />
-          </MobileDrawer>
-          </Suspense>
-        </>
-      ) : (
-        <Sidebar
-          currentConversationId={currentConversationId ?? undefined}
-          conversations={conversations}
-          userPlan={userPlan}
-          onNewConversation={handleNewConversation}
-          onSelectConversation={handleSelectConversation}
-          onOpenSettings={handleOpenSettings}
-          userConvenios={userConvenios}
-          isLoadingConvenios={loadingUserConvenios}
-          onSelectConvenioFromManager={handleSelectConvenioFromManager}
-          onConvenioUploaded={handleConvenioUploaded}
-        />
-      )}
+      <ChatSidebarColumn
+        isMobile={isMobile}
+        isTablet={isTablet}
+        currentConversationId={currentConversationId}
+        conversations={conversations}
+        userPlan={userPlan}
+        userConvenios={userConvenios}
+        loadingUserConvenios={loadingUserConvenios}
+        convenioUploaderController={convenioUploaderController}
+        onConvenioUploaded={handleConvenioUploaded}
+        onNewConversation={handleNewConversation}
+        onSelectConversation={handleSelectConversation}
+        onOpenSettings={handleOpenSettings}
+        selectConvenio={selectConvenio}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+      />
 
       {/* Área de Chat - Centro */}
       <main className="flex flex-1 flex-col overflow-hidden">
