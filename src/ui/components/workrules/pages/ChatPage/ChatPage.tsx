@@ -1,67 +1,27 @@
 /**
  * ChatPage - Página principal de chat para consultas de convenios colectivos
  *
- * Layout de 3 columnas:
- * - Sidebar (izquierda): Navegación de conversaciones
- * - Chat (centro): Área de mensajes + input
- * - VariablesPanel (derecha): Variables del convenio seleccionado
- *
- * Integra:
- * - Vercel AI SDK (useChat) para streaming
- * - AI Elements (Message, PromptInput, Sources)
- * - Componentes WorkRules (Sidebar, ConvenioSelector, VariablesPanel)
+ * Orquesta 3 columnas:
+ * - ChatSidebarColumn (izquierda): navegación de conversaciones y convenios
+ * - ChatConversationColumn (centro): hilo de mensajes + input
+ * - ChatVariablesColumn (derecha): variables del convenio seleccionado
  */
 
 import { cn } from '@/lib/utils';
-import { CHAT_TEXTS } from '@constants/texts';
 import { useBreakpoint } from '@core/hooks';
-import {
-  Message,
-  MessageContent,
-} from '@ui/components/ai-elements/message';
-import {
-  PromptInput,
-  PromptInputFooter,
-  PromptInputSubmit,
-  PromptInputTextarea,
-} from '@ui/components/ai-elements/prompt-input';
-import { Button } from '@ui/components/shadcn/button';
-import { ScrollArea } from '@ui/components/shadcn/scroll-area';
-import { Separator } from '@ui/components/shadcn/separator';
-import { Logo } from '@ui/components/workrules/atoms/Logo/Logo';
-import { SalaryModeToggle } from '@ui/components/workrules/atoms/SalaryModeToggle';
-import { AlertConflict } from '@ui/components/workrules/molecules/AlertConflict/AlertConflict';
-import { AlertInvalidData } from '@ui/components/workrules/molecules/AlertInvalidData/AlertInvalidData';
-import { AlertSMI } from '@ui/components/workrules/molecules/AlertSMI/AlertSMI';
-import { DataRequestCard } from '@ui/components/workrules/molecules/DataRequestCard/DataRequestCard';
-import { UserMessage } from '@ui/components/workrules/molecules/UserMessage/UserMessage';
-import { VariableChips, type VariableChip } from '@ui/components/workrules/molecules/VariableChips/VariableChips';
-import { ConvenioSelector } from '@ui/components/workrules/organisms/ConvenioSelector/ConvenioSelector';
 import { useConvenios, useUserConvenios, useUserPlan } from '@ui/hooks';
 import { openConvenioPdf as openConvenioPdfUseCase } from '@/application/use-cases';
 import { useRepositories } from '@/providers/RepositoriesProvider';
-import { Loader2Icon, MenuIcon, SlidersIcon } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
+import { useState } from 'react';
 
-const MessageResponse = lazy(() =>
-  import('@ui/components/ai-elements/message-response').then((m) => ({
-    default: m.MessageResponse,
-  }))
-);
-import type {
-  AlertConflictPayload,
-  AlertInvalidDataPayload,
-  AlertSMIPayload,
-  ChatPageProps,
-} from './ChatPage.types';
+import type { ChatPageProps } from './ChatPage.types';
 import { useChatPage } from './useChatPage';
-import { MessageCitations } from './components/MessageCitations';
 import { canSubmit as canSubmitHelper } from './helpers/canSubmit';
 import { getEmptyStateText } from './helpers/emptyState';
 import { normalizeUserPlan } from './helpers/normalizeUserPlan';
-import { useMobileInputHeight } from './hooks/useMobileInputHeight';
 import { useConvenioUploadIntegration } from './hooks/useConvenioUploadIntegration';
 import { ChatSidebarColumn } from './components/ChatSidebarColumn';
+import { ChatConversationColumn } from './components/ChatConversationColumn';
 import { ChatVariablesColumn } from './components/ChatVariablesColumn';
 
 export function ChatPage({
@@ -73,7 +33,6 @@ export function ChatPage({
   mockUserPlan = 'premium',
   className,
 }: ChatPageProps) {
-  // Detectar viewport
   const { isMobile, isTablet } = useBreakpoint();
 
   const { convenio: convenioRepo } = useRepositories();
@@ -82,25 +41,18 @@ export function ChatPage({
     options?: { page?: number | null },
   ) => void openConvenioPdfUseCase(convenioId, { repo: convenioRepo }, options);
 
-  // Estado para mobile drawers
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isVariablesPanelOpen, setIsVariablesPanelOpen] = useState(false);
 
-  // Medir altura real del input fijo en móvil para evitar que tape el final del chat
-  const { ref: setMobileInputEl, height: mobileInputHeight } = useMobileInputHeight(isMobile);
-
-  // Usar convenios reales de Supabase (o mocks en Storybook)
   const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
   const { data: realConvenios = [], isLoading: loadingConvenios } = useConvenios();
   const { data: userConvenios = [], isLoading: loadingUserConvenios } = useUserConvenios();
   const convenios = useMocks ? (mockConvenios ?? []) : realConvenios;
 
-  // Plan del usuario (real desde user_profiles, o mock en Storybook)
   const { plan: realUserPlan } = useUserPlan();
   const userPlan = useMocks ? mockUserPlan : normalizeUserPlan(realUserPlan);
 
   const {
-    // Estado
     selectedConvenio,
     perfilJson,
     isVariablesPanelCollapsed,
@@ -109,18 +61,10 @@ export function ChatPage({
     messages,
     input,
     isLoading,
-
-    // Estado de alertas
     alertState,
-
-    // Estado de data request
     dataRequestState,
-
-    // Refs
     inputRef,
     messagesEndRef,
-
-    // Handlers
     handleInputChange,
     handleSubmitFromText,
     handleVariableClick,
@@ -130,23 +74,15 @@ export function ChatPage({
     handleSelectConversation,
     handleOpenSettings,
     toggleVariablesPanel,
-
-    // Handlers de alertas
     handleAlertDismiss,
     handleInvalidDataSuggestion,
     handleConflictOption,
     handleSMIViewDetails,
-
-    // Handlers de data request
     handleDataRequestSubmit,
     handleDataRequestSkip,
-
-    // Variables estructuradas (chips)
     activeVariables,
     handleVariableRemove,
     humanizeVariableLabel,
-
-    // Modo calculo salarial
     salaryMode,
     setSalaryMode,
     hasIdentifyingVariables,
@@ -180,7 +116,7 @@ export function ChatPage({
     <div
       className={cn(
         'flex h-screen h-[100dvh] w-full overflow-hidden bg-background',
-        className
+        className,
       )}
     >
       <ChatSidebarColumn
@@ -201,271 +137,40 @@ export function ChatPage({
         setIsSidebarOpen={setIsSidebarOpen}
       />
 
-      {/* Área de Chat - Centro */}
-      <main className="flex flex-1 flex-col overflow-hidden">
-        {/* Header sticky */}
-        {selectedConvenio ? (
-          <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
-            <div className="flex h-16 items-start gap-2 px-3 py-3 md:gap-4 md:px-6">
-              {/* Hamburger menu - Mobile y Tablet */}
-              {(isMobile || isTablet) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsSidebarOpen(true)}
-                  aria-label="Abrir menú"
-                  className="shrink-0"
-                >
-                  <MenuIcon className="h-5 w-5" />
-                </Button>
-              )}
-
-              <ConvenioSelector
-                selectedConvenio={selectedConvenio}
-                convenios={convenios}
-                isLoading={loadingConvenios}
-                onSelect={selectConvenio}
-                onClear={clearConvenio}
-                placeholder={CHAT_TEXTS.convenioSelector.placeholder}
-                className="min-w-0 flex-1"
-              />
-
-              {/* Botón Variables Panel - Mobile y Tablet */}
-              {(isMobile || isTablet) && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsVariablesPanelOpen(true)}
-                  aria-label="Ver variables"
-                  className="shrink-0"
-                >
-                  <SlidersIcon className="h-5 w-5" />
-                </Button>
-              )}
-            </div>
-          </header>
-        ) : (
-          isMobile && (
-            <header className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/60">
-              <div className="flex h-16 items-center justify-between gap-2 px-3 md:gap-4 md:px-6">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsSidebarOpen(true)}
-                  aria-label="Abrir menú"
-                >
-                  <MenuIcon className="h-5 w-5" />
-                </Button>
-                <Logo variant="full" size="md" />
-                <div className="w-10" /> {/* Spacer para centrar el logo */}
-              </div>
-            </header>
-          )
-        )}
-
-        {/* Área de mensajes */}
-        <ScrollArea
-          className={cn(
-            "flex-1 overflow-hidden py-4",
-            "px-4 md:px-6"
-          )}
-        >
-          <div
-            className="mx-auto max-w-3xl space-y-6"
-            style={isMobile && mobileInputHeight > 0 ? { paddingBottom: mobileInputHeight + 16 } : undefined}
-          >
-            {messages.length === 0 ? (
-              // Estado vacío
-              <div className="flex flex-col items-center justify-center py-12 md:py-20 text-center">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                  <svg
-                    className="h-8 w-8 text-muted-foreground"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                    />
-                  </svg>
-                </div>
-                <h2 className="mb-2 text-lg font-semibold text-foreground">
-                  {emptyState.title}
-                </h2>
-                <p className="mb-6 max-w-md text-sm text-muted-foreground">
-                  {emptyState.description}
-                </p>
-
-                {/* Selector de convenios si no hay ninguno seleccionado */}
-                {!selectedConvenio && (
-                  <div className="w-full max-w-md px-4">
-                    <ConvenioSelector
-                      selectedConvenio={selectedConvenio}
-                      convenios={convenios}
-                      isLoading={loadingConvenios}
-                      onSelect={selectConvenio}
-                      onClear={clearConvenio}
-                      placeholder={CHAT_TEXTS.convenioSelector.placeholder}
-                      className="w-full"
-                    />
-                  </div>
-                )}
-              </div>
-            ) : (
-              // Lista de mensajes
-              <>
-                {messages.map((message) =>
-                  message.role === 'user' ? (
-                    <UserMessage key={message.id} content={message.content} />
-                  ) : (
-                    <Message key={message.id} from={message.role}>
-                      <MessageContent>
-                        {/* TODO TFM.7-G: envolver con ErrorBoundary global (junto a Sentry) */}
-                        <Suspense fallback={<span className="text-sm opacity-60">{message.content}</span>}>
-                          <MessageResponse>{message.content}</MessageResponse>
-                        </Suspense>
-                        {message.citations && message.citations.length > 0 && (
-                          <MessageCitations
-                            citations={message.citations}
-                            convenioId={selectedConvenio?.id}
-                            onOpenPdf={handleOpenConvenioPdf}
-                            hidePerCitationLinks={isMobile || isTablet}
-                          />
-                        )}
-                      </MessageContent>
-                    </Message>
-                  )
-                )}
-
-
-              </>
-            )}
-
-            {/* Alertas del protocolo (Estados D, E, F) */}
-            {alertState.isVisible && alertState.type === 'smi' && alertState.payload && (
-              <AlertSMI
-                calculatedAmount={(alertState.payload as AlertSMIPayload).calculatedAmount}
-                smiAmount={(alertState.payload as AlertSMIPayload).smiAmount}
-                adjustedAmount={(alertState.payload as AlertSMIPayload).adjustedAmount}
-                payPeriod={(alertState.payload as AlertSMIPayload).payPeriod}
-                year={(alertState.payload as AlertSMIPayload).year}
-                onViewDetails={handleSMIViewDetails}
-                onDismiss={handleAlertDismiss}
-              />
-            )}
-
-            {alertState.isVisible && alertState.type === 'invalid_data' && alertState.payload && (
-              <AlertInvalidData
-                reason={{
-                  field: (alertState.payload as AlertInvalidDataPayload).field,
-                  value: (alertState.payload as AlertInvalidDataPayload).value,
-                  limit: (alertState.payload as AlertInvalidDataPayload).limit,
-                  legalReference: (alertState.payload as AlertInvalidDataPayload).legalReference,
-                }}
-                suggestions={(alertState.payload as AlertInvalidDataPayload).suggestions}
-                onSelectSuggestion={handleInvalidDataSuggestion}
-                onDismiss={handleAlertDismiss}
-              />
-            )}
-
-            {alertState.isVisible && alertState.type === 'conflict' && alertState.payload && (
-              <AlertConflict
-                conflict={{
-                  field1: (alertState.payload as AlertConflictPayload).field1,
-                  field2: (alertState.payload as AlertConflictPayload).field2,
-                  explanation: (alertState.payload as AlertConflictPayload).explanation,
-                }}
-                options={(alertState.payload as AlertConflictPayload).options}
-                onSelectOption={handleConflictOption}
-                onDismiss={handleAlertDismiss}
-              />
-            )}
-
-            {/* DataRequestCard (Estado B - Datos incompletos) */}
-            {dataRequestState.isVisible && dataRequestState.payload && (
-              <DataRequestCard
-                title={dataRequestState.payload.title}
-                convenioName={dataRequestState.payload.convenioName}
-                fields={dataRequestState.payload.fields}
-                maxAttempts={dataRequestState.payload.maxAttempts}
-                currentAttempt={dataRequestState.payload.currentAttempt}
-                onSubmit={handleDataRequestSubmit}
-                onSkip={handleDataRequestSkip}
-              />
-            )}
-
-            {/* Indicador de "escribiendo..." */}
-            {isLoading && (
-              <Message from="assistant">
-                <MessageContent>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Loader2Icon className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">{CHAT_TEXTS.loading.typing}</span>
-                  </div>
-                </MessageContent>
-              </Message>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-
-        {!isMobile && <Separator />}
-
-        {/* Input de chat - Fixed en mobile, estático en desktop */}
-        <div
-          ref={setMobileInputEl}
-          className={cn(
-            "bg-card",
-            isMobile && "fixed bottom-0 left-0 right-0 z-20 border-t border-border",
-            isMobile ? "px-4 pb-[max(env(safe-area-inset-bottom),12px)] pt-3" : "px-6 py-4"
-          )}
-        >
-          <div className="mx-auto max-w-3xl">
-            <VariableChips
-              chips={Object.entries(activeVariables).map(([name, value]): VariableChip => ({
-                name,
-                label: humanizeVariableLabel(name),
-                value,
-              }))}
-              onRemove={handleVariableRemove}
-            />
-            <PromptInput
-              onSubmit={handlePromptSubmit}
-              className="w-full"
-            >
-              <PromptInputTextarea
-                ref={inputRef}
-                placeholder={
-                  selectedConvenio
-                    ? CHAT_TEXTS.input.placeholder
-                    : CHAT_TEXTS.input.placeholderNoConvenio
-                }
-                disabled={!selectedConvenio}
-                value={input}
-                onChange={handleInputChange}
-                className="min-h-15 resize-none text-[var(--tokensColorsText)] placeholder:text-[var(--colorsNeutralNeutral9)]"
-              />
-              <PromptInputFooter>
-                <SalaryModeToggle
-                  active={salaryMode}
-                  onToggle={setSalaryMode}
-                  disabled={!selectedConvenio || isLoading}
-                />
-                <div className="flex-1" />
-                <PromptInputSubmit
-                  disabled={isLoading || !canSubmit(input)}
-                  status={isLoading ? 'streaming' : undefined}
-                />
-              </PromptInputFooter>
-            </PromptInput>
-          </div>
-        </div>
-      </main>
+      <ChatConversationColumn
+        isMobile={isMobile}
+        isTablet={isTablet}
+        selectedConvenio={selectedConvenio}
+        convenios={convenios}
+        loadingConvenios={loadingConvenios}
+        selectConvenio={selectConvenio}
+        clearConvenio={clearConvenio}
+        messages={messages}
+        isLoading={isLoading}
+        messagesEndRef={messagesEndRef}
+        emptyState={emptyState}
+        alertState={alertState}
+        handleAlertDismiss={handleAlertDismiss}
+        handleSMIViewDetails={handleSMIViewDetails}
+        handleInvalidDataSuggestion={handleInvalidDataSuggestion}
+        handleConflictOption={handleConflictOption}
+        dataRequestState={dataRequestState}
+        handleDataRequestSubmit={handleDataRequestSubmit}
+        handleDataRequestSkip={handleDataRequestSkip}
+        input={input}
+        inputRef={inputRef}
+        handleInputChange={handleInputChange}
+        handlePromptSubmit={handlePromptSubmit}
+        canSubmit={canSubmit}
+        activeVariables={activeVariables}
+        handleVariableRemove={handleVariableRemove}
+        humanizeVariableLabel={humanizeVariableLabel}
+        salaryMode={salaryMode}
+        setSalaryMode={setSalaryMode}
+        handleOpenConvenioPdf={handleOpenConvenioPdf}
+        onOpenSidebar={() => setIsSidebarOpen(true)}
+        onOpenVariablesPanel={() => setIsVariablesPanelOpen(true)}
+      />
 
       <ChatVariablesColumn
         isMobile={isMobile}
