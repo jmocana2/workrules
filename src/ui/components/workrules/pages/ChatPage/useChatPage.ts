@@ -25,9 +25,6 @@ import { useSupabase } from "@ui/hooks/useSupabase";
 import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
-  AlertConflictPayload,
-  AlertInvalidDataPayload,
-  AlertSMIPayload,
   AlertState,
   ChatMessage,
   ChatPageState,
@@ -44,8 +41,8 @@ import {
   clearDataRequestState,
   createInitialAlertState,
   createInitialDataRequestState,
-  parseDataRequestEvent,
 } from "./parseAlertEvent";
+import { mapSpecialStateToUi } from "./helpers/specialStateMapper";
 import {
   humanizeVariableLabel,
   isIdentifyingVariable,
@@ -175,129 +172,14 @@ export function useChatPage(
   // ============================================================================
   const handleSpecialState = useCallback(
     (specialState: { type: string; payload: Record<string, unknown> }) => {
-      // Mapear estados especiales del backend a alertas/data request
-      switch (specialState.type) {
-        case "incomplete": {
-          // Estado B - Datos incompletos -> mostrar DataRequestCard
-          const payload = specialState.payload as {
-            missingVariables?: string[];
-            suggestions?: Record<string, string[]>;
-          };
-
-          // Solo bloqueamos por variables IDENTIFICADORAS (sin ellas no hay
-          // tabla salarial aplicable). Las moduladoras (jornada, antigüedad,
-          // turno, horas extra, pluses) asumen default y se aclaran en la
-          // respuesta. Ver docs/analisis-calculo-salarios.md §2.
-          const identifying = (payload.missingVariables ?? []).filter(
-            isIdentifyingVariable,
-          );
-
-          // Si todas las que faltan son moduladoras, no mostramos card —
-          // dejamos que Claude responda con el supuesto explícito.
-          if (identifying.length === 0) break;
-
-          // Preferir nombre legible del convenio sobre el nombre técnico/PDF
-          const convenio = state.selectedConvenio;
-          const convenioLabel = convenio?.nombre_corto ||
-            convenio?.nombre_oficial ||
-            convenio?.nombre;
-
-          // Construir DataRequestPayload desde el payload del backend
-          const dataRequestPayload = parseDataRequestEvent(
-            JSON.stringify({
-              title: "Necesito más información",
-              convenioName: convenioLabel,
-              fields: identifying.map((v) => ({
-                name: v,
-                label: humanizeVariableLabel(v),
-                type: "radio" as const,
-                options: payload.suggestions?.[v]?.map((s) => ({
-                  value: s,
-                  label: s,
-                })) || [],
-              })),
-              maxAttempts: 3,
-              currentAttempt: 1,
-            }),
-          );
-
-          if (dataRequestPayload) {
-            setDataRequestState(dataRequestPayload);
-          }
-          break;
-        }
-
-        case "invalid": {
-          // Estado D - Datos invalidos
-          // Backend payload: { message, invalidVariables: [{name, reason, value}] }
-          // Tomamos la primera variable inválida (el componente muestra una a la vez).
-          const raw = specialState.payload as {
-            message?: string;
-            invalidVariables?: Array<{
-              name: string;
-              reason: string;
-              value: string | number;
-            }>;
-          };
-          const first = raw.invalidVariables?.[0];
-          if (!first) break;
-
-          const payload: AlertInvalidDataPayload = {
-            field: first.name,
-            value: first.value,
-            limit: first.reason,
-            legalReference: raw.message,
-          };
-
-          setAlertState({
-            type: "invalid_data",
-            payload,
-            isVisible: true,
-          });
-          break;
-        }
-
-        case "smi_alert": {
-          // Estado E - Salario menor al SMI
-          // El backend ya envía el payload con la forma de AlertSMIPayload.
-          const payload = specialState.payload as unknown as AlertSMIPayload;
-          setAlertState({
-            type: "smi",
-            payload,
-            isVisible: true,
-          });
-          break;
-        }
-
-        case "conflicting": {
-          // Estado F - Datos contradictorios
-          // Backend payload: { message, conflictingVariables: [{variables: [a,b], reason}] }
-          const raw = specialState.payload as {
-            message?: string;
-            conflictingVariables?: Array<{
-              variables: string[];
-              reason: string;
-            }>;
-          };
-          const first = raw.conflictingVariables?.[0];
-          if (!first || first.variables.length < 2) break;
-
-          const [name1, name2] = first.variables;
-          const payload: AlertConflictPayload = {
-            field1: { name: name1, value: "" },
-            field2: { name: name2, value: "" },
-            explanation: first.reason || raw.message || "",
-            options: [],
-          };
-
-          setAlertState({
-            type: "conflict",
-            payload,
-            isVisible: true,
-          });
-          break;
-        }
-      }
+      const result = mapSpecialStateToUi(specialState, {
+        selectedConvenio: state.selectedConvenio,
+        humanize: humanizeVariableLabel,
+        isIdentifying: isIdentifyingVariable,
+      });
+      if (!result) return;
+      if (result.alert) setAlertState(result.alert);
+      if (result.dataRequest) setDataRequestState(result.dataRequest);
     },
     [state.selectedConvenio],
   );
