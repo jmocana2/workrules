@@ -1,13 +1,14 @@
 /**
- * useChatPage - Hook de estado y lógica para ChatPage
+ * useChatPage - Orquestador de estado y lógica para ChatPage.
  *
- * Maneja:
- * - Estado del convenio seleccionado
- * - Integración con useChat del AI SDK (mock) o useChatStream (API real)
- * - Parseo de citaciones
- * - Panel de variables
- * - Historial de conversaciones
- * - Estados especiales del protocolo (incomplete, invalid, smi_alert, conflicting)
+ * Compone 4 sub-hooks especializados y añade el estado UI residual
+ * (convenio seleccionado, perfil, panel colapsados, input, salaryMode).
+ *
+ * Sub-hooks:
+ * - `useChatIntegration`  → mensajes, streaming, real/mock unificados.
+ * - `useProtocolState`    → alertas y data requests del protocolo backend.
+ * - `useVariableChips`    → chips de variables activas encima del textarea.
+ * - `useChatSessionLifecycle` → sessionId + carga de sesiones históricas.
  */
 
 import { useRepositories } from "@/providers/RepositoriesProvider";
