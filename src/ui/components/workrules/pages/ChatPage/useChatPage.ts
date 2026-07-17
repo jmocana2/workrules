@@ -25,33 +25,21 @@ import { useSupabase } from "@ui/hooks/useSupabase";
 import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
-  AlertState,
   ChatMessage,
   ChatPageState,
   Citation,
-  ConflictOption,
   Convenio,
   ConversationSummary,
-  DataRequestState,
   PerfilJson,
   UseChatPageReturn,
 } from "./ChatPage.types";
-import {
-  clearAlertState,
-  clearDataRequestState,
-  createInitialAlertState,
-  createInitialDataRequestState,
-} from "./parseAlertEvent";
-import { mapSpecialStateToUi } from "./helpers/specialStateMapper";
 import { useVariableChips } from "./hooks/useVariableChips";
 import {
-  humanizeVariableLabel,
-  isIdentifyingVariable,
-} from "./helpers/variableClassification";
-import {
-  buildFallbackOptionsPrompt,
-  buildSyntheticPrompt,
-} from "./helpers/syntheticPrompt";
+  type ProtocolSendMessage,
+  useProtocolState,
+} from "./hooks/useProtocolState";
+import { humanizeVariableLabel } from "./helpers/variableClassification";
+import { buildSyntheticPrompt } from "./helpers/syntheticPrompt";
 import {
   buildPdfHref,
   getMessageText,
@@ -137,16 +125,6 @@ export function useChatPage(
   // Citaciones parseadas del stream (para modo mock)
   const [mockCitations, setMockCitations] = useState<Citation[]>([]);
 
-  // Estado de alertas del protocolo (Estados D, E, F)
-  const [alertState, setAlertState] = useState<AlertState>(
-    createInitialAlertState(),
-  );
-
-  // Estado de data request del protocolo (Estado B)
-  const [dataRequestState, setDataRequestState] = useState<DataRequestState>(
-    createInitialDataRequestState(),
-  );
-
   // Input controlado localmente
   const [localInput, setLocalInput] = useState("");
 
@@ -161,22 +139,48 @@ export function useChatPage(
 
   const [salaryMode, setSalaryMode] = useState(false);
 
-  // ============================================================================
-  // Hook de Chat Real (useChatStream) - cuando NO usamos mocks
-  // ============================================================================
-  const handleSpecialState = useCallback(
-    (specialState: { type: string; payload: Record<string, unknown> }) => {
-      const result = mapSpecialStateToUi(specialState, {
-        selectedConvenio: state.selectedConvenio,
-        humanize: humanizeVariableLabel,
-        isIdentifying: isIdentifyingVariable,
-      });
-      if (!result) return;
-      if (result.alert) setAlertState(result.alert);
-      if (result.dataRequest) setDataRequestState(result.dataRequest);
-    },
-    [state.selectedConvenio],
+  /**
+   * Sender unificado que abstrae real/mock. Se asigna en un efecto tras
+   * instanciar ambos hooks de chat y se consume desde `useProtocolState`
+   * vía un callback estable que lee la ref.
+   */
+  const sendMessageRef = useRef<ProtocolSendMessage>(async () => {});
+  const messagesRef = useRef<ChatMessage[]>([]);
+  const activeVariablesRef = useRef<Record<string, string>>({});
+  activeVariablesRef.current = activeVariables;
+
+  const stableSendMessage = useCallback<ProtocolSendMessage>(
+    async (text, opts) => sendMessageRef.current(text, opts),
+    [],
   );
+  const getMessages = useCallback(() => messagesRef.current, []);
+  const getActiveVariables = useCallback(() => activeVariablesRef.current, []);
+  const onInvalidDataSuggestion = useCallback((suggestion: string) => {
+    setLocalInput(suggestion);
+    inputRef.current?.focus();
+  }, []);
+
+  const {
+    alertState,
+    dataRequestState,
+    handleSpecialState,
+    clearProtocol,
+    handleAlertDismiss,
+    handleInvalidDataSuggestion,
+    handleConflictOption,
+    handleSMIViewDetails,
+    setAlert,
+    handleDataRequestSubmit,
+    handleDataRequestSkip,
+    setDataRequest,
+  } = useProtocolState({
+    sendMessage: stableSendMessage,
+    getMessages,
+    getActiveVariables,
+    mergeResolvedVariables,
+    selectedConvenio: state.selectedConvenio,
+    onInvalidDataSuggestion,
+  });
 
   const realChat = useChatStream({
     convenioId: state.selectedConvenio?.id || null,
@@ -239,10 +243,24 @@ export function useChatPage(
   // Seleccionar fuente de datos según modo (real o mock)
   // ============================================================================
   const messages: ChatMessage[] = shouldUseMocks ? mockMessages : realMessages;
+  messagesRef.current = messages;
   const isLoading = shouldUseMocks
     ? mockChat.status === "streaming" || mockChat.status === "submitted"
     : realChat.isLoading;
   const error = shouldUseMocks ? mockChat.error : realChat.error;
+
+  sendMessageRef.current = async (text, opts) => {
+    if (shouldUseMocks) {
+      await mockChat.sendMessage({ text });
+    } else {
+      await realChat.sendMessage(
+        text,
+        undefined,
+        opts?.variables,
+        opts?.replayLastUser,
+      );
+    }
+  };
   const citations: Citation[] = shouldUseMocks
     ? mockCitations
     : realChat.citations.map((c) => ({
@@ -323,8 +341,7 @@ export function useChatPage(
         }
         setLocalInput("");
         setSessionId(null);
-        setAlertState(clearAlertState());
-        setDataRequestState(clearDataRequestState());
+        clearProtocol();
         setSalaryMode(false);
       }
       return {
@@ -345,7 +362,13 @@ export function useChatPage(
       });
     }
     // En modo real, el perfil se actualizará automáticamente vía useEffect
-  }, [useMocks, mockSetMessages, realClearMessages, clearActiveVariables]);
+  }, [
+    useMocks,
+    mockSetMessages,
+    realClearMessages,
+    clearActiveVariables,
+    clearProtocol,
+  ]);
   const realSendMessage = realChat.sendMessage;
   const realSetMessages = realChat.setMessages;
 
@@ -424,8 +447,7 @@ export function useChatPage(
       if (useMocks) {
         setMockCitations([]);
       }
-      setAlertState(clearAlertState());
-      setDataRequestState(clearDataRequestState());
+      clearProtocol();
 
       if (useMocks) {
         await mockSendMessage({ text });
@@ -457,6 +479,7 @@ export function useChatPage(
       salaryMode,
       hasIdentifyingVariables,
       chatSessionRepo,
+      clearProtocol,
     ],
   );
 
@@ -480,8 +503,7 @@ export function useChatPage(
     setLocalInput("");
     setSelectedConvenioId(null);
     setSessionId(null); // Resetear session_id para crear una nueva sesión
-    setAlertState(clearAlertState());
-    setDataRequestState(clearDataRequestState());
+    clearProtocol();
     clearActiveVariables();
     setSalaryMode(false);
     setState((prev) => ({
@@ -490,7 +512,13 @@ export function useChatPage(
       selectedConvenio: null,
       perfilJson: null,
     }));
-  }, [useMocks, mockSetMessages, realClearMessages, clearActiveVariables]);
+  }, [
+    useMocks,
+    mockSetMessages,
+    realClearMessages,
+    clearActiveVariables,
+    clearProtocol,
+  ]);
 
   // Seleccionar conversación del historial
   const handleSelectConversation = useCallback(
@@ -588,154 +616,6 @@ export function useChatPage(
   // Setter para input
   const setInput = useCallback((value: string) => {
     setLocalInput(value);
-  }, []);
-
-  // ============================================================================
-  // Handlers de alertas del protocolo
-  // ============================================================================
-
-  /**
-   * Descartar la alerta actual
-   */
-  const handleAlertDismiss = useCallback(() => {
-    setAlertState(clearAlertState());
-  }, []);
-
-  /**
-   * Seleccionar una sugerencia de AlertInvalidData
-   * Inserta el texto sugerido en el input y cierra la alerta
-   */
-  const handleInvalidDataSuggestion = useCallback(
-    (suggestion: string) => {
-      setLocalInput(suggestion);
-      setAlertState(clearAlertState());
-      inputRef.current?.focus();
-    },
-    [],
-  );
-
-  /**
-   * Seleccionar una opción de AlertConflict
-   * Envía un mensaje con la opción seleccionada y cierra la alerta
-   */
-  const handleConflictOption = useCallback(
-    async (option: ConflictOption) => {
-      // Enviar mensaje con la opción seleccionada
-      const text = `Mi respuesta es: ${option.label}`;
-      if (useMocks) {
-        await mockSendMessage({ text });
-      } else {
-        await realSendMessage(text);
-      }
-      setAlertState(clearAlertState());
-    },
-    [useMocks, mockSendMessage, realSendMessage],
-  );
-
-  /**
-   * Ver detalles del SMI
-   * Por ahora solo loguea, se puede expandir para mostrar modal o scroll a detalles
-   */
-  const handleSMIViewDetails = useCallback(() => {
-    // TODO: Implementar visualización de detalles SMI
-    console.log("Ver detalles SMI:", alertState.payload);
-  }, [alertState.payload]);
-
-  /**
-   * Función para establecer alerta manualmente (útil para mocks/testing)
-   */
-  const setAlert = useCallback((newAlertState: AlertState) => {
-    setAlertState(newAlertState);
-  }, []);
-
-  // ============================================================================
-  // Handlers de DataRequest del protocolo (Estado B)
-  // ============================================================================
-
-  /**
-   * Manejar envio de respuesta de DataRequestCard
-   * Construye un mensaje con los valores seleccionados
-   */
-  const handleDataRequestSubmit = useCallback(
-    async (values: Record<string, string>) => {
-      if (!dataRequestState.payload) {
-        return;
-      }
-
-      // Convertir respuestas del card en chips estructurados.
-      // `stars` se queda como numero; el resto se manda tal cual.
-      const newChips: Record<string, string> = {};
-      for (const [key, value] of Object.entries(values)) {
-        const field = dataRequestState.payload?.fields.find(
-          (f) => f.name === key,
-        );
-        if (field?.type === "stars") {
-          newChips[key] = `${value} estrellas`;
-        } else {
-          newChips[key] = value;
-        }
-      }
-      const mergedVariables = { ...activeVariables, ...newChips };
-      mergeResolvedVariables(newChips);
-
-      // Re-enviar la pregunta original del usuario (ultimo mensaje user)
-      // con las variables actualizadas. Asi el backend re-clasifica con los
-      // nuevos datos en vez de recibir "Mis datos son: ..." como mensaje.
-      const lastUserMessage = [...messages].reverse().find(
-        (m) => m.role === "user",
-      );
-      const text = lastUserMessage?.content || "";
-      if (!text) {
-        setDataRequestState(clearDataRequestState());
-        return;
-      }
-
-      setDataRequestState(clearDataRequestState());
-      if (useMocks) {
-        await mockSendMessage({ text });
-      } else {
-        await realSendMessage(text, undefined, mergedVariables, true);
-      }
-    },
-    [
-      dataRequestState.payload,
-      useMocks,
-      mockSendMessage,
-      realSendMessage,
-      activeVariables,
-      messages,
-      mergeResolvedVariables,
-    ],
-  );
-
-  /**
-   * Manejar "No lo se" - mostrar opciones de establecimiento/clase
-   *
-   * Cuando el usuario no conoce los datos solicitados (ej: tipo de establecimiento),
-   * pedimos al backend que muestre las OPCIONES disponibles segun el convenio,
-   * para que el usuario pueda elegir.
-   */
-  const handleDataRequestSkip = useCallback(async () => {
-    const lastUserMessage = messages
-      .filter((m) => m.role === "user")
-      .pop();
-
-    setDataRequestState(clearDataRequestState());
-
-    const text = buildFallbackOptionsPrompt(lastUserMessage?.content ?? "");
-
-    if (useMocks) {
-      await mockSendMessage({ text });
-    } else {
-      await realSendMessage(text);
-    }
-  }, [messages, useMocks, mockSendMessage, realSendMessage]);
-
-  /**
-   * Funcion para establecer data request manualmente (util para mocks/testing)
-   */
-  const setDataRequest = useCallback((newState: DataRequestState) => {
-    setDataRequestState(newState);
   }, []);
 
   return {
