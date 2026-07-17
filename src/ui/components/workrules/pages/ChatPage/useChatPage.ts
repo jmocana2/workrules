@@ -10,12 +10,6 @@
  * - Estados especiales del protocolo (incomplete, invalid, smi_alert, conflicting)
  */
 
-import {
-  createChatSession,
-  getConvenioById,
-  getConvenioIdForSession,
-  loadChatSessionMessages,
-} from "@/application/use-cases";
 import { useRepositories } from "@/providers/RepositoriesProvider";
 import { useChatSessions } from "@ui/hooks/useChatSessions";
 import { useConvenioVariables } from "@ui/hooks/useConvenioVariables";
@@ -35,6 +29,7 @@ import {
   useProtocolState,
 } from "./hooks/useProtocolState";
 import { useChatIntegration } from "./hooks/useChatIntegration";
+import { useChatSessionLifecycle } from "./hooks/useChatSessionLifecycle";
 import { humanizeVariableLabel } from "./helpers/variableClassification";
 import { buildSyntheticPrompt } from "./helpers/syntheticPrompt";
 
@@ -96,8 +91,17 @@ export function useChatPage(
     currentConversationId: null,
   });
 
-  // Estado para session_id (se crea automáticamente al enviar el primer mensaje)
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const {
+    sessionId,
+    createSessionIfNeeded,
+    loadSession,
+    setActiveSession,
+    resetSession,
+  } = useChatSessionLifecycle({
+    userId: user?.id ?? null,
+    chatSessionRepo,
+    convenioRepo,
+  });
 
   // Actualizar conversaciones cuando lleguen datos reales
   useEffect(() => {
@@ -223,7 +227,7 @@ export function useChatPage(
       if (isChangingConvenio) {
         chatClearMessages();
         setLocalInput("");
-        setSessionId(null);
+        resetSession();
         clearProtocol();
         setSalaryMode(false);
       }
@@ -245,7 +249,13 @@ export function useChatPage(
       });
     }
     // En modo real, el perfil se actualizará automáticamente vía useEffect
-  }, [useMocks, chatClearMessages, clearActiveVariables, clearProtocol]);
+  }, [
+    useMocks,
+    chatClearMessages,
+    clearActiveVariables,
+    clearProtocol,
+    resetSession,
+  ]);
 
   // Limpiar convenio
   const clearConvenio = useCallback(() => {
@@ -290,27 +300,12 @@ export function useChatPage(
       let currentSessionId = sessionId;
 
       // Si es el primer mensaje y no hay sesión, crearla con el texto del usuario como título
-      if (
-        !shouldUseMocks && !currentSessionId && user?.id &&
-        state.selectedConvenio.id
-      ) {
-        const newSessionId = await createChatSession(
-          {
-            userId: user.id,
-            convenioId: state.selectedConvenio.id,
-            firstMessage: text,
-          },
-          { repo: chatSessionRepo },
+      if (!shouldUseMocks && !currentSessionId && state.selectedConvenio.id) {
+        currentSessionId = await createSessionIfNeeded(
+          state.selectedConvenio.id,
+          text,
         );
-        if (newSessionId) {
-          // Establecer el sessionId inmediatamente
-          currentSessionId = newSessionId;
-          setSessionId(newSessionId);
-          console.log("[useChatPage] Created new session:", newSessionId);
-        } else {
-          console.error("[useChatPage] Failed to create chat session");
-          return; // No continuar si no se pudo crear la sesión
-        }
+        if (!currentSessionId) return;
       }
 
       clearProtocol();
@@ -328,12 +323,11 @@ export function useChatPage(
       state.selectedConvenio,
       sendMessageWithSession,
       sessionId,
-      user?.id,
+      createSessionIfNeeded,
       shouldUseMocks,
       activeVariables,
       salaryMode,
       hasIdentifyingVariables,
-      chatSessionRepo,
       clearProtocol,
     ],
   );
@@ -352,7 +346,7 @@ export function useChatPage(
     chatClearMessages();
     setLocalInput("");
     setSelectedConvenioId(null);
-    setSessionId(null); // Resetear session_id para crear una nueva sesión
+    resetSession();
     clearProtocol();
     clearActiveVariables();
     setSalaryMode(false);
@@ -362,7 +356,7 @@ export function useChatPage(
       selectedConvenio: null,
       perfilJson: null,
     }));
-  }, [chatClearMessages, clearActiveVariables, clearProtocol]);
+  }, [chatClearMessages, clearActiveVariables, clearProtocol, resetSession]);
 
   // Seleccionar conversación del historial
   const handleSelectConversation = useCallback(
@@ -385,59 +379,22 @@ export function useChatPage(
         return;
       }
 
-      // En modo real, cargar la conversación desde el backend
-      try {
-        const convenioIdForSession = await getConvenioIdForSession(id, {
-          repo: chatSessionRepo,
-        });
-        if (!convenioIdForSession) {
-          console.error("[useChatPage] Session not found:", id);
-          return;
-        }
+      const loaded = await loadSession(id);
+      if (!loaded) return;
 
-        const loadedMessages = await loadChatSessionMessages(id, {
-          repo: chatSessionRepo,
-        });
-        if (!loadedMessages) {
-          console.error("[useChatPage] Failed to load chat messages");
-          return;
-        }
+      chatSetMessages(loaded.messages);
+      setActiveSession(id);
 
-        chatSetMessages(
-          loadedMessages.map((msg) => ({
-            id: msg.id,
-            role: msg.role as "user" | "assistant",
-            content: msg.content,
-            createdAt: msg.createdAt,
-            citations: msg.citations?.map((c) => ({
-              source: c.source,
-              url: c.url ?? "",
-              text: c.section,
-              url_pdf: c.url_pdf,
-              pagina: c.pagina,
-            })) ?? [],
-            parts: [{ type: "text" as const, text: msg.content }],
-          })),
-        );
-
-        setSessionId(id);
-
-        const convenio = await getConvenioById(convenioIdForSession, {
-          repo: convenioRepo,
-        });
-        if (convenio) {
-          setState((prev) => ({ ...prev, selectedConvenio: convenio }));
-          setSelectedConvenioId(convenio.id);
-        }
-      } catch (err) {
-        console.error("[useChatPage] Error loading conversation:", err);
+      if (loaded.convenio) {
+        setState((prev) => ({ ...prev, selectedConvenio: loaded.convenio }));
+        setSelectedConvenioId(loaded.convenio.id);
       }
     },
     [
       shouldUseMocks,
       chatSetMessages,
-      chatSessionRepo,
-      convenioRepo,
+      loadSession,
+      setActiveSession,
       clearActiveVariables,
     ],
   );
