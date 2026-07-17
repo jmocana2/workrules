@@ -8,8 +8,8 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   calculateSalary,
   type CalculateSalaryDeps,
-} from "./calculate-salary.ts";
-import type { CalculateSalaryInput } from "./types.ts";
+} from "./index.ts";
+import type { CalculateSalaryInput } from "../types.ts";
 
 // ============================================
 // MOCK HELPERS
@@ -394,7 +394,7 @@ Deno.test("calculateSalary - streaming con datos incompletos NO retorna stream",
 // ============================================
 
 Deno.test("calculateSalary - error de embedding", async () => {
-  const { EmbeddingError } = await import("../../lib/openai.ts");
+  const { EmbeddingError } = await import("../../../lib/openai.ts");
   const deps = createMockDeps({
     embedQuestion: async () => {
       throw new EmbeddingError("API error", "API_ERROR", false);
@@ -411,7 +411,7 @@ Deno.test("calculateSalary - error de embedding", async () => {
 });
 
 Deno.test("calculateSalary - error de Anthropic rate limit", async () => {
-  const { AnthropicError } = await import("../../lib/anthropic.ts");
+  const { AnthropicError } = await import("../../../lib/anthropic.ts");
   const deps = createMockDeps({
     createChatResponse: async () => {
       throw new AnthropicError("Rate limited", "RATE_LIMIT", true);
@@ -429,7 +429,7 @@ Deno.test("calculateSalary - error de Anthropic rate limit", async () => {
 });
 
 Deno.test("calculateSalary - error de Supabase", async () => {
-  const { RepositoryError } = await import("../../lib/supabase.ts");
+  const { RepositoryError } = await import("../../../lib/supabase.ts");
   const deps = createMockDeps({
     searchChunksByConvenio: async () => {
       throw new RepositoryError("DB error", "DB_ERROR");
