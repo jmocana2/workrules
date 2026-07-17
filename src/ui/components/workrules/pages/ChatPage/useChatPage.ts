@@ -17,17 +17,13 @@ import {
   loadChatSessionMessages,
 } from "@/application/use-cases";
 import { useRepositories } from "@/providers/RepositoriesProvider";
-import { useChat } from "@ai-sdk/react";
 import { useChatSessions } from "@ui/hooks/useChatSessions";
-import { useChatStream } from "@ui/hooks/useChatStream";
 import { useConvenioVariables } from "@ui/hooks/useConvenioVariables";
 import { useSupabase } from "@ui/hooks/useSupabase";
-import { DefaultChatTransport } from "ai";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   ChatMessage,
   ChatPageState,
-  Citation,
   Convenio,
   ConversationSummary,
   PerfilJson,
@@ -38,14 +34,9 @@ import {
   type ProtocolSendMessage,
   useProtocolState,
 } from "./hooks/useProtocolState";
+import { useChatIntegration } from "./hooks/useChatIntegration";
 import { humanizeVariableLabel } from "./helpers/variableClassification";
 import { buildSyntheticPrompt } from "./helpers/syntheticPrompt";
-import {
-  buildPdfHref,
-  getMessageText,
-} from "./helpers/messageAdapters";
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
 
 /** Flag para usar mocks en desarrollo/Storybook */
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCKS === "true";
@@ -122,9 +113,6 @@ export function useChatPage(
     }
   }, [shouldUseMocks, realPerfilJson]);
 
-  // Citaciones parseadas del stream (para modo mock)
-  const [mockCitations, setMockCitations] = useState<Citation[]>([]);
-
   // Input controlado localmente
   const [localInput, setLocalInput] = useState("");
 
@@ -182,120 +170,25 @@ export function useChatPage(
     onInvalidDataSuggestion,
   });
 
-  const realChat = useChatStream({
+  const {
+    messages,
+    isLoading,
+    error,
+    citations,
+    sendMessage: chatSendMessage,
+    sendMessageWithSession,
+    setMessages: chatSetMessages,
+    clearMessages: chatClearMessages,
+  } = useChatIntegration({
+    mode: shouldUseMocks ? "mock" : "real",
     convenioId: state.selectedConvenio?.id || null,
-    sessionId: shouldUseMocks ? undefined : sessionId || undefined,
+    sessionId,
     onSpecialState: handleSpecialState,
-    onError: (err) => {
-      console.error("[useChatPage] Chat error:", err);
-    },
     onResolvedVariables: mergeResolvedVariables,
   });
 
-  // ============================================================================
-  // Hook de Chat Mock (useChat del AI SDK) - para Storybook/desarrollo
-  // ============================================================================
-  const mockChat = useChat({
-    transport: new DefaultChatTransport({
-      api: SUPABASE_URL ? `${SUPABASE_URL}/functions/v1/chat` : "/api/chat",
-    }),
-  });
-
-  // Convertir mensajes de AI SDK a nuestro tipo (para modo mock)
-  const mockMessages: ChatMessage[] = useMemo(
-    () =>
-      mockChat.messages.map((msg) => {
-        const content = getMessageText(msg);
-        return {
-          ...msg,
-          content,
-          role: msg.role as "user" | "assistant" | "system",
-        };
-      }),
-    [mockChat.messages],
-  );
-
-  // ============================================================================
-  // Convertir mensajes de realChat a ChatMessage[]
-  // ============================================================================
-
-  const realMessages: ChatMessage[] = useMemo(
-    () =>
-      realChat.messages.map((msg) => ({
-        id: msg.id,
-        role: msg.role,
-        content: msg.content,
-        createdAt: msg.createdAt,
-        citations: msg.citations?.map((c) => ({
-          source: c.source,
-          url: buildPdfHref(c.url_pdf, c.pagina) || c.url || "",
-          text: c.section,
-          url_pdf: c.url_pdf,
-          pagina: c.pagina,
-        })),
-        // Agregar parts para compatibilidad con UIMessage
-        parts: [{ type: "text" as const, text: msg.content }],
-      })),
-    [realChat.messages],
-  );
-
-  // ============================================================================
-  // Seleccionar fuente de datos según modo (real o mock)
-  // ============================================================================
-  const messages: ChatMessage[] = shouldUseMocks ? mockMessages : realMessages;
   messagesRef.current = messages;
-  const isLoading = shouldUseMocks
-    ? mockChat.status === "streaming" || mockChat.status === "submitted"
-    : realChat.isLoading;
-  const error = shouldUseMocks ? mockChat.error : realChat.error;
-
-  sendMessageRef.current = async (text, opts) => {
-    if (shouldUseMocks) {
-      await mockChat.sendMessage({ text });
-    } else {
-      await realChat.sendMessage(
-        text,
-        undefined,
-        opts?.variables,
-        opts?.replayLastUser,
-      );
-    }
-  };
-  const citations: Citation[] = shouldUseMocks
-    ? mockCitations
-    : realChat.citations.map((c) => ({
-      source: c.source,
-      url: buildPdfHref(c.url_pdf, c.pagina) || c.url || "",
-      text: c.section,
-      url_pdf: c.url_pdf,
-      pagina: c.pagina,
-    }));
-
-  // Parsear citaciones cuando termina el streaming (solo modo mock)
-  useEffect(() => {
-    if (!shouldUseMocks) return;
-
-    if (mockChat.status === "ready" && mockMessages.length > 0) {
-      const lastMessage = mockMessages[mockMessages.length - 1];
-      if (lastMessage.role === "assistant") {
-        // Parsear citaciones del mensaje (formato markdown: [texto](url))
-        // Regex optimizada para evitar backtracking
-        const citationMatches = lastMessage.content.matchAll(
-          /\[([^\]]{1,200})\]\(([^)\s]{1,500})\)/g,
-        );
-        const parsedCitations: Citation[] = [];
-        for (const match of citationMatches) {
-          parsedCitations.push({
-            source: match[1],
-            url: match[2],
-          });
-        }
-        if (parsedCitations.length > 0) {
-          setMockCitations(parsedCitations);
-        }
-      }
-    }
-  }, [useMocks, mockChat.status, mockMessages, shouldUseMocks]);
+  sendMessageRef.current = chatSendMessage;
 
   // Cargar convenio inicial
   useEffect(() => {
@@ -321,11 +214,6 @@ export function useChatPage(
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Extraer funciones de los hooks de chat para evitar warnings de dependencias
-  const mockSetMessages = mockChat.setMessages;
-  const mockSendMessage = mockChat.sendMessage;
-  const realClearMessages = realChat.clearMessages;
-
   // Seleccionar convenio
   const selectConvenio = useCallback((convenio: Convenio) => {
     setState((prev) => {
@@ -333,12 +221,7 @@ export function useChatPage(
       // mezclaría contexto de un convenio distinto en el siguiente turno.
       const isChangingConvenio = prev.selectedConvenio?.id !== convenio.id;
       if (isChangingConvenio) {
-        if (useMocks) {
-          mockSetMessages([]);
-          setMockCitations([]);
-        } else {
-          realClearMessages();
-        }
+        chatClearMessages();
         setLocalInput("");
         setSessionId(null);
         clearProtocol();
@@ -362,15 +245,7 @@ export function useChatPage(
       });
     }
     // En modo real, el perfil se actualizará automáticamente vía useEffect
-  }, [
-    useMocks,
-    mockSetMessages,
-    realClearMessages,
-    clearActiveVariables,
-    clearProtocol,
-  ]);
-  const realSendMessage = realChat.sendMessage;
-  const realSetMessages = realChat.setMessages;
+  }, [useMocks, chatClearMessages, clearActiveVariables, clearProtocol]);
 
   // Limpiar convenio
   const clearConvenio = useCallback(() => {
@@ -380,15 +255,10 @@ export function useChatPage(
       perfilJson: null,
     }));
     setSelectedConvenioId(null);
-    if (useMocks) {
-      mockSetMessages([]);
-      setMockCitations([]);
-    } else {
-      realClearMessages();
-    }
+    chatClearMessages();
     setLocalInput("");
     clearActiveVariables();
-  }, [useMocks, mockSetMessages, realClearMessages, clearActiveVariables]);
+  }, [chatClearMessages, clearActiveVariables]);
 
   // Manejar cambio de input
   const handleInputChange = useCallback(
@@ -443,35 +313,20 @@ export function useChatPage(
         }
       }
 
-      // Reset citaciones, alertas y data request al enviar nuevo mensaje
-      if (useMocks) {
-        setMockCitations([]);
-      }
       clearProtocol();
 
-      if (useMocks) {
-        await mockSendMessage({ text });
-      } else {
-        // Pasar el sessionId directamente para asegurar que se use en este mensaje
-        console.log(
-          "[useChatPage] Sending message with sessionId:",
-          currentSessionId,
-        );
-        await realSendMessage(
-          text,
-          currentSessionId || undefined,
-          activeVariables,
-          false,
-          salaryMode ? "salary" : undefined,
-        );
-      }
+      await sendMessageWithSession(
+        text,
+        currentSessionId || undefined,
+        activeVariables,
+        false,
+        salaryMode ? "salary" : undefined,
+      );
       setLocalInput("");
     },
     [
       state.selectedConvenio,
-      useMocks,
-      mockSendMessage,
-      realSendMessage,
+      sendMessageWithSession,
       sessionId,
       user?.id,
       shouldUseMocks,
@@ -494,12 +349,7 @@ export function useChatPage(
 
   // Nueva conversación
   const handleNewConversation = useCallback(() => {
-    if (useMocks) {
-      mockSetMessages([]);
-      setMockCitations([]);
-    } else {
-      realClearMessages();
-    }
+    chatClearMessages();
     setLocalInput("");
     setSelectedConvenioId(null);
     setSessionId(null); // Resetear session_id para crear una nueva sesión
@@ -512,13 +362,7 @@ export function useChatPage(
       selectedConvenio: null,
       perfilJson: null,
     }));
-  }, [
-    useMocks,
-    mockSetMessages,
-    realClearMessages,
-    clearActiveVariables,
-    clearProtocol,
-  ]);
+  }, [chatClearMessages, clearActiveVariables, clearProtocol]);
 
   // Seleccionar conversación del historial
   const handleSelectConversation = useCallback(
@@ -537,7 +381,7 @@ export function useChatPage(
             parts: [{ type: "text" as const, text: msg.content }],
           }),
         );
-        mockSetMessages(historicMessages);
+        chatSetMessages(historicMessages);
         return;
       }
 
@@ -551,21 +395,28 @@ export function useChatPage(
           return;
         }
 
-        const messages = await loadChatSessionMessages(id, {
+        const loadedMessages = await loadChatSessionMessages(id, {
           repo: chatSessionRepo,
         });
-        if (!messages) {
+        if (!loadedMessages) {
           console.error("[useChatPage] Failed to load chat messages");
           return;
         }
 
-        realSetMessages(
-          messages.map((msg) => ({
+        chatSetMessages(
+          loadedMessages.map((msg) => ({
             id: msg.id,
             role: msg.role as "user" | "assistant",
             content: msg.content,
             createdAt: msg.createdAt,
-            citations: msg.citations || [],
+            citations: msg.citations?.map((c) => ({
+              source: c.source,
+              url: c.url ?? "",
+              text: c.section,
+              url_pdf: c.url_pdf,
+              pagina: c.pagina,
+            })) ?? [],
+            parts: [{ type: "text" as const, text: msg.content }],
           })),
         );
 
@@ -584,8 +435,7 @@ export function useChatPage(
     },
     [
       shouldUseMocks,
-      mockSetMessages,
-      realSetMessages,
+      chatSetMessages,
       chatSessionRepo,
       convenioRepo,
       clearActiveVariables,
