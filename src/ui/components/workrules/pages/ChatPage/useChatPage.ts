@@ -43,6 +43,7 @@ import {
   createInitialDataRequestState,
 } from "./parseAlertEvent";
 import { mapSpecialStateToUi } from "./helpers/specialStateMapper";
+import { useVariableChips } from "./hooks/useVariableChips";
 import {
   humanizeVariableLabel,
   isIdentifyingVariable,
@@ -149,23 +150,16 @@ export function useChatPage(
   // Input controlado localmente
   const [localInput, setLocalInput] = useState("");
 
-  // Variables estructuradas activas (chips encima del textarea).
-  // Una sola por nombre: el reemplazo por grupo es automatico (set sobrescribe).
-  // Persisten entre turnos hasta que el usuario las elimine o cambie de convenio.
-  const [activeVariables, setActiveVariables] = useState<
-    Record<string, string>
-  >({});
+  const {
+    activeVariables,
+    hasIdentifyingVariables,
+    handleVariableClick,
+    handleVariableRemove,
+    mergeResolvedVariables,
+    clear: clearActiveVariables,
+  } = useVariableChips();
 
-  // Toggle del modo "Calculo salarial". Fuerza el backend a calculateSalary
-  // ignorando la heuristica de clasificacion. No persiste entre conversaciones.
   const [salaryMode, setSalaryMode] = useState(false);
-
-  // Hay alguna variable identificadora activa? (necesario para habilitar
-  // submit sin texto en modo cálculo)
-  const hasIdentifyingVariables = useMemo(
-    () => Object.keys(activeVariables).some(isIdentifyingVariable),
-    [activeVariables],
-  );
 
   // ============================================================================
   // Hook de Chat Real (useChatStream) - cuando NO usamos mocks
@@ -191,12 +185,7 @@ export function useChatPage(
     onError: (err) => {
       console.error("[useChatPage] Chat error:", err);
     },
-    // El backend devuelve las variables que ha resuelto del mensaje con las
-    // claves crudas del perfil; las mergeamos en `activeVariables` para que el
-    // panel refleje el contexto vigente sin que el usuario tenga que re-marcarlas.
-    onResolvedVariables: (resolved) => {
-      setActiveVariables((prev) => ({ ...prev, ...resolved }));
-    },
+    onResolvedVariables: mergeResolvedVariables,
   });
 
   // ============================================================================
@@ -347,7 +336,7 @@ export function useChatPage(
       };
     });
     setSelectedConvenioId(convenio.id);
-    setActiveVariables({});
+    clearActiveVariables();
 
     // En modo mock, usar perfil mock (dynamic import para que no entre al bundle prod)
     if (useMocks) {
@@ -356,7 +345,7 @@ export function useChatPage(
       });
     }
     // En modo real, el perfil se actualizará automáticamente vía useEffect
-  }, [useMocks, mockSetMessages, realClearMessages]);
+  }, [useMocks, mockSetMessages, realClearMessages, clearActiveVariables]);
   const realSendMessage = realChat.sendMessage;
   const realSetMessages = realChat.setMessages;
 
@@ -375,33 +364,8 @@ export function useChatPage(
       realClearMessages();
     }
     setLocalInput("");
-    setActiveVariables({});
-  }, [useMocks, mockSetMessages, realClearMessages]);
-
-  // Click en variable del panel: se convierte en chip estructurado encima
-  // del textarea. Reemplazo automatico por grupo (mismo `variable` → sobrescribe).
-  const handleVariableClick = useCallback(
-    (variable: string, value: string) => {
-      setActiveVariables((prev) => {
-        if (prev[variable] === value) {
-          const next = { ...prev };
-          delete next[variable];
-          return next;
-        }
-        return { ...prev, [variable]: value };
-      });
-    },
-    [],
-  );
-
-  // Eliminar chip (X)
-  const handleVariableRemove = useCallback((variable: string) => {
-    setActiveVariables((prev) => {
-      const next = { ...prev };
-      delete next[variable];
-      return next;
-    });
-  }, []);
+    clearActiveVariables();
+  }, [useMocks, mockSetMessages, realClearMessages, clearActiveVariables]);
 
   // Manejar cambio de input
   const handleInputChange = useCallback(
@@ -518,7 +482,7 @@ export function useChatPage(
     setSessionId(null); // Resetear session_id para crear una nueva sesión
     setAlertState(clearAlertState());
     setDataRequestState(clearDataRequestState());
-    setActiveVariables({});
+    clearActiveVariables();
     setSalaryMode(false);
     setState((prev) => ({
       ...prev,
@@ -526,13 +490,13 @@ export function useChatPage(
       selectedConvenio: null,
       perfilJson: null,
     }));
-  }, [useMocks, mockSetMessages, realClearMessages]);
+  }, [useMocks, mockSetMessages, realClearMessages, clearActiveVariables]);
 
   // Seleccionar conversación del historial
   const handleSelectConversation = useCallback(
     async (id: string) => {
       setState((prev) => ({ ...prev, currentConversationId: id }));
-      setActiveVariables({});
+      clearActiveVariables();
       setSalaryMode(false);
 
       // En modo mock, usar mensajes mock (dynamic import para que no entre al bundle prod)
@@ -596,6 +560,7 @@ export function useChatPage(
       realSetMessages,
       chatSessionRepo,
       convenioRepo,
+      clearActiveVariables,
     ],
   );
 
@@ -711,7 +676,7 @@ export function useChatPage(
         }
       }
       const mergedVariables = { ...activeVariables, ...newChips };
-      setActiveVariables(mergedVariables);
+      mergeResolvedVariables(newChips);
 
       // Re-enviar la pregunta original del usuario (ultimo mensaje user)
       // con las variables actualizadas. Asi el backend re-clasifica con los
@@ -739,6 +704,7 @@ export function useChatPage(
       realSendMessage,
       activeVariables,
       messages,
+      mergeResolvedVariables,
     ],
   );
 
