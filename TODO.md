@@ -42,6 +42,30 @@ Si n8n falla (LlamaParse timeout, Claude API error, etc.):
 
 ---
 
+## 🏗️ Ingeniería del software
+
+### Refactors SRP pendientes del audit `docs/refactor/001-srp-audit.md`
+
+Tras cerrar el doc [`006-useChatPage-srp.md`](docs/refactor/006-useChatPage-srp.md) (violación 🔴 #5 del audit), quedan pendientes las violaciones 🟡 #6 y #7:
+
+- **`useChatStream.ts`** (~440 líneas reales) — extraer `StreamEventDispatcher` (parseo puro de los 4 tipos de evento SSE) y `ChatMessageAccumulator` (acumulación en memoria + citaciones). El hook se queda con `AbortController`, retries y estado React.
+- **`lib/chat-api.ts`** (~460 líneas reales) — extraer `SSEParser` como clase independiente con tests propios y `ChatAuthClient` (token + headers Supabase). Hoy mezcla parseo SSE + auth + manejo JSON/streaming + construcción de headers.
+
+Ambos comparten un mismo eje: **el parseo SSE está duplicado entre `chat-api.ts` (`parseSSELine` + `processSSEStream`) y el `useChatStream` que lo consume**. Un `SSEParser` común elimina la duplicación real.
+
+### Análisis pendientes (más allá de SRP)
+
+La skill actual `.agents/skills/single-responsibility/` sólo cubre SRP. Falta un pase por el proyecto con estos ejes:
+
+- **DRY** — duplicaciones estructurales reales. Un ejemplo detectado durante 006: el branching `if (useMocks) { mockX() } else { realX() }` aparece en 8+ sitios de `useChatPage.ts`. Otro: parseo SSE duplicado entre `chat-api.ts` y `useChatStream.ts`.
+- **KISS** — simplificaciones posibles. Ej: ¿realmente el modo mock necesita vivir en producción, o puede quedar restringido a Storybook y aligerar `useChatPage`?
+- **YAGNI** — código para escenarios no confirmados. Auditar hooks, use cases y componentes en busca de props/estados que hoy no usa nadie.
+- **Antipatrones** — God hooks, primitive obsession en payloads de eventos, shotgun surgery al añadir un nuevo estado del protocolo, etc.
+
+**Acción sugerida:** valorar la creación de una nueva skill (`.agents/skills/software-engineering-hygiene/` o similar) que ejecute este análisis de forma sistemática, análoga a `single-responsibility/` pero cubriendo DRY / KISS / YAGNI / antipatrones. Definir su `SKILL.md` (test de aplicabilidad, criterios de detección, plantilla de doc de análisis) sería el entregable inicial.
+
+---
+
 ## ✅ Completados
 
 ### ~~Sistema de Progreso Real para Upload de Convenios~~

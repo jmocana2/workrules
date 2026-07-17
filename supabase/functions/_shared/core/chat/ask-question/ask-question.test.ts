@@ -1,20 +1,17 @@
-// supabase/functions/_shared/core/chat/ask-question.test.ts
+// supabase/functions/_shared/core/chat/ask-question/ask-question.test.ts
 
 import { assertEquals, assertExists } from "@std/assert";
-import { AnthropicError } from "../../lib/anthropic.ts";
-import { EmbeddingError } from "../../lib/openai.ts";
+import { AnthropicError } from "../../../lib/anthropic.ts";
+import { EmbeddingError } from "../../../lib/openai.ts";
 import type {
   CacheHit,
   ChunkSearchResult,
   Convenio,
   QuotaStatus,
-} from "../../lib/supabase.ts";
-import { RepositoryError } from "../../lib/supabase.ts";
-import {
-  askQuestion,
-  type AskQuestionDeps,
-  type AskQuestionInput,
-} from "./ask-question.ts";
+} from "../../../lib/supabase.ts";
+import { RepositoryError } from "../../../lib/supabase.ts";
+import { askQuestion } from "./ask-question.ts";
+import type { AskQuestionDeps, AskQuestionInput } from "./types.ts";
 
 // ============================================
 // TEST FIXTURES
