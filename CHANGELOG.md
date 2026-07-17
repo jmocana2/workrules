@@ -6,9 +6,31 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ---
 
-## [Unreleased] — TFM.7 (en curso)
+## [Unreleased]
 
-Fase de ajustes finales de producción.
+---
+
+## [0.10.0] — 2026-07-17
+
+Refactor mayor aplicando SRP y Clean Architecture al módulo de chat (frontend y edge functions).
+
+### Cambiado
+- **Frontend `ChatPage`**: extracción de hooks y helpers puros para reducir tamaño y responsabilidad del componente principal.
+  - Nuevos sub-hooks: `useChatIntegration`, `useChatSessionLifecycle`, `useVariableChips`.
+  - Nuevas columnas: `ChatSidebarColumn`, `ChatVariablesColumn`, `ChatConversationColumn`.
+  - Helpers puros extraídos: mappers de variables, prompts, adaptadores de mensajes y `mapSpecialStateToUi`.
+  - Extracción de `MessageCitations` y lógica de altura del input móvil a hooks propios.
+- **Edge Function `/chat`**: aplicación de SRP a `handlers.ts` separando capas HTTP, SSE y routing en módulos independientes.
+- **Casos de uso backend**: reorganización modular de `AskQuestion` y `CalculateSalary` con inyección de dependencias y adaptadores de variables.
+- Módulos compartidos migrados de `ask-question/` a `rag/` para reutilización entre casos de uso.
+
+### Añadido
+- Manejo de eventos SSE y encoding para respuestas en streaming de Anthropic.
+- Función `persistResponse` para cacheo y gestión de historial de chat.
+- Expansión de chunks con vecinos para respuestas más completas.
+- Reglas de chunks para display de artículos, mapeo de prompts y construcción de citaciones.
+- Generación de cache keys y manejo de errores en `ask-question`.
+- Tests de `calculate-salary` y JSDoc en el módulo de chat.
 
 ### Documentación
 - Auditoría y revisión masiva de archivos `.md` del proyecto.
@@ -83,4 +105,4 @@ Fase de ajustes finales de producción.
 
 ---
 
-**Última actualización**: 2026-05-23
+**Última actualización**: 2026-07-17
