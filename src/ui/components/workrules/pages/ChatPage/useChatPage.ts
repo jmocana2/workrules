@@ -22,7 +22,7 @@ import { useChatSessions } from "@ui/hooks/useChatSessions";
 import { useChatStream } from "@ui/hooks/useChatStream";
 import { useConvenioVariables } from "@ui/hooks/useConvenioVariables";
 import { useSupabase } from "@ui/hooks/useSupabase";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   AlertConflictPayload,
@@ -46,65 +46,20 @@ import {
   createInitialDataRequestState,
   parseDataRequestEvent,
 } from "./parseAlertEvent";
+import {
+  humanizeVariableLabel,
+  isIdentifyingVariable,
+} from "./helpers/variableClassification";
+import {
+  buildFallbackOptionsPrompt,
+  buildSyntheticPrompt,
+} from "./helpers/syntheticPrompt";
+import {
+  buildPdfHref,
+  getMessageText,
+} from "./helpers/messageAdapters";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
-
-/**
- * Decide si una variable critica del perfil es "identificadora": sin ella no
- * se puede aplicar una tabla salarial concreta (categoria, nivel/tipo de
- * establecimiento, zona/ambito territorial, grupo profesional).
- * Las moduladoras (jornada, antigüedad, turno, horas extra, pluses) NO
- * bloquean; se asume default y se aclara en la respuesta de Claude.
- */
-function isIdentifyingVariable(name: string): boolean {
-  // Misma normalizacion que el backend: lowercase, sin acentos,
-  // separadores (`_`, `-`) y multiples espacios colapsados a un espacio.
-  const normalized = name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[_-]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  const identifyingKeywords = [
-    "categoria",
-    "puesto",
-    "nivel",
-    "tipo establecimiento",
-    "tipo de establecimiento",
-    "clase",
-    "zona",
-    "ambito",
-    "grupo",
-    "area",
-  ];
-
-  return identifyingKeywords.some((kw) => normalized.includes(kw));
-}
-
-/**
- * Convierte "tipo_establecimiento" -> "Tipo establecimiento" para mostrarlo
- * como label legible en DataRequestCard.
- */
-function humanizeVariableLabel(name: string): string {
-  const cleaned = name.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
-}
-
-/**
- * Construye una pregunta sintetica para el modo calculo salarial cuando el
- * usuario no ha escrito texto pero ha seleccionado variables identificadoras.
- */
-function buildSyntheticPrompt(
-  variables: Record<string, string>,
-  humanize: (name: string) => string,
-): string {
-  const parts = Object.entries(variables).map(
-    ([name, value]) => `${humanize(name)}=${value}`,
-  );
-  return `Calcula el salario con: ${parts.join(", ")}`;
-}
 
 /** Flag para usar mocks en desarrollo/Storybook */
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCKS === "true";
@@ -148,22 +103,6 @@ export function useChatPage(
   const { data: realPerfilJson } = useConvenioVariables(
     useMocks ? null : selectedConvenioId,
   );
-
-  const getMessageText = useCallback((message: UIMessage): string => {
-    // Intentar obtener content legacy
-    const legacyContent = (message as { content?: unknown }).content;
-    if (typeof legacyContent === "string" && legacyContent.length > 0) {
-      return legacyContent;
-    }
-
-    // Extraer de parts
-    return message.parts
-      .filter((part): part is { type: "text"; text: string } =>
-        part.type === "text"
-      )
-      .map((part) => part.text)
-      .join("\n");
-  }, []);
 
   // Refs
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -398,20 +337,13 @@ export function useChatPage(
           role: msg.role as "user" | "assistant" | "system",
         };
       }),
-    [mockChat.messages, getMessageText],
+    [mockChat.messages],
   );
 
   // ============================================================================
   // Convertir mensajes de realChat a ChatMessage[]
   // ============================================================================
 
-  function buildPdfHref(
-    urlPdf: string | null | undefined,
-    pagina: number | null | undefined,
-  ): string {
-    if (!urlPdf) return "";
-    return pagina != null ? `${urlPdf}#page=${pagina}` : urlPdf;
-  }
   const realMessages: ChatMessage[] = useMemo(
     () =>
       realChat.messages.map((msg) => ({
@@ -936,47 +868,13 @@ export function useChatPage(
    * para que el usuario pueda elegir.
    */
   const handleDataRequestSkip = useCallback(async () => {
-    // Extraer contexto del ultimo mensaje del usuario
     const lastUserMessage = messages
       .filter((m) => m.role === "user")
       .pop();
-    const contexto = lastUserMessage?.content?.toLowerCase() || "";
-
-    // Extraer categoria profesional usando busqueda de texto simple
-    // para evitar regex complejas que disparan sonarjs/regex-complexity
-    const categoriasConocidas = [
-      "ayudante de cocina",
-      "jefe de cocina",
-      "cocinero",
-      "camarero",
-      "ayudante de camarero",
-      "recepcionista",
-      "gobernanta",
-      "pinche",
-      "barman",
-      "jefe de sala",
-      "camarera de pisos",
-    ];
-
-    let categoriaDetectada = "";
-    for (const cat of categoriasConocidas) {
-      if (contexto.includes(cat)) {
-        categoriaDetectada = cat;
-        break;
-      }
-    }
 
     setDataRequestState(clearDataRequestState());
 
-    // Construir mensaje pidiendo las OPCIONES disponibles, no los salarios
-    let text: string;
-    if (categoriaDetectada) {
-      text =
-        `Para ${categoriaDetectada}, muestrame los tipos de establecimiento y clases disponibles en el convenio con sus salarios correspondientes`;
-    } else {
-      text =
-        "Muestrame los tipos de establecimiento, clases y categorias profesionales disponibles en el convenio";
-    }
+    const text = buildFallbackOptionsPrompt(lastUserMessage?.content ?? "");
 
     if (useMocks) {
       await mockSendMessage({ text });
