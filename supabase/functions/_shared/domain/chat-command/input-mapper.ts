@@ -274,13 +274,16 @@ function checkHorasNocturnasVsSemanales(
 // ============================================
 
 /**
- * Convierte un `ChatRequestRaw` en `ChatCommand` validado. El `Perfil` se
- * acepta como parámetro para respetar la firma del plan; no se usa aún en
- * fase 7 (queda para fase 8 al validar `categoria ∈ perfil.categorias`).
+ * Convierte un `ChatRequestRaw` en `ChatCommand` validado.
+ *
+ * El `Perfil` es opcional en esta fase: cuando se pase, validaciones adicionales
+ * (p.ej. `categoria ∈ perfil.categorias`) se activarán en fase 8b. Hasta
+ * entonces, se acepta `undefined` para poder validar el input a las puertas
+ * del router sin haber leído aún el perfil de BD.
  */
 export function toChatCommand(
   req: ChatRequestRaw,
-  _perfil: Perfil,
+  _perfil?: Perfil,
 ): Result<ChatCommand, InvalidChatInput> {
   const pregunta = req.pregunta?.trim() ?? "";
   if (pregunta.length === 0) return err({ kind: "pregunta_empty" });

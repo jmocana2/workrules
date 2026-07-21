@@ -9,6 +9,7 @@ import type { ChatRequest } from "../types.ts";
 import { isShowRangesRequest } from "../variable-extractor.ts";
 import type { ChatUseCaseResult } from "../http/result-mapper.ts";
 import { transformRangesRequest } from "./ranges-transformer.ts";
+import { validateChatCommand } from "./command-validator.ts";
 
 /**
  * Construye el input de `calculateSalary` desde un `ChatRequest`.
@@ -56,6 +57,10 @@ export async function classifyAndExecute(
   request: ChatRequest,
   userId: string,
 ): Promise<ChatUseCaseResult> {
+  // Refactor 007 fase 8a: validación de dominio antes de tocar cuota/cache/RAG.
+  const invalid = validateChatCommand(request, userId);
+  if (invalid) return invalid;
+
   if (request.mode === "salary") {
     return calculateSalary(buildSalaryInput(request, userId));
   }

@@ -82,6 +82,10 @@ export function classifyDataState(
 // ============================================
 // VERIFICACIONES
 // ============================================
+// Nota fase 9 (refactor 007): estas verificaciones son redundantes cuando el
+// request entra por el router (`toChatCommand` en fase 8a ya las aplica). Se
+// conservan para el path de extraccion de lenguaje natural dentro de los use
+// cases, hasta que fase 8b migre esa extraccion al pipeline de VOs.
 
 /**
  * Verifica variables con valores fuera de limites legales
@@ -185,8 +189,9 @@ function checkConflicts(
   variables: ExtractedVariables,
   result: DataClassificationResult,
 ): void {
-  // moved to Jornada VO (domain/value-objects/jornada.ts) — remove in phase 8
-  // Conflicto: jornada completa pero menos de 35h
+  // Regla duplicada con `Jornada` VO (domain/value-objects/jornada.ts). Se
+  // conserva mientras `calculateSalary` no reciba `ChatCommand` (refactor 007
+  // fase 8b). Al migrar la firma, esta funcion queda vacia y se elimina.
   if (
     variables.jornada === "completa" &&
     variables.horasSemanales !== undefined &&
@@ -200,7 +205,6 @@ function checkConflicts(
     });
   }
 
-  // Conflicto: jornada parcial pero 40h
   if (
     variables.jornada === "parcial" &&
     variables.horasSemanales !== undefined &&

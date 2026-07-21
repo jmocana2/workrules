@@ -8,6 +8,26 @@
 
 ---
 
+## Estado (actualizado 2026-07-21)
+
+| Fase | Estado | Notas |
+|------|--------|-------|
+| 0 – Result | ✅ Completa | 13 tests |
+| 1 – labor-law | ✅ Completa | `LEGAL_LIMITS` + `SMI_2026` reexportados desde `data-classifier.ts` |
+| 2 – IDs | ✅ Completa | `ConvenioId` / `UserId` / `SessionId` con UUID v4 |
+| 3 – Magnitudes | ✅ Completa | 6 VOs escalares (44 tests) |
+| 4 – Jornada | ✅ Completa | Invariante `completa ⇒ horas ≥ 35` movida al VO |
+| 5 – Perfil | ✅ Completa | `Perfil` como anti-corruption layer, 3 invariantes |
+| 6 – Intent + StateMachine | ✅ Completa | `QueryIntent` + `DataState.fromChecks` |
+| 7 – ChatCommand | ✅ Completa | `toChatCommand` + `InvalidChatInput` tipado |
+| 8a – Router validator | ✅ Completa | **Primer cambio de comportamiento**: `classifyAndExecute` valida con `toChatCommand` antes de cuota/cache/RAG |
+| 8b – Firma `ChatCommand` en use cases | ⏸ Diferida | Requiere mover fetch de perfil, migrar `variable-adapters`, actualizar tests de use cases |
+| 9 – Colapsar `data-classifier` | ⏸ Parcial | `checkInvalidVariables` y regla jornada de `checkConflicts` conservadas con comentarios que señalan la duplicidad; eliminación real pendiente de 8b |
+
+**Suite completa:** 463 tests deno verdes, `pnpm lint` limpio.
+
+---
+
 ## 1. Motivación (resumen del análisis)
 
 El análisis de arquitectura identificó cuatro problemas concretos que un VO resuelve limpiamente:
@@ -63,121 +83,141 @@ Regla de dependencias: **`domain/` no importa nada de `core/`, `lib/` ni `http/`
 
 Diez fases pequeñas, cada una es un PR independiente y no rompe comportamiento hasta la fase 8.
 
-### Fase 0 — Andamiaje
+### Fase 0 — Andamiaje ✅
 
-- [ ] Crear `domain/result.ts` con `Result<T,E>`, `ok`, `err`, `isOk`, `isErr`, `map`, `chain`, `unwrapOr`.
-- [ ] Añadir tests unitarios de `Result` (Deno test).
-- [ ] Documentar en el propio `result.ts` que **no se lanzan excepciones desde `domain/`**: todo error se devuelve.
+- [x] Crear `domain/result.ts` con `Result<T,E>`, `ok`, `err`, `isOk`, `isErr`, `map`, `chain`, `unwrapOr`. Añadido también `mapErr`.
+- [x] Añadir tests unitarios de `Result` (Deno test) — 13 tests.
+- [x] Documentar en el propio `result.ts` que **no se lanzan excepciones desde `domain/`**: todo error se devuelve.
 
 **Criterio de éxito:** `deno test domain/result.test.ts` verde. Cero imports desde `core/`.
 
-### Fase 1 — Mover política legal a `domain/labor-law/`
+### Fase 1 — Mover política legal a `domain/labor-law/` ✅
 
 Motivo: hoy `LEGAL_LIMITS` y `SMI_2026` son constantes sueltas en `data-classifier.ts` (~líneas 40–90). Son **derecho positivo español**, no reglas del chat.
 
-- [ ] Crear `domain/labor-law/legal-limits.ts` moviendo `LEGAL_LIMITS` verbatim + comentarios de artículos ET (34.1, 35.2…).
-- [ ] Crear `domain/labor-law/smi.ts` con `SMI_2026` y `validateAgainstSMI(salarioMensual, pagas): Result<void, SmiViolation>`.
-- [ ] En `data-classifier.ts`, reemplazar las constantes por `import { LEGAL_LIMITS } from "../../domain/labor-law"`.
-- [ ] Sin cambios de comportamiento; sólo movimiento.
+- [x] Crear `domain/labor-law/legal-limits.ts` moviendo `LEGAL_LIMITS` verbatim + comentarios de artículos ET (34.1, 35.2…).
+- [x] Crear `domain/labor-law/smi.ts` con `SMI_2026` y `validateAgainstSMI`. **Nota:** la firma se mantiene imperativa (`SMIValidationResult`) para no romper callers; la variante `Result<void, SmiViolation>` se aplicará cuando `ChatCommand` la consuma.
+- [x] En `data-classifier.ts`, reemplazar las constantes por reexport desde `domain/labor-law/`.
+- [x] Sin cambios de comportamiento; sólo movimiento.
 
 **Criterio de éxito:** todos los tests existentes (`data-classifier.test.ts`, `handlers.test.ts`) pasan sin modificar aserciones.
 
-### Fase 2 — VO `ConvenioId`, `UserId`, `SessionId`
+### Fase 2 — VO `ConvenioId`, `UserId`, `SessionId` ✅
 
 Motivo: son el punto de entrada del use case y hoy son `string` desnudo. Empezar por aquí porque son triviales y ejercitan el patrón sin tocar reglas de negocio complejas.
 
-- [ ] `domain/value-objects/convenio-id.ts` — brand type + `makeConvenioId(s: string): Result<ConvenioId, "not_uuid" | "empty">`.
-- [ ] Idem `user-id.ts`, `session-id.ts`.
-- [ ] Tests para: UUID v4 válido, string vacío, string arbitrario, mayúsculas/minúsculas, UUID v1.
-- [ ] **No** integrar aún en `types.ts` — se hará en Fase 8.
+- [x] `domain/value-objects/convenio-id.ts` — brand type + `makeConvenioId(s: string): Result<ConvenioId, ConvenioIdError>`.
+- [x] Idem `user-id.ts`, `session-id.ts`. Regex UUID v4 compartida en `value-objects/uuid.ts`.
+- [x] Tests para: UUID v4 válido, string vacío, string arbitrario, mayúsculas/minúsculas (normalización a lowercase), UUID v1, whitespace, malformado.
+- [x] **No** integrar aún en `types.ts` — se hizo parcialmente en Fase 8a (validación en router).
 
 **Criterio de éxito:** cobertura de casos límite del §5.5 del análisis.
 
-### Fase 3 — VOs de magnitudes escalares
+### Fase 3 — VOs de magnitudes escalares ✅
 
 Uno por commit para revisar en aislado.
 
-- [ ] `horas-semanales.ts` — invariante `1 ≤ n ≤ 40`, sólo múltiplos de 0.5 (decisión §5.1 análisis).
-- [ ] `horas-extra-anuales.ts` — `0 ≤ n ≤ 80`, entero.
-- [ ] `horas-nocturnas.ts` — `n ≥ 0`. La invariante cross-field (`≤ horasSemanales * 52`) va en `ChatCommand` fase 7.
-- [ ] `antiguedad-anos.ts` — `0 ≤ n ≤ 50`. Decisión: aceptar decimales de 0.5 (medio año) o rechazar → registrar decisión en el propio fichero.
-- [ ] `importe-euros.ts` — `n ≥ 0`, precisión 2 decimales, redondeo bancario, factory desde `number` y desde string es-ES.
-- [ ] `salario-bruto.ts` — envuelve `ImporteEuros` + intercepta `NaN`/`Infinity` (§5.4 análisis).
+- [x] `horas-semanales.ts` — invariante `1 ≤ n ≤ 40`, sólo múltiplos de 0.5.
+- [x] `horas-extra-anuales.ts` — `0 ≤ n ≤ 80`, entero.
+- [x] `horas-nocturnas.ts` — `n ≥ 0`. La invariante cross-field (`≤ horasSemanales * 52`) vive en `ChatCommand` (fase 7).
+- [x] `antiguedad-anos.ts` — `0 ≤ n ≤ 50`. **Decisión registrada en el fichero:** se aceptan decimales de 0.5 (medio año); otras fracciones se rechazan.
+- [x] `importe-euros.ts` — `n ≥ 0`, precisión 2 decimales, redondeo bancario (half-to-even), factory desde `number` y desde string es-ES con heurística para desambiguar `1.234` vs `12.34`.
+- [x] `salario-bruto.ts` — envuelve `ImporteEuros` con brand adicional; intercepta `NaN`/`Infinity`.
 
 Cada VO tiene su `*.test.ts` con la tabla de casos límite del §4.1 del análisis.
 
 **Criterio de éxito:** `deno test domain/value-objects/` verde. Cada test cubre al menos: valor válido mínimo, valor válido máximo, valor bajo mínimo, valor sobre máximo, `NaN`, `Infinity`, negativo, no numérico.
 
-### Fase 4 — VO compuesto `Jornada`
+### Fase 4 — VO compuesto `Jornada` ✅
 
 Motivo: la invariante `completa ⇒ horas ≥ 35` está hoy en `checkConflicts` (`data-classifier.ts:200-231`). Debería vivir en el constructor del propio `Jornada`.
 
-- [ ] `domain/value-objects/jornada.ts`:
+- [x] `domain/value-objects/jornada.ts`:
   - Tipo `TipoJornada = "completa" | "parcial"`.
   - Smart constructor `makeJornada(tipo, horas: HorasSemanales): Result<Jornada, JornadaError>`.
   - Errores tipados: `"completa_con_horas_bajas"`, `"parcial_con_horas_completas"`.
-- [ ] Test para cada combinación (completa/35h ✅, completa/30h ❌, parcial/40h ❌, parcial/20h ✅).
-- [ ] En `checkConflicts`, marcar la regla como duplicada temporalmente (comment `// moved to Jornada VO — remove in phase 8`) para revisar en fase 8.
+- [x] Test para cada combinación (completa/35h ✅, completa/30h ❌, parcial/40h ❌, parcial/20h ✅) + frontera 39.5h + verificación del brand.
+- [x] En `checkConflicts`, comentario que marca la regla como duplicada con `Jornada` VO. Eliminación real diferida a fase 9 completa (tras 8b).
 
 **Criterio de éxito:** los 4 casos anteriores se pueden testear sin importar `data-classifier`.
 
-### Fase 5 — VOs de perfil
+### Fase 5 — VOs de perfil ✅
 
 Los más frágiles del análisis (§3.2, §5.6, §5.7). Aquí está la deuda urgente.
 
-- [ ] `variable-critica.ts`:
+- [x] `variable-critica.ts`:
   - Campos: `nombre` normalizado (sin acentos, snake_case), `clase: "identificadora" | "moduladora"`.
-  - `isIdentifying()` como método del VO (elimina la función libre `isIdentifyingCritical`).
-- [ ] `categoria-profesional.ts`: nombre no vacío + sinónimos no vacíos + unicidad delegada al `Perfil`.
-- [ ] `perfil.ts`:
+  - `isIdentifying(v)` como función libre sobre el VO (elimina la lógica de `isIdentifyingCritical`).
+- [x] `categoria-profesional.ts`: nombre no vacío + sinónimos no vacíos individualmente + salarios finitos + mapping a camelCase.
+- [x] `perfil.ts`:
   - Smart constructor `makePerfil(raw: unknown): Result<Perfil, PerfilError>`.
-  - Invariantes: `variables_criticas.length ≥ 1`; `∀ v ∈ valores_posibles: v.variable ∈ variables_criticas`; `categorias_profesionales` con nombres únicos.
-  - Este VO es la **anti-corruption layer** contra el JSON del indexer n8n (§2.2 análisis).
-- [ ] Tests con fixtures reales (extraer 2–3 perfiles del repo, mínimo un caso válido y uno inválido por cada invariante).
+  - Invariantes: `variables_criticas.length ≥ 1`; `∀ v ∈ valores_posibles: v.variable ∈ variables_criticas` (con normalización); `categorias_profesionales` con nombres únicos (case-insensitive).
+  - Es la **anti-corruption layer** contra el JSON del indexer n8n.
+- [x] Tests con fixtures inspirados en los tests reales del proyecto (12 tests en `perfil.test.ts`, cubren cada invariante en positivo y negativo).
 
 **Criterio de éxito:** todas las funciones de `data-classifier.ts` y `variable-extractor.ts` que hoy leen `perfil.variables_criticas` como `unknown` pueden migrarse a tipo `Perfil` sin `any`.
 
-### Fase 6 — `QueryIntent` y `DataStateMachine`
+### Fase 6 — `QueryIntent` y `DataStateMachine` ✅
 
 Motivo: §4.4 análisis. Hoy son `if/else` sueltos.
 
-- [ ] `domain/value-objects/query-intent.ts` con `classify(message: string, hasProfileData: boolean): QueryIntent`. Encapsula los regex de `isSalaryQuery`.
-- [ ] `domain/value-objects/data-state.ts` con máquina de estados: precedencia `invalid > conflicting > incomplete > complete`. La función libre `determineState` se convierte en `DataState.from(checks)`.
-- [ ] Tests: cada transición y cada colisión de precedencia.
+- [x] `domain/value-objects/query-intent.ts` con `classifyQueryIntent(message, hasProfileData): QueryIntent`. Encapsula regex de salario + patrones informativos, normaliza acentos. `hasProfileData=true` sesga a `salary_calculation` salvo pregunta informativa explícita.
+- [x] `domain/value-objects/data-state.ts` con `fromChecks({invalidCount, conflictingCount, missingCount})`. Precedencia `invalid > conflicting > incomplete > complete`.
+- [x] Tests: 10 para `QueryIntent`, 8 para `DataState` (cada transición + cada colisión de precedencia).
+- [ ] Integración en `data-classifier` (sustituir `determineState`): pendiente de fase 8b.
 
 **Criterio de éxito:** `data-classifier.determineState` desaparece; el clasificador delega en `DataState.from`.
 
-### Fase 7 — `ChatCommand` (input validado del use case)
+### Fase 7 — `ChatCommand` (input validado del use case) ✅
 
 Motivo: §6 paso 2 del análisis. Punto único donde el DTO HTTP se convierte en dominio.
 
-- [ ] `domain/chat-command/chat-command.ts` — tipo agregado: `{ convenioId, userId, sessionId, intent, variables?: ExtractedVariablesVO }`.
-- [ ] `domain/chat-command/input-mapper.ts`:
-  - Firma: `toChatCommand(req: ChatRequest, perfil: Perfil): Result<ChatCommand, InvalidChatInput>`.
-  - Aquí viven las **invariantes cross-field** que no encajaban en un VO simple: `horasNocturnas ≤ horasSemanales * 52`, `sum(desglose) === totalBruto`, etc.
-- [ ] Tests de mapeo con snapshots de requests reales.
+- [x] `domain/chat-command/chat-command.ts` — tipo agregado: `{ convenioId, userId, sessionId?, intent, pregunta, variables?: ExtractedVariablesVO, messages?, stream }`.
+- [x] `domain/chat-command/input-mapper.ts`:
+  - Firma: `toChatCommand(req: ChatRequestRaw, perfil?: Perfil): Result<ChatCommand, InvalidChatInput>` (`perfil` opcional para permitir validación pre-fetch en fase 8a).
+  - Invariantes cross-field cubiertas: `horasNocturnas ≤ horasSemanales * 52`, `jornada + horasSemanales` coherentes (delegado a `Jornada` VO).
+  - `InvalidChatInput` como discriminated union para permitir mapeo preciso a mensajes HTTP.
+- [x] 15 tests de mapeo (request mínimo, session_id, variables completas, string numérica es-ES, `mode=salary`, y 10 casos de error por campo/cross-field).
 
 **Criterio de éxito:** el use case `ask-question` puede escribirse como `toChatCommand(req, perfil).chain(runAskQuestion)` sin ver el DTO crudo.
 
 ### Fase 8 — Integración en use cases (**primer cambio de comportamiento**)
 
-- [ ] `use-case-router.ts` llama a `toChatCommand` como primera operación. Si falla, responde `invalid_data` **antes** de tocar cuota/cache/RAG.
-- [ ] `ask-question.ts` y `calculate-salary.ts` firman ahora con `ChatCommand` en vez de `ChatRequest`.
-- [ ] Adaptar `handlers.ts` para que su respuesta `invalid_data` incluya el `InvalidChatInput.reason` tipado.
-- [ ] Actualizar tests de integración: los mensajes de error de validación cambian de forma (más específicos).
+Fase dividida en dos sub-fases por su tamaño y riesgo.
 
-**Criterio de éxito:** `deno test` completo verde. Playwright verde. El request `{"horas_semanales": -5}` responde `invalid_data` con `reason: "horas_semanales_below_minimum"` en vez del genérico actual.
+#### Fase 8a — Validación en el router ✅
 
-### Fase 9 — Colapsar `data-classifier`
+- [x] `use-case-router.classifyAndExecute` llama a `validateChatCommand` como primera operación. Si falla, responde `invalid_data` **antes** de tocar cuota/cache/RAG.
+- [x] `routing/command-validator.ts` traduce cada variante de `InvalidChatInput` a un `CalculateSalaryInvalid` con `invalidVariables[].reason` **tipada** (`horasSemanales_below_minimum`, `not_uuid`, `completa_con_horas_bajas`, `horas_nocturnas_exceden_base_anual`, etc.).
+- [x] 5 tests en `command-validator.test.ts` cubren el criterio de éxito: `{"horas_semanales": -5}` → `invalid_data` con `reason: horasSemanales_below_minimum`.
+- [x] Sin cambios en la firma de `ask-question` / `calculate-salary`: siguen recibiendo `ChatRequest`.
+
+**Criterio de éxito cumplido:** `deno test` completo verde (463/463), `pnpm lint` limpio. El request `{"horas_semanales": -5}` responde `invalid_data` con `reason: "horasSemanales_below_minimum"` en vez del genérico anterior.
+
+#### Fase 8b — Firma `ChatCommand` en use cases ⏸ Diferida
+
+Requiere una sesión dedicada. Alcance pendiente:
+
+- [ ] Mover el fetch de `Perfil` (`getPerfilByConvenio`) desde el interior de los use cases al router, para poder invocar `toChatCommand(req, perfil)` con perfil real.
+- [ ] Cambiar `AskQuestionInput` y `CalculateSalaryInput` a recibir `ChatCommand` en vez de `ChatRequest` / campos sueltos.
+- [ ] Reescribir `variable-adapters.ts` para consumir `ExtractedVariablesVO` en lugar de `Record<string, string | number>`.
+- [ ] Adaptar `handlers.ts` y `result-mapper.ts` si es necesario.
+- [ ] Actualizar tests de integración: `ask-question.test.ts`, `calculate-salary.test.ts`, `handlers.test.ts` — sus fixtures usan `convenio_id: "test-convenio-id"` (no UUID), así que habrá que rehacer los fixtures a UUID v4 reales.
+
+**Riesgo:** alto. Diff estimado grande, varios ciclos de fix probables. Recomendado abrir un refactor 008 dedicado.
+
+### Fase 9 — Colapsar `data-classifier` ⏸ Parcial
 
 Meta del §6 paso 3: `checkInvalidVariables` desaparece.
 
-- [ ] Borrar `checkInvalidVariables` y sus tests (las mismas invariantes están ahora en VOs con tests propios).
-- [ ] `checkConflicts` conserva sólo reglas verdaderamente multi-campo que no estén ya en `ChatCommand`.
-- [ ] `data-classifier.ts` pasa de ~200 líneas a ~50 (estimado análisis).
-- [ ] Verificar que ninguna aserción de test ha quedado huérfana; migrar las relevantes a los tests de VO.
+Estado actual:
 
-**Criterio de éxito:** `wc -l data-classifier.ts` < 80. Cobertura no baja.
+- [ ] Borrar `checkInvalidVariables` — **no ejecutado**. Se conserva porque el path natural-language dentro de `calculateSalary` (variables extraídas del texto de la pregunta, no del campo `variables` explícito) todavía depende de esta función; fase 8a solo valida el campo `variables` explícito. La eliminación real requiere que fase 8b haya migrado la extracción al pipeline de VOs.
+- [x] `checkConflicts` — comentarios que marcan la regla jornada como duplicada con `Jornada` VO, pendientes de eliminar tras 8b.
+- [x] Añadida documentación en cabecera de `data-classifier.ts` explicando la redundancia intencional.
+- [ ] `data-classifier.ts` pasa de ~200 líneas a ~50: **no ejecutado**, sigue en ~470 líneas.
+
+**Criterio de éxito diferido a la sesión que ejecute fase 8b.**
 
 ---
 
@@ -225,16 +265,16 @@ export function makeHorasSemanales(n: number): Result<HorasSemanales, HorasSeman
 
 ## 6. Casos límite que la refactor debe cerrar (checklist para QA)
 
-Del §5 del análisis, verificar al final de la fase 8:
+Del §5 del análisis. Estado tras fase 8a:
 
-- [ ] `horas_semanales = 40.5` → `invalid_data` con `not_half_hour_step`.
-- [ ] `horas_nocturnas > horas_semanales * 52` → `invalid_data` desde `ChatCommand`.
-- [ ] `antiguedad_anos = 2.5` → política definida y respetada (§5.3).
-- [ ] `salario_mensual = NaN` devuelto por LLM → interceptado por `SalarioBruto`.
-- [ ] `convenio_id` malformado → `invalid_data` con `not_uuid`, distinto de `not_found`.
-- [ ] `perfil.variables_criticas = []` → el use case nunca se ejecuta; el request falla en construcción del `Perfil`.
-- [ ] Variable crítica ausente de `valores_posibles` → error en `makePerfil`, no llega a runtime.
-- [ ] `jornada.completa` + `horas_semanales = 40` + `horas_extra = 5` semanales → regla temporal cubierta en `ChatCommand` (nueva).
+- [x] `horas_semanales = 40.5` → `invalid_data` con `above_legal_max` (el VO rechaza fracciones > 40; `not_half_hour_step` cubre 37.25). Cubierto en `input-mapper.test.ts`.
+- [x] `horas_nocturnas > horas_semanales * 52` → `invalid_data` desde `ChatCommand`. Cubierto en `command-validator.test.ts`.
+- [x] `antiguedad_anos = 2.5` → aceptado; `2.3` rechazado con `not_half_year_step`. Decisión documentada en el VO.
+- [x] `salario_mensual = NaN` devuelto por LLM → interceptado por `SalarioBruto`. Cubierto en `salario-bruto.test.ts`.
+- [x] `convenio_id` malformado → `invalid_data` con `not_uuid`. Cubierto en `command-validator.test.ts` (mensaje: `"convenio_id invalido: not_uuid"`).
+- [x] `perfil.variables_criticas = []` → `makePerfil` devuelve `variables_criticas_empty`. Cubierto en `perfil.test.ts`. **Nota:** no se invoca en runtime todavía (fase 8b integra `makePerfil` en el flujo real).
+- [x] Variable crítica ausente de `valores_posibles` → `makePerfil` devuelve `valor_posible_no_critica`. Cubierto en `perfil.test.ts`. Misma nota que arriba.
+- [ ] `jornada.completa` + `horas_semanales = 40` + `horas_extra = 5` semanales → **pendiente**. Requiere que `ExtractedVariablesVO` distinga horas extra semanales vs anuales; hoy `HorasExtraAnuales` asume base anual.
 
 ---
 
