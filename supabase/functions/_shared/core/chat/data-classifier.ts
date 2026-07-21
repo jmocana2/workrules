@@ -21,30 +21,14 @@ import {
 // ============================================
 // LIMITES LEGALES
 // ============================================
+export {
+  LEGAL_LIMITS,
+  SMI_2026,
+  type SMIValidationResult,
+  validateAgainstSMI,
+} from "../../domain/labor-law/index.ts";
 
-export const LEGAL_LIMITS = {
-  /** Art. 35.2 ET - Maximo horas extra anuales */
-  horasExtraAnuales: 80,
-  /** Art. 34.1 ET - Jornada maxima semanal */
-  jornadaSemanalMaxima: 40,
-  /** Minimo razonable */
-  jornadaSemanalMinima: 1,
-  /** Maximo razonable de antiguedad */
-  antiguedadMaxima: 50,
-};
-
-/**
- * Salario Minimo Interprofesional 2026
- * RD febrero 2026 - Subida del 3.1%
- */
-export const SMI_2026 = {
-  /** SMI mensual en 14 pagas */
-  mensual14Pagas: 1221,
-  /** SMI mensual en 12 pagas (prorrateado) */
-  mensual12Pagas: 1424.5, // 1221 * 14 / 12
-  /** SMI anual bruto */
-  anual: 17094, // 1221 * 14
-};
+import { LEGAL_LIMITS } from "../../domain/labor-law/index.ts";
 
 // ============================================
 // FUNCIONES PRINCIPALES
@@ -275,8 +259,7 @@ function collectSuggestionsForVariable(
   const valoresPosibles = perfil.valores_posibles;
   if (!valoresPosibles) return undefined;
 
-  const opciones =
-    valoresPosibles[varCritica] ??
+  const opciones = valoresPosibles[varCritica] ??
     valoresPosibles[normalizedCritica] ??
     valoresPosibles[normalizedCritica.replace(/_/g, " ")] ??
     valoresPosibles[key];
@@ -410,62 +393,5 @@ export function buildConflictMessage(
 // ============================================
 // VALIDACION SMI
 // ============================================
-
-/**
- * Resultado de la validacion contra SMI
- */
-export interface SMIValidationResult {
-  /** Si el salario es inferior al SMI */
-  belowSMI: boolean;
-  /** Salario calculado */
-  calculatedSalary: number;
-  /** SMI aplicable */
-  smiApplicable: number;
-  /** Diferencia (negativa si esta por debajo) */
-  difference: number;
-  /** Mensaje para mostrar al usuario si aplica */
-  message?: string;
-}
-
-/**
- * Valida si un salario mensual es inferior al SMI
- *
- * @param salarioMensual - Salario bruto mensual calculado
- * @param pagas - Numero de pagas (12 o 14). Por defecto 14
- * @returns Resultado de la validacion
- *
- * @example
- * const result = validateAgainstSMI(1100, 14);
- * // result.belowSMI === true
- * // result.message === "El salario calculado (1.100,00€) es inferior al SMI..."
- */
-export function validateAgainstSMI(
-  salarioMensual: number,
-  pagas: 12 | 14 = 14,
-): SMIValidationResult {
-  const smiMensual = pagas === 14 ? SMI_2026.mensual14Pagas : SMI_2026.mensual12Pagas;
-  const difference = salarioMensual - smiMensual;
-  const belowSMI = salarioMensual < smiMensual;
-
-  const result: SMIValidationResult = {
-    belowSMI,
-    calculatedSalary: salarioMensual,
-    smiApplicable: smiMensual,
-    difference,
-  };
-
-  if (belowSMI) {
-    const formatEuro = (n: number) =>
-      n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-    result.message =
-      `**Alerta SMI:** El salario calculado (${formatEuro(salarioMensual)}€) ` +
-      `es inferior al Salario Minimo Interprofesional vigente ` +
-      `(${formatEuro(smiMensual)}€/mes en ${pagas} pagas).\n\n` +
-      `Por ley, se debe aplicar el SMI como minimo. ` +
-      `El salario mensual seria de **${formatEuro(smiMensual)}€** brutos.\n\n` +
-      `*Referencia: Art. 27 del Estatuto de los Trabajadores.*`;
-  }
-
-  return result;
-}
+// `SMIValidationResult` y `validateAgainstSMI` viven ahora en
+// `domain/labor-law/smi.ts` y se reexportan en la cabecera de este fichero.
