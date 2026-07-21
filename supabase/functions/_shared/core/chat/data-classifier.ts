@@ -185,6 +185,7 @@ function checkConflicts(
   variables: ExtractedVariables,
   result: DataClassificationResult,
 ): void {
+  // moved to Jornada VO (domain/value-objects/jornada.ts) — remove in phase 8
   // Conflicto: jornada completa pero menos de 35h
   if (
     variables.jornada === "completa" &&
