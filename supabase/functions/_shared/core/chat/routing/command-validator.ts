@@ -12,18 +12,22 @@ import {
   InvalidChatInput,
   toChatCommand,
 } from "../../../domain/chat-command/input-mapper.ts";
+import type { ChatCommand } from "../../../domain/chat-command/chat-command.ts";
 import type { ChatRequest, InvalidVariable } from "../types.ts";
 import type { CalculateSalaryInvalid } from "../types.ts";
 
+export type ValidateChatCommandResult =
+  | { ok: true; command: ChatCommand }
+  | { ok: false; invalid: CalculateSalaryInvalid };
+
 /**
- * Valida el `ChatRequest` construyendo un `ChatCommand`. Solo devuelve algo
- * cuando la validación falla; en éxito devuelve `null` y el router prosigue
- * con la ruta actual.
+ * Valida el `ChatRequest` construyendo un `ChatCommand`. Devuelve el command
+ * validado en éxito, o un `CalculateSalaryInvalid` tipado en fallo.
  */
 export function validateChatCommand(
   request: ChatRequest,
   userId: string,
-): CalculateSalaryInvalid | null {
+): ValidateChatCommandResult {
   const raw: ChatRequestRaw = {
     convenio_id: request.convenio_id,
     user_id: userId,
@@ -39,9 +43,9 @@ export function validateChatCommand(
   };
 
   const result = toChatCommand(raw);
-  if (result.ok) return null;
+  if (result.ok) return { ok: true, command: result.value };
 
-  return mapInvalidInputToResult(result.error);
+  return { ok: false, invalid: mapInvalidInputToResult(result.error) };
 }
 
 // ============================================

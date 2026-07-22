@@ -58,8 +58,11 @@ export async function classifyAndExecute(
   userId: string,
 ): Promise<ChatUseCaseResult> {
   // Refactor 007 fase 8a: validación de dominio antes de tocar cuota/cache/RAG.
-  const invalid = validateChatCommand(request, userId);
-  if (invalid) return invalid;
+  // Fase 8b etapa 1: `validateChatCommand` ya devuelve el `ChatCommand` en
+  // caso de éxito; su propagación como firma de los use cases llega en las
+  // siguientes etapas del refactor.
+  const validation = validateChatCommand(request, userId);
+  if (!validation.ok) return validation.invalid;
 
   if (request.mode === "salary") {
     return calculateSalary(buildSalaryInput(request, userId));

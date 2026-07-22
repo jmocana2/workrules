@@ -14,8 +14,13 @@ function baseRequest(): ChatRequest {
   };
 }
 
-Deno.test("validateChatCommand - request válido devuelve null (passthrough)", () => {
-  assertEquals(validateChatCommand(baseRequest(), USER_ID), null);
+Deno.test("validateChatCommand - request válido devuelve ok con command", () => {
+  const result = validateChatCommand(baseRequest(), USER_ID);
+  assertEquals(result.ok, true);
+  if (result.ok) {
+    assertEquals(result.command.pregunta, "cuanto cobra un camarero");
+    assertEquals(result.command.convenioId, CONVENIO_ID);
+  }
 });
 
 Deno.test("validateChatCommand - horas_semanales negativas devuelve invalid_data tipado", () => {
@@ -26,12 +31,15 @@ Deno.test("validateChatCommand - horas_semanales negativas devuelve invalid_data
     },
     USER_ID,
   );
-  assertEquals(result?.type, "invalid_data");
-  assertEquals(result?.invalidVariables[0].name, "horasSemanales");
-  assertEquals(
-    result?.invalidVariables[0].reason,
-    "horasSemanales_below_minimum",
-  );
+  assertEquals(result.ok, false);
+  if (!result.ok) {
+    assertEquals(result.invalid.type, "invalid_data");
+    assertEquals(result.invalid.invalidVariables[0].name, "horasSemanales");
+    assertEquals(
+      result.invalid.invalidVariables[0].reason,
+      "horasSemanales_below_minimum",
+    );
+  }
 });
 
 Deno.test("validateChatCommand - convenio_id no UUID devuelve invalid_data", () => {
@@ -39,11 +47,11 @@ Deno.test("validateChatCommand - convenio_id no UUID devuelve invalid_data", () 
     { ...baseRequest(), convenio_id: "not-a-uuid" },
     USER_ID,
   );
-  assertEquals(result?.type, "invalid_data");
-  assertEquals(
-    result?.message,
-    "convenio_id invalido: not_uuid",
-  );
+  assertEquals(result.ok, false);
+  if (!result.ok) {
+    assertEquals(result.invalid.type, "invalid_data");
+    assertEquals(result.invalid.message, "convenio_id invalido: not_uuid");
+  }
 });
 
 Deno.test("validateChatCommand - jornada completa con 30h reporta jornada_invalida", () => {
@@ -57,12 +65,15 @@ Deno.test("validateChatCommand - jornada completa con 30h reporta jornada_invali
     },
     USER_ID,
   );
-  assertEquals(result?.type, "invalid_data");
-  assertEquals(result?.invalidVariables[0].name, "jornada");
-  assertEquals(
-    result?.invalidVariables[0].reason,
-    "completa_con_horas_bajas",
-  );
+  assertEquals(result.ok, false);
+  if (!result.ok) {
+    assertEquals(result.invalid.type, "invalid_data");
+    assertEquals(result.invalid.invalidVariables[0].name, "jornada");
+    assertEquals(
+      result.invalid.invalidVariables[0].reason,
+      "completa_con_horas_bajas",
+    );
+  }
 });
 
 Deno.test("validateChatCommand - horasNocturnas exceden base anual", () => {
@@ -76,9 +87,12 @@ Deno.test("validateChatCommand - horasNocturnas exceden base anual", () => {
     },
     USER_ID,
   );
-  assertEquals(result?.type, "invalid_data");
-  assertEquals(
-    result?.invalidVariables[0].reason,
-    "horas_nocturnas_exceden_base_anual",
-  );
+  assertEquals(result.ok, false);
+  if (!result.ok) {
+    assertEquals(result.invalid.type, "invalid_data");
+    assertEquals(
+      result.invalid.invalidVariables[0].reason,
+      "horas_nocturnas_exceden_base_anual",
+    );
+  }
 });
