@@ -1,8 +1,13 @@
 /**
  * Clasificador de estado de datos para calculos salariales
  *
- * Verifica que los datos del usuario sean validos, completos y coherentes
- * antes de realizar un calculo salarial.
+ * Verifica que los datos del usuario sean completos (segun el perfil del
+ * convenio) antes de realizar un calculo salarial. Los rangos legales y las
+ * invariantes cross-field (ej. `jornada.completa ⇒ horas ≥ 35`) se aplican
+ * ahora en los VOs de dominio: cuando las variables provienen del campo
+ * `variables` del ChatCommand, `toChatCommand` ya las ha validado; cuando
+ * provienen del texto libre, `validateExtractedFromText` en el pipeline del
+ * use case actua como red de seguridad reusando los mismos VOs.
  *
  * @module data-classifier
  */
@@ -28,25 +33,14 @@ export {
   validateAgainstSMI,
 } from "../../domain/labor-law/index.ts";
 
-import { LEGAL_LIMITS } from "../../domain/labor-law/index.ts";
-
 // ============================================
 // FUNCIONES PRINCIPALES
 // ============================================
 
 /**
- * Clasifica el estado de los datos para un calculo salarial
- *
- * @param variables - Variables extraidas del mensaje
- * @param perfil - Perfil del convenio
- * @returns Resultado de clasificacion
- *
- * @example
- * const result = classifyDataState(
- *   { categoria: "Camarero", horasExtra: 100 },
- *   perfil
- * );
- * // result.state === "invalid" (horasExtra > 80)
+ * Clasifica el estado de los datos para un calculo salarial. En esta fase del
+ * refactor solo verifica variables faltantes segun el perfil del convenio:
+ * la validez y los conflictos se aplican upstream por VOs.
  */
 export function classifyDataState(
   variables: ExtractedVariables,
@@ -62,162 +56,17 @@ export function classifyDataState(
     suggestions: {},
   };
 
-  // 1. Verificar variables invalidas
-  checkInvalidVariables(variables, result);
-
-  // 2. Verificar conflictos
-  checkConflicts(variables, result);
-
-  // 3. Verificar variables faltantes
   if (perfil) {
     checkMissingVariables(variables, perfil, result);
   }
 
-  // 4. Determinar estado final
   result.state = determineState(result);
-
   return result;
 }
 
 // ============================================
 // VERIFICACIONES
 // ============================================
-// Nota fase 9 (refactor 007): estas verificaciones son redundantes cuando el
-// request entra por el router (`toChatCommand` en fase 8a ya las aplica). Se
-// conservan para el path de extraccion de lenguaje natural dentro de los use
-// cases, hasta que fase 8b migre esa extraccion al pipeline de VOs.
-
-/**
- * Verifica variables con valores fuera de limites legales
- */
-function checkInvalidVariables(
-  variables: ExtractedVariables,
-  result: DataClassificationResult,
-): void {
-  // Horas extra > 80 anuales
-  if (
-    variables.horasExtra !== undefined &&
-    variables.horasExtra > LEGAL_LIMITS.horasExtraAnuales
-  ) {
-    result.invalidVariables.push({
-      name: "horasExtra",
-      reason:
-        `El maximo legal de horas extra es ${LEGAL_LIMITS.horasExtraAnuales}/ano (Art. 35.2 ET)`,
-      value: variables.horasExtra,
-    });
-  }
-
-  // Jornada > 40h semanales
-  if (
-    variables.horasSemanales !== undefined &&
-    variables.horasSemanales > LEGAL_LIMITS.jornadaSemanalMaxima
-  ) {
-    result.invalidVariables.push({
-      name: "horasSemanales",
-      reason:
-        `La jornada maxima legal es ${LEGAL_LIMITS.jornadaSemanalMaxima}h semanales (Art. 34.1 ET)`,
-      value: variables.horasSemanales,
-    });
-  }
-
-  // Horas semanales < 1
-  if (
-    variables.horasSemanales !== undefined &&
-    variables.horasSemanales < LEGAL_LIMITS.jornadaSemanalMinima
-  ) {
-    result.invalidVariables.push({
-      name: "horasSemanales",
-      reason: "La jornada debe ser de al menos 1 hora semanal",
-      value: variables.horasSemanales,
-    });
-  }
-
-  // Antiguedad > 50 anos
-  if (
-    variables.antiguedadAnos !== undefined &&
-    variables.antiguedadAnos > LEGAL_LIMITS.antiguedadMaxima
-  ) {
-    result.invalidVariables.push({
-      name: "antiguedadAnos",
-      reason:
-        `La antiguedad indicada (${variables.antiguedadAnos} anos) parece incorrecta`,
-      value: variables.antiguedadAnos,
-    });
-  }
-
-  // Antiguedad negativa
-  if (
-    variables.antiguedadAnos !== undefined &&
-    variables.antiguedadAnos < 0
-  ) {
-    result.invalidVariables.push({
-      name: "antiguedadAnos",
-      reason: "La antiguedad no puede ser negativa",
-      value: variables.antiguedadAnos,
-    });
-  }
-
-  // Horas nocturnas negativas
-  if (
-    variables.horasNocturnas !== undefined &&
-    variables.horasNocturnas < 0
-  ) {
-    result.invalidVariables.push({
-      name: "horasNocturnas",
-      reason: "Las horas nocturnas no pueden ser negativas",
-      value: variables.horasNocturnas,
-    });
-  }
-
-  // Horas extra negativas
-  if (
-    variables.horasExtra !== undefined &&
-    variables.horasExtra < 0
-  ) {
-    result.invalidVariables.push({
-      name: "horasExtra",
-      reason: "Las horas extra no pueden ser negativas",
-      value: variables.horasExtra,
-    });
-  }
-}
-
-/**
- * Verifica conflictos entre variables
- */
-function checkConflicts(
-  variables: ExtractedVariables,
-  result: DataClassificationResult,
-): void {
-  // Regla duplicada con `Jornada` VO (domain/value-objects/jornada.ts). Se
-  // conserva mientras `calculateSalary` no reciba `ChatCommand` (refactor 007
-  // fase 8b). Al migrar la firma, esta funcion queda vacia y se elimina.
-  if (
-    variables.jornada === "completa" &&
-    variables.horasSemanales !== undefined &&
-    variables.horasSemanales < 35
-  ) {
-    result.conflictingVariables.push({
-      variables: ["jornada", "horasSemanales"],
-      reason:
-        `Indicas jornada completa pero ${variables.horasSemanales}h semanales. ` +
-        "La jornada completa es tipicamente 40h. ¿Es jornada parcial?",
-    });
-  }
-
-  if (
-    variables.jornada === "parcial" &&
-    variables.horasSemanales !== undefined &&
-    variables.horasSemanales >= 40
-  ) {
-    result.conflictingVariables.push({
-      variables: ["jornada", "horasSemanales"],
-      reason:
-        `Indicas jornada parcial pero ${variables.horasSemanales}h semanales. ` +
-        "Esto corresponde a jornada completa.",
-    });
-  }
-}
 
 /**
  * Verifica variables faltantes segun el perfil del convenio

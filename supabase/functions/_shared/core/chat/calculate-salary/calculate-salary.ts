@@ -37,11 +37,11 @@ import {
 import { handleError } from "../rag/error-mapper.ts";
 import { persistResponse } from "../rag/finalize.ts";
 import {
-  buildConflictMessage,
   buildIncompleteMessage,
   buildInvalidMessage,
   classifyDataState,
 } from "../data-classifier.ts";
+import { validateExtractedFromText } from "./extracted-variables-validator.ts";
 import {
   extractVariables,
   isSalaryQuery,
@@ -142,14 +142,29 @@ export async function calculateSalary(
     // (helper `voToExtractedVariables`), ya con claves canónicas — no requieren
     // `normalizeKnownVariables`.
     const extractedVars = extractVariables(expandedQuery, perfilContexto);
+
+    // 6b. Red de seguridad: las variables extraídas del texto libre no han
+    // pasado por VOs. Rechazarlas si están fuera de rango, con el mismo shape
+    // `invalid_data` que aplica `toChatCommand` para las variables explícitas.
+    const citations = buildCitations(chunks, convenio.url_pdf ?? null);
+    const invalidFromText = validateExtractedFromText(extractedVars);
+    if (invalidFromText.length > 0) {
+      return {
+        type: "invalid_data",
+        message: `**Dato fuera de rango:** ${invalidFromText[0].reason}\n\n` +
+          `Valor indicado: ${invalidFromText[0].value}\n\n` +
+          "Por favor, verifica e indica el valor correcto.",
+        invalidVariables: invalidFromText,
+        citations,
+      };
+    }
+
     const allVariables = mergeVariables(variablesConocidas, extractedVars);
 
     // 7. Clasificar estado + cortocircuito (no llamamos al LLM si faltan datos).
-    // Las citations y resolvedVariables se calculan aquí porque también van en
-    // los estados no-completos (para que el front muestre Sources y pre-marque
-    // los chips ya conocidos).
+    // Solo `incomplete` es alcanzable aquí: los invalid/conflicting se
+    // filtraron upstream (VOs del ChatCommand + validateExtractedFromText).
     const classification = classifyDataState(allVariables, perfilContexto);
-    const citations = buildCitations(chunks, convenio.url_pdf ?? null);
     const resolvedVariables = buildResolvedVariables(allVariables, perfilContexto);
 
     if (classification.state === "incomplete") {
@@ -167,15 +182,6 @@ export async function calculateSalary(
         type: "invalid_data",
         message: buildInvalidMessage(classification),
         invalidVariables: classification.invalidVariables,
-        citations,
-      };
-    }
-    if (classification.state === "conflicting") {
-      return {
-        type: "invalid_data",
-        message: buildConflictMessage(classification),
-        invalidVariables: [],
-        conflictingVariables: classification.conflictingVariables,
         citations,
       };
     }

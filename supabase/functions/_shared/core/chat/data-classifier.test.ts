@@ -6,7 +6,6 @@
 
 import { assertEquals } from '@std/assert';
 import {
-  buildConflictMessage,
   buildIncompleteMessage,
   buildInvalidMessage,
   classifyDataState,
@@ -122,209 +121,11 @@ Deno.test('classifyDataState - variable critica con acento', () => {
   assertEquals(result.missingVariables, ['categoría profesional']);
 });
 
-// ============================================
-// classifyDataState - Invalido
-// ============================================
-
-Deno.test('classifyDataState - horas extra > 80', () => {
-  const variables = {
-    horasExtra: 100,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'invalid');
-  assertEquals(result.invalidVariables.length, 1);
-  assertEquals(result.invalidVariables[0].name, 'horasExtra');
-  assertEquals(result.invalidVariables[0].value, 100);
-});
-
-Deno.test('classifyDataState - horas extra = 80 es valido', () => {
-  const variables = {
-    horasExtra: 80,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'complete');
-  assertEquals(result.invalidVariables.length, 0);
-});
-
-Deno.test('classifyDataState - jornada > 40h semanales', () => {
-  const variables = {
-    horasSemanales: 50,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'invalid');
-  assertEquals(result.invalidVariables[0].name, 'horasSemanales');
-});
-
-Deno.test('classifyDataState - jornada = 40h es valido', () => {
-  const variables = {
-    horasSemanales: 40,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'complete');
-});
-
-Deno.test('classifyDataState - jornada < 1h', () => {
-  const variables = {
-    horasSemanales: 0,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'invalid');
-  assertEquals(result.invalidVariables[0].name, 'horasSemanales');
-});
-
-Deno.test('classifyDataState - antiguedad > 50 anos', () => {
-  const variables = {
-    antiguedadAnos: 60,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'invalid');
-  assertEquals(result.invalidVariables[0].name, 'antiguedadAnos');
-});
-
-Deno.test('classifyDataState - antiguedad negativa', () => {
-  const variables = {
-    antiguedadAnos: -5,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'invalid');
-  assertEquals(result.invalidVariables[0].reason, 'La antiguedad no puede ser negativa');
-});
-
-Deno.test('classifyDataState - horas nocturnas negativas', () => {
-  const variables = {
-    horasNocturnas: -10,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'invalid');
-  assertEquals(result.invalidVariables[0].name, 'horasNocturnas');
-});
-
-Deno.test('classifyDataState - horas extra negativas', () => {
-  const variables = {
-    horasExtra: -5,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'invalid');
-  assertEquals(result.invalidVariables[0].name, 'horasExtra');
-});
-
-// ============================================
-// classifyDataState - Conflictivo
-// ============================================
-
-Deno.test('classifyDataState - jornada completa con 20h', () => {
-  const variables = {
-    jornada: 'completa' as const,
-    horasSemanales: 20,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'conflicting');
-  assertEquals(result.conflictingVariables.length, 1);
-  assertEquals(result.conflictingVariables[0].variables, [
-    'jornada',
-    'horasSemanales',
-  ]);
-});
-
-Deno.test('classifyDataState - jornada parcial con 40h', () => {
-  const variables = {
-    jornada: 'parcial' as const,
-    horasSemanales: 40,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'conflicting');
-});
-
-Deno.test('classifyDataState - jornada completa con 35h no es conflicto', () => {
-  const variables = {
-    jornada: 'completa' as const,
-    horasSemanales: 35,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'complete');
-  assertEquals(result.conflictingVariables.length, 0);
-});
-
-Deno.test('classifyDataState - jornada parcial con 39h no es conflicto', () => {
-  const variables = {
-    jornada: 'parcial' as const,
-    horasSemanales: 39,
-  };
-
-  const result = classifyDataState(variables, null);
-
-  assertEquals(result.state, 'complete');
-});
-
-// ============================================
-// classifyDataState - Prioridad de estados
-// ============================================
-
-Deno.test('classifyDataState - invalido tiene prioridad sobre incompleto', () => {
-  const variables = {
-    horasExtra: 100, // invalido
-  };
-  const perfil = {
-    variables_criticas: ['categoria'], // faltaria
-  };
-
-  const result = classifyDataState(variables, perfil);
-
-  // Invalido tiene prioridad
-  assertEquals(result.state, 'invalid');
-});
-
-Deno.test('classifyDataState - invalido tiene prioridad sobre conflicto', () => {
-  const variables = {
-    jornada: 'completa' as const,
-    horasSemanales: 20, // conflicto
-    horasExtra: 100, // invalido
-  };
-
-  const result = classifyDataState(variables, null);
-
-  // Invalido tiene prioridad
-  assertEquals(result.state, 'invalid');
-});
-
-Deno.test('classifyDataState - conflicto tiene prioridad sobre incompleto', () => {
-  const variables = {
-    jornada: 'completa' as const,
-    horasSemanales: 20, // conflicto
-  };
-  const perfil = {
-    variables_criticas: ['categoria'], // faltaria
-  };
-
-  const result = classifyDataState(variables, perfil);
-
-  // Conflicto tiene prioridad
-  assertEquals(result.state, 'conflicting');
-});
+// Nota fase 9 (refactor 007): los tests de invalid/conflicting/prioridad se
+// borraron al colapsar `data-classifier`. Esas invariantes viven ahora en:
+//   - `domain/value-objects/*.test.ts` (rangos escalares)
+//   - `domain/chat-command/input-mapper.test.ts` (cross-field)
+//   - `calculate-salary/extracted-variables-validator.test.ts` (path NL)
 
 // ============================================
 // buildIncompleteMessage
@@ -390,31 +191,6 @@ Deno.test('buildInvalidMessage - horas extra', () => {
   assertEquals(message.includes('fuera de rango'), true);
   assertEquals(message.includes('100'), true);
   assertEquals(message.includes('80'), true);
-});
-
-// ============================================
-// buildConflictMessage
-// ============================================
-
-Deno.test('buildConflictMessage - jornada inconsistente', () => {
-  const result = {
-    state: 'conflicting' as const,
-    extractedVariables: {},
-    missingVariables: [],
-    invalidVariables: [],
-    conflictingVariables: [
-      {
-        variables: ['jornada', 'horasSemanales'],
-        reason: 'Jornada completa pero 20h',
-      },
-    ],
-    suggestions: {},
-  };
-
-  const message = buildConflictMessage(result);
-
-  assertEquals(message.includes('inconsistentes'), true);
-  assertEquals(message.includes('20h'), true);
 });
 
 // ============================================
