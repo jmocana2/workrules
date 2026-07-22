@@ -12,6 +12,35 @@
 
 import type { ExtractedVariables } from "../types.ts";
 import { resolveVariableKey } from "../variable-extractor.ts";
+import type { ExtractedVariablesVO } from "../../../domain/chat-command/chat-command.ts";
+
+/**
+ * Convierte los VOs de `ChatCommand.variables` al `ExtractedVariables` (Record
+ * plano) que el pipeline interno de `calculate-salary` sigue consumiendo.
+ * Es el borde de entrada al pipeline legacy — cuando fase 9 colapse la
+ * extracción a VO end-to-end, este helper desaparece.
+ */
+export function voToExtractedVariables(
+  vo: ExtractedVariablesVO | undefined,
+): ExtractedVariables {
+  const out: ExtractedVariables = {};
+  if (!vo) return out;
+  if (vo.categoria !== undefined) out.categoria = vo.categoria;
+  if (vo.jornada !== undefined) {
+    out.jornada = vo.jornada.tipo;
+    out.horasSemanales = vo.jornada.horas as unknown as number;
+  }
+  if (vo.horasExtraAnuales !== undefined) {
+    out.horasExtra = vo.horasExtraAnuales as unknown as number;
+  }
+  if (vo.horasNocturnas !== undefined) {
+    out.horasNocturnas = vo.horasNocturnas as unknown as number;
+  }
+  if (vo.antiguedadAnos !== undefined) {
+    out.antiguedadAnos = vo.antiguedadAnos as unknown as number;
+  }
+  return out;
+}
 
 export function buildResolvedVariables(
   allVariables: ExtractedVariables,

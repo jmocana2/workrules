@@ -12,6 +12,8 @@ import type {
 import { RepositoryError } from "../../../lib/supabase.ts";
 import { askQuestion } from "./ask-question.ts";
 import type { AskQuestionDeps, AskQuestionInput } from "./types.ts";
+import { toChatCommand } from "../../../domain/chat-command/input-mapper.ts";
+import type { ChatCommand } from "../../../domain/chat-command/chat-command.ts";
 
 // ============================================
 // TEST FIXTURES
@@ -62,11 +64,48 @@ const MOCK_CACHE_HIT: CacheHit = {
   citations: [],
 };
 
-const DEFAULT_INPUT: AskQuestionInput = {
-  convenioId: VALID_UUID,
-  pregunta: "Cual es el salario base?",
-  userId: VALID_UUID,
-};
+/**
+ * Overrides ergonómicos para construir un `AskQuestionInput` desde campos
+ * crudos (como los usaba el input pre-refactor 007 fase 8b). Todo pasa por
+ * `toChatCommand` para producir el `ChatCommand` que espera el use case.
+ */
+interface RawInputOverrides {
+  convenioId?: string;
+  userId?: string;
+  sessionId?: string;
+  pregunta?: string;
+  stream?: boolean;
+  variables?: Record<string, string>;
+  messages?: { role: "user" | "assistant"; content: string }[];
+  perfil?: Record<string, unknown> | null;
+}
+
+function buildCommand(overrides: RawInputOverrides = {}): ChatCommand {
+  const result = toChatCommand({
+    convenio_id: overrides.convenioId ?? VALID_UUID,
+    user_id: overrides.userId ?? VALID_UUID,
+    pregunta: overrides.pregunta ?? "Cual es el salario base?",
+    session_id: overrides.sessionId,
+    variables: overrides.variables,
+    messages: overrides.messages,
+    stream: overrides.stream,
+  });
+  if (!result.ok) {
+    throw new Error(
+      `Test fixture invalid: ${JSON.stringify(result.error)}`,
+    );
+  }
+  return result.value;
+}
+
+function makeInput(overrides: RawInputOverrides = {}): AskQuestionInput {
+  return {
+    command: buildCommand(overrides),
+    perfil: overrides.perfil !== undefined ? overrides.perfil : MOCK_PERFIL,
+  };
+}
+
+const DEFAULT_INPUT: AskQuestionInput = makeInput();
 
 // ============================================
 // TEST HELPERS
@@ -295,13 +334,15 @@ Deno.test("askQuestion - retorna not_found si convenio no existe", async () => {
 // RAG FLOW TESTS
 // ============================================
 
-Deno.test("askQuestion - busca chunks y perfil en paralelo", async () => {
+Deno.test("askQuestion - busca chunks (perfil ya inyectado por el router)", async () => {
+  // Refactor 007 fase 8b etapa 2: el router pre-fetchea el perfil y lo pasa
+  // en el input. El use case no vuelve a llamar a `getPerfilByConvenio`.
   const { deps, calls } = createMockDeps();
 
   await askQuestion(DEFAULT_INPUT, deps);
 
   assertEquals(calls.searchChunksByConvenio.length, 1);
-  assertEquals(calls.getPerfilByConvenio.length, 1);
+  assertEquals(calls.getPerfilByConvenio.length, 0);
 });
 
 Deno.test("askQuestion - funciona sin perfil JSON", async () => {
@@ -349,7 +390,7 @@ Deno.test("askQuestion - incluye pregunta del usuario en userMessage", async () 
   const { deps, calls } = createMockDeps();
   const pregunta = "Cuantos dias de vacaciones tengo?";
 
-  await askQuestion({ ...DEFAULT_INPUT, pregunta }, deps);
+  await askQuestion(makeInput({ pregunta }), deps);
 
   const callArgs = calls.createChatResponse[0][0] as { userMessage: string };
   assertEquals(callArgs.userMessage.includes(pregunta), true);
@@ -422,7 +463,7 @@ Deno.test("askQuestion - omite articulo en citations de tabla salarial", async (
 Deno.test("askQuestion - guarda respuesta en cache tras success", async () => {
   const { deps, calls } = createMockDeps();
 
-  await askQuestion({ ...DEFAULT_INPUT, pregunta: "Test question" }, deps);
+  await askQuestion(makeInput({ pregunta: "Test question" }), deps);
 
   // Esperar a que se ejecute el fire-and-forget
   await new Promise((resolve) => setTimeout(resolve, 10));
@@ -442,7 +483,7 @@ Deno.test("askQuestion - guarda mensajes en historial si hay sessionId", async (
   const { deps, calls } = createMockDeps();
   const sessionId = VALID_UUID;
 
-  await askQuestion({ ...DEFAULT_INPUT, sessionId }, deps);
+  await askQuestion(makeInput({ sessionId }), deps);
 
   // Esperar a que se ejecuten los fire-and-forget
   await new Promise((resolve) => setTimeout(resolve, 10));
@@ -493,7 +534,7 @@ Deno.test("askQuestion - no incrementa contador en cache_hit", async () => {
 Deno.test("askQuestion - retorna stream si stream=true", async () => {
   const { deps, calls } = createMockDeps();
 
-  const result = await askQuestion({ ...DEFAULT_INPUT, stream: true }, deps);
+  const result = await askQuestion(makeInput({ stream: true }), deps);
 
   assertEquals(result.type, "stream");
   if (result.type === "stream") {
@@ -510,7 +551,7 @@ Deno.test("askQuestion - cleanup function guarda en cache e incrementa contador"
   const { deps, calls } = createMockDeps();
 
   const result = await askQuestion(
-    { ...DEFAULT_INPUT, pregunta: "Test question", stream: true },
+    makeInput({ pregunta: "Test question", stream: true }),
     deps,
   );
 
@@ -529,7 +570,7 @@ Deno.test("askQuestion - cleanup guarda mensajes si hay sessionId", async () => 
   const sessionId = VALID_UUID;
 
   const result = await askQuestion(
-    { ...DEFAULT_INPUT, sessionId, stream: true },
+    makeInput({ sessionId, stream: true }),
     deps,
   );
 
@@ -620,9 +661,13 @@ Deno.test("askQuestion - maneja error inesperado", async () => {
 
 Deno.test("askQuestion - incluye variables del usuario en el mensaje", async () => {
   const { deps, calls } = createMockDeps();
-  const variables = { categoria: "Camarero", jornada: "completa" };
+  const variables = {
+    categoria: "Camarero",
+    jornada: "completa",
+    horasSemanales: "40",
+  };
 
-  await askQuestion({ ...DEFAULT_INPUT, variables }, deps);
+  await askQuestion(makeInput({ variables }), deps);
 
   const callArgs = calls.createChatResponse[0][0] as { userMessage: string };
   assertEquals(callArgs.userMessage.includes("Camarero"), true);
@@ -638,7 +683,7 @@ Deno.test("askQuestion streaming - cleanup no falla si saveToSemanticCache falla
     saveToSemanticCache: () => Promise.reject(new Error("Cache error")),
   });
 
-  const result = await askQuestion({ ...DEFAULT_INPUT, stream: true }, deps);
+  const result = await askQuestion(makeInput({ stream: true }), deps);
 
   assertEquals(result.type, "stream");
   if (result.type === "stream") {
@@ -656,7 +701,7 @@ Deno.test("askQuestion streaming - cleanup no falla si saveChatMessage falla", a
   });
 
   const result = await askQuestion(
-    { ...DEFAULT_INPUT, stream: true, sessionId: "test-session" },
+    makeInput({ stream: true, sessionId: VALID_UUID }),
     deps,
   );
 
@@ -675,7 +720,7 @@ Deno.test("askQuestion streaming - cleanup no falla si incrementQueryCount falla
     incrementQueryCount: () => Promise.reject(new Error("Quota error")),
   });
 
-  const result = await askQuestion({ ...DEFAULT_INPUT, stream: true }, deps);
+  const result = await askQuestion(makeInput({ stream: true }), deps);
 
   assertEquals(result.type, "stream");
   if (result.type === "stream") {

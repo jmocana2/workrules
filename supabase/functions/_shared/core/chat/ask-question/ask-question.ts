@@ -32,6 +32,8 @@ import type {
   AskQuestionInput,
   AskQuestionResult,
 } from "./types.ts";
+import { voToExtractedVariables } from "../calculate-salary/variable-adapters.ts";
+import { variablesToRecord } from "../calculate-salary/variable-adapters.ts";
 
 /**
  * Ejecuta el flujo RAG completo para responder una pregunta sobre un convenio.
@@ -45,9 +47,23 @@ export async function askQuestion(
 ): Promise<AskQuestionResult> {
   const startTime = Date.now();
 
+  // Fase 8b etapa 3: el input ya viene como `ChatCommand` validado. Se
+  // desestructuran los primitivos para no reescribir el cuerpo del use case.
+  const { command } = input;
+  const convenioId = command.convenioId as unknown as string;
+  const userId = command.userId as unknown as string;
+  const sessionId = command.sessionId as unknown as string | undefined;
+  const pregunta = input.preguntaOverride ?? command.pregunta;
+  const stream = command.stream;
+  const messages = command.messages as
+    | { role: "user" | "assistant"; content: string }[]
+    | undefined;
+  // Serializa VO → Record<string, string> para el prompt y la clave de cache.
+  const variables = variablesToRecord(voToExtractedVariables(command.variables));
+
   try {
     // 1. Cuota
-    const quota = await deps.checkUserQuota(input.userId);
+    const quota = await deps.checkUserQuota(userId);
     if (!quota.hasQuota) {
       return {
         type: "quota_exceeded",
@@ -61,14 +77,17 @@ export async function askQuestion(
     // de cache: dos preguntas con la misma redacción pero variables distintas
     // producen embeddings casi idénticos y, con umbral 0.95, la cache
     // devolvería la respuesta anterior.
-    const expandedQuery = expandQuery(input.pregunta);
-    const cacheKeyText = buildCacheKeyText(expandedQuery, input.variables);
+    const expandedQuery = expandQuery(pregunta);
+    const cacheKeyText = buildCacheKeyText(
+      expandedQuery,
+      Object.keys(variables).length > 0 ? variables : undefined,
+    );
     const embedding = await deps.embedQuestion(cacheKeyText);
 
     // 3. Cache semántica
     const cacheHit = await deps.searchSemanticCache(
       embedding,
-      input.convenioId,
+      convenioId,
       CACHE_THRESHOLD,
     );
     if (cacheHit) {
@@ -87,31 +106,26 @@ export async function askQuestion(
     }
 
     // 4. Convenio
-    const convenio = await deps.getConvenioById(input.convenioId);
+    const convenio = await deps.getConvenioById(convenioId);
     if (!convenio) {
       return {
         type: "not_found",
-        message: `Convenio con ID ${input.convenioId} no encontrado.`,
+        message: `Convenio con ID ${convenioId} no encontrado.`,
       };
     }
 
-    // 5. Chunks + perfil en paralelo, y expansión con vecinos.
-    // Si el router ya inyectó `input.perfil` (fase 8b etapa 2), reusar en vez
-    // de refetch.
-    const [rawChunks, perfil] = await Promise.all([
-      deps.searchChunksByConvenio(
-        embedding,
-        input.convenioId,
-        DEFAULT_CHUNK_LIMIT,
-        DEFAULT_CHUNK_THRESHOLD,
-      ),
-      input.perfil !== undefined
-        ? Promise.resolve(input.perfil)
-        : deps.getPerfilByConvenio(input.convenioId),
-    ]);
+    // 5. Chunks + perfil (perfil ya viene inyectado por el router, fase 8b
+    // etapa 2). Solo chunks va a la red.
+    const rawChunks = await deps.searchChunksByConvenio(
+      embedding,
+      convenioId,
+      DEFAULT_CHUNK_LIMIT,
+      DEFAULT_CHUNK_THRESHOLD,
+    );
+    const perfil = input.perfil;
     const chunks = await expandChunksWithNeighbors(
       rawChunks,
-      input.convenioId,
+      convenioId,
       deps.getChunksByGroup,
     );
 
@@ -123,30 +137,33 @@ export async function askQuestion(
     const userMessage = buildUserMessage(
       chunksFormatted,
       perfilContexto,
-      input.pregunta,
-      input.variables,
-      input.messages,
+      pregunta,
+      Object.keys(variables).length > 0 ? variables : undefined,
+      messages,
     );
 
     // 7. Claude
     const citations = buildCitations(chunks, convenio.url_pdf ?? null);
 
-    if (input.stream) {
-      const stream = await deps.streamChatResponse({ systemPrompt, userMessage });
+    if (stream) {
+      const streamResp = await deps.streamChatResponse({
+        systemPrompt,
+        userMessage,
+      });
       return {
         type: "stream",
-        stream,
+        stream: streamResp,
         citations,
         cleanup: (fullResponse: string) =>
           persistResponse({
             deps,
             embedding,
-            question: input.pregunta,
+            question: pregunta,
             response: fullResponse,
-            convenioId: input.convenioId,
+            convenioId,
             citations,
-            sessionId: input.sessionId,
-            userId: input.userId,
+            sessionId,
+            userId,
             logTag: "Stream cleanup",
             sequentialMessages: false,
           }),
@@ -159,12 +176,12 @@ export async function askQuestion(
     await persistResponse({
       deps,
       embedding,
-      question: input.pregunta,
+      question: pregunta,
       response,
-      convenioId: input.convenioId,
+      convenioId,
       citations,
-      sessionId: input.sessionId,
-      userId: input.userId,
+      sessionId,
+      userId,
       logTag: "non-stream",
       sequentialMessages: true,
     });

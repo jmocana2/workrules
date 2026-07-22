@@ -115,22 +115,20 @@ export interface DataClassificationResult {
  * Input para el calculo de salario
  */
 export interface CalculateSalaryInput {
-  convenioId: string;
-  pregunta: string;
-  userId: string;
-  sessionId?: string;
-  /** Variables ya conocidas del usuario (de turnos anteriores) */
-  variablesConocidas?: ExtractedVariables;
-  stream?: boolean;
-  /** Historial de mensajes anteriores para contexto multi-turno */
-  messages?: ChatHistoryMessage[];
+  /** Comando validado por `toChatCommand` en el router. */
+  command: ChatCommandRef;
   /**
-   * Perfil del convenio, pre-fetched por el router (refactor 007 fase 8b
-   * etapa 2). Si viene, se usa; si es `undefined`, el use case hace fallback
-   * a `deps.getPerfilByConvenio` para compatibilidad con callers directos.
+   * Perfil del convenio, pre-fetched por el router. `null` explícito significa
+   * "el convenio no tiene perfil registrado".
    */
-  perfil?: Record<string, unknown> | null;
+  perfil: Record<string, unknown> | null;
 }
+
+/**
+ * Alias interno tipado laxo para evitar el ciclo con `domain/chat-command`
+ * desde `core/chat/types.ts`. El use case lo trata como `ChatCommand`.
+ */
+type ChatCommandRef = import("../../domain/chat-command/chat-command.ts").ChatCommand;
 
 /**
  * Metadata del calculo salarial

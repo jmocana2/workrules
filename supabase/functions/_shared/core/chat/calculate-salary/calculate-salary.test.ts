@@ -10,6 +10,22 @@ import {
   type CalculateSalaryDeps,
 } from "./index.ts";
 import type { CalculateSalaryInput } from "../types.ts";
+import { toChatCommand } from "../../../domain/chat-command/input-mapper.ts";
+
+const VALID_CONVENIO_ID = "11111111-1111-4111-8111-111111111111";
+const VALID_USER_ID = "22222222-2222-4222-8222-222222222222";
+const VALID_SESSION_ID = "33333333-3333-4333-8333-333333333333";
+
+const DEFAULT_PERFIL = {
+  variables_criticas: ["categoria", "jornada"],
+  categorias_profesionales: [
+    { nombre: "Gobernanta", salario_base_anual: 22000 },
+    { nombre: "Camarera de pisos", salario_base_anual: 19850 },
+    { nombre: "Ayudante de cocina", salario_base_anual: 19850 },
+  ],
+  jornada: { horas_anuales: 1826 },
+  tablas_salariales: { ano_referencia: "2024" },
+};
 
 // ============================================
 // MOCK HELPERS
@@ -28,7 +44,7 @@ function createMockDeps(
     embedQuestion: async () => Array(1536).fill(0.1),
     searchSemanticCache: async () => null,
     getConvenioById: async () => ({
-      id: "test-convenio-id",
+      id: VALID_CONVENIO_ID,
       nombre: "Hosteleria Valencia",
       codigo_regcon: "RC-12345",
       ambito: "provincial",
@@ -38,7 +54,7 @@ function createMockDeps(
     searchChunksByConvenio: async () => [
       {
         chunk_id: "chunk-1",
-        convenio_id: "test-convenio-id",
+        convenio_id: VALID_CONVENIO_ID,
         contenido: "Salario base anual: 19.850 euros",
         similarity: 0.85,
         metadata: { articulo: "31", seccion: "Retribuciones" },
@@ -70,14 +86,46 @@ function createMockDeps(
   };
 }
 
+/**
+ * Overrides ergonómicos para construir un `CalculateSalaryInput` desde
+ * campos crudos (como los usaba el input pre-refactor 007 fase 8b). Todo
+ * pasa por `toChatCommand` para producir el `ChatCommand` que espera el use
+ * case.
+ */
+interface RawInputOverrides {
+  convenioId?: string;
+  userId?: string;
+  sessionId?: string;
+  pregunta?: string;
+  stream?: boolean;
+  variablesConocidas?: Record<string, string | number>;
+  messages?: { role: "user" | "assistant"; content: string }[];
+  perfil?: Record<string, unknown> | null;
+}
+
 function createInput(
-  overrides: Partial<CalculateSalaryInput> = {},
+  overrides: RawInputOverrides = {},
 ): CalculateSalaryInput {
+  const cmdResult = toChatCommand({
+    convenio_id: overrides.convenioId ?? VALID_CONVENIO_ID,
+    user_id: overrides.userId ?? VALID_USER_ID,
+    pregunta: overrides.pregunta ??
+      "Calcula el salario de una gobernanta a jornada completa",
+    session_id: overrides.sessionId,
+    variables: overrides.variablesConocidas as
+      | Record<string, string | number | undefined>
+      | undefined,
+    messages: overrides.messages,
+    stream: overrides.stream,
+  });
+  if (!cmdResult.ok) {
+    throw new Error(
+      `Test fixture invalid: ${JSON.stringify(cmdResult.error)}`,
+    );
+  }
   return {
-    convenioId: "test-convenio-id",
-    pregunta: "Calcula el salario de una gobernanta a jornada completa",
-    userId: "test-user-id",
-    ...overrides,
+    command: cmdResult.value,
+    perfil: overrides.perfil !== undefined ? overrides.perfil : DEFAULT_PERFIL,
   };
 }
 
@@ -122,7 +170,7 @@ Deno.test("calculateSalary - omite articulo en citations de tabla salarial", asy
     searchChunksByConvenio: async () => [
       {
         chunk_id: "chunk-tabla",
-        convenio_id: "test-convenio-id",
+        convenio_id: VALID_CONVENIO_ID,
         contenido: "Tabla salarial anual 2024",
         similarity: 0.9,
         metadata: {
@@ -177,6 +225,7 @@ Deno.test("calculateSalary - merge con variables conocidas", async () => {
     variablesConocidas: {
       categoria: "Gobernanta",
       jornada: "completa",
+      horasSemanales: 40,
     },
   });
 
@@ -292,26 +341,29 @@ Deno.test("calculateSalary - detecta jornada > 40h", async () => {
 // DATOS CONFLICTIVOS
 // ============================================
 
-Deno.test("calculateSalary - detecta conflicto jornada/horas via variablesConocidas", async () => {
-  const deps = createMockDeps();
-  // Simulamos variables que tienen conflicto directo
-  // (esto podría pasar si el usuario corrige manualmente o hay un error de parsing)
-  const input = createInput({
-    pregunta: "Calcula el salario",
-    variablesConocidas: {
-      categoria: "Gobernanta",
-      jornada: "completa",
-      horasSemanales: 20, // Conflicto: completa pero solo 20h
-    },
-  });
-
-  const result = await calculateSalary(input, deps);
-
-  assertEquals(result.type, "invalid_data");
-  if (result.type === "invalid_data") {
-    assertExists(result.conflictingVariables);
-    assertEquals(result.conflictingVariables!.length, 1);
+Deno.test("calculateSalary - conflicto jornada/horas detectado en construcción del ChatCommand", () => {
+  // Refactor 007 fase 8b: la coherencia jornada+horas es ahora invariante del
+  // VO `Jornada`. El conflicto `completa + 20h` ya no llega al use case: lo
+  // rechaza `toChatCommand`, y el router responde `invalid_data` antes de
+  // cualquier fetch. Verificamos ese contrato aquí.
+  let threw = false;
+  try {
+    createInput({
+      pregunta: "Calcula el salario",
+      variablesConocidas: {
+        categoria: "Gobernanta",
+        jornada: "completa",
+        horasSemanales: 20,
+      },
+    });
+  } catch (e) {
+    threw = true;
+    assertEquals(
+      String(e).includes("completa_con_horas_bajas"),
+      true,
+    );
   }
+  assertEquals(threw, true);
 });
 
 // ============================================
@@ -466,11 +518,10 @@ Deno.test("calculateSalary - error desconocido", async () => {
 // ============================================
 
 Deno.test("calculateSalary - sin perfil no valida variables faltantes", async () => {
-  const deps = createMockDeps({
-    getPerfilByConvenio: async () => null,
-  });
+  const deps = createMockDeps();
   const input = createInput({
     pregunta: "Calcula el salario", // Sin categoria pero sin perfil
+    perfil: null,
   });
 
   const result = await calculateSalary(input, deps);

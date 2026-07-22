@@ -9,29 +9,28 @@ import type {
   Convenio,
   QuotaStatus,
 } from "../../../lib/supabase.ts";
-import type { ChatCitation, ChatHistoryMessage } from "../types.ts";
+import type { ChatCitation } from "../types.ts";
+import type { ChatCommand } from "../../../domain/chat-command/chat-command.ts";
 
+/**
+ * Input del use case AskQuestion (refactor 007 fase 8b etapa 3).
+ * El DTO HTTP crudo ya no llega hasta aquí: el router valida y construye el
+ * `ChatCommand`, opcionalmente aplica un override sobre la pregunta (ranges
+ * transformer) e inyecta el `perfil` pre-fetched.
+ */
 export interface AskQuestionInput {
-  /** UUID del convenio a consultar */
-  convenioId: string;
-  /** Pregunta del usuario */
-  pregunta: string;
-  /** UUID del usuario */
-  userId: string;
-  /** UUID de sesion de chat (opcional) */
-  sessionId?: string;
-  /** Variables adicionales del usuario (categoria, jornada, etc) */
-  variables?: Record<string, string>;
-  /** Si true, retorna streaming SSE */
-  stream?: boolean;
-  /** Historial de mensajes anteriores para contexto multi-turno */
-  messages?: ChatHistoryMessage[];
+  /** Comando validado por `toChatCommand` en el router. */
+  command: ChatCommand;
   /**
-   * Perfil del convenio, pre-fetched por el router (refactor 007 fase 8b
-   * etapa 2). Si viene, se usa; si es `undefined`, el use case hace fallback
-   * a `deps.getPerfilByConvenio` para compatibilidad con callers directos.
+   * Perfil del convenio, pre-fetched por el router. `null` explícito significa
+   * "el convenio no tiene perfil registrado" — el use case no vuelve a
+   * consultar la BD.
    */
-  perfil?: Record<string, unknown> | null;
+  perfil: Record<string, unknown> | null;
+  /**
+   * Sustituye `command.pregunta` en el prompt (uso: `transformRangesRequest`).
+   */
+  preguntaOverride?: string;
 }
 
 export interface AskQuestionMetadata {
