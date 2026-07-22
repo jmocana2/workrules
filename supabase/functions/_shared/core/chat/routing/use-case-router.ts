@@ -10,12 +10,19 @@ import { isShowRangesRequest } from "../variable-extractor.ts";
 import type { ChatUseCaseResult } from "../http/result-mapper.ts";
 import { transformRangesRequest } from "./ranges-transformer.ts";
 import { validateChatCommand } from "./command-validator.ts";
+import { getPerfilByConvenio } from "../../../lib/supabase.ts";
+
+type PerfilResult = Record<string, unknown> | null;
 
 /**
  * Construye el input de `calculateSalary` desde un `ChatRequest`.
  * Aísla el cast a `Record<string, string | number | undefined>` en un único sitio.
  */
-function buildSalaryInput(request: ChatRequest, userId: string) {
+function buildSalaryInput(
+  request: ChatRequest,
+  userId: string,
+  perfil: PerfilResult,
+) {
   return {
     convenioId: request.convenio_id,
     pregunta: request.pregunta,
@@ -27,6 +34,7 @@ function buildSalaryInput(request: ChatRequest, userId: string) {
     >,
     stream: request.stream,
     messages: request.messages,
+    perfil,
   };
 }
 
@@ -36,6 +44,7 @@ function buildSalaryInput(request: ChatRequest, userId: string) {
 function buildAskQuestionInput(
   request: ChatRequest,
   userId: string,
+  perfil: PerfilResult,
   preguntaOverride?: string,
 ) {
   return {
@@ -46,6 +55,7 @@ function buildAskQuestionInput(
     variables: request.variables,
     stream: request.stream,
     messages: request.messages,
+    perfil,
   };
 }
 
@@ -64,20 +74,31 @@ export async function classifyAndExecute(
   const validation = validateChatCommand(request, userId);
   if (!validation.ok) return validation.invalid;
 
+  // Fase 8b etapa 2: fetch perfil aquí para inyectarlo en el use case.
+  // Se lanza en paralelo con la clasificación por regex (barato) para no
+  // serializar innecesariamente respecto al pipeline downstream.
+  const perfilPromise: Promise<PerfilResult> = getPerfilByConvenio(
+    request.convenio_id,
+  );
+
   if (request.mode === "salary") {
-    return calculateSalary(buildSalaryInput(request, userId));
+    const perfil = await perfilPromise;
+    return calculateSalary(buildSalaryInput(request, userId, perfil));
   }
 
   if (isShowRangesRequest(request.pregunta)) {
     const transformedPregunta = transformRangesRequest(request.pregunta);
+    const perfil = await perfilPromise;
     return askQuestion(
-      buildAskQuestionInput(request, userId, transformedPregunta),
+      buildAskQuestionInput(request, userId, perfil, transformedPregunta),
     );
   }
 
   if (isSalaryQuery(request.pregunta)) {
-    return calculateSalary(buildSalaryInput(request, userId));
+    const perfil = await perfilPromise;
+    return calculateSalary(buildSalaryInput(request, userId, perfil));
   }
 
-  return askQuestion(buildAskQuestionInput(request, userId));
+  const perfil = await perfilPromise;
+  return askQuestion(buildAskQuestionInput(request, userId, perfil));
 }

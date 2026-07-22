@@ -124,6 +124,12 @@ export interface CalculateSalaryInput {
   stream?: boolean;
   /** Historial de mensajes anteriores para contexto multi-turno */
   messages?: ChatHistoryMessage[];
+  /**
+   * Perfil del convenio, pre-fetched por el router (refactor 007 fase 8b
+   * etapa 2). Si viene, se usa; si es `undefined`, el use case hace fallback
+   * a `deps.getPerfilByConvenio` para compatibilidad con callers directos.
+   */
+  perfil?: Record<string, unknown> | null;
 }
 
 /**

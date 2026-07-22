@@ -111,6 +111,8 @@ export async function calculateSalary(
     }
 
     // 5. Chunks + perfil en paralelo
+    // Si el router ya inyectó `input.perfil` (fase 8b etapa 2), reusar en vez
+    // de refetch.
     const [chunks, perfil] = await Promise.all([
       deps.searchChunksByConvenio(
         embedding,
@@ -118,7 +120,9 @@ export async function calculateSalary(
         DEFAULT_CHUNK_LIMIT,
         DEFAULT_CHUNK_THRESHOLD,
       ),
-      deps.getPerfilByConvenio(input.convenioId),
+      input.perfil !== undefined
+        ? Promise.resolve(input.perfil)
+        : deps.getPerfilByConvenio(input.convenioId),
     ]);
     const perfilContexto = normalizePerfilContexto(perfil);
 

@@ -96,6 +96,8 @@ export async function askQuestion(
     }
 
     // 5. Chunks + perfil en paralelo, y expansión con vecinos.
+    // Si el router ya inyectó `input.perfil` (fase 8b etapa 2), reusar en vez
+    // de refetch.
     const [rawChunks, perfil] = await Promise.all([
       deps.searchChunksByConvenio(
         embedding,
@@ -103,7 +105,9 @@ export async function askQuestion(
         DEFAULT_CHUNK_LIMIT,
         DEFAULT_CHUNK_THRESHOLD,
       ),
-      deps.getPerfilByConvenio(input.convenioId),
+      input.perfil !== undefined
+        ? Promise.resolve(input.perfil)
+        : deps.getPerfilByConvenio(input.convenioId),
     ]);
     const chunks = await expandChunksWithNeighbors(
       rawChunks,
