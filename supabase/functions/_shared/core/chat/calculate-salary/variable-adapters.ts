@@ -25,6 +25,15 @@ export function voToExtractedVariables(
 ): ExtractedVariables {
   const out: ExtractedVariables = {};
   if (!vo) return out;
+  // Extras primero para que los campos VO puedan sobrescribir si hay colisión
+  // (no debería, pero es más seguro). Se normalizan a claves canónicas para
+  // que `checkMissingVariables` las case con `variables_criticas` del perfil.
+  if (vo.extras) {
+    for (const [key, value] of Object.entries(vo.extras)) {
+      const canonical = resolveVariableKey(key);
+      out[canonical] = value;
+    }
+  }
   if (vo.categoria !== undefined) out.categoria = vo.categoria;
   if (vo.jornada !== undefined) {
     out.jornada = vo.jornada.tipo;

@@ -133,7 +133,37 @@ type MappedVariables = {
   horasExtraAnuales?: HorasExtraAnuales;
   horasNocturnas?: HorasNocturnas;
   antiguedadAnos?: AntiguedadAnos;
+  extras?: Record<string, string>;
 };
+
+/**
+ * Claves del payload `variables` que ya tienen un VO dedicado. Cualquier otra
+ * clave del payload se preserva en `extras` (chips de variables críticas del
+ * perfil ajenas al VO: `tipo_establecimiento`, `zona`, `nivel`, etc.).
+ */
+const VO_KNOWN_KEYS: ReadonlySet<string> = new Set([
+  "categoria",
+  "horasSemanales",
+  "jornada",
+  "horasExtra",
+  "horasExtraAnuales",
+  "horasNocturnas",
+  "antiguedadAnos",
+]);
+
+function mapExtras(
+  raw: NonNullable<ChatRequestRaw["variables"]>,
+): Record<string, string> | undefined {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (VO_KNOWN_KEYS.has(key)) continue;
+    if (value === undefined || value === null) continue;
+    const s = String(value).trim();
+    if (s.length === 0) continue;
+    out[key] = s;
+  }
+  return Object.keys(out).length > 0 ? out : undefined;
+}
 
 function mapHorasSemanales(
   raw: unknown,
@@ -244,6 +274,7 @@ function mapVariables(
     horasExtraAnuales: he.value,
     horasNocturnas: hn.value,
     antiguedadAnos: aa.value,
+    extras: mapExtras(raw),
   });
 }
 
@@ -319,6 +350,7 @@ export function toChatCommand(
       horasExtraAnuales: mapped.value.horasExtraAnuales,
       horasNocturnas: mapped.value.horasNocturnas,
       antiguedadAnos: mapped.value.antiguedadAnos,
+      extras: mapped.value.extras,
     };
   }
 

@@ -19,6 +19,13 @@ export type ExtractedVariablesVO = {
   readonly horasExtraAnuales?: HorasExtraAnuales;
   readonly horasNocturnas?: HorasNocturnas;
   readonly antiguedadAnos?: AntiguedadAnos;
+  /**
+   * Claves adicionales que aporta el usuario (chips seleccionados de
+   * `variables_criticas` del perfil, ej. `tipo_establecimiento`, `zona`,
+   * `nivel`). Son agnósticas al convenio y no tienen VO propio: se preservan
+   * sin validar y se propagan como Record al pipeline legacy.
+   */
+  readonly extras?: Readonly<Record<string, string>>;
 };
 
 export type ChatMessage = {

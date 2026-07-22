@@ -166,6 +166,7 @@ const CANONICAL_VARIABLE_KEYS: Record<string, keyof ExtractedVariables> = {
   nivel_de_establecimiento: "nivelEstablecimiento",
   nivel_establecimiento: "nivelEstablecimiento",
   tipo_de_establecimiento: "nivelEstablecimiento",
+  tipo_establecimiento: "nivelEstablecimiento",
   antiguedad: "antiguedadAnos",
 };
 

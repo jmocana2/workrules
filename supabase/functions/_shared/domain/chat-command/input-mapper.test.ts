@@ -216,3 +216,41 @@ Deno.test("toChatCommand - horasNocturnas exactamente en el tope aceptadas", () 
   );
   assertEquals(r.ok, true);
 });
+
+// ============================================
+// Extras: variables críticas del perfil ajenas al VO
+// ============================================
+
+Deno.test("toChatCommand - preserva variables ajenas al VO como extras (fix bucle DataRequestCard)", () => {
+  const r = toChatCommand(
+    {
+      ...baseRequest(),
+      variables: {
+        categoria: "Gobernanta",
+        tipo_establecimiento: "4 estrellas",
+        zona: "centro",
+      } as unknown as Record<string, string | number | undefined>,
+    },
+    PERFIL,
+  );
+  assertEquals(r.ok, true);
+  if (r.ok) {
+    assertEquals(r.value.variables?.categoria, "Gobernanta");
+    assertEquals(r.value.variables?.extras, {
+      tipo_establecimiento: "4 estrellas",
+      zona: "centro",
+    });
+  }
+});
+
+Deno.test("toChatCommand - sin extras devuelve extras undefined", () => {
+  const r = toChatCommand(
+    {
+      ...baseRequest(),
+      variables: { categoria: "Camarero" },
+    },
+    PERFIL,
+  );
+  assertEquals(r.ok, true);
+  if (r.ok) assertEquals(r.value.variables?.extras, undefined);
+});

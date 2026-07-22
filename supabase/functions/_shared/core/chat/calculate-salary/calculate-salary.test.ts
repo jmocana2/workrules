@@ -546,3 +546,41 @@ Deno.test("calculateSalary - incluye latencia en metadata", async () => {
     assertEquals(result.metadata.latencyMs >= 0, true);
   }
 });
+
+// ============================================
+// REGRESION: bucle DataRequestCard
+// ============================================
+
+Deno.test("calculateSalary - variables ajenas al VO (tipo_establecimiento) satisfacen variables_criticas", async () => {
+  // Regresión fase 8b: si el chip del DataRequestCard envía una variable crítica
+  // del perfil que no está modelada como VO (ej. `tipo_establecimiento`), debía
+  // preservarse a través del ChatCommand.extras y normalizarse a clave canónica
+  // para que `checkMissingVariables` la case. Si no, cada respuesta del usuario
+  // vuelve a devolver `incomplete_data` → bucle infinito en el front.
+  const deps = createMockDeps({
+    getPerfilByConvenio: async () => ({
+      variables_criticas: ["categoria", "nivel establecimiento"],
+      categorias_profesionales: [
+        { nombre: "Gobernanta", salario_base_anual: 22000 },
+      ],
+    }),
+  });
+  const input = createInput({
+    pregunta: "calcula el salario",
+    variablesConocidas: {
+      categoria: "Gobernanta",
+      tipo_establecimiento: "4 estrellas",
+    },
+    perfil: {
+      variables_criticas: ["categoria", "nivel establecimiento"],
+      categorias_profesionales: [
+        { nombre: "Gobernanta", salario_base_anual: 22000 },
+      ],
+    },
+  });
+
+  const result = await calculateSalary(input, deps);
+
+  // Debe llegar a `salary_calculated`, no volver a pedir `nivel establecimiento`.
+  assertEquals(result.type, "salary_calculated");
+});
