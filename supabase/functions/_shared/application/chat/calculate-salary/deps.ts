@@ -1,36 +1,45 @@
 /**
  * Wiring de producción de las dependencias del use case CalculateSalary.
- * Cambia cuando cambia una implementación concreta (proveedor de embeddings,
- * cliente de Supabase, etc.), no cuando cambia el contrato o el flujo.
+ * Enlaza los adapters de `infrastructure/` al contrato del use case.
  */
 
-import {
-  createChatResponse as defaultCreateChatResponse,
-  streamChatResponse as defaultStreamChatResponse,
-} from "../../../lib/anthropic.ts";
-import { embedQuestion as defaultEmbedQuestion } from "../../../lib/openai.ts";
-import {
-  checkUserQuota as defaultCheckUserQuota,
-  getConvenioById as defaultGetConvenioById,
-  getPerfilByConvenio as defaultGetPerfilByConvenio,
-  incrementQueryCount as defaultIncrementQueryCount,
-  saveChatMessage as defaultSaveChatMessage,
-  saveToSemanticCache as defaultSaveToSemanticCache,
-  searchChunksByConvenio as defaultSearchChunksByConvenio,
-  searchSemanticCache as defaultSearchSemanticCache,
-} from "../../../lib/supabase.ts";
+import { anthropicLlmChatClient } from "../../../infrastructure/anthropic/llm-chat-client.ts";
+import { supabaseChatHistoryRepository } from "../../../infrastructure/supabase/chat-history-repository.ts";
+import { supabaseChunkRepository } from "../../../infrastructure/supabase/chunk-repository.ts";
+import { supabaseConvenioRepository } from "../../../infrastructure/supabase/convenio-repository.ts";
+import { supabasePerfilRepository } from "../../../infrastructure/supabase/perfil-repository.ts";
+import { supabaseQuotaService } from "../../../infrastructure/supabase/quota-service.ts";
+import { supabaseSemanticCache } from "../../../infrastructure/supabase/semantic-cache.ts";
+import { openaiEmbeddingClient } from "../../../infrastructure/openai/embedding-client.ts";
 import type { CalculateSalaryDeps } from "./types.ts";
 
 export const defaultDeps: CalculateSalaryDeps = {
-  checkUserQuota: defaultCheckUserQuota,
-  embedQuestion: defaultEmbedQuestion,
-  searchSemanticCache: defaultSearchSemanticCache,
-  getConvenioById: defaultGetConvenioById,
-  searchChunksByConvenio: defaultSearchChunksByConvenio,
-  getPerfilByConvenio: defaultGetPerfilByConvenio,
-  createChatResponse: defaultCreateChatResponse,
-  streamChatResponse: defaultStreamChatResponse,
-  saveToSemanticCache: defaultSaveToSemanticCache,
-  saveChatMessage: defaultSaveChatMessage,
-  incrementQueryCount: defaultIncrementQueryCount,
+  checkUserQuota: (userId) => supabaseQuotaService.check(userId),
+  embedQuestion: (text) => openaiEmbeddingClient.embed(text),
+  searchSemanticCache: (embedding, convenioId, threshold) =>
+    supabaseSemanticCache.search(embedding, convenioId, threshold),
+  getConvenioById: (convenioId) =>
+    supabaseConvenioRepository.getById(convenioId),
+  searchChunksByConvenio: (embedding, convenioId, limit, threshold) =>
+    supabaseChunkRepository.searchByConvenio(
+      embedding,
+      convenioId,
+      limit,
+      threshold,
+    ),
+  getPerfilByConvenio: (convenioId) =>
+    supabasePerfilRepository.getByConvenio(convenioId),
+  createChatResponse: (request) => anthropicLlmChatClient.createResponse(request),
+  streamChatResponse: (request) => anthropicLlmChatClient.streamResponse(request),
+  saveToSemanticCache: (embedding, query, response, convenioId, citations) =>
+    supabaseSemanticCache.save(
+      embedding,
+      query,
+      response,
+      convenioId,
+      citations,
+    ),
+  saveChatMessage: (sessionId, role, content) =>
+    supabaseChatHistoryRepository.saveMessage(sessionId, role, content),
+  incrementQueryCount: (userId) => supabaseQuotaService.increment(userId),
 };

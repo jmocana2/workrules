@@ -5,7 +5,7 @@
  * Todo aquí es puro (sin I/O) y testeable sin mocks.
  */
 
-import type { ChunkSearchResult } from "../../../lib/supabase.ts";
+import type { RetrievedChunk } from "../../ports/dtos.ts";
 import type { ChunkResult } from "../prompts.ts";
 import type { ChatCitation } from "../types.ts";
 
@@ -48,18 +48,18 @@ export function getChunkArticulo(
 }
 
 /**
- * Convierte ChunkSearchResult a ChunkResult para prompts.
+ * Convierte RetrievedChunk a ChunkResult para prompts.
  * Ignora el artículo para chunks de tipo "tabla_salarial" ya que suelen tener
  * artículos incorrectos (ej: "Art. 1" cuando realmente son del Anexo).
  */
 export function mapChunksToPromptFormat(
-  chunks: ChunkSearchResult[],
+  chunks: RetrievedChunk[],
 ): ChunkResult[] {
   return chunks.map((c) => {
     const metadata = c.metadata as Record<string, unknown>;
 
     return {
-      content: c.contenido,
+      content: c.content,
       articulo: getChunkArticulo(metadata),
       seccion: metadata?.seccion as string | undefined,
       similarity: c.similarity,
@@ -71,7 +71,7 @@ export function mapChunksToPromptFormat(
  * Construye citaciones desde los chunks usados.
  */
 export function buildCitations(
-  chunks: ChunkSearchResult[],
+  chunks: RetrievedChunk[],
   convenioUrlPdf: string | null,
 ): ChatCitation[] {
   return chunks.map((c) => {
@@ -83,7 +83,7 @@ export function buildCitations(
     return {
       articulo: getChunkArticulo(metadata),
       seccion: (metadata?.seccion as string) || null,
-      chunk_id: c.chunk_id,
+      chunk_id: c.chunkId,
       relevance_score: c.similarity,
       url_pdf: convenioUrlPdf,
       pagina,

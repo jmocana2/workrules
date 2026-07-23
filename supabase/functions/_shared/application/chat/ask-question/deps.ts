@@ -1,39 +1,49 @@
 /**
- * Wiring de producción de `AskQuestionDeps`: enlaza las implementaciones
- * reales (Supabase, OpenAI, Anthropic) al contrato del use case.
+ * Wiring de producción de `AskQuestionDeps`: enlaza los adapters de
+ * `infrastructure/` al contrato del use case.
  *
  * Los tests inyectan un `AskQuestionDeps` distinto; producción usa este.
  */
 
-import {
-  createChatResponse as defaultCreateChatResponse,
-  streamChatResponse as defaultStreamChatResponse,
-} from "../../../lib/anthropic.ts";
-import { embedQuestion as defaultEmbedQuestion } from "../../../lib/openai.ts";
-import {
-  checkUserQuota as defaultCheckUserQuota,
-  getChunksByGroup as defaultGetChunksByGroup,
-  getConvenioById as defaultGetConvenioById,
-  getPerfilByConvenio as defaultGetPerfilByConvenio,
-  incrementQueryCount as defaultIncrementQueryCount,
-  saveChatMessage as defaultSaveChatMessage,
-  saveToSemanticCache as defaultSaveToSemanticCache,
-  searchChunksByConvenio as defaultSearchChunksByConvenio,
-  searchSemanticCache as defaultSearchSemanticCache,
-} from "../../../lib/supabase.ts";
+import { anthropicLlmChatClient } from "../../../infrastructure/anthropic/llm-chat-client.ts";
+import { supabaseChatHistoryRepository } from "../../../infrastructure/supabase/chat-history-repository.ts";
+import { supabaseChunkRepository } from "../../../infrastructure/supabase/chunk-repository.ts";
+import { supabaseConvenioRepository } from "../../../infrastructure/supabase/convenio-repository.ts";
+import { supabasePerfilRepository } from "../../../infrastructure/supabase/perfil-repository.ts";
+import { supabaseQuotaService } from "../../../infrastructure/supabase/quota-service.ts";
+import { supabaseSemanticCache } from "../../../infrastructure/supabase/semantic-cache.ts";
+import { openaiEmbeddingClient } from "../../../infrastructure/openai/embedding-client.ts";
 import type { AskQuestionDeps } from "./types.ts";
 
 export const defaultDeps: AskQuestionDeps = {
-  checkUserQuota: defaultCheckUserQuota,
-  embedQuestion: defaultEmbedQuestion,
-  searchSemanticCache: defaultSearchSemanticCache,
-  getConvenioById: defaultGetConvenioById,
-  searchChunksByConvenio: defaultSearchChunksByConvenio,
-  getChunksByGroup: defaultGetChunksByGroup,
-  getPerfilByConvenio: defaultGetPerfilByConvenio,
-  createChatResponse: defaultCreateChatResponse,
-  streamChatResponse: defaultStreamChatResponse,
-  saveToSemanticCache: defaultSaveToSemanticCache,
-  saveChatMessage: defaultSaveChatMessage,
-  incrementQueryCount: defaultIncrementQueryCount,
+  checkUserQuota: (userId) => supabaseQuotaService.check(userId),
+  embedQuestion: (text) => openaiEmbeddingClient.embed(text),
+  searchSemanticCache: (embedding, convenioId, threshold) =>
+    supabaseSemanticCache.search(embedding, convenioId, threshold),
+  getConvenioById: (convenioId) =>
+    supabaseConvenioRepository.getById(convenioId),
+  searchChunksByConvenio: (embedding, convenioId, limit, threshold) =>
+    supabaseChunkRepository.searchByConvenio(
+      embedding,
+      convenioId,
+      limit,
+      threshold,
+    ),
+  getChunksByGroup: (convenioId, key, value) =>
+    supabaseChunkRepository.getByGroup(convenioId, key, value),
+  getPerfilByConvenio: (convenioId) =>
+    supabasePerfilRepository.getByConvenio(convenioId),
+  createChatResponse: (request) => anthropicLlmChatClient.createResponse(request),
+  streamChatResponse: (request) => anthropicLlmChatClient.streamResponse(request),
+  saveToSemanticCache: (embedding, query, response, convenioId, citations) =>
+    supabaseSemanticCache.save(
+      embedding,
+      query,
+      response,
+      convenioId,
+      citations,
+    ),
+  saveChatMessage: (sessionId, role, content) =>
+    supabaseChatHistoryRepository.saveMessage(sessionId, role, content),
+  incrementQueryCount: (userId) => supabaseQuotaService.increment(userId),
 };

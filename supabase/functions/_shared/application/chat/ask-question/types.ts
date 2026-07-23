@@ -2,13 +2,13 @@
  * Contratos públicos del use case AskQuestion.
  */
 
-import type { StreamOptions } from "../../../lib/anthropic.ts";
 import type {
   CacheHit,
-  ChunkSearchResult,
-  Convenio,
+  ConvenioSummary,
+  LlmChatRequest,
   QuotaStatus,
-} from "../../../lib/supabase.ts";
+  RetrievedChunk,
+} from "../../ports/dtos.ts";
 import type { ChatCitation } from "../types.ts";
 import type { ChatCommand } from "../../../domain/chat-command/chat-command.ts";
 
@@ -98,7 +98,13 @@ export type AskQuestionResult =
   | AskQuestionError
   | AskQuestionStreamResult;
 
-/** Dependencias inyectables del use case (para testing y wiring). */
+/**
+ * Dependencias inyectables del use case (para testing y wiring).
+ *
+ * Las firmas hablan en DTOs neutrales de `application/ports/dtos.ts`. Ningún
+ * tipo de `lib/` (fila DB, opciones de SDK) cruza este contrato: los adapters
+ * de `infrastructure/` traducen entre ambos mundos.
+ */
 export interface AskQuestionDeps {
   checkUserQuota: (userId: string) => Promise<QuotaStatus>;
   embedQuestion: (text: string) => Promise<number[]>;
@@ -107,24 +113,24 @@ export interface AskQuestionDeps {
     convenioId: string,
     threshold?: number,
   ) => Promise<CacheHit | null>;
-  getConvenioById: (convenioId: string) => Promise<Convenio | null>;
+  getConvenioById: (convenioId: string) => Promise<ConvenioSummary | null>;
   searchChunksByConvenio: (
     embedding: number[],
     convenioId: string,
     limit?: number,
     threshold?: number,
-  ) => Promise<ChunkSearchResult[]>;
+  ) => Promise<RetrievedChunk[]>;
   getChunksByGroup: (
     convenioId: string,
     key: "articulo" | "seccion",
     value: string,
-  ) => Promise<ChunkSearchResult[]>;
+  ) => Promise<RetrievedChunk[]>;
   getPerfilByConvenio: (
     convenioId: string,
   ) => Promise<Record<string, unknown> | null>;
-  createChatResponse: (options: StreamOptions) => Promise<string>;
+  createChatResponse: (request: LlmChatRequest) => Promise<string>;
   streamChatResponse: (
-    options: StreamOptions,
+    request: LlmChatRequest,
   ) => Promise<ReadableStream<Uint8Array>>;
   saveToSemanticCache: (
     embedding: number[],

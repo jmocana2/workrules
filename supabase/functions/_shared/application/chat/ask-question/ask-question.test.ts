@@ -1,15 +1,15 @@
-// supabase/functions/_shared/core/chat/ask-question/ask-question.test.ts
+// supabase/functions/_shared/application/chat/ask-question/ask-question.test.ts
 
 import { assertEquals, assertExists } from "@std/assert";
 import { AnthropicError } from "../../../lib/anthropic.ts";
 import { EmbeddingError } from "../../../lib/openai.ts";
+import { RepositoryError } from "../../../lib/supabase.ts";
 import type {
   CacheHit,
-  ChunkSearchResult,
-  Convenio,
+  ConvenioSummary,
   QuotaStatus,
-} from "../../../lib/supabase.ts";
-import { RepositoryError } from "../../../lib/supabase.ts";
+  RetrievedChunk,
+} from "../../ports/dtos.ts";
 import { askQuestion } from "./ask-question.ts";
 import type { AskQuestionDeps, AskQuestionInput } from "./types.ts";
 import { toChatCommand } from "../../../domain/chat-command/input-mapper.ts";
@@ -22,27 +22,31 @@ import type { ChatCommand } from "../../../domain/chat-command/chat-command.ts";
 const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
 const VALID_EMBEDDING = new Array(1536).fill(0.1);
 
-const MOCK_CONVENIO: Convenio = {
+const MOCK_CONVENIO: ConvenioSummary = {
   id: VALID_UUID,
   nombre: "Hosteleria de Valencia",
-  codigo_regcon: "46001234",
+  nombreOficial: null,
+  nombreCorto: null,
+  codigoRegcon: "46001234",
   ambito: "Provincial",
-  fecha_vigencia: "2026-01-01",
+  ambitoTerritorial: null,
+  fechaVigencia: "2026-01-01",
   estado: "vigente",
+  urlPdf: null,
 };
 
-const MOCK_CHUNKS: ChunkSearchResult[] = [
+const MOCK_CHUNKS: RetrievedChunk[] = [
   {
-    chunk_id: "chunk-1",
-    convenio_id: VALID_UUID,
-    contenido: "El salario base sera de 20.000 euros anuales.",
+    chunkId: "chunk-1",
+    convenioId: VALID_UUID,
+    content: "El salario base sera de 20.000 euros anuales.",
     metadata: { articulo: "Art. 24", seccion: "Retribuciones" },
     similarity: 0.92,
   },
   {
-    chunk_id: "chunk-2",
-    convenio_id: VALID_UUID,
-    contenido: "La jornada anual sera de 1.826 horas.",
+    chunkId: "chunk-2",
+    convenioId: VALID_UUID,
+    content: "La jornada anual sera de 1.826 horas.",
     metadata: { articulo: "Art. 15", seccion: "Jornada" },
     similarity: 0.85,
   },
@@ -57,10 +61,10 @@ const MOCK_PERFIL = {
 };
 
 const MOCK_CACHE_HIT: CacheHit = {
-  cache_id: "cache-123",
+  cacheId: "cache-123",
   response: "Respuesta cacheada: El salario base es 20.000 euros.",
   similarity: 0.98,
-  hit_count: 5,
+  hitCount: 5,
   citations: [],
 };
 
@@ -130,9 +134,9 @@ interface MockOverrides {
   checkUserQuota?: () => Promise<QuotaStatus>;
   embedQuestion?: () => Promise<number[]>;
   searchSemanticCache?: () => Promise<CacheHit | null>;
-  getConvenioById?: () => Promise<Convenio | null>;
-  searchChunksByConvenio?: () => Promise<ChunkSearchResult[]>;
-  getChunksByGroup?: () => Promise<ChunkSearchResult[]>;
+  getConvenioById?: () => Promise<ConvenioSummary | null>;
+  searchChunksByConvenio?: () => Promise<RetrievedChunk[]>;
+  getChunksByGroup?: () => Promise<RetrievedChunk[]>;
   getPerfilByConvenio?: () => Promise<Record<string, unknown> | null>;
   createChatResponse?: () => Promise<string>;
   streamChatResponse?: () => Promise<ReadableStream<Uint8Array>>;
@@ -433,9 +437,9 @@ Deno.test("askQuestion - omite articulo en citations de tabla salarial", async (
     searchChunksByConvenio: () =>
       Promise.resolve([
         {
-          chunk_id: "chunk-tabla",
-          convenio_id: VALID_UUID,
-          contenido: "Tabla salarial 2026 para camarero",
+          chunkId: "chunk-tabla",
+          convenioId: VALID_UUID,
+          content: "Tabla salarial 2026 para camarero",
           metadata: {
             articulo: "Art. 1",
             seccion: "Tablas salariales",
@@ -739,7 +743,7 @@ Deno.test("askQuestion - citations incluyen url_pdf del convenio", async () => {
     getConvenioById: () =>
       Promise.resolve({
         ...MOCK_CONVENIO,
-        url_pdf: "https://bocm.es/hosteleria-2024.pdf",
+        urlPdf: "https://bocm.es/hosteleria-2024.pdf",
       }),
   });
 
@@ -768,14 +772,14 @@ Deno.test("askQuestion - citations incluyen pagina del chunk metadata", async ()
     getConvenioById: () =>
       Promise.resolve({
         ...MOCK_CONVENIO,
-        url_pdf: "https://bocm.es/hosteleria-2024.pdf",
+        urlPdf: "https://bocm.es/hosteleria-2024.pdf",
       }),
     searchChunksByConvenio: () =>
       Promise.resolve([
         {
-          chunk_id: "chunk-pagina",
-          convenio_id: VALID_UUID,
-          contenido: "Articulo con pagina conocida",
+          chunkId: "chunk-pagina",
+          convenioId: VALID_UUID,
+          content: "Articulo con pagina conocida",
           metadata: { articulo: "Art. 24", seccion: "Retribuciones", pagina: 42 },
           similarity: 0.9,
         },
@@ -821,24 +825,24 @@ Deno.test("askQuestion - llama a getChunksByGroup por cada articulo unico recupe
 Deno.test("askQuestion - expande con chunks vecinos del mismo articulo", async () => {
   // Simula el caso "áreas funcionales": un solo chunk recuperado pero el
   // artículo tiene 3 chunks consecutivos en la BD.
-  const baseChunk: ChunkSearchResult = {
-    chunk_id: "chunk-area-1",
-    convenio_id: VALID_UUID,
-    contenido: "Area 1 y Area 2 ...",
+  const baseChunk: RetrievedChunk = {
+    chunkId: "chunk-area-1",
+    convenioId: VALID_UUID,
+    content: "Area 1 y Area 2 ...",
     metadata: { articulo: "Art. 15", seccion: "Areas de actividad", numero_chunk: 10 },
     similarity: 0.88,
   };
-  const neighbor2: ChunkSearchResult = {
-    chunk_id: "chunk-area-2",
-    convenio_id: VALID_UUID,
-    contenido: "Area 3 y Area 4 ...",
+  const neighbor2: RetrievedChunk = {
+    chunkId: "chunk-area-2",
+    convenioId: VALID_UUID,
+    content: "Area 3 y Area 4 ...",
     metadata: { articulo: "Art. 15", seccion: "Areas de actividad", numero_chunk: 11 },
     similarity: 0,
   };
-  const neighbor3: ChunkSearchResult = {
-    chunk_id: "chunk-area-3",
-    convenio_id: VALID_UUID,
-    contenido: "Area 5 y Area 6 ...",
+  const neighbor3: RetrievedChunk = {
+    chunkId: "chunk-area-3",
+    convenioId: VALID_UUID,
+    content: "Area 5 y Area 6 ...",
     metadata: { articulo: "Art. 15", seccion: "Areas de actividad", numero_chunk: 12 },
     similarity: 0,
   };
@@ -864,10 +868,10 @@ Deno.test("askQuestion - expande con chunks vecinos del mismo articulo", async (
 });
 
 Deno.test("askQuestion - usa seccion como fallback cuando el chunk no tiene articulo", async () => {
-  const sinArticulo: ChunkSearchResult = {
-    chunk_id: "chunk-anexo",
-    convenio_id: VALID_UUID,
-    contenido: "Tabla salarial ...",
+  const sinArticulo: RetrievedChunk = {
+    chunkId: "chunk-anexo",
+    convenioId: VALID_UUID,
+    content: "Tabla salarial ...",
     metadata: { seccion: "Anexo I - Tablas Salariales" },
     similarity: 0.8,
   };
@@ -898,18 +902,18 @@ Deno.test("askQuestion - no rompe si getChunksByGroup falla", async () => {
 });
 
 Deno.test("askQuestion - respeta tope EXPANDED_CHUNK_CAP al expandir", async () => {
-  const base: ChunkSearchResult = {
-    chunk_id: "base-1",
-    convenio_id: VALID_UUID,
-    contenido: "base",
+  const base: RetrievedChunk = {
+    chunkId: "base-1",
+    convenioId: VALID_UUID,
+    content: "base",
     metadata: { articulo: "Art. 99" },
     similarity: 0.9,
   };
   // Devolvemos 30 vecinos; debe truncar a EXPANDED_CHUNK_CAP (15)
-  const muchosVecinos: ChunkSearchResult[] = Array.from({ length: 30 }, (_, i) => ({
-    chunk_id: `vec-${i}`,
-    convenio_id: VALID_UUID,
-    contenido: `vecino ${i}`,
+  const muchosVecinos: RetrievedChunk[] = Array.from({ length: 30 }, (_, i) => ({
+    chunkId: `vec-${i}`,
+    convenioId: VALID_UUID,
+    content: `vecino ${i}`,
     metadata: { articulo: "Art. 99", numero_chunk: i },
     similarity: 0,
   }));

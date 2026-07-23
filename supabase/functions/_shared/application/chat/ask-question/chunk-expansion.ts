@@ -9,7 +9,7 @@
  *      `seccion` en metadata.
  *   2. Por cada grupo único (articulo o seccion), pide a la BD todos los chunks
  *      de ese grupo en este convenio (función `fetchGroup`).
- *   3. Fusiona los originales con los vecinos, deduplica por `chunk_id` y
+ *   3. Fusiona los originales con los vecinos, deduplica por `chunkId` y
  *      mantiene la `similarity` original cuando existe (los vecinos añadidos
  *      llevan similarity = 0 para que no afecten al ranking).
  *   4. Limita el total a `EXPANDED_CHUNK_CAP` para no inflar el contexto.
@@ -18,7 +18,7 @@
  * devuelve lo que se haya podido reunir; nunca debe romper el flujo principal.
  */
 
-import type { ChunkSearchResult } from "../../../lib/supabase.ts";
+import type { RetrievedChunk } from "../../ports/dtos.ts";
 import { EXPANDED_CHUNK_CAP } from "../rag/config.ts";
 import type { AskQuestionDeps } from "./types.ts";
 
@@ -27,7 +27,7 @@ type ChunkGroup = { key: "articulo" | "seccion"; value: string };
 type FetchGroupFn = AskQuestionDeps["getChunksByGroup"];
 
 function detectChunkGroups(
-  base: ChunkSearchResult[],
+  base: RetrievedChunk[],
 ): Map<string, ChunkGroup> {
   const groups = new Map<string, ChunkGroup>();
   for (const chunk of base) {
@@ -52,7 +52,7 @@ async function fetchNeighborsForGroups(
   groups: ChunkGroup[],
   convenioId: string,
   fetchGroup: FetchGroupFn,
-): Promise<ChunkSearchResult[][]> {
+): Promise<RetrievedChunk[][]> {
   return await Promise.all(
     groups.map((g) =>
       fetchGroup(convenioId, g.key, g.value).catch((err) => {
@@ -60,23 +60,23 @@ async function fetchNeighborsForGroups(
           `[ask-question] Error expanding chunks for ${g.key}=${g.value}:`,
           err,
         );
-        return [] as ChunkSearchResult[];
+        return [] as RetrievedChunk[];
       })
     ),
   );
 }
 
 function mergeChunks(
-  base: ChunkSearchResult[],
-  neighborResults: ChunkSearchResult[][],
-): ChunkSearchResult[] {
-  const byId = new Map<string, ChunkSearchResult>();
-  for (const c of base) byId.set(c.chunk_id, c);
+  base: RetrievedChunk[],
+  neighborResults: RetrievedChunk[][],
+): RetrievedChunk[] {
+  const byId = new Map<string, RetrievedChunk>();
+  for (const c of base) byId.set(c.chunkId, c);
 
   for (const list of neighborResults) {
     for (const neighbor of list) {
-      if (!byId.has(neighbor.chunk_id)) {
-        byId.set(neighbor.chunk_id, neighbor);
+      if (!byId.has(neighbor.chunkId)) {
+        byId.set(neighbor.chunkId, neighbor);
       }
     }
   }
@@ -96,10 +96,10 @@ function mergeChunks(
 }
 
 export async function expandChunksWithNeighbors(
-  base: ChunkSearchResult[],
+  base: RetrievedChunk[],
   convenioId: string,
   fetchGroup: FetchGroupFn,
-): Promise<ChunkSearchResult[]> {
+): Promise<RetrievedChunk[]> {
   if (base.length === 0) return base;
 
   const groups = detectChunkGroups(base);

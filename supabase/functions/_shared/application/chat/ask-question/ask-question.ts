@@ -32,8 +32,7 @@ import type {
   AskQuestionInput,
   AskQuestionResult,
 } from "./types.ts";
-import { voToExtractedVariables } from "../calculate-salary/variable-adapters.ts";
-import { variablesToRecord } from "../calculate-salary/variable-adapters.ts";
+import { unpackChatCommand } from "../unpack-command.ts";
 
 /**
  * Ejecuta el flujo RAG completo para responder una pregunta sobre un convenio.
@@ -47,19 +46,11 @@ export async function askQuestion(
 ): Promise<AskQuestionResult> {
   const startTime = Date.now();
 
-  // Fase 8b etapa 3: el input ya viene como `ChatCommand` validado. Se
-  // desestructuran los primitivos para no reescribir el cuerpo del use case.
-  const { command } = input;
-  const convenioId = command.convenioId as unknown as string;
-  const userId = command.userId as unknown as string;
-  const sessionId = command.sessionId as unknown as string | undefined;
-  const pregunta = input.preguntaOverride ?? command.pregunta;
-  const stream = command.stream;
-  const messages = command.messages as
-    | { role: "user" | "assistant"; content: string }[]
-    | undefined;
-  // Serializa VO → Record<string, string> para el prompt y la clave de cache.
-  const variables = variablesToRecord(voToExtractedVariables(command.variables));
+  // Refactor 007 P2: un único punto de desempaquetado del ChatCommand.
+  const unpacked = unpackChatCommand(input.command);
+  const { convenioId, userId, sessionId, stream, messages, variables } =
+    unpacked;
+  const pregunta = input.preguntaOverride ?? unpacked.pregunta;
 
   try {
     // 1. Cuota
@@ -143,7 +134,7 @@ export async function askQuestion(
     );
 
     // 7. Claude
-    const citations = buildCitations(chunks, convenio.url_pdf ?? null);
+    const citations = buildCitations(chunks, convenio.urlPdf);
 
     if (stream) {
       const streamResp = await deps.streamChatResponse({

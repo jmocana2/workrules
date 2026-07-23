@@ -4,13 +4,13 @@
  * del resultado). Aislado del wiring y del flujo.
  */
 
-import type { StreamOptions } from "../../../lib/anthropic.ts";
 import type {
   CacheHit,
-  ChunkSearchResult,
-  Convenio,
+  ConvenioSummary,
+  LlmChatRequest,
   QuotaStatus,
-} from "../../../lib/supabase.ts";
+  RetrievedChunk,
+} from "../../ports/dtos.ts";
 import type {
   AskQuestionCacheHit,
   AskQuestionError,
@@ -42,6 +42,9 @@ export type CalculateSalaryResult =
 /**
  * Dependencias inyectables del use case. Todo I/O externo pasa por aquí para
  * que los tests puedan sustituir cada capacidad sin tocar red ni DB.
+ *
+ * Las firmas hablan en DTOs neutrales de `application/ports/dtos.ts`; ningún
+ * tipo de `lib/` cruza este contrato.
  */
 export interface CalculateSalaryDeps {
   checkUserQuota: (userId: string) => Promise<QuotaStatus>;
@@ -51,19 +54,19 @@ export interface CalculateSalaryDeps {
     convenioId: string,
     threshold?: number,
   ) => Promise<CacheHit | null>;
-  getConvenioById: (convenioId: string) => Promise<Convenio | null>;
+  getConvenioById: (convenioId: string) => Promise<ConvenioSummary | null>;
   searchChunksByConvenio: (
     embedding: number[],
     convenioId: string,
     limit?: number,
     threshold?: number,
-  ) => Promise<ChunkSearchResult[]>;
+  ) => Promise<RetrievedChunk[]>;
   getPerfilByConvenio: (
     convenioId: string,
   ) => Promise<Record<string, unknown> | null>;
-  createChatResponse: (options: StreamOptions) => Promise<string>;
+  createChatResponse: (request: LlmChatRequest) => Promise<string>;
   streamChatResponse: (
-    options: StreamOptions,
+    request: LlmChatRequest,
   ) => Promise<ReadableStream<Uint8Array>>;
   saveToSemanticCache: (
     embedding: number[],

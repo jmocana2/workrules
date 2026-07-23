@@ -55,6 +55,7 @@ import {
   variablesToRecord,
   voToExtractedVariables,
 } from "./variable-adapters.ts";
+import { unpackChatCommand } from "../unpack-command.ts";
 
 const LOG_TAG = "calculate-salary";
 
@@ -64,17 +65,10 @@ export async function calculateSalary(
 ): Promise<CalculateSalaryResult> {
   const startTime = Date.now();
 
-  // Fase 8b etapa 3: input viene como `ChatCommand` validado.
-  const { command } = input;
-  const convenioId = command.convenioId as unknown as string;
-  const userId = command.userId as unknown as string;
-  const sessionId = command.sessionId as unknown as string | undefined;
-  const pregunta = command.pregunta;
-  const stream = command.stream;
-  const messages = command.messages as
-    | { role: "user" | "assistant"; content: string }[]
-    | undefined;
-  const variablesConocidas = voToExtractedVariables(command.variables);
+  // Refactor 007 P2: un único punto de desempaquetado del ChatCommand.
+  const { convenioId, userId, sessionId, pregunta, stream, messages } =
+    unpackChatCommand(input.command);
+  const variablesConocidas = voToExtractedVariables(input.command.variables);
 
   try {
     // 1. Cuota
@@ -146,7 +140,7 @@ export async function calculateSalary(
     // 6b. Red de seguridad: las variables extraídas del texto libre no han
     // pasado por VOs. Rechazarlas si están fuera de rango, con el mismo shape
     // `invalid_data` que aplica `toChatCommand` para las variables explícitas.
-    const citations = buildCitations(chunks, convenio.url_pdf ?? null);
+    const citations = buildCitations(chunks, convenio.urlPdf);
     const invalidFromText = validateExtractedFromText(extractedVars);
     if (invalidFromText.length > 0) {
       return {

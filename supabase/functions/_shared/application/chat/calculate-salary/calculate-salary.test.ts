@@ -46,16 +46,20 @@ function createMockDeps(
     getConvenioById: async () => ({
       id: VALID_CONVENIO_ID,
       nombre: "Hosteleria Valencia",
-      codigo_regcon: "RC-12345",
+      nombreOficial: null,
+      nombreCorto: null,
+      codigoRegcon: "RC-12345",
       ambito: "provincial",
-      fecha_vigencia: "2024-01-01",
+      ambitoTerritorial: null,
+      fechaVigencia: "2024-01-01",
       estado: "vigente",
+      urlPdf: null,
     }),
     searchChunksByConvenio: async () => [
       {
-        chunk_id: "chunk-1",
-        convenio_id: VALID_CONVENIO_ID,
-        contenido: "Salario base anual: 19.850 euros",
+        chunkId: "chunk-1",
+        convenioId: VALID_CONVENIO_ID,
+        content: "Salario base anual: 19.850 euros",
         similarity: 0.85,
         metadata: { articulo: "31", seccion: "Retribuciones" },
       },
@@ -169,9 +173,9 @@ Deno.test("calculateSalary - omite articulo en citations de tabla salarial", asy
   const deps = createMockDeps({
     searchChunksByConvenio: async () => [
       {
-        chunk_id: "chunk-tabla",
-        convenio_id: VALID_CONVENIO_ID,
-        contenido: "Tabla salarial anual 2024",
+        chunkId: "chunk-tabla",
+        convenioId: VALID_CONVENIO_ID,
+        content: "Tabla salarial anual 2024",
         similarity: 0.9,
         metadata: {
           articulo: "Art. 1",
@@ -248,10 +252,10 @@ Deno.test("calculateSalary - merge con variables conocidas", async () => {
 Deno.test("calculateSalary - cache hit retorna respuesta cacheada", async () => {
   const deps = createMockDeps({
     searchSemanticCache: async () => ({
-      cache_id: "cache-123",
+      cacheId: "cache-123",
       response: "Respuesta cacheada",
       similarity: 0.98,
-      hit_count: 5,
+      hitCount: 5,
       citations: [],
     }),
   });
