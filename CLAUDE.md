@@ -42,9 +42,14 @@ pnpm tokens:build  # Build CSS variables from design tokens
 ### Backend (`supabase/functions/`)
 - **Supabase Edge Functions** written in **Deno/TypeScript**
 - Main endpoint: `POST /chat` - Classifies queries and routes to appropriate handler
-- Shared code in `_shared/`:
-  - `lib/` - Supabase client, OpenAI/Anthropic wrappers, CORS
-  - `core/chat/` - Business logic (ask-question, calculate-salary, classifiers)
+- Shared code in `_shared/` follows a hexagonal layout:
+  - `domain/` - Value objects, `ChatCommand`, reglas puras de dominio
+  - `application/` - Use cases y contratos hexagonales
+    - `application/ports/` - Interfaces neutrales + DTOs de puerto (`RetrievedChunk`, `ConvenioSummary`, `QuotaStatus`, `CacheHit`, `LlmChatRequest`)
+    - `application/chat/` - Use cases (`ask-question`, `calculate-salary`), routing, http, sse, rag compartido
+  - `infrastructure/` - Adapters concretos que implementan los puertos (`supabase/`, `anthropic/`, `openai/`); son thin wrappers sobre `lib/`
+  - `lib/` - SDK clients crudos (Supabase, Anthropic, OpenAI) + utilidades genéricas (CORS). Consumido por adapters y por edge functions distintas de `chat/`
+- Regla de dependencias: `application/` depende de `application/ports/`; nunca de `infrastructure/` ni de `lib/` (con excepciones anotadas: clases de error concretas usadas por `rag/error-mapper.ts`, `verifyUserToken` en `http/auth.ts`)
 - Supports both JSON responses and SSE streaming
 
 ### Design System
@@ -66,7 +71,7 @@ pnpm tokens:build  # Build CSS variables from design tokens
 - `src/App.tsx` - Main chat interface demo
 - `src/lib/supabase.ts` - Supabase client singleton
 - `supabase/functions/chat/index.ts` - Chat endpoint entry
-- `supabase/functions/_shared/core/chat/handlers.ts` - Request classification and routing
+- `supabase/functions/_shared/application/chat/handlers.ts` - Request classification and routing
 
 ## Testing Supabase Functions Locally
 

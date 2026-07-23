@@ -10,7 +10,7 @@ import { isShowRangesRequest } from "../variable-extractor.ts";
 import type { ChatUseCaseResult } from "../http/result-mapper.ts";
 import { transformRangesRequest } from "./ranges-transformer.ts";
 import { validateChatCommand } from "./command-validator.ts";
-import { getPerfilByConvenio } from "../../../lib/supabase.ts";
+import { supabasePerfilRepository } from "../../../infrastructure/supabase/perfil-repository.ts";
 
 type PerfilResult = Record<string, unknown> | null;
 
@@ -29,9 +29,8 @@ export async function classifyAndExecute(
   const command = validation.command;
 
   // Fase 8b etapa 2: fetch perfil aquí para inyectarlo en el use case.
-  const perfilPromise: Promise<PerfilResult> = getPerfilByConvenio(
-    request.convenio_id,
-  );
+  const perfilPromise: Promise<PerfilResult> = supabasePerfilRepository
+    .getByConvenio(request.convenio_id);
 
   if (request.mode === "salary") {
     const perfil = await perfilPromise;
