@@ -1,7 +1,7 @@
 // supabase/functions/chat/index.ts
 // Edge Function: POST /chat - Endpoint principal de WorkRules
 
-import type { ChatRequest } from '../_shared/core/chat/types.ts';
+import type { ChatRequest } from '../_shared/application/chat/types.ts';
 import {
   validateChatRequest,
   parseRequestBody,
@@ -11,7 +11,7 @@ import {
   handleStreamResponse,
   buildErrorResponse,
   buildStatusStreamResponse,
-} from '../_shared/core/chat/handlers.ts';
+} from '../_shared/application/chat/handlers.ts';
 import { buildCorsHeaders } from '../_shared/lib/cors.ts';
 import { countRecentChatRequests } from '../_shared/lib/supabase.ts';
 
