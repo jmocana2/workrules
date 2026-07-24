@@ -51,40 +51,32 @@ Webhook POST → Descarga PDF → LlamaParse → Markdown
 
 ---
 
-## 4. Estructura de Carpetas (Clean Architecture Pragmatica)
+## 4. Estructura de Carpetas (Clean Architecture Pragmatica + Hexagonal)
+
+> Para el detalle completo de capas, puertos, VOs y regla de dependencias ver [`arquitectura-software.md`](./arquitectura-software.md).
 
 ```
-supabase/
-└── functions/
-    ├── _shared/                        # Logica compartida entre Edge Functions
-    │   ├── core/                       # Dominio + Aplicacion fusionados (por feature)
-    │   │   ├── convenio/               # Tipos y logica de convenios
-    │   │   │   └── types.ts            # Convenio, PerfilJSON, Chunk
-    │   │   ├── chat/                   # Logica del chat RAG
-    │   │   │   ├── ask-question.ts     # Use case: preguntas generales
-    │   │   │   ├── calculate-salary.ts # Use case: calculos salariales
-    │   │   │   ├── prompts.ts          # System prompts y templates
-    │   │   │   └── types.ts            # ChatRequest, ChatResponse, SSE types
-    │   │   └── salary/                 # Logica de validacion salarial
-    │   │       ├── validators.ts       # SMI, limites legales, conflictos
-    │   │       └── classifier.ts       # Clasificador de estado de datos
-    │   └── lib/                        # Infraestructura (clients externos)
-    │       ├── supabase.ts             # Cliente Supabase (queries, pgvector, cache)
-    │       ├── anthropic.ts            # Cliente Anthropic (streaming SSE)
-    │       └── openai.ts              # Cliente OpenAI (embeddings de preguntas)
-    │
-    ├── chat/                           # Edge Function: Chat RAG
-    │   └── index.ts                    # POST /functions/v1/chat
-    └── webhook-pdf/                    # Edge Function: Trigger para n8n (futuro)
-        └── index.ts
+supabase/functions/
+├── chat/index.ts                       # Composition root del endpoint /chat
+├── webhook-pdf/ · webhook-progress/ · upload-convenio/ · sign-pdf/
+└── _shared/
+    ├── domain/                         # Reglas puras: VOs, labor-law, perfil, chat-command, result
+    ├── application/                    # Casos de uso + puertos hexagonales
+    │   ├── ports/                      # Interfaces neutrales + DTOs (RetrievedChunk, QuotaStatus…)
+    │   └── chat/                       # ask-question, calculate-salary, routing, http, sse, rag
+    ├── infrastructure/                 # Adapters concretos que implementan puertos
+    │   ├── supabase/                   # chunk, semantic-cache, quota, chat-history, perfil, convenio
+    │   ├── anthropic/                  # llm-chat-client
+    │   └── openai/                     # embedding-client
+    └── lib/                            # SDK clients crudos + utilidades genericas (compartido con otras Edge Functions)
 ```
 
 ### Decisiones de diseno
 
-- **Por feature, no por capa:** `core/chat/` contiene tipos, use cases y prompts juntos. Mas facil de navegar que `domain/entities/`, `application/use-cases/` separados.
-- **Sin clases, patron funcional:** Edge Functions en Deno son efimeras. Funciones exportadas son mas idiomaticas que clases con inyeccion de dependencias.
-- **Un solo endpoint `/chat`:** Preguntas generales y calculos salariales comparten el mismo flujo RAG. La diferencia es el prompt y la validacion, no la arquitectura. El use case se selecciona internamente.
-- **`webhook-pdf/` separado:** Para futuro trigger de ingesta desde el frontend (subida de PDFs privados). No se implementa en Fase 2.
+- **Capas separadas (domain/application/infrastructure)** tras el refactor 007 + P1/P2. Regla de dependencia: `application` depende de `application/ports/`, nunca de `infrastructure/` ni `lib/`.
+- **Sin clases, patron funcional:** VOs como *branded types + smart constructors*; puertos como interfaces TS; casos de uso como funciones con `Deps` inyectadas.
+- **Un solo endpoint `/chat`:** Preguntas generales y calculos salariales comparten el mismo flujo RAG. El router (`use-case-router`) valida el `ChatCommand` y despacha segun `QueryIntent`.
+- **`lib/` se conserva** como capa cruda porque la consumen las 6 Edge Functions distintas; los adapters de `infrastructure/` son thin wrappers sobre ella.
 
 ---
 

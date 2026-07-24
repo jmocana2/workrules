@@ -110,8 +110,8 @@ curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/chat' \
 ## Archivos relacionados
 
 - `index.ts` - Punto de entrada de la funcion
-- `../_shared/core/chat/types.ts` - Definicion de tipos
-- `../_shared/core/chat/handlers.ts` - Logica de validacion y procesamiento
+- `../_shared/application/chat/types.ts` - Definicion de tipos
+- `../_shared/application/chat/handlers.ts` - Logica de validacion y procesamiento
 - `../_shared/lib/cors.ts` - Configuracion CORS
 
 ## Streaming (futuro)

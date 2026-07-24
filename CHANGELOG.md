@@ -10,6 +10,49 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ---
 
+## [0.11.0] — 2026-07-24
+
+Refactor mayor de arquitectura del backend: separación clara de capas (Domain / Application / Infrastructure) con puertos hexagonales y Value Objects de dominio.
+
+### Añadido
+- **Capa de dominio** (`supabase/functions/_shared/domain/`):
+  - `Result<T, E>` para manejo funcional de errores sin excepciones.
+  - Value Objects como *branded types + smart constructors*: `ConvenioId`, `UserId`, `SessionId`, `HorasSemanales`, `HorasExtraAnuales`, `HorasNocturnas`, `AntiguedadAnos`, `ImporteEuros`, `SalarioBruto`, `Jornada`, `QueryIntent`, `DataState`.
+  - Módulo `labor-law/` con `LEGAL_LIMITS` (Art. 34.1 / 35.2 ET) y `SMI_2026` extraídos del clasificador.
+  - Anti-corruption layer `Perfil` / `VariableCritica` / `CategoriaProfesional` frente al JSON del indexer n8n.
+  - Agregado de entrada `ChatCommand` + `input-mapper` (DTO HTTP → VO validado) con `InvalidChatInput` tipado.
+- **Capa de aplicación con puertos hexagonales** (`supabase/functions/_shared/application/ports/`): interfaces neutrales `ChunkRepository`, `SemanticCacheStore`, `LlmChatClient`, `EmbeddingClient`, `QuotaService`, `ChatHistoryRepository`, `PerfilRepository`, `ConvenioRepository` con DTOs propios (`RetrievedChunk`, `ConvenioSummary`, `QuotaStatus`, `CacheHit`, `LlmChatRequest`).
+- **Capa de infraestructura** (`supabase/functions/_shared/infrastructure/`) con adapters concretos por proveedor (`supabase/`, `anthropic/`, `openai/`) que implementan los puertos delegando en `lib/`.
+- **Validación en el router** (`command-validator.ts`): `classifyAndExecute` invoca `toChatCommand` antes de cuota/cache/RAG y responde `invalid_data` con `reason` tipado (p. ej. `horasSemanales_below_minimum`, `not_uuid`, `completa_con_horas_bajas`, `horas_nocturnas_exceden_base_anual`).
+- Red de seguridad `extracted-variables-validator.ts` para el path natural-language de `calculate-salary`.
+- Skill de convenciones de estilo para frontend (`.claude/skills/frontend-coding-style/`).
+
+### Cambiado
+- **Reorganización de capas backend**: `_shared/core/chat/` → `_shared/application/chat/`. Los use cases (`ask-question`, `calculate-salary`) ahora reciben `ChatCommand` validado en lugar del `ChatRequest` crudo y dependen exclusivamente de puertos, no de tipos de infraestructura.
+- Router pre-fetchea el `Perfil` e inyecta a los use cases (`perfil` reutilizado sin doble lectura).
+- `unpackChatCommand` centraliza el desempaquetado de VOs a primitivos en un único punto (eliminado el `as unknown as string` disperso).
+- `data-classifier.ts`: reducido de 402 a 251 líneas tras mover invariantes a VOs; `checkInvalidVariables` y `checkConflicts` retirados del flujo principal.
+- `ImporteEuros`: redondeo bancario mejorado y heurística de parsing es-ES (`1.234` vs `12.34`).
+- Validación de `pregunta` y `convenio_id` (longitud máxima) en el borde HTTP.
+- Cálculo SMI enriquecido con contexto de contratos a tiempo parcial.
+
+### Corregido
+- `mapInvalid` incluye contexto y `reason` legible para el frontend.
+- Límites de `horasSemanales` y `horasExtraAnuales` alineados con los límites de producto.
+
+### Documentación
+- Nuevo consolidado [`docs/arquitectura/arquitectura-software.md`](docs/arquitectura/arquitectura-software.md) con la arquitectura front + back post-refactor, regla de dependencias, catálogo de VOs y deuda técnica.
+- Actualizado `docs/arquitectura/arquitectura-back.md` §4 con la nueva estructura de carpetas.
+- Actualizado `CLAUDE.md` con la organización hexagonal (`domain/`, `application/ports/`, `infrastructure/`, `lib/`) y las excepciones de dependencia toleradas.
+- Nuevo `docs/refactor/007-domain-value-objects.md` con el plan y estado por fases (0–8a completas, 8b/9 diferidas).
+- Ampliado `TODO.md` con la deuda pendiente (fase 8b, partir `lib/supabase.ts`, consolidar puertos duplicados, errores de dominio, extraer config de modelo).
+- Eliminados los md de análisis intermedios ya consolidados: `docs/domain-errors-events-clean-architecture.md`, `docs/arquitectura/clean-architecture-analysis.md`, `docs/arquitectura/use-cases-e-infraestructura-analysis.md`.
+
+### Tests
+- Suite Deno: **463 tests verdes** cubriendo VOs, mapeo `ChatCommand`, validación de router y adapters.
+
+---
+
 ## [0.10.0] — 2026-07-17
 
 Refactor mayor aplicando SRP y Clean Architecture al módulo de chat (frontend y edge functions).
@@ -105,4 +148,4 @@ Refactor mayor aplicando SRP y Clean Architecture al módulo de chat (frontend y
 
 ---
 
-**Última actualización**: 2026-07-17
+**Última actualización**: 2026-07-24

@@ -57,7 +57,7 @@ export function mapSpecialStateToUi(
     case "incomplete":
       return mapIncomplete(event.payload, ctx);
     case "invalid":
-      return mapInvalid(event.payload);
+      return mapInvalid(event.payload, ctx);
     case "smi_alert":
       return mapSmiAlert(event.payload);
     case "conflicting":
@@ -107,6 +107,7 @@ function mapIncomplete(
 
 function mapInvalid(
   payload: Record<string, unknown>,
+  ctx: SpecialStateMapperContext,
 ): SpecialStateUiResult | null {
   const raw = payload as {
     message?: string;
@@ -120,10 +121,9 @@ function mapInvalid(
   if (!first) return null;
 
   const alertPayload: AlertInvalidDataPayload = {
-    field: first.name,
+    field: ctx.humanize(first.name),
     value: first.value,
-    limit: first.reason,
-    legalReference: raw.message,
+    limit: describeReason(first.reason),
   };
 
   return {
@@ -134,6 +134,50 @@ function mapInvalid(
     },
   };
 }
+
+/**
+ * Traduce el `reason` code estable emitido por el backend
+ * (`<field>_<kind>`) a un texto humano legible para el usuario.
+ * Devuelve undefined cuando no hay una explicación corta útil (en ese caso
+ * el componente omite la cláusula "pero ...").
+ */
+function describeReason(reason: string): string | undefined {
+  return REASON_DESCRIPTIONS[reason];
+}
+
+const REASON_DESCRIPTIONS: Record<string, string> = {
+  // horasSemanales
+  horasSemanales_above_product_max: "el máximo aceptado es 40 horas por semana",
+  horasSemanales_below_minimum: "el mínimo aceptado es 1 hora por semana",
+  horasSemanales_not_half_hour_step: "debe ser un múltiplo de 0,5 horas",
+  horasSemanales_not_finite: "debe ser un número válido",
+
+  // horasExtra (VO: horasExtraAnuales)
+  horasExtraAnuales_above_product_max: "el máximo aceptado son 80 horas al año",
+  horasExtraAnuales_below_minimum: "no puede ser negativo",
+  horasExtraAnuales_not_integer: "debe ser un número entero de horas",
+  horasExtraAnuales_not_finite: "debe ser un número válido",
+
+  // horasNocturnas
+  horasNocturnas_below_minimum: "no puede ser negativo",
+  horasNocturnas_not_finite: "debe ser un número válido",
+  horas_nocturnas_exceden_base_anual:
+    "las horas nocturnas superan el tope anual según las horas semanales indicadas",
+
+  // antiguedadAnos
+  antiguedadAnos_above_maximum: "el máximo aceptado son 50 años",
+  antiguedadAnos_below_minimum: "no puede ser negativo",
+  antiguedadAnos_not_half_year_step: "debe ser un múltiplo de 0,5 años",
+  antiguedadAnos_not_finite: "debe ser un número válido",
+
+  // jornada
+  completa_con_horas_bajas:
+    "una jornada completa requiere al menos 35 horas semanales",
+  parcial_con_horas_completas:
+    "una jornada parcial no puede alcanzar las 40 horas semanales",
+  jornada_tipo_desconocido:
+    "el tipo de jornada debe ser 'completa' o 'parcial'",
+};
 
 function mapSmiAlert(
   payload: Record<string, unknown>,

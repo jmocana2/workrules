@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/release-v0.10.0-555555" alt="release" />
+  <img src="https://img.shields.io/badge/release-v0.11.0-555555" alt="release" />
   <img src="https://img.shields.io/badge/License-PolyForm_NC_1.0-blue" alt="License" />
   <img src="https://img.shields.io/badge/Node-20+-339933?logo=node.js&logoColor=white" alt="Node 20+" />
 </p>
@@ -156,11 +156,15 @@ workrules/
 │
 ├── supabase/
 │   ├── functions/
-│   │   ├── chat/                     # Endpoint POST /chat (clasifica y enruta)
+│   │   ├── chat/                     # Endpoint POST /chat (composition root)
 │   │   ├── webhook-pdf/              # Webhook de ingesta de convenios
-│   │   └── _shared/
-│   │       ├── core/chat/            # Casos de uso: ask-question, calculate-salary
-│   │       └── lib/                  # Wrappers Supabase, OpenAI, Anthropic, CORS
+│   │   └── _shared/                  # Backend Clean Architecture + Hexagonal
+│   │       ├── domain/               # 🟢 VOs, labor-law, perfil, chat-command, result
+│   │       ├── application/          # 🔵 Use cases + puertos hexagonales
+│   │       │   ├── ports/            #    interfaces neutrales + DTOs
+│   │       │   └── chat/             #    ask-question, calculate-salary, routing, rag
+│   │       ├── infrastructure/       # 🟠 Adapters: supabase/, anthropic/, openai/
+│   │       └── lib/                  # SDK clients crudos + utilidades genéricas
 │   └── migrations/                   # Migraciones SQL
 │
 ├── database/                         # Schema + funciones SQL (búsqueda vectorial)
