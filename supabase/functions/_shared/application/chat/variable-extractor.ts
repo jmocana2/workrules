@@ -208,8 +208,7 @@ function extractFromValoresPosibles(
     // Buscar los `valores_posibles` indexados con varias normalizaciones del
     // nombre, porque el indexer no siempre normaliza igual.
     const normalizedCritica = normalizeVariableName(varCritica);
-    const candidates =
-      valoresPosibles[varCritica] ??
+    const candidates = valoresPosibles[varCritica] ??
       valoresPosibles[normalizedCritica] ??
       valoresPosibles[normalizedCritica.replace(/_/g, " ")] ??
       valoresPosibles[key];
@@ -262,7 +261,7 @@ function findCategoria(
   message: string,
   categorias: Array<{ nombre: string; sinonimos?: string[] }>,
 ): string | undefined {
-  const lowerMessage = message.toLowerCase();
+  const lowerMessage = normalizeVariableName(message).replace(/_/g, " ");
 
   // Ordenar por longitud descendente (match mas especifico primero)
   const sorted = [...categorias].sort(
@@ -271,14 +270,24 @@ function findCategoria(
 
   for (const cat of sorted) {
     // Buscar en nombre
-    if (lowerMessage.includes(cat.nombre.toLowerCase())) {
+    if (
+      matchesAsWord(
+        lowerMessage,
+        normalizeVariableName(cat.nombre).replace(/_/g, " "),
+      )
+    ) {
       return cat.nombre;
     }
 
     // Buscar en sinónimos
     if (cat.sinonimos && cat.sinonimos.length > 0) {
       for (const sinonimo of cat.sinonimos) {
-        if (lowerMessage.includes(sinonimo.toLowerCase())) {
+        if (
+          matchesAsWord(
+            lowerMessage,
+            normalizeVariableName(sinonimo).replace(/_/g, " "),
+          )
+        ) {
           return cat.nombre;
         }
       }
@@ -287,7 +296,6 @@ function findCategoria(
 
   return undefined;
 }
-
 // ============================================
 // FUNCIONES PRINCIPALES
 // ============================================

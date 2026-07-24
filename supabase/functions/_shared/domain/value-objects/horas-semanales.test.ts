@@ -32,10 +32,10 @@ Deno.test("makeHorasSemanales - negativo", () => {
   });
 });
 
-Deno.test("makeHorasSemanales - por encima del máximo legal (40.5)", () => {
+Deno.test("makeHorasSemanales - por encima del máximo de producto (40.5)", () => {
   assertEquals(makeHorasSemanales(40.5), {
     ok: false,
-    error: { kind: "above_legal_max", max: 40, source: "Art. 34.1 ET" },
+    error: { kind: "above_product_max", max: 40 },
   });
 });
 

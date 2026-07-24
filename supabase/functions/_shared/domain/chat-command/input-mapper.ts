@@ -346,6 +346,7 @@ export function toChatCommand(
 
     variables = {
       categoria: mapped.value.categoria,
+      horasSemanales: mapped.value.horasSemanales,
       jornada: mapped.value.jornada,
       horasExtraAnuales: mapped.value.horasExtraAnuales,
       horasNocturnas: mapped.value.horasNocturnas,

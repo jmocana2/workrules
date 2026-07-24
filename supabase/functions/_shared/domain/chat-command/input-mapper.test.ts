@@ -151,14 +151,14 @@ Deno.test("toChatCommand - horas_semanales negativas", () => {
   }
 });
 
-Deno.test("toChatCommand - horas_semanales fracción no admitida", () => {
+Deno.test("toChatCommand - horas_semanales por encima del máximo de producto", () => {
   const r = toChatCommand(
     { ...baseRequest(), variables: { horasSemanales: 40.5 } },
     PERFIL,
   );
   assertEquals(r.ok, false);
   if (!r.ok && r.error.kind === "horas_semanales") {
-    assertEquals(r.error.cause.kind, "above_legal_max");
+    assertEquals(r.error.cause.kind, "above_product_max");
   }
 });
 

@@ -8,6 +8,7 @@ import { AntiguedadAnos } from "../value-objects/antiguedad-anos.ts";
 import { ConvenioId } from "../value-objects/convenio-id.ts";
 import { HorasExtraAnuales } from "../value-objects/horas-extra-anuales.ts";
 import { HorasNocturnas } from "../value-objects/horas-nocturnas.ts";
+import { HorasSemanales } from "../value-objects/horas-semanales.ts";
 import { Jornada } from "../value-objects/jornada.ts";
 import { QueryIntent } from "../value-objects/query-intent.ts";
 import { SessionId } from "../value-objects/session-id.ts";
@@ -15,6 +16,11 @@ import { UserId } from "../value-objects/user-id.ts";
 
 export type ExtractedVariablesVO = {
   readonly categoria?: string;
+  /**
+   * Horas semanales sueltas: se preservan aunque no venga `jornada` tipo.
+   * Cuando ambos vienen, `jornada.horas === horasSemanales`.
+   */
+  readonly horasSemanales?: HorasSemanales;
   readonly jornada?: Jornada;
   readonly horasExtraAnuales?: HorasExtraAnuales;
   readonly horasNocturnas?: HorasNocturnas;

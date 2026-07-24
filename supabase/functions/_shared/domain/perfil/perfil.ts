@@ -37,8 +37,16 @@ export type PerfilError =
   | { kind: "invalid_type" }
   | { kind: "variables_criticas_missing" }
   | { kind: "variables_criticas_empty" }
-  | { kind: "variable_critica_invalid"; index: number; cause: VariableCriticaError }
-  | { kind: "categoria_invalid"; index: number; cause: CategoriaProfesionalError }
+  | {
+    kind: "variable_critica_invalid";
+    index: number;
+    cause: VariableCriticaError;
+  }
+  | {
+    kind: "categoria_invalid";
+    index: number;
+    cause: CategoriaProfesionalError;
+  }
   | { kind: "categoria_duplicated"; nombre: string }
   | { kind: "valores_posibles_invalid_type" }
   | {
@@ -126,7 +134,7 @@ function buildValoresPosibles(
         return err({ kind: "valor_posible_invalid_value", clave, index: i });
       }
     }
-    out[clave] = valores as string[];
+    out[claveNormalizada] = valores as string[];
   }
   return ok(out);
 }

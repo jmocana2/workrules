@@ -39,7 +39,7 @@ function validateSinonimos(
       return err({ kind: "sinonimo_empty", index: i });
     }
   }
-  return ok(raw as string[]);
+  return ok(raw.map((s) => (s as string).trim()));
 }
 
 function validateSalarios(

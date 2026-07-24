@@ -35,8 +35,12 @@ export function voToExtractedVariables(
     }
   }
   if (vo.categoria !== undefined) out.categoria = vo.categoria;
+  if (vo.horasSemanales !== undefined) {
+    out.horasSemanales = vo.horasSemanales as unknown as number;
+  }
   if (vo.jornada !== undefined) {
     out.jornada = vo.jornada.tipo;
+    // jornada.horas === vo.horasSemanales por construcción cuando ambos vienen.
     out.horasSemanales = vo.jornada.horas as unknown as number;
   }
   if (vo.horasExtraAnuales !== undefined) {

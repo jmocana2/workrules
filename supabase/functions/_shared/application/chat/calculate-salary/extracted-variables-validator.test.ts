@@ -15,7 +15,7 @@ Deno.test("validateExtractedFromText - horasSemanales > 40 rechazado", () => {
   const invalid = validateExtractedFromText({ horasSemanales: 50 });
   assertEquals(invalid.length, 1);
   assertEquals(invalid[0].name, "horasSemanales");
-  assertEquals(invalid[0].reason, "horasSemanales_above_legal_max");
+  assertEquals(invalid[0].reason, "horasSemanales_above_product_max");
 });
 
 Deno.test("validateExtractedFromText - horasSemanales < 1 rechazado", () => {
@@ -26,7 +26,7 @@ Deno.test("validateExtractedFromText - horasSemanales < 1 rechazado", () => {
 Deno.test("validateExtractedFromText - horasExtra > 80 rechazado", () => {
   const invalid = validateExtractedFromText({ horasExtra: 100 });
   assertEquals(invalid[0].name, "horasExtra");
-  assertEquals(invalid[0].reason, "horasExtraAnuales_above_legal_max");
+  assertEquals(invalid[0].reason, "horasExtraAnuales_above_product_max");
 });
 
 Deno.test("validateExtractedFromText - horasExtra negativa rechazado", () => {

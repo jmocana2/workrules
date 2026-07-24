@@ -37,7 +37,7 @@ Deno.test("makeHorasExtraAnuales - negativo", () => {
 Deno.test("makeHorasExtraAnuales - por encima del máximo (81)", () => {
   assertEquals(makeHorasExtraAnuales(81), {
     ok: false,
-    error: { kind: "above_legal_max", max: 80, source: "Art. 35.2 ET" },
+    error: { kind: "above_product_max", max: 80 },
   });
 });
 

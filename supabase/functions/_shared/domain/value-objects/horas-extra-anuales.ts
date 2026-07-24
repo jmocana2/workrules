@@ -11,13 +11,20 @@ export type HorasExtraAnualesError =
   | { kind: "not_finite" }
   | { kind: "not_integer" }
   | { kind: "below_minimum"; min: 0 }
-  | { kind: "above_legal_max"; max: number; source: "Art. 35.2 ET" };
+  | { kind: "above_product_max"; max: number };
 
 /**
  * Construye `HorasExtraAnuales` validando:
  * - Número finito.
  * - Entero (no se pactan fracciones de hora extra a nivel anual).
- * - Rango `[0, LEGAL_LIMITS.horasExtraAnuales]` (Art. 35.2 ET).
+ * - Rango `[0, LEGAL_LIMITS.horasExtraAnuales]`.
+ *
+ * NOTA: El máximo NO es un cap legal duro sobre el input bruto del usuario.
+ * El Art. 35.2 ET fija 80h anuales sobre las horas extras **computables**:
+ * excluye las compensadas con descanso equivalente dentro de 4 meses
+ * (Art. 35.1 ET) y las de fuerza mayor / prevención / reparación de siniestros
+ * (Art. 35.3 ET). Con solo `n` no podemos afirmar violación legal — este cap
+ * actúa como restricción de producto para acotar inputs razonables.
  */
 export function makeHorasExtraAnuales(
   n: number,
@@ -27,9 +34,8 @@ export function makeHorasExtraAnuales(
   if (n < 0) return err({ kind: "below_minimum", min: 0 });
   if (n > LEGAL_LIMITS.horasExtraAnuales) {
     return err({
-      kind: "above_legal_max",
+      kind: "above_product_max",
       max: LEGAL_LIMITS.horasExtraAnuales,
-      source: "Art. 35.2 ET",
     });
   }
   return ok(n as HorasExtraAnuales);
