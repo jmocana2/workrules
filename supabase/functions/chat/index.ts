@@ -14,6 +14,7 @@ import {
 } from '../_shared/application/chat/handlers.ts';
 import { buildCorsHeaders } from '../_shared/lib/cors.ts';
 import { countRecentChatRequests } from '../_shared/lib/supabase.ts';
+import { supabasePerfilRepository } from '../_shared/infrastructure/supabase/perfil-repository.ts';
 
 // Anti-ráfaga: máximo de preguntas por ventana corta
 const RATE_LIMIT_WINDOW_SECONDS = 60;
@@ -109,7 +110,7 @@ async function handleChatRequest(
   const { request, errorResponse } = await parseAndValidateRequest(req, jsonHeaders);
   if (errorResponse) return errorResponse;
 
-  const result = await classifyAndExecute(request!, userId);
+  const result = await classifyAndExecute(request!, userId, supabasePerfilRepository);
 
   if (result.type === 'stream') {
     return handleStreamResponse(

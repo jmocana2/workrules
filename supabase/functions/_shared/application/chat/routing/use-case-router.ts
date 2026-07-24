@@ -10,17 +10,21 @@ import { isShowRangesRequest } from "../variable-extractor.ts";
 import type { ChatUseCaseResult } from "../http/result-mapper.ts";
 import { transformRangesRequest } from "./ranges-transformer.ts";
 import { validateChatCommand } from "./command-validator.ts";
-import { supabasePerfilRepository } from "../../../infrastructure/supabase/perfil-repository.ts";
+import type { PerfilRepository } from "../../ports/perfil-repository.ts";
 
 type PerfilResult = Record<string, unknown> | null;
 
 /**
  * Clasifica la consulta y ejecuta el UseCase apropiado.
  * Cascada con orden significativo: mode override → ranges → salary heurístico → general.
+ *
+ * `perfilRepository` se inyecta por DI para respetar la frontera
+ * application/infrastructure: el router no importa adapters concretos.
  */
 export async function classifyAndExecute(
   request: ChatRequest,
   userId: string,
+  perfilRepository: PerfilRepository,
 ): Promise<ChatUseCaseResult> {
   // Refactor 007 fase 8a: validación de dominio antes de tocar cuota/cache/RAG.
   // Fase 8b etapa 3: el `ChatCommand` validado se propaga a los use cases.
@@ -29,7 +33,7 @@ export async function classifyAndExecute(
   const command = validation.command;
 
   // Fase 8b etapa 2: fetch perfil aquí para inyectarlo en el use case.
-  const perfilPromise: Promise<PerfilResult> = supabasePerfilRepository
+  const perfilPromise: Promise<PerfilResult> = perfilRepository
     .getByConvenio(request.convenio_id);
 
   if (request.mode === "salary") {
