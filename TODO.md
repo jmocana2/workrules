@@ -44,6 +44,23 @@ Si n8n falla (LlamaParse timeout, Claude API error, etc.):
 
 ## 🏗️ Ingeniería del software
 
+### Deuda pendiente de arquitectura back (post refactor 007 + P1/P2)
+
+Detalle y contexto en [`docs/arquitectura/arquitectura-software.md`](docs/arquitectura/arquitectura-software.md) §5.1.
+
+- **Fase 8b refactor 007** — migrar use cases a firma completa `ChatCommand` y eliminar `data-classifier.checkInvalidVariables`. Requiere renovar fixtures a UUIDs válidos y mover extracción NL de `calculate-salary` al pipeline de VOs. Riesgo alto, sesión dedicada.
+- **P3 — partir `lib/supabase.ts` (834 líneas)** en repos por agregado dentro de `infrastructure/supabase/`. Hoy los adapters son thin wrappers.
+- **Consolidar puertos duplicados** entre `AskQuestionDeps` y `CalculateSalaryDeps` (10+ métodos repetidos).
+- **P2 evolutivo — puertos en VOs**, no en primitivos. Eliminar el desempaquetado de `unpack-command.ts`.
+- **Extraer decisiones de modelo/temperature** de `lib/anthropic.ts` a `application/config/`.
+- **Eliminar import cruzado** `ask-question` ↔ `calculate-salary/variable-adapters.ts` (mover a `rag/` compartido o a dominio).
+- **Errores de dominio propios** (`QuotaExceededError`, `ConvenioNotFoundError`) y traducción en adapters. Hoy `AnthropicError` / `RepositoryError` cruzan a los use cases.
+- **`prompts.ts`** — separar `normalizePerfilContexto` (dominio) de `buildSystemPrompt` (infra LLM).
+- **Domain events** — pospuesto hasta ≥2–3 eventos reales con múltiples consumidores.
+- **`domain/errors` unificado** — pospuesto hasta detectar patrones repetidos.
+
+
+
 ### Refactors SRP pendientes del audit `docs/refactor/001-srp-audit.md`
 
 Tras cerrar el doc [`006-useChatPage-srp.md`](docs/refactor/006-useChatPage-srp.md) (violación 🔴 #5 del audit), quedan pendientes las violaciones 🟡 #6 y #7:

@@ -21,8 +21,8 @@
 | 6 – Intent + StateMachine | ✅ Completa | `QueryIntent` + `DataState.fromChecks` |
 | 7 – ChatCommand | ✅ Completa | `toChatCommand` + `InvalidChatInput` tipado |
 | 8a – Router validator | ✅ Completa | **Primer cambio de comportamiento**: `classifyAndExecute` valida con `toChatCommand` antes de cuota/cache/RAG |
-| 8b – Firma `ChatCommand` en use cases | ⏸ Diferida | Requiere mover fetch de perfil, migrar `variable-adapters`, actualizar tests de use cases |
-| 9 – Colapsar `data-classifier` | ⏸ Parcial | `checkInvalidVariables` y regla jornada de `checkConflicts` conservadas con comentarios que señalan la duplicidad; eliminación real pendiente de 8b |
+| 8b – Firma `ChatCommand` en use cases | ✅ Completa | Router pre-fetchea perfil e inyecta; use cases reciben `{ command, perfil, preguntaOverride? }`. Helper `voToExtractedVariables` como borde de entrada al pipeline legacy |
+| 9 – Colapsar `data-classifier` | ✅ Completa | `checkInvalidVariables` y `checkConflicts` eliminados. Red de seguridad para path NL en `calculate-salary/extracted-variables-validator.ts` reusando VOs. `data-classifier.ts`: 402 → 251 líneas |
 
 **Suite completa:** 463 tests deno verdes, `pnpm lint` limpio.
 
@@ -72,10 +72,10 @@ supabase/functions/_shared/
       chat-command.ts                  # VO agregado: request DTO → command validado
       input-mapper.ts                  # ChatRequest → Result<ChatCommand, InvalidChatInput>
       index.ts
-  core/chat/                           # use cases importan desde domain/
+  application/chat/                    # use cases importan desde domain/
 ```
 
-Regla de dependencias: **`domain/` no importa nada de `core/`, `lib/` ni `http/`**. Sólo Deno stdlib y otros módulos de `domain/`.
+Regla de dependencias: **`domain/` no importa nada de `application/`, `infrastructure/`, `lib/` ni `http/`**. Sólo Deno stdlib y otros módulos de `domain/`.
 
 ---
 
@@ -89,7 +89,7 @@ Diez fases pequeñas, cada una es un PR independiente y no rompe comportamiento 
 - [x] Añadir tests unitarios de `Result` (Deno test) — 13 tests.
 - [x] Documentar en el propio `result.ts` que **no se lanzan excepciones desde `domain/`**: todo error se devuelve.
 
-**Criterio de éxito:** `deno test domain/result.test.ts` verde. Cero imports desde `core/`.
+**Criterio de éxito:** `deno test domain/result.test.ts` verde. Cero imports desde `application/`, `infrastructure/` o `lib/`.
 
 ### Fase 1 — Mover política legal a `domain/labor-law/` ✅
 
