@@ -26,13 +26,24 @@ Deno.test("makeImporteEuros - redondeo bancario, empate a par bajo (1.005 → 1.
 });
 
 Deno.test("makeImporteEuros - redondeo bancario, empate a par alto (1.015 → 1.02)", () => {
-  const r = makeImporteEuros(1.015);
-  assertEquals(r.ok, true);
-  // Nota: floating-point puede desplazar 1.015 → 1.01 en algunas plataformas
-  // por el error del binario. Validamos que el resultado es un múltiplo de 0.01.
-  if (r.ok) {
-    assertEquals(Math.round(r.value * 100) / 100, r.value);
-  }
+  assertEquals(makeImporteEuros(1.015), {
+    ok: true,
+    value: 1.02 as ImporteEuros,
+  });
+});
+
+Deno.test("makeImporteEuros - redondeo bancario, empate a par (1.025 → 1.02)", () => {
+  assertEquals(makeImporteEuros(1.025), {
+    ok: true,
+    value: 1.02 as ImporteEuros,
+  });
+});
+
+Deno.test("makeImporteEuros - redondeo bancario, empate a par alto (1.035 → 1.04)", () => {
+  assertEquals(makeImporteEuros(1.035), {
+    ok: true,
+    value: 1.04 as ImporteEuros,
+  });
 });
 
 Deno.test("makeImporteEuros - negativo rechazado", () => {
@@ -106,5 +117,33 @@ Deno.test("makeImporteEurosFromEsString - texto no numérico", () => {
   assertEquals(makeImporteEurosFromEsString("mil euros"), {
     ok: false,
     error: { kind: "unparseable_es_string", raw: "mil euros" },
+  });
+});
+
+Deno.test("makeImporteEurosFromEsString - '1.2' se interpreta como decimal en-US (1.20), no como miles corruptos", () => {
+  assertEquals(makeImporteEurosFromEsString("1.2"), {
+    ok: true,
+    value: 1.2 as ImporteEuros,
+  });
+});
+
+Deno.test("makeImporteEurosFromEsString - '1.2345' es decimal en-US y se redondea a 1.23", () => {
+  assertEquals(makeImporteEurosFromEsString("1.2345"), {
+    ok: true,
+    value: 1.23 as ImporteEuros,
+  });
+});
+
+Deno.test("makeImporteEurosFromEsString - puntos consecutivos rechazados (1..23)", () => {
+  assertEquals(makeImporteEurosFromEsString("1..23"), {
+    ok: false,
+    error: { kind: "unparseable_es_string", raw: "1..23" },
+  });
+});
+
+Deno.test("makeImporteEurosFromEsString - grupo de miles malformado rechazado (12.34.56)", () => {
+  assertEquals(makeImporteEurosFromEsString("12.34.56"), {
+    ok: false,
+    error: { kind: "unparseable_es_string", raw: "12.34.56" },
   });
 });

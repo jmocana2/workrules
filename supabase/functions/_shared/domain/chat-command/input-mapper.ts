@@ -258,7 +258,7 @@ function mapVariables(
   const jornada = mapJornada(raw.jornada, hs.value);
   if (!jornada.ok) return jornada;
 
-  const he = mapHorasExtra(raw.horasExtra);
+  const he = mapHorasExtra(raw.horasExtra ?? raw.horasExtraAnuales);
   if (!he.ok) return he;
 
   const hn = mapHorasNocturnas(raw.horasNocturnas);

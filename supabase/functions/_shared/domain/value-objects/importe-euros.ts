@@ -14,18 +14,39 @@ export type ImporteEurosError =
   | { kind: "unparseable_es_string"; raw: string };
 
 /**
- * Redondeo bancario (half-to-even, IEEE 754) a 2 decimales.
+ * Redondeo bancario (half-to-even) a 2 decimales.
  * 1.005 -> 1.00 ; 1.015 -> 1.02 ; 1.025 -> 1.02 ; 1.035 -> 1.04
+ *
+ * Opera sobre la representación decimal exacta del número (vía string) para
+ * evitar sesgos de coma flotante binaria: `1.015 * 100` en IEEE-754 no es
+ * `101.5` sino `101.49999999999999`, lo que rompería el criterio de empate.
  */
 function roundHalfToEven(n: number): number {
-  const scaled = n * 100;
-  const floor = Math.floor(scaled);
-  const diff = scaled - floor;
+  // Representación decimal con precisión suficiente para exponer el 5 de empate
+  // antes de que el ruido binario lo desplace. 12 decimales cubren cualquier
+  // importe monetario razonable sin arrastrar artefactos IEEE-754.
+  const [intPart, fracPartRaw = ""] = n.toFixed(12).split(".");
+  const fracPart = fracPartRaw.padEnd(3, "0");
 
-  if (diff < 0.5) return floor / 100;
-  if (diff > 0.5) return (floor + 1) / 100;
-  // Empate exacto: elegir el par
-  return (floor % 2 === 0 ? floor : floor + 1) / 100;
+  const keepStr = intPart + fracPart.slice(0, 2);
+  const nextDigit = Number(fracPart[2]);
+  const rest = fracPart.slice(3);
+  let restNonZero = false;
+  for (let i = 0; i < rest.length; i++) {
+    if (rest[i] !== "0") {
+      restNonZero = true;
+      break;
+    }
+  }
+
+  let cents = Number(keepStr);
+  if (nextDigit > 5 || (nextDigit === 5 && restNonZero)) {
+    cents += 1;
+  } else if (nextDigit === 5 && !restNonZero) {
+    // Empate exacto: elegir el par
+    if (cents % 2 !== 0) cents += 1;
+  }
+  return cents / 100;
 }
 
 /**
@@ -53,34 +74,23 @@ export function makeImporteEurosFromEsString(
     return err({ kind: "unparseable_es_string", raw });
   }
 
-  // Formatos aceptados:
-  //   1234        -> "1234"
-  //   1234,56     -> "1234.56"
-  //   1234.56     -> "1234.56"        (formato en-US también admitido)
-  //   1.234,56    -> "1234.56"        (miles con punto)
-  //   1.234.567,8 -> "1234567.8"
-  const hasComma = trimmed.includes(",");
-  const hasDot = trimmed.includes(".");
+  // Formatos aceptados (validados con gramática explícita, no heurística):
+  //   1234        -> "1234"                 (us/entero)
+  //   1234,56     -> "1234.56"              (es-ES sin miles)
+  //   1234.56     -> "1234.56"              (en-US decimal)
+  //   1.234,56    -> "1234.56"              (es-ES con miles)
+  //   1.234.567,8 -> "1234567.8"            (es-ES con miles)
+  // Rechazados: "1.2", "1.2345", "1..23", "1.23.45", etc.
+  const esFormat = /^-?(?:\d{1,3}(?:\.\d{3})+|\d+)(?:,\d+)?$/;
+  const usFormat = /^-?\d+(?:\.\d+)?$/;
 
   let normalized: string;
-  if (hasComma) {
-    // Coma es decimal; los puntos son separadores de miles.
+  if (esFormat.test(trimmed)) {
+    // Coma decimal opcional; los puntos son separadores de miles.
     normalized = trimmed.replace(/\./g, "").replace(",", ".");
-  } else if (hasDot) {
-    // Solo puntos: ambiguo entre miles (es-ES) y decimal (en-US).
-    // Heurística: si hay más de un punto o el punto no deja exactamente 2
-    // decimales, es separador de miles.
-    const parts = trimmed.split(".");
-    if (parts.length > 2 || parts[parts.length - 1].length !== 2) {
-      normalized = trimmed.replace(/\./g, "");
-    } else {
-      normalized = trimmed;
-    }
-  } else {
+  } else if (usFormat.test(trimmed)) {
     normalized = trimmed;
-  }
-
-  if (!/^-?\d+(\.\d+)?$/.test(normalized)) {
+  } else {
     return err({ kind: "unparseable_es_string", raw });
   }
 
