@@ -50,10 +50,14 @@ export function normalizeNombre(raw: string): string {
 }
 
 function classify(nombreNormalizado: string): ClaseVariable {
-  const legible = nombreNormalizado.replace(/_/g, " ");
-  return IDENTIFYING_KEYWORDS.some((kw) => legible.includes(kw))
-    ? "identificadora"
-    : "moduladora";
+  // Match por tokens completos, no por substring: evita que "tarea" matchee
+  // "area" o "impuesto"/"presupuesto" matcheen "puesto".
+  const tokens = new Set(nombreNormalizado.split("_"));
+  const match = IDENTIFYING_KEYWORDS.some((kw) => {
+    const kwTokens = kw.replace(/\s+/g, "_").split("_");
+    return kwTokens.every((t) => tokens.has(t));
+  });
+  return match ? "identificadora" : "moduladora";
 }
 
 /**

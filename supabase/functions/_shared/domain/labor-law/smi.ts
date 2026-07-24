@@ -16,45 +16,79 @@ export const SMI_2026 = {
 };
 
 /**
+ * Contexto necesario para comparar correctamente el salario con el SMI.
+ *
+ * El SMI publicado (1221 €/mes en 14 pagas) asume jornada completa. Para
+ * contratos a tiempo parcial se prorratea según la ratio de horas efectivas
+ * (Art. 12 ET + RD SMI). Sin este contexto, un salario legalmente correcto
+ * a tiempo parcial se marcaría como infracción.
+ */
+export interface SMIContext {
+  /** Horas semanales pactadas en el contrato. */
+  horasSemanalesContrato: number;
+  /**
+   * Horas semanales de la jornada completa de referencia (habitualmente 40
+   * según convenio/sector). Se usa para calcular la ratio de tiempo parcial.
+   */
+  jornadaCompletaHoras: number;
+}
+
+/**
  * Resultado de la validacion contra SMI
  */
 export interface SMIValidationResult {
-  /** Si el salario es inferior al SMI */
+  /** Si la remuneración anual es inferior al SMI anual prorrateado por jornada */
   belowSMI: boolean;
-  /** Salario calculado */
-  calculatedSalary: number;
-  /** SMI aplicable */
-  smiApplicable: number;
-  /** Diferencia (negativa si esta por debajo) */
+  /** Salario bruto anual calculado (mensual × pagas) */
+  calculatedAnnualSalary: number;
+  /** SMI anual aplicable tras prorratear por ratio de jornada */
+  smiAnnualApplicable: number;
+  /** Ratio jornada aplicada (1 = completa, 0.5 = mitad de jornada, etc.) */
+  jornadaRatio: number;
+  /** Diferencia anual (negativa si esta por debajo) */
   difference: number;
   /** Mensaje para mostrar al usuario si aplica */
   message?: string;
 }
 
 /**
- * Valida si un salario mensual es inferior al SMI
+ * Valida si la remuneración anual de un contrato es inferior al SMI aplicable.
  *
- * @param salarioMensual - Salario bruto mensual calculado
- * @param pagas - Numero de pagas (12 o 14). Por defecto 14
- * @returns Resultado de la validacion
+ * La comparación se hace en términos ANUALES BRUTOS (Art. 27 ET + RD SMI),
+ * prorrateando el SMI por la ratio de jornada cuando el contrato es a tiempo
+ * parcial. Sin `context` se asume jornada completa (ratio 1).
  *
- * @example
- * const result = validateAgainstSMI(1100, 14);
- * // result.belowSMI === true
- * // result.message === "El salario calculado (1.100,00€) es inferior al SMI..."
+ * IMPORTANTE: esta validación no incorpora complementos salariales, en especie
+ * ni reglas de compensación específicas del RD; sirve como aviso preventivo,
+ * no como dictamen legal.
+ *
+ * @param salarioMensual - Salario bruto mensual calculado.
+ * @param pagas - Número de pagas (12 o 14). Por defecto 14.
+ * @param context - Contexto de jornada; omitir si es jornada completa.
  */
 export function validateAgainstSMI(
   salarioMensual: number,
   pagas: 12 | 14 = 14,
+  context?: SMIContext,
 ): SMIValidationResult {
-  const smiMensual = pagas === 14 ? SMI_2026.mensual14Pagas : SMI_2026.mensual12Pagas;
-  const difference = salarioMensual - smiMensual;
-  const belowSMI = salarioMensual < smiMensual;
+  const rawRatio = context
+    ? context.horasSemanalesContrato / context.jornadaCompletaHoras
+    : 1;
+  // Los contratos a tiempo completo con horas puntualmente superiores no
+  // aumentan el SMI aplicable — el prorrateo solo baja, nunca sube.
+  const jornadaRatio = Math.min(1, Math.max(0, rawRatio));
+
+  const smiAnnualFullTime = SMI_2026.anual;
+  const smiAnnualApplicable = smiAnnualFullTime * jornadaRatio;
+  const calculatedAnnualSalary = salarioMensual * pagas;
+  const difference = calculatedAnnualSalary - smiAnnualApplicable;
+  const belowSMI = calculatedAnnualSalary < smiAnnualApplicable;
 
   const result: SMIValidationResult = {
     belowSMI,
-    calculatedSalary: salarioMensual,
-    smiApplicable: smiMensual,
+    calculatedAnnualSalary,
+    smiAnnualApplicable,
+    jornadaRatio,
     difference,
   };
 
@@ -62,13 +96,18 @@ export function validateAgainstSMI(
     const formatEuro = (n: number) =>
       n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+    const jornadaNota = jornadaRatio < 1
+      ? ` (prorrateado al ${(jornadaRatio * 100).toFixed(0)}% de jornada)`
+      : "";
+
     result.message =
-      `**Alerta SMI:** El salario calculado (${formatEuro(salarioMensual)}€) ` +
-      `es inferior al Salario Minimo Interprofesional vigente ` +
-      `(${formatEuro(smiMensual)}€/mes en ${pagas} pagas).\n\n` +
-      `Por ley, se debe aplicar el SMI como minimo. ` +
-      `El salario mensual seria de **${formatEuro(smiMensual)}€** brutos.\n\n` +
-      `*Referencia: Art. 27 del Estatuto de los Trabajadores.*`;
+      `**Alerta SMI:** La remuneración anual calculada ` +
+      `(${formatEuro(calculatedAnnualSalary)}€ = ${formatEuro(salarioMensual)}€ × ${pagas} pagas) ` +
+      `es inferior al Salario Mínimo Interprofesional anual aplicable ` +
+      `(${formatEuro(smiAnnualApplicable)}€${jornadaNota}).\n\n` +
+      `Verifique complementos, en especie y reglas de compensación del RD antes ` +
+      `de concluir infracción. *Referencia: Art. 27 del Estatuto de los ` +
+      `Trabajadores y RD SMI vigente.*`;
   }
 
   return result;

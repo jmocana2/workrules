@@ -3,6 +3,7 @@
 export { LEGAL_LIMITS } from "./legal-limits.ts";
 export {
   SMI_2026,
+  type SMIContext,
   type SMIValidationResult,
   validateAgainstSMI,
 } from "./smi.ts";

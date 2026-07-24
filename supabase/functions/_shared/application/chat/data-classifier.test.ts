@@ -216,62 +216,93 @@ Deno.test('SMI_2026 - valores correctos 2026', () => {
   assertEquals(SMI_2026.anual, 17094);
 });
 
-Deno.test('validateAgainstSMI - salario por encima del SMI', () => {
+Deno.test('validateAgainstSMI - salario por encima del SMI (jornada completa)', () => {
   const result = validateAgainstSMI(1500, 14);
 
   assertEquals(result.belowSMI, false);
-  assertEquals(result.calculatedSalary, 1500);
-  assertEquals(result.smiApplicable, 1221);
-  assertEquals(result.difference, 279);
+  assertEquals(result.calculatedAnnualSalary, 21000);
+  assertEquals(result.smiAnnualApplicable, 17094);
+  assertEquals(result.jornadaRatio, 1);
+  assertEquals(result.difference, 3906);
   assertEquals(result.message, undefined);
 });
 
-Deno.test('validateAgainstSMI - salario igual al SMI', () => {
+Deno.test('validateAgainstSMI - salario igual al SMI (jornada completa)', () => {
   const result = validateAgainstSMI(1221, 14);
 
   assertEquals(result.belowSMI, false);
+  assertEquals(result.calculatedAnnualSalary, 17094);
+  assertEquals(result.smiAnnualApplicable, 17094);
   assertEquals(result.difference, 0);
   assertEquals(result.message, undefined);
 });
 
-Deno.test('validateAgainstSMI - salario por debajo del SMI', () => {
+Deno.test('validateAgainstSMI - salario por debajo del SMI (jornada completa)', () => {
   const result = validateAgainstSMI(1100, 14);
 
   assertEquals(result.belowSMI, true);
-  assertEquals(result.calculatedSalary, 1100);
-  assertEquals(result.smiApplicable, 1221);
-  assertEquals(result.difference, -121);
+  assertEquals(result.calculatedAnnualSalary, 15400);
+  assertEquals(result.smiAnnualApplicable, 17094);
+  assertEquals(result.difference, -1694);
   assertEquals(result.message?.includes('Alerta SMI'), true);
-  assertEquals(result.message?.includes('1100') || result.message?.includes('1.100'), true);
-  assertEquals(result.message?.includes('1221') || result.message?.includes('1.221'), true);
   assertEquals(result.message?.includes('Art. 27'), true);
+});
+
+Deno.test('validateAgainstSMI - part-time 50% con salario prorrateado NO viola SMI', () => {
+  // Caso del aviso CodeRabbit: 700€/mes × 14 pagas al 50% de jornada.
+  // SMI anual prorrateado = 17094 * 0.5 = 8547€; salario anual = 700 * 14 = 9800€.
+  const result = validateAgainstSMI(700, 14, {
+    horasSemanalesContrato: 20,
+    jornadaCompletaHoras: 40,
+  });
+
+  assertEquals(result.belowSMI, false);
+  assertEquals(result.jornadaRatio, 0.5);
+  assertEquals(result.smiAnnualApplicable, 8547);
+  assertEquals(result.calculatedAnnualSalary, 9800);
+  assertEquals(result.message, undefined);
+});
+
+Deno.test('validateAgainstSMI - part-time 50% con salario insuficiente SÍ viola SMI', () => {
+  // 500€ × 14 = 7000€ anuales, por debajo del SMI prorrateado (8547€).
+  const result = validateAgainstSMI(500, 14, {
+    horasSemanalesContrato: 20,
+    jornadaCompletaHoras: 40,
+  });
+
+  assertEquals(result.belowSMI, true);
+  assertEquals(result.jornadaRatio, 0.5);
+  assertEquals(result.difference, -1547);
+  assertEquals(result.message?.includes('prorrateado'), true);
 });
 
 Deno.test('validateAgainstSMI - 12 pagas por encima', () => {
   const result = validateAgainstSMI(1500, 12);
 
   assertEquals(result.belowSMI, false);
-  assertEquals(result.smiApplicable, 1424.5);
+  assertEquals(result.calculatedAnnualSalary, 18000);
+  assertEquals(result.smiAnnualApplicable, 17094);
 });
 
 Deno.test('validateAgainstSMI - 12 pagas por debajo', () => {
   const result = validateAgainstSMI(1300, 12);
 
   assertEquals(result.belowSMI, true);
-  assertEquals(result.smiApplicable, 1424.5);
-  assertEquals(result.message?.includes('12 pagas'), true);
+  assertEquals(result.calculatedAnnualSalary, 15600);
+  assertEquals(result.smiAnnualApplicable, 17094);
 });
 
-Deno.test('validateAgainstSMI - salario muy bajo', () => {
+Deno.test('validateAgainstSMI - salario muy bajo (jornada completa)', () => {
   const result = validateAgainstSMI(500, 14);
 
   assertEquals(result.belowSMI, true);
-  assertEquals(result.difference, -721);
+  assertEquals(result.difference, -10094);
 });
 
-Deno.test('validateAgainstSMI - por defecto usa 14 pagas', () => {
+Deno.test('validateAgainstSMI - por defecto asume 14 pagas y jornada completa', () => {
   const result = validateAgainstSMI(1221);
 
-  assertEquals(result.smiApplicable, 1221);
+  assertEquals(result.smiAnnualApplicable, 17094);
+  assertEquals(result.jornadaRatio, 1);
   assertEquals(result.belowSMI, false);
 });

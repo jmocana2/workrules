@@ -29,6 +29,7 @@ import {
 export {
   LEGAL_LIMITS,
   SMI_2026,
+  type SMIContext,
   type SMIValidationResult,
   validateAgainstSMI,
 } from "../../domain/labor-law/index.ts";

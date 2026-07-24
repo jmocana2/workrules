@@ -65,3 +65,21 @@ Deno.test("makeVariableCritica - tipo no string devuelve invalid_type", () => {
     error: { kind: "invalid_type" },
   });
 });
+
+Deno.test("makeVariableCritica - 'tarea' NO matchea 'area' (token completo)", () => {
+  const r = makeVariableCritica("tarea");
+  assertEquals(r.ok, true);
+  if (r.ok) assertEquals(r.value.clase, "moduladora");
+});
+
+Deno.test("makeVariableCritica - 'impuesto' NO matchea 'puesto'", () => {
+  const r = makeVariableCritica("impuesto");
+  assertEquals(r.ok, true);
+  if (r.ok) assertEquals(r.value.clase, "moduladora");
+});
+
+Deno.test("makeVariableCritica - 'presupuesto' NO matchea 'puesto'", () => {
+  const r = makeVariableCritica("presupuesto");
+  assertEquals(r.ok, true);
+  if (r.ok) assertEquals(r.value.clase, "moduladora");
+});
