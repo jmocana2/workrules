@@ -237,13 +237,15 @@ export function buildConflictMessage(
   result: DataClassificationResult,
 ): string {
   const conflict = result.conflictingVariables[0];
+  if (!conflict) {
+    return "Error: No se encontraron datos conflictivos.";
+  }
 
   return (
     `**Datos inconsistentes:** ${conflict.reason}\n\n` +
     "Por favor, confirma cual es la situacion correcta."
   );
 }
-
 // ============================================
 // VALIDACION SMI
 // ============================================

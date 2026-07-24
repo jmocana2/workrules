@@ -22,6 +22,20 @@ import type { ChatCitation } from "../types.ts";
 import type { AskQuestionDeps } from "../ask-question/types.ts";
 
 /**
+ * Extiende la vida del isolate hasta que `promise` complete. En Supabase Edge
+ * Functions (Deno Deploy) el runtime destruye el isolate en cuanto se envía la
+ * respuesta; sin `EdgeRuntime.waitUntil` las escrituras fire-and-forget se
+ * pierden. Fuera del runtime (tests Deno, otros hosts) es un no-op seguro.
+ */
+function keepAlive(promise: Promise<unknown>): void {
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } })
+    .EdgeRuntime;
+  if (runtime?.waitUntil) {
+    runtime.waitUntil(promise);
+  }
+}
+
+/**
  * Sub-conjunto de dependencias que `persistResponse` realmente necesita.
  * Cualquier `Deps` de use case que cumpla estas tres capacidades vale — así
  * este módulo lo reutilizan otros use cases sin heredar `AskQuestionDeps`
@@ -61,11 +75,9 @@ export async function persistResponse(params: PersistResponseParams): Promise<vo
     sequentialMessages,
   } = params;
 
-  // Cache semántica: fire and forget.
-  // TODO: envolver en EdgeRuntime.waitUntil(...) para evitar que el Edge
-  // Runtime termine la instancia antes de que la escritura complete.
-  // Aplica también a saveChatMessage más abajo. Bug preexistente al refactor.
-  deps.saveToSemanticCache(
+  // Cache semántica: fire-and-forget pero registrado en EdgeRuntime.waitUntil
+  // para que el isolate no se destruya antes de que la escritura complete.
+  const cacheWrite = deps.saveToSemanticCache(
     embedding,
     question,
     response,
@@ -74,22 +86,31 @@ export async function persistResponse(params: PersistResponseParams): Promise<vo
   ).catch((err) => {
     console.error(`[${logTag}] Error saving to cache:`, err);
   });
+  keepAlive(cacheWrite);
 
-  // Historial: fire and forget, respetando el orden pedido.
+  // Historial: fire-and-forget con waitUntil, respetando el orden pedido.
   if (sessionId) {
     if (sequentialMessages) {
-      deps.saveChatMessage(sessionId, "user", question)
+      const historyWrite = deps.saveChatMessage(sessionId, "user", question)
         .then(() => deps.saveChatMessage(sessionId, "assistant", response))
         .catch((err) => {
           console.error(`[${logTag}] Error saving chat messages:`, err);
         });
+      keepAlive(historyWrite);
     } else {
-      deps.saveChatMessage(sessionId, "user", question).catch((err) => {
-        console.error(`[${logTag}] Error saving user message:`, err);
-      });
-      deps.saveChatMessage(sessionId, "assistant", response).catch((err) => {
+      const userWrite = deps.saveChatMessage(sessionId, "user", question)
+        .catch((err) => {
+          console.error(`[${logTag}] Error saving user message:`, err);
+        });
+      const assistantWrite = deps.saveChatMessage(
+        sessionId,
+        "assistant",
+        response,
+      ).catch((err) => {
         console.error(`[${logTag}] Error saving assistant message:`, err);
       });
+      keepAlive(userWrite);
+      keepAlive(assistantWrite);
     }
   }
 

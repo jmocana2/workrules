@@ -52,6 +52,13 @@ export function validateChatRequest(body: unknown): ValidationResult {
     };
   }
 
+  if (request.convenio_id.length > 64) {
+    return {
+      valid: false,
+      error: "convenio_id must be at most 64 characters",
+    };
+  }
+
   if (typeof request.pregunta !== "string") {
     return {
       valid: false,
@@ -63,6 +70,13 @@ export function validateChatRequest(body: unknown): ValidationResult {
     return {
       valid: false,
       error: "pregunta must be at least 3 characters",
+    };
+  }
+
+  if (request.pregunta.length > 2000) {
+    return {
+      valid: false,
+      error: "pregunta must be at most 2000 characters",
     };
   }
 

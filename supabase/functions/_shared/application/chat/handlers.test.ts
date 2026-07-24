@@ -124,6 +124,26 @@ Deno.test('validateChatRequest - rejects pregunta with only whitespace', () => {
   assertEquals(result.error, 'pregunta must be at least 3 characters');
 });
 
+Deno.test('validateChatRequest - rejects pregunta over 2000 chars', () => {
+  const result = validateChatRequest({
+    convenio_id: '66499',
+    pregunta: 'a'.repeat(2001),
+  });
+
+  assertEquals(result.valid, false);
+  assertEquals(result.error, 'pregunta must be at most 2000 characters');
+});
+
+Deno.test('validateChatRequest - rejects convenio_id over 64 chars', () => {
+  const result = validateChatRequest({
+    convenio_id: 'a'.repeat(65),
+    pregunta: '¿Cuántos días de vacaciones?',
+  });
+
+  assertEquals(result.valid, false);
+  assertEquals(result.error, 'convenio_id must be at most 64 characters');
+});
+
 // ============================================
 // parseRequestBody
 // ============================================
@@ -362,7 +382,7 @@ Deno.test('mapResultToHttpResponse - stream type returns error (should not be ma
 
   const response = mapResultToHttpResponse(result);
 
-  assertEquals(response.status, 200);
+  assertEquals(response.status, 500);
   assertEquals(response.body.status, 'error');
 });
 

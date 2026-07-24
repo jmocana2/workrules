@@ -99,7 +99,7 @@ export function mapResultToHttpResponse(
 
     case "stream":
       return {
-        status: 200,
+        status: 500,
         body: {
           status: "error",
           error: "Stream result should not be mapped to HTTP response",
