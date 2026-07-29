@@ -5,6 +5,7 @@
     semantic_cache,
     user_documents,
     convenio_chunks,
+    convenio_familias,
     convenio_perfiles,
     convenio_versiones,
     convenios
