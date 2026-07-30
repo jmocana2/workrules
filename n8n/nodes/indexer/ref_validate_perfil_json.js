@@ -41,7 +41,55 @@ function cleanJsonResponse(text) {
     cleaned = cleaned.slice(0, -3);
   }
 
-  return cleaned.trim();
+  return sanitizeControlChars(cleaned.trim());
+}
+
+// Claude a veces devuelve saltos de línea, tabuladores y otros caracteres de
+// control literales DENTRO de strings del JSON (típico en 'articulo',
+// 'condicion', 'notas_extraccion'). JSON estricto no los admite y JSON.parse
+// falla con "Bad control character in string literal". Los reemplazamos por su
+// forma escapada — sólo cuando estamos dentro de un string (tracking de "
+// balanceadas, respetando el escape \\ previo).
+const CONTROL_ESCAPES = {
+  '\n': '\\n',
+  '\r': '\\r',
+  '\t': '\\t',
+  '\b': '\\b',
+  '\f': '\\f',
+};
+
+function escapeControlChar(ch) {
+  if (CONTROL_ESCAPES[ch]) return CONTROL_ESCAPES[ch];
+  return '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0');
+}
+
+function sanitizeControlChars(text) {
+  let out = '';
+  let inString = false;
+  let escapeNext = false;
+  for (const ch of text) {
+    if (escapeNext) {
+      out += ch;
+      escapeNext = false;
+      continue;
+    }
+    if (ch === '\\') {
+      out += ch;
+      escapeNext = true;
+      continue;
+    }
+    if (ch === '"') {
+      inString = !inString;
+      out += ch;
+      continue;
+    }
+    if (inString && ch.charCodeAt(0) < 0x20) {
+      out += escapeControlChar(ch);
+      continue;
+    }
+    out += ch;
+  }
+  return out;
 }
 
 function validateCategoria(cat, index) {

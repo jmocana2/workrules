@@ -32,7 +32,7 @@ import { Skeleton } from '@/ui/components/shadcn/skeleton';
 import { ConvenioChip } from '@/ui/components/workrules/atoms/ConvenioChip/ConvenioChip';
 import type { Convenio } from '@core/types';
 import { ChevronsUpDown } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export interface ConvenioSelectorProps {
   /** Convenio actualmente seleccionado */
@@ -125,16 +125,128 @@ function getAmbitoLabel(ambito: Convenio['ambito']): string {
  * Devuelve el nombre legible del convenio para mostrar en el selector.
  * Prioriza la etiqueta corta extraída por el indexer; cae al nombre oficial
  * y, en último término, al nombre del PDF mientras el indexado no ha terminado.
+ * Incluye el año de `fecha_vigencia` cuando está disponible para diferenciar
+ * versiones del mismo convenio.
  */
+function buildSufijo(territorial: string | undefined, anio: number | null): string {
+  if (territorial && anio) return `${territorial} · ${anio}`;
+  if (territorial) return territorial;
+  if (anio) return String(anio);
+  return '';
+}
+
 function getDisplayName(convenio: Convenio): string {
   const corto = convenio.nombre_corto?.trim();
   const oficial = convenio.nombre_oficial?.trim();
   const territorial = convenio.ambito_territorial?.trim();
   const base = corto || oficial;
+  const anio = getAnio(convenio);
 
-  if (base && territorial) return `${base} — ${territorial}`;
+  const sufijo = buildSufijo(territorial, anio);
+
+  if (base && sufijo) return `${base} — ${sufijo}`;
   if (base) return base;
+  if (sufijo) return `${convenio.nombre} — ${sufijo}`;
   return convenio.nombre;
+}
+
+/**
+ * Extrae el año a mostrar. Usa `fecha_vigencia` si existe; si no, no muestra
+ * año (se descarta `created_at` para no confundir "año de subida" con "año de
+ * vigencia").
+ */
+function getAnio(convenio: Convenio): number | null {
+  if (!convenio.fecha_vigencia) return null;
+  const d = new Date(convenio.fecha_vigencia);
+  const y = d.getFullYear();
+  return Number.isFinite(y) ? y : null;
+}
+
+/**
+ * Clave que agrupa convenios de la misma "familia" (misma norma en distintas
+ * versiones/años). Se prefiere `codigo_regcon`, que es el identificador oficial
+ * del Registro de Convenios; como fallback se combina nombre corto y ámbito
+ * territorial.
+ */
+function getFamiliaKey(convenio: Convenio): string {
+  const regcon = convenio.codigo_regcon?.trim();
+  if (regcon) return `regcon:${regcon}`;
+  const nombre = (convenio.nombre_corto || convenio.nombre_oficial || convenio.nombre)
+    ?.trim()
+    .toLowerCase() ?? '';
+  const territorial = convenio.ambito_territorial?.trim().toLowerCase() ?? '';
+  return `nom:${nombre}|${territorial}`;
+}
+
+/**
+ * Devuelve el conjunto de ids de convenios que son la versión más reciente
+ * dentro de su familia. Un convenio sin `fecha_vigencia` no se considera
+ * "vigente" salvo que sea el único de su familia.
+ */
+function groupByFamilia(convenios: Convenio[]): Map<string, Convenio[]> {
+  const grupos = new Map<string, Convenio[]>();
+  for (const c of convenios) {
+    const key = getFamiliaKey(c);
+    const arr = grupos.get(key);
+    if (arr) arr.push(c);
+    else grupos.set(key, [c]);
+  }
+  return grupos;
+}
+
+function pickVigenteId(grupo: Convenio[]): string | null {
+  if (grupo.length === 1) return grupo[0].id;
+  let mejorId: string | null = null;
+  let mejorTs = -Infinity;
+  for (const c of grupo) {
+    const ts = c.fecha_vigencia ? new Date(c.fecha_vigencia).getTime() : NaN;
+    if (Number.isFinite(ts) && ts > mejorTs) {
+      mejorId = c.id;
+      mejorTs = ts;
+    }
+  }
+  return mejorId;
+}
+
+function computeVigentes(convenios: Convenio[]): Set<string> {
+  const vigentes = new Set<string>();
+  for (const grupo of groupByFamilia(convenios).values()) {
+    const id = pickVigenteId(grupo);
+    if (id) vigentes.add(id);
+  }
+  return vigentes;
+}
+
+/**
+ * Ordena los convenios de forma estable: agrupa por familia y, dentro de cada
+ * familia, coloca primero el más reciente por `fecha_vigencia DESC`. El orden
+ * entre familias respeta la primera aparición del input.
+ */
+function sortConvenios(convenios: Convenio[]): Convenio[] {
+  const orden = new Map<string, number>();
+  const grupos = new Map<string, Convenio[]>();
+  convenios.forEach((c, i) => {
+    const key = getFamiliaKey(c);
+    if (!orden.has(key)) orden.set(key, i);
+    const arr = grupos.get(key);
+    if (arr) arr.push(c);
+    else grupos.set(key, [c]);
+  });
+
+  const familias = Array.from(grupos.entries()).sort(
+    ([a], [b]) => (orden.get(a) ?? 0) - (orden.get(b) ?? 0)
+  );
+
+  const out: Convenio[] = [];
+  for (const [, grupo] of familias) {
+    grupo.sort((a, b) => {
+      const ta = a.fecha_vigencia ? new Date(a.fecha_vigencia).getTime() : -Infinity;
+      const tb = b.fecha_vigencia ? new Date(b.fecha_vigencia).getTime() : -Infinity;
+      return tb - ta;
+    });
+    out.push(...grupo);
+  }
+  return out;
 }
 
 /**
@@ -169,9 +281,13 @@ export function ConvenioSelector({
     }
   }, [open]);
 
+  // Familia -> id del convenio vigente. Recalculado solo cuando cambia la lista.
+  const vigentes = useMemo(() => computeVigentes(convenios), [convenios]);
+  const sortedConvenios = useMemo(() => sortConvenios(convenios), [convenios]);
+
   // Filtrar convenios según la búsqueda fuzzy
   const filteredConvenios = searchQuery
-    ? convenios.filter((convenio) => {
+    ? sortedConvenios.filter((convenio) => {
         const searchableText = [
           convenio.nombre,
           convenio.nombre_oficial,
@@ -183,7 +299,7 @@ export function ConvenioSelector({
           .join(' ');
         return fuzzyMatch(searchableText, searchQuery);
       })
-    : convenios;
+    : sortedConvenios;
 
   const handleSelect = (convenio: Convenio) => {
     onSelect(convenio);
@@ -247,20 +363,38 @@ export function ConvenioSelector({
                    
                     <div className="flex flex-1 items-center justify-between gap-2 max-w-full">
                       <span
-                        className="flex-1 truncate text-sm min-w-0 max-w-[295px]"
+                        className="flex-1 truncate text-sm min-w-0 max-w-[260px]"
                         title={getFullName(convenio)}
                       >
                         {getDisplayName(convenio)}
                       </span>
-                      <Badge
-                        variant="secondary"
-                        className={cn(
-                          'text-[0.65rem] font-medium',
-                          getAmbitoBadgeClasses(convenio.ambito)
-                        )}
-                      >
-                        {getAmbitoLabel(convenio.ambito)}
-                      </Badge>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            'text-[0.65rem] font-medium',
+                            vigentes.has(convenio.id)
+                              ? 'bg-[var(--colorsSemanticSuccess1)] text-[var(--colorsSemanticSuccess12)] border border-[var(--colorsSemanticSuccess9)]'
+                              : 'bg-muted text-muted-foreground border border-border'
+                          )}
+                          title={
+                            vigentes.has(convenio.id)
+                              ? 'Versión más reciente detectada para este convenio'
+                              : 'Existe una versión más reciente del mismo convenio'
+                          }
+                        >
+                          {vigentes.has(convenio.id) ? 'Vigente' : 'Antiguo'}
+                        </Badge>
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            'text-[0.65rem] font-medium',
+                            getAmbitoBadgeClasses(convenio.ambito)
+                          )}
+                        >
+                          {getAmbitoLabel(convenio.ambito)}
+                        </Badge>
+                      </div>
                     </div>
                   </CommandItem>
                 ))}

@@ -11,7 +11,7 @@
 // ============================================
 
 const MODEL = 'claude-sonnet-4-20250514';
-const MAX_OUTPUT_TOKENS = 16384;
+const MAX_OUTPUT_TOKENS = 64000;
 const TEMPERATURE = 0;
 
 const SYSTEM_PROMPT = `Eres un experto en derecho laboral espanol especializado en convenios colectivos.

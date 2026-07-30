@@ -38,7 +38,28 @@ Si n8n falla (LlamaParse timeout, Claude API error, etc.):
 
 ## 🐛 Bugs Conocidos
 
-*(Ninguno actualmente)*
+### Coste de indexación por convenio demasiado alto (~$0.5–1 por PDF grande)
+**Fecha detectado**: 2026-07-30
+**Contexto**: Al indexar `hosteleria-malaga-2018.pdf` el nodo `HTTP Claude API` (Sonnet 4.5) devolvió `stop_reason: "max_tokens"` con `output_tokens: 16384` y `input_tokens: 91538`, coste estimado **$0.52 en una sola llamada** (y truncada — hubo que subir `MAX_OUTPUT_TOKENS` a 64000 para que cierre el JSON, lo que sube el coste a ~$1 en convenios grandes).
+
+**Causa raíz**: el prompt de `Prepare Claude Request` pide a Claude que emita en un único JSON:
+- TODAS las categorías profesionales (≈160 en Hostelería Málaga)
+- Salarios por 10 tipos de establecimiento **por cada categoría** (matriz 160×10)
+- Sinónimos por categoría con variaciones de género
+- `valores_posibles` con todas las categorías listadas otra vez
+- Complementos, jornada, tablas, horas extra, periodo prueba, vacaciones…
+
+Esto genera output masivo (30–40k tokens) con mucha redundancia (mismos salarios repetidos en cada categoría del mismo nivel).
+
+**Posibles mitigaciones a evaluar**:
+1. **Dividir la extracción en 2–3 llamadas** (categorías/salarios, complementos+jornada, valores_posibles). Reduciría output por llamada y permitiría cachear el system prompt entre ellas.
+2. **Normalizar salarios por nivel en el JSON** en vez de repetirlos categoría a categoría. Ej: `salarios_por_nivel: { "I": {"5*":…}, "II":…}` y en cada categoría sólo `nivel`. Ahorro estimado 60–70% del output.
+3. **Modelo más barato para la extracción estructurada** (Haiku 4.5 a $0.8/M input, $4/M output → ~5× más barato). Requiere validar que respeta el schema con la misma calidad.
+4. **Prompt caching** del system prompt ya activo, pero el user prompt (con el markdown del convenio) no cachea. Evaluar si segmentar el markdown ayuda.
+
+**Impacto**: con 100 convenios grandes indexados = $100. No sostenible para escalado.
+
+---
 
 ---
 

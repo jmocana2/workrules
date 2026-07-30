@@ -227,7 +227,24 @@ export function ChatConversationColumn({
                   />
                 </svg>
               </div>
-              <h2 className="mb-2 text-lg font-semibold text-foreground">{emptyState.title}</h2>
+              <h2 className="mb-2 text-lg font-semibold text-foreground">
+                {selectedConvenio ? (
+                  <>
+                    {emptyState.title.slice(0, emptyState.title.indexOf(':') + 1) + ' '}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenConvenioPdf(selectedConvenio.id)}
+                      className="text-primary underline underline-offset-2 hover:opacity-80"
+                    >
+                      {selectedConvenio.nombre_corto ||
+                        selectedConvenio.nombre_oficial ||
+                        selectedConvenio.nombre}
+                    </button>
+                  </>
+                ) : (
+                  emptyState.title
+                )}
+              </h2>
               <p className="mb-6 max-w-md text-sm text-muted-foreground">
                 {emptyState.description}
               </p>

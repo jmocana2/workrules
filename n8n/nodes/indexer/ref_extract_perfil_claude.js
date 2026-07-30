@@ -93,6 +93,15 @@ console.log(
 );
 console.log(`  - Costo estimado: $${estimatedCostUsd.toFixed(4)}`);
 console.log(`  - Longitud respuesta: ${responseText.length} caracteres`);
+console.log(`  - Stop reason: ${usage.stop_reason}`);
+
+if (usage.stop_reason === 'max_tokens') {
+  throw new Error(
+    `Claude cortó la respuesta por max_tokens (output_tokens=${usage.output_tokens}). ` +
+      `El JSON está truncado. Sube MAX_OUTPUT_TOKENS en 'Prepare Claude Request' o ` +
+      `divide la extracción en varias llamadas. Convenio: ${convenioNombre || convenioId}.`
+  );
+}
 
 return [
   {
