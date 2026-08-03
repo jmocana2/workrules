@@ -348,31 +348,6 @@ describe('ChatPage - VariablesPanel', () => {
     expect(screen.getByPlaceholderText(/selecciona un convenio primero/i)).toBeInTheDocument();
   });
 
-  // TODO(2026-06-10): El VariablesPanel no renderiza el botón "Colapsar panel" en el contexto
-  // del test de ChatPage, probablemente porque requiere un convenio seleccionado y los mocks
-  // actuales no propagan ese estado. El componente VariablesPanel sí está cubierto por sus
-  // propios tests (VariablesPanel.test.tsx). Skip hasta refactorizar mocks de ChatPage.
-  it.skip('puede colapsar el VariablesPanel', async () => {
-    const user = userEvent.setup();
-
-    renderWithQueryClient(
-      <ChatPage
-        mockConvenios={mockConvenios}
-        mockConversations={[]}
-        mockPerfil={mockPerfil}
-      />
-    );
-
-    // Buscar el botón de colapsar (icono ChevronRight)
-    const collapseButton = screen.getByRole('button', { name: /colapsar/i });
-    await user.click(collapseButton);
-
-    // El contenido debería estar oculto
-    // Verificamos que el panel se colapsó (el contenido no debería ser visible)
-    await waitFor(() => {
-      expect(screen.queryByText('Categoría Profesional')).not.toBeInTheDocument();
-    });
-  });
 });
 
 describe('ChatPage - Accesibilidad', () => {
