@@ -1,52 +1,19 @@
 import type { Convenio, ConversationSummary, PerfilJson } from '@core/types';
-import type { Repositories } from '@/providers/RepositoriesProvider';
 import { RepositoriesProvider } from '@/providers/RepositoriesProvider';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ChatPage } from './ChatPage';
+import {
+  createFakeRepositories,
+  createTestQueryClient,
+} from './__test-utils__/chatPageFakes';
 
-const fakeRepositories: Partial<Repositories> = {
-  convenio: {
-    getById: vi.fn().mockResolvedValue(null),
-    list: vi.fn().mockResolvedValue([]),
-    listOwnedByUser: vi.fn().mockResolvedValue([]),
-    getPerfil: vi.fn().mockResolvedValue(null),
-    getSignedPdfUrl: vi.fn().mockResolvedValue(null),
-  },
-  chatSession: {
-    listByUser: vi.fn().mockResolvedValue([]),
-    deleteById: vi.fn().mockResolvedValue(undefined),
-    create: vi.fn().mockResolvedValue('mock-session-id'),
-    loadMessages: vi.fn().mockResolvedValue(null),
-    getConvenioIdForSession: vi.fn().mockResolvedValue(null),
-  },
-  userPlan: {
-    getPlan: vi.fn().mockResolvedValue('free'),
-  },
-  convenioUpload: {
-    getUploadIdentity: vi.fn().mockResolvedValue(null),
-    uploadPdf: vi.fn().mockResolvedValue({ signedUrl: '', filePath: '' }),
-    confirmUpload: vi.fn().mockResolvedValue({
-      status: 'started' as const,
-      convenioId: 'mock',
-      existingNombre: null,
-    }),
-    fetchProcessingStatus: vi.fn().mockResolvedValue({
-      estado: 'procesando',
-      errorMessage: null,
-      progressStage: null,
-      progressValue: null,
-      progressMessage: null,
-    }),
-  },
-};
+const fakeRepositories = createFakeRepositories();
 
-// Mock environment variable for using mocks
 vi.stubEnv('VITE_USE_MOCKS', 'true');
 
-// Mock useChat del AI SDK (nueva API con sendMessage)
 vi.mock('@ai-sdk/react', () => ({
   useChat: vi.fn(() => ({
     messages: [],
@@ -57,15 +24,12 @@ vi.mock('@ai-sdk/react', () => ({
   })),
 }));
 
-// Mock DefaultChatTransport
 vi.mock('ai', () => ({
-  DefaultChatTransport: vi.fn().mockImplementation(function() {
+  DefaultChatTransport: vi.fn().mockImplementation(function () {
     return {};
   }),
 }));
 
-// Mock useSupabase (auth) — el cliente Supabase real no se carga porque
-// los repositorios son fakes inyectados via RepositoriesProvider.
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
@@ -144,17 +108,6 @@ const mockPerfil: PerfilJson = {
     'Antigüedad': ['0-2 años', '2-5 años'],
   },
 };
-
-// Helper para crear QueryClient para tests
-function createTestQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-      },
-    },
-  });
-}
 
 // Wrapper con QueryClientProvider + RepositoriesProvider
 function renderWithQueryClient(ui: React.ReactElement) {
