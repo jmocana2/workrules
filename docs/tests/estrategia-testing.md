@@ -51,6 +51,19 @@
 | **Functions** | 90% | Evita testear getters triviales y boilerplate |
 | **Lines** | 70% | Sostenible para solo-dev sin tests de relleno |
 
+### Baseline actual (frontend `src/`)
+
+Medido con `pnpm test:unit:coverage` el 2026-08-03 sobre 28 archivos / 409 tests:
+
+| Métrica | Actual | Objetivo | Gap |
+|---------|--------|----------|-----|
+| Statements | 49.76% | — | — |
+| Branches | 41.68% | — | — |
+| Functions | 44.72% | 90% | −45 pp |
+| Lines | 51.67% | 70% | −18 pp |
+
+Áreas con 0% cobertura detectadas: `src/application/use-cases/userPlan.ts`, mayoría de `src/infrastructure/repositories/`, varios shadcn wrappers (`dialog`, `dropdown-menu`, `select`, `hover-card`). Ver paso 2.4 del plan de mejora para priorización.
+
 ### Objetivos por Área
 
 | Área | Objetivo | Notas |
