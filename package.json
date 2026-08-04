@@ -16,6 +16,7 @@
     "test:report": "playwright show-report",
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:unit:watch": "vitest --config vitest.unit.config.ts",
+    "test:unit:coverage": "vitest run --coverage --config vitest.unit.config.ts",
     "test:deno": "deno test --allow-all --config supabase/functions/deno.json supabase/functions",
     "test:coverage": "deno test --allow-all --config supabase/functions/deno.json --coverage=supabase/functions/coverage supabase/functions",
     "test:storybook": "test-storybook --url http://localhost:6006",
