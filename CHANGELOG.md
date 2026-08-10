@@ -10,6 +10,24 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y 
 
 ---
 
+## [0.12.0] — 2026-08-10
+
+Recuperación de tests E2E críticos y saneamiento de la documentación de testing.
+
+### Corregido
+- **Tests E2E críticos de chat recuperados** (`tests/chat-flows.spec.ts`): los 3 flujos (consulta general con citation, cálculo de salario con desglose, DataRequestCard ante datos incompletos) estaban en `describe.skip` desde `a300e40`/`c417e35`. La causa real no era el mock SSE sino la `storageKey` de la sesión fake: supabase-js deriva la clave `sb-<projectref>-auth-token` del host de `VITE_SUPABASE_URL`, distinto en local y en CI (secret con projectref real). El test sólo sembraba variantes conocidas, así que en CI `getAuthToken()` devolvía `null` y `streamChat()` abortaba con "No hay sesion activa" **antes** de disparar el mock SSE. Fix: sobrescribir `Storage.prototype.getItem` en `addInitScript` para responder la sesión fake ante cualquier clave `sb-.+-auth-token`.
+- **Selector estable en `MobileDrawer.test.tsx`**: sustituido `container.querySelector('[aria-hidden="true"]')` por `screen.getByTestId('mobile-drawer-overlay')`; añadido `data-testid` correspondiente en el componente. El selector anterior podía colisionar con cualquier `children` decorativo con `aria-hidden`.
+
+### Cambiado
+- **Workflow `playwright.yml`**: añadido `workflow_dispatch` para poder lanzar la suite E2E manualmente desde GitHub Actions sin tener que hacer push a `main`/`master`.
+- **Skill `testing`** (`.agents/skills/testing/SKILL.md`): la afirmación de que `test:unit` y `test:deno` excluían `*.integration.test.*` era falsa (Vitest los incluye vía el patrón `src/**/*.test.{ts,tsx}` y `deno test` no filtra). Reescrita la sección: el sufijo `.integration` es marcador documental, y la responsabilidad de no gastar recursos externos recae en cada test vía auto-skip (`Deno.test({ ignore: !Deno.env.get(...) })` o `it.skipIf(...)` en Vitest).
+
+### Documentación
+- **`docs/tests/e2e/README.md`** actualizado: los 3 tests críticos pasan de `skipped` a activos, deuda técnica reducida a 1 test skipeado (chips de variables) que requiere feature dedicada, y CI validado tras el fix.
+- **`docs/tests/unit-test/README.md`** recontado y verificado contra runs reales (2026-08-10): frontend 28 unit + 1 integration / 391 tests; backend 32 unit + 2 integration / 518 passed + 4 ignored. Corregidos los conteos por sección (Átomos 5→4, Organismos 7→10 con `MobileDrawer`, Otros 3→2, Domain 14→17, application/chat 8→9).
+
+---
+
 ## [0.11.0] — 2026-07-24
 
 Refactor mayor de arquitectura del backend: separación clara de capas (Domain / Application / Infrastructure) con puertos hexagonales y Value Objects de dominio.
@@ -148,4 +166,4 @@ Refactor mayor aplicando SRP y Clean Architecture al módulo de chat (frontend y
 
 ---
 
-**Última actualización**: 2026-07-24
+**Última actualización**: 2026-08-10

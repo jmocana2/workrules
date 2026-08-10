@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/release-v0.11.0-555555" alt="release" />
+  <img src="https://img.shields.io/badge/release-v0.12.0-555555" alt="release" />
   <img src="https://img.shields.io/badge/License-PolyForm_NC_1.0-blue" alt="License" />
   <img src="https://img.shields.io/badge/Node-20+-339933?logo=node.js&logoColor=white" alt="Node 20+" />
 </p>
