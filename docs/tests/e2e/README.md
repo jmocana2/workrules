@@ -1,6 +1,6 @@
 # Informe de Tests End-to-End (E2E)
 
-Fecha del informe: 2026-08-04
+Fecha del informe: 2026-08-10
 Runner: **Playwright** (`pnpm test`, config `playwright.config.ts`)
 Browsers configurados: chromium, firefox, webkit
 Servidor de test: `vite preview` en `http://127.0.0.1:4173` con `VITE_E2E_TESTING=true`
@@ -10,8 +10,8 @@ Servidor de test: `vite preview` en `http://127.0.0.1:4173` con `VITE_E2E_TESTIN
 | Fichero | Tests activos | Tests skipped |
 |---|---|---|
 | `tests/chat-integration.spec.ts` | 5 | 1 |
-| `tests/chat-flows.spec.ts` | 0 | 3 (todo el `describe` con `.skip`) |
-| **Total** | **5 activos** | **4 skipped** |
+| `tests/chat-flows.spec.ts` | 3 | 0 |
+| **Total** | **8 activos** | **1 skipped** |
 
 Page Object: `tests/pages/ChatPage.ts`.
 
@@ -33,15 +33,15 @@ Verifican que la UI arranca y responde a interacciones básicas. **No usan mocks
 
 **Skipped**: `flujo completo: seleccionar convenio y ver chips de variables` — requeriría mocks o Supabase real.
 
-### `tests/chat-flows.spec.ts` — Flujos críticos del producto (3 skipped)
+### `tests/chat-flows.spec.ts` — Flujos críticos del producto (3 activos)
 
-Todo el `describe` está en `.skip` (ver comentario TODO en el fichero: tras a300e40 + c417e35 el mock SSE quedó desincronizado con el nuevo flujo de variables resueltas).
+Recuperados el 2026-08-10. Cubren los 3 flujos clave del producto:
 
 1. `Consulta general devuelve respuesta con citation` — mockea `/functions/v1/chat` con SSE.
 2. `Calculo de salario con datos completos muestra desglose`.
 3. `Calculo con datos incompletos abre DataRequestCard`.
 
-Usan `page.route()` para interceptar: auth, REST convenios, chat_sessions, chat_messages, perfil_json, y la Edge Function `/chat`. Inyectan sesión fake en `localStorage` para bypass del auth.
+Usan `page.route()` para interceptar: auth, REST convenios, chat_sessions, chat_messages, perfil_json, y la Edge Function `/chat`. Para la sesión fake se sobrescribe `Storage.prototype.getItem` para responder a cualquier clave `sb-<projectref>-auth-token`, evitando que la storageKey dependa del `VITE_SUPABASE_URL` (que es un secret distinto en local y CI). Antes del fix, en CI la sesión fake no se devolvía y `streamChat()` abortaba con "No hay sesion activa" antes de disparar el mock SSE — en local pasaban por casualidad porque coincidía la clave con `sb-localhost-auth-token`.
 
 ---
 
@@ -59,9 +59,8 @@ Usan `page.route()` para interceptar: auth, REST convenios, chat_sessions, chat_
 - **Accesibilidad**: `axe-playwright` instalado pero no usado en ningún test.
 
 ### Deuda técnica
-- **3 tests críticos skipped** (`chat-flows.spec.ts`) — son los que dan valor real de negocio. Recuperarlos es la prioridad #1.
-- **1 test skipped** en `chat-integration.spec.ts` (chips de variables).
-- **Sin CI validado**: memoria del proyecto indica que la fix de timeout de chromium en GH Actions está pendiente de validación.
+- **1 test skipped** en `chat-integration.spec.ts` (chips de variables). Requiere mocks adicionales de perfil/variables — pendiente para feature dedicada.
+- **CI validado**: los 3 tests críticos pasan en GitHub Actions tras el fix de storageKey (2026-08-10).
 
 ---
 
@@ -74,8 +73,7 @@ Usan `page.route()` para interceptar: auth, REST convenios, chat_sessions, chat_
 
 ## Recomendaciones
 
-1. **Desbloquear los 3 tests de `chat-flows.spec.ts`** — actualizar los mocks SSE al nuevo protocolo de `resolvedVariables`. Es el mayor valor por esfuerzo.
-2. **Añadir suite de auth** y de subida de convenio, que son los otros dos flujos críticos del producto.
-3. **Activar mobile viewport** (Pixel 5, iPhone 12) al menos para los smoke tests, dado el foco mobile-first del proyecto.
-4. **Introducir `axe-playwright`** para al menos un chequeo de accesibilidad por página principal.
-5. **Configurar shards** en Playwright si los tiempos de CI crecen (hoy sólo 5 tests activos, no es urgente).
+1. **Añadir suite de auth** y de subida de convenio, que son los otros dos flujos críticos del producto.
+2. **Activar mobile viewport** (Pixel 5, iPhone 12) al menos para los smoke tests, dado el foco mobile-first del proyecto.
+3. **Introducir `axe-playwright`** para al menos un chequeo de accesibilidad por página principal.
+4. **Configurar shards** en Playwright si los tiempos de CI crecen (hoy sólo 8 tests activos, no es urgente).
