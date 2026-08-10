@@ -180,66 +180,6 @@ describe('ConvenioManager', () => {
     expect(lockIcons.length).toBeGreaterThan(0);
   });
 
-  it.skip('muestra icono de favorito cuando isFavorite es true', () => {
-    // Este test se omite porque la funcionalidad de favoritos fue removida
-    const { container } = render(
-      <ConvenioManager
-        userConvenios={mockConvenios.slice(0, 1)} // Solo el primero que es favorito
-        onUpload={vi.fn()}
-        onSelectConvenio={vi.fn()}
-      />
-    );
-
-    // El StarIcon está visible en el DOM
-    // Verificar que hay un svg con clase fill-yellow-400 (el icono de favorito)
-    const starIcon = container.querySelector('.fill-yellow-400');
-    expect(starIcon).toBeInTheDocument();
-  });
-
-  it.skip('abre el dropdown menu al hacer click en el botón de acciones', async () => {
-    // Este test se omite porque el menu de acciones fue removido
-    const user = userEvent.setup();
-
-    render(
-      <ConvenioManager
-        userConvenios={mockConvenios.slice(0, 1)}
-        onUpload={vi.fn()}
-        onSelectConvenio={vi.fn()}
-      />
-    );
-
-    // Buscar el botón de menú por accesibilidad
-    const menuButton = screen.getByRole('button', { name: /abrir menú/i });
-    await user.click(menuButton);
-
-    // Verificar que aparecen las opciones del menú
-    expect(screen.getByText(/Quitar de favoritos/i)).toBeInTheDocument();
-    expect(screen.getByText('Editar nombre')).toBeInTheDocument();
-    expect(screen.getByText('Eliminar')).toBeInTheDocument();
-  });
-
-  it.skip('deshabilita el botón de editar cuando status no es ready', async () => {
-    // Este test se omite porque el menu de acciones fue removido
-    const user = userEvent.setup();
-
-    render(
-      <ConvenioManager
-        userConvenios={mockConvenios.slice(1, 2)} // Convenio en estado 'processing'
-        onUpload={vi.fn()}
-        onSelectConvenio={vi.fn()}
-      />
-    );
-
-    const menuButton = screen.getByRole('button', { name: /abrir menú/i });
-    await user.click(menuButton);
-
-    // Verificar que el botón de editar existe y está marcado como deshabilitado
-    const editButton = screen.getByText('Editar nombre');
-    expect(editButton).toBeInTheDocument();
-    // Radix UI usa aria-disabled para indicar elementos deshabilitados
-    const menuItem = editButton.closest('[role="menuitem"]');
-    expect(menuItem).toHaveAttribute('aria-disabled', 'true');
-  });
   it('muestra el errorMessage cuando status es error', () => {
     render(
       <ConvenioManager

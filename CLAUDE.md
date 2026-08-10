@@ -73,6 +73,16 @@ pnpm tokens:build  # Build CSS variables from design tokens
 - `supabase/functions/chat/index.ts` - Chat endpoint entry
 - `supabase/functions/_shared/application/chat/handlers.ts` - Request classification and routing
 
+## Project Skills
+
+Skills locales en `.agents/skills/`. Invocarlas vía la herramienta Skill cuando aplique:
+
+- **single-responsibility** — Aplicar SRP al escribir/revisar funciones, clases, componentes React, hooks o módulos en `src/` y `supabase/functions/`. Triggers: "nueva función", "nuevo use case", "refactor", "split this", "¿esto está limpio?".
+- **frontend-developer** — Convenciones de estilo TS/React/Deno del repo: JSDoc solo en funciones exportadas y variables de configuración, separadores de sección, prohibición de barrels. Usar al crear/editar código en `src/` o `supabase/functions/`.
+- **frontend-design** — Diseño de interfaces frontend con calidad de producción y estética distintiva (componentes, páginas, landings, dashboards). Usar cuando se pida construir o rediseñar UI con foco visual, no solo lógica.
+- **frontend-responsive-design-standards** — Layouts mobile-first, breakpoints, unidades fluidas (rem/em/%), touch targets ≥44px. Usar al crear/modificar layouts, media queries, grids responsive o navegación móvil.
+- **testing** — Pirámide de testing (unit/integración/e2e), TDD red-green-refactor, herramientas (Vitest, RTL, Playwright, `deno test`), coverage 100% funciones / 80% líneas, POM + mock server para e2e, selectores estables y esperas inteligentes. Usar al escribir o revisar tests en `src/` o `supabase/functions/`.
+
 ## Testing Supabase Functions Locally
 
 ```bash

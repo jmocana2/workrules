@@ -469,9 +469,6 @@ Deno.test("askQuestion - guarda respuesta en cache tras success", async () => {
 
   await askQuestion(makeInput({ pregunta: "Test question" }), deps);
 
-  // Esperar a que se ejecute el fire-and-forget
-  await new Promise((resolve) => setTimeout(resolve, 10));
-
   assertEquals(calls.saveToSemanticCache.length, 1);
   const saveCall = calls.saveToSemanticCache[0];
   assertEquals(saveCall[0], VALID_EMBEDDING); // embedding
@@ -489,9 +486,6 @@ Deno.test("askQuestion - guarda mensajes en historial si hay sessionId", async (
 
   await askQuestion(makeInput({ sessionId }), deps);
 
-  // Esperar a que se ejecuten los fire-and-forget
-  await new Promise((resolve) => setTimeout(resolve, 10));
-
   assertEquals(calls.saveChatMessage.length, 2);
   assertEquals(calls.saveChatMessage[0][0], sessionId);
   assertEquals(calls.saveChatMessage[0][1], "user");
@@ -502,8 +496,6 @@ Deno.test("askQuestion - no guarda mensajes si no hay sessionId", async () => {
   const { deps, calls } = createMockDeps();
 
   await askQuestion(DEFAULT_INPUT, deps);
-
-  await new Promise((resolve) => setTimeout(resolve, 10));
 
   assertEquals(calls.saveChatMessage.length, 0);
 });
