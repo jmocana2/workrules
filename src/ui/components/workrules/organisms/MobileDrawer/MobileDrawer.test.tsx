@@ -86,11 +86,9 @@ describe('MobileDrawer', () => {
     it('llama a onClose al hacer click en el overlay', async () => {
       const user = userEvent.setup();
       const onClose = vi.fn();
-      const { container } = renderDrawer({ onClose });
+      renderDrawer({ onClose });
 
-      const overlay = container.querySelector('[aria-hidden="true"]');
-      expect(overlay).not.toBeNull();
-      await user.click(overlay as Element);
+      await user.click(screen.getByTestId('mobile-drawer-overlay'));
 
       expect(onClose).toHaveBeenCalledTimes(1);
     });

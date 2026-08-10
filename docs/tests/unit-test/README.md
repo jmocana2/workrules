@@ -1,6 +1,6 @@
 # Informe de Tests Unitarios
 
-Fecha del informe: 2026-08-04
+Fecha del informe: 2026-08-10
 Comandos:
 - Frontend: `pnpm test:unit` (Vitest + jsdom, config `vitest.unit.config.ts`)
 - Backend/Supabase: `pnpm test:deno` (Deno test runner)
@@ -9,14 +9,14 @@ Comandos:
 
 | Ámbito | Ficheros de test | Tests | Estado |
 |---|---|---|---|
-| Frontend (`src/`) | 28 | 380 | 380 passed |
-| Backend (`supabase/functions/`) | 35 (unit) + 2 (integración) | 518 passed / 4 ignored | ok |
+| Frontend (`src/`) | 28 (unit) + 1 (integración) | 391 | 391 passed |
+| Backend (`supabase/functions/`) | 32 (unit) + 2 (integración) | 518 passed / 4 ignored | ok |
 
-Nota: la suite de Deno agrupa unit + integración en una sola ejecución. Los ficheros marcados como `*.integration.test.ts` se detallan en `../integration/README.md`. Aquí se cuentan únicamente los unit.
+Nota: tanto Vitest como Deno agrupan unit + integración en una sola ejecución (el sufijo `.integration` es marcador documental, no filtro del runner). Los ficheros `*.integration.test.*` se detallan en `../integration/README.md`. Aquí se cuentan únicamente los unit por sección.
 
 ---
 
-## Frontend (`src/`) — 28 ficheros, 380 tests
+## Frontend (`src/`) — 28 ficheros unit, ~380 tests unit
 
 ### Cobertura (Vitest + v8)
 
@@ -29,7 +29,7 @@ Nota: la suite de Deno agrupa unit + integración en una sola ejecución. Los fi
 
 ### Inventario por área
 
-#### Átomos (5)
+#### Átomos (4)
 - `ui/components/workrules/atoms/StarRating/StarRating.test.tsx` — 93% lines
 - `ui/components/workrules/atoms/ThemeToggle/ThemeToggle.test.tsx`
 - `ui/components/workrules/atoms/Logo/Logo.test.tsx`
@@ -42,7 +42,7 @@ Nota: la suite de Deno agrupa unit + integración en una sola ejecución. Los fi
 - `ConvenioListItem/ConvenioListItem.test.tsx` — 100%
 - `DataRequestCard/DataRequestCard.test.tsx` — 96%
 
-#### Organismos (7)
+#### Organismos (10)
 - `ConvenioUploader/__tests__/ConvenioUploader.test.tsx`
 - `ConvenioUploader/__tests__/ConvenioPreview.test.tsx`
 - `ConvenioUploader/__tests__/UploadProgress.test.tsx`
@@ -52,6 +52,7 @@ Nota: la suite de Deno agrupa unit + integración en una sola ejecución. Los fi
 - `Sidebar/Sidebar.test.tsx` — 48% (bajo)
 - `VariablesPanel/VariablesPanel.test.tsx` — 88%
 - `ConvenioManager/ConvenioManager.test.tsx` — 60%
+- `MobileDrawer/MobileDrawer.test.tsx`
 
 #### Páginas (2)
 - `pages/ChatPage/ChatPage.test.tsx`
@@ -64,7 +65,7 @@ Nota: la suite de Deno agrupa unit + integración en una sola ejecución. Los fi
 - `ui/hooks/useConvenioVariables.test.tsx`
 - `ui/hooks/useConvenios.test.tsx`
 
-#### Otros (3)
+#### Otros (2)
 - `core/stores/themeStore.test.ts` — 87%
 - `lib/chat-api.test.ts` — 18% (bajo, funciones críticas sin cubrir)
 
@@ -87,7 +88,7 @@ Nota: la suite de Deno agrupa unit + integración en una sola ejecución. Los fi
 
 ---
 
-## Backend / Supabase (`supabase/functions/`) — 35 ficheros unit, ~516 tests
+## Backend / Supabase (`supabase/functions/`) — 32 ficheros unit, 518 tests (unit + integración; 4 ignored)
 
 ### Cobertura
 
@@ -95,7 +96,7 @@ Nota: la suite de Deno agrupa unit + integración en una sola ejecución. Los fi
 
 ### Inventario por capa (hexagonal)
 
-#### `_shared/domain/` — Value Objects y reglas puras (14 ficheros)
+#### `_shared/domain/` — Value Objects y reglas puras (17 ficheros)
 - `result.test.ts`
 - `chat-command/input-mapper.test.ts`
 - `perfil/categoria-profesional.test.ts`
@@ -116,7 +117,7 @@ Nota: la suite de Deno agrupa unit + integración en una sola ejecución. Los fi
 
 Cobertura funcional esperada: alta (VOs son puros y muy testables).
 
-#### `_shared/application/chat/` — Use cases y routing (8)
+#### `_shared/application/chat/` — Use cases y routing (9)
 - `ask-question/ask-question.test.ts`
 - `calculate-salary/calculate-salary.test.ts`
 - `calculate-salary/extracted-variables-validator.test.ts`

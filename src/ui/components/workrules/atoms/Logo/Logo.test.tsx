@@ -22,6 +22,8 @@ describe('Logo', () => {
       const { container } = render(<Logo variant={variant} />);
       return container.querySelector('svg')?.getAttribute('viewBox');
     });
-    expect(new Set(viewBoxes).size).toBe(3);
+    expect(viewBoxes).not.toContain(undefined);
+    expect(viewBoxes).not.toContain(null);
+    expect(new Set(viewBoxes).size).toBe(viewBoxes.length);
   });
 });

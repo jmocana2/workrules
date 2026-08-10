@@ -55,14 +55,14 @@ No mezcles runners. No introduzcas Jest, Mocha, Cypress, etc.
 ### Convención de nombres y ejecución
 
 - **Unit**: `*.test.ts` / `*.test.tsx` — se ejecutan con `pnpm test:unit` (Vitest) y `pnpm test:deno` (Deno).
-- **Integración**: **obligatorio** el sufijo `*.integration.test.ts` / `*.integration.test.tsx`, tanto en `src/` como en `supabase/functions/`. Se ejecutan con `pnpm test:integration` (front), `pnpm test:deno:integration` (back) o `pnpm test:integration:all` (ambos).
+- **Integración**: **obligatorio** el sufijo `*.integration.test.ts` / `*.integration.test.tsx`, tanto en `src/` como en `supabase/functions/`. Se ejecutan **junto con los unit** en los mismos scripts: no hay runners separados.
 - **E2E**: `tests/*.spec.ts` con Playwright — `pnpm test`.
 
 Reglas de la convención `.integration`:
 
 - Un test es integración si monta **>1 módulo de dominio** trabajando junto: hook + provider + repo fake; componente + store real + hijos reales; use case + adapter real; handler HTTP con `Request`/`Response` reales.
 - Un test que renderiza un único componente atómico/molécula con RTL sigue siendo **unit** (aunque toque JSDOM).
-- Los `test:deno` y `test:unit` **excluyen** por defecto los `*.integration.test.*` para que integración corra aislada y no dispare llamadas de red externas por accidente. Cualquier integration nuevo debe respetar el sufijo o quedará fuera del pipeline.
+- El sufijo `.integration` es un **marcador documental**, no un filtro del runner: `pnpm test:unit` y `pnpm test:deno` los incluyen. Cualquier integration que necesite recursos externos (API keys, DB local, Supabase real) **debe autoskipearse** si el recurso no está disponible — patrón en Deno: `Deno.test({ ignore: !Deno.env.get("ANTHROPIC_API_KEY"), ... })`; en Vitest: `it.skipIf(!process.env.FOO)(...)`. Sin este auto-skip, el test gastaría cuota/dinero en cada ejecución local o CI.
 
 ---
 

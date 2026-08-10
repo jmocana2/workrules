@@ -91,6 +91,7 @@ export function MobileDrawer({
     <>
       {/* Overlay */}
       <div
+        data-testid="mobile-drawer-overlay"
         className={cn(
           'fixed inset-0 z-40 bg-black/50 transition-opacity duration-300',
           isOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
