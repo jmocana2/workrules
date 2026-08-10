@@ -52,6 +52,18 @@ Antes de escribir un test nuevo, pregúntate: **¿en qué nivel debe vivir?** Si
 
 No mezcles runners. No introduzcas Jest, Mocha, Cypress, etc.
 
+### Convención de nombres y ejecución
+
+- **Unit**: `*.test.ts` / `*.test.tsx` — se ejecutan con `pnpm test:unit` (Vitest) y `pnpm test:deno` (Deno).
+- **Integración**: **obligatorio** el sufijo `*.integration.test.ts` / `*.integration.test.tsx`, tanto en `src/` como en `supabase/functions/`. Se ejecutan con `pnpm test:integration` (front), `pnpm test:deno:integration` (back) o `pnpm test:integration:all` (ambos).
+- **E2E**: `tests/*.spec.ts` con Playwright — `pnpm test`.
+
+Reglas de la convención `.integration`:
+
+- Un test es integración si monta **>1 módulo de dominio** trabajando junto: hook + provider + repo fake; componente + store real + hijos reales; use case + adapter real; handler HTTP con `Request`/`Response` reales.
+- Un test que renderiza un único componente atómico/molécula con RTL sigue siendo **unit** (aunque toque JSDOM).
+- Los `test:deno` y `test:unit` **excluyen** por defecto los `*.integration.test.*` para que integración corra aislada y no dispare llamadas de red externas por accidente. Cualquier integration nuevo debe respetar el sufijo o quedará fuera del pipeline.
+
 ---
 
 ## 4. TDD — Red / Green / Refactor
@@ -113,6 +125,7 @@ Si un test necesita un sleep para pasar, hay una condición real que deberías e
 ## 9. Checklist rápida antes de aceptar un test
 
 - [ ] ¿Está en el nivel correcto de la pirámide?
+- [ ] Si es integración, ¿el fichero usa el sufijo `.integration.test.ts(x)`?
 - [ ] ¿Prueba **un** comportamiento observable, no detalles de implementación?
 - [ ] ¿Usa selectores estables (role > label > testid)?
 - [ ] ¿Sin `setTimeout` ni sleeps?
