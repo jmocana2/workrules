@@ -66,10 +66,19 @@ async function setupCommonMocks(page: Page) {
         email: "e2e@example.com",
       },
     };
-    // Cubrir cualquier storageKey que use supabase-js (sb-<projectref>-auth-token).
-    // El projectref es el primer subdominio de VITE_SUPABASE_URL; en CI/build
-    // sin secret es "e2e" (placeholder). Cubrimos las variantes conocidas.
+    // supabase-js deriva la storageKey del projectref del VITE_SUPABASE_URL,
+    // que en CI es un secret desconocido para el test. Interceptamos getItem
+    // para responder la sesión fake a cualquier clave `sb-*-auth-token`.
     const value = JSON.stringify(fakeSession);
+    const originalGetItem = Storage.prototype.getItem;
+    Storage.prototype.getItem = function (key: string) {
+      if (typeof key === "string" && /^sb-.+-auth-token$/.test(key)) {
+        return value;
+      }
+      return originalGetItem.call(this, key);
+    };
+    // Fallback: sembrar también las claves conocidas por si algún código las
+    // lee de forma directa sin pasar por Storage.prototype.
     try {
       localStorage.setItem("sb-e2e-auth-token", value);
       localStorage.setItem("sb-localhost-auth-token", value);
