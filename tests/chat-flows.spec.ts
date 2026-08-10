@@ -173,7 +173,7 @@ test.describe.configure({ timeout: 60000 });
 // Antes pasaba "verde" sin ejecutar nada real; ahora cae con el flujo real.
 // Los 3 tests fallan por la misma causa (mock SSE desincronizado con el
 // nuevo flujo de variables resueltas). No es regresion de producto.
-test.describe.skip("Flujos E2E criticos de chat", () => {
+test.describe("Flujos E2E criticos de chat", () => {
   test("1. Consulta general devuelve respuesta con citation", async ({ page }) => {
     await setupCommonMocks(page);
 
